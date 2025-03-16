@@ -1,0 +1,16 @@
+FROM node:18-slim
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY bun.lockb ./
+
+# ติดตั้ง dependencies
+RUN npm install
+
+COPY . .
+
+EXPOSE 5173
+
+# CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--no-open"]
