@@ -82,9 +82,33 @@ export const Footer = styled.footer`
   }
 `;
 
-export const ChangeMapButton = styled.button`
-  font-weight: 500;
-  background-color: transparent;
-  border: 3px solid var(--modal_changeMap_border);
-  color: var(--modal_changeMap_text);
+// export const ChangeMapButton = styled.button`
+//   font-weight: 500;
+//   background-color: transparent;
+//   border: 3px solid var(--modal_changeMap_border);
+//   color: var(--modal_changeMap_text);
+// `;
+
+// อัพเดท definition ของ ChangeMapButton ให้รับ prop size
+export const ChangeMapButton = styled.button<{ size?: 'sm' | 'md' | 'lg' }>`
+  min-width: 100px;
+  padding: ${({ size }) => 
+    size === 'sm' ? '8px 12px' : 
+    size === 'lg' ? '12px 24px' : 
+    '10px 20px'};
+  font-size: ${({ size }) => 
+    size === 'sm' ? '0.9rem' : 
+    size === 'lg' ? '1.2rem' : 
+    '1.1rem'};
+  border: none;
+  border-radius: 5px;
+  background-color: #6c757d;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: filter 0.2s;
+
+  &:hover {
+    filter: brightness(0.9);
+  }
 `;
