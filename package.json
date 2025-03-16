@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "homepage": "https://teay.github.io/ragnarokmvptimer",
   "private": true,
   "description": "web app to track ragnarok mvp respawn",
   "type": "module",

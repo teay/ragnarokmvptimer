@@ -23,7 +23,7 @@ export default defineConfig({
     react(),
     wyw({
       include: ['**/*.{ts,tsx}'],
-      base: '/ragnarokmvptimer-frontend/',
+      base: '/ragnarokmvptimer/',
     }),
     imagetools({
       exclude: ['./src/assets/mvp_icons_animated/**/*'],
