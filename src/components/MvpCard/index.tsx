@@ -32,11 +32,16 @@ interface MvpCardProps {
 }
 
 export function MvpCard({ mvp }: MvpCardProps) {
+  console.log('Rendering MvpCard', mvp); // ใส่ตรงนี้
+
   const { killMvp, resetMvpTimer, removeMvpByMap, setEditingMvp } =
     useMvpsContext();
   const { respawnAsCountdown, animatedSprites } = useSettings();
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+
+  // โค้ดอื่นๆ...
+
 
   const isActive = !!mvp.deathMap;
 
@@ -98,12 +103,12 @@ export function MvpCard({ mvp }: MvpCardProps) {
               >
                 <Trash2 />
               </Control>
-              {/* <Control
-              onClick={() => openAndEditModal(mvp)}
-              title='Edit this mvp'
-            >
-              <Edit2 />
-            </Control> */}
+              <Control
+                onClick={() => setEditingMvp(mvp)}
+                title='Edit this mvp'
+              >
+                <Edit2 />
+              </Control>
             </Controls>
           </>
         ) : (

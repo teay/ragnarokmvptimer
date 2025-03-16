@@ -27,6 +27,7 @@ interface MvpsContextData {
   isLoading: boolean;
   resetMvpTimer: (mvp: IMvp) => void;
   killMvp: (mvp: IMvp, time?: Date | null) => void;
+  updateMvp: (mvp: IMvp, time?: Date | null) => void; // เพิ่มฟังก์ชันใหม่
   removeMvpByMap: (mvpID: number, deathMap: string) => void;
   setEditingMvp: (mvp: IMvp) => void;
   closeEditMvpModal: () => void;
@@ -36,6 +37,8 @@ interface MvpsContextData {
 export const MvpsContext = createContext({} as MvpsContextData);
 
 export function MvpProvider({ children }: MvpProviderProps) {
+  console.log('MvpProvider initializing');
+  
   const { server } = useSettings();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -62,8 +65,29 @@ export function MvpProvider({ children }: MvpProviderProps) {
       deathTime,
     };
 
-    setActiveMvps((s) =>
-      [...s, killedMvp].sort((a: IMvp, b: IMvp) => {
+    setActiveMvps((s) => {
+      // ตรวจสอบว่า MVP นี้มีอยู่แล้วหรือไม่ (ตรวจสอบทั้ง id และ deathMap)
+      const existingMvpIndex = s.findIndex(
+        (m) => m.id === mvp.id && m.deathMap === mvp.deathMap
+      );
+
+      // ถ้ามีอยู่แล้ว ให้อัพเดต
+      if (existingMvpIndex !== -1) {
+        const newState = [...s];
+        newState[existingMvpIndex] = killedMvp;
+        return newState.sort((a: IMvp, b: IMvp) => {
+          const bothHaveDeathTime = a.deathTime && b.deathTime;
+          if (!bothHaveDeathTime) {
+            return 0;
+          }
+          return dayjs(a.deathTime)
+            .add(getMvpRespawnTime(a), 'ms')
+            .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
+        });
+      }
+
+      // ถ้ายังไม่มี ให้เพิ่มใหม่
+      return [...s, killedMvp].sort((a: IMvp, b: IMvp) => {
         const bothHaveDeathTime = a.deathTime && b.deathTime;
         if (!bothHaveDeathTime) {
           return 0;
@@ -71,8 +95,49 @@ export function MvpProvider({ children }: MvpProviderProps) {
         return dayjs(a.deathTime)
           .add(getMvpRespawnTime(a), 'ms')
           .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
-      })
-    );
+      });
+    });
+  }, []);
+
+  // เพิ่มฟังก์ชัน updateMvp เพื่อแก้ไข MVP ที่มีอยู่แล้ว
+  const updateMvp = useCallback((mvp: IMvp, deathTime = mvp.deathTime) => {
+    const updatedMvp = {
+      ...mvp,
+      deathTime,
+    };
+
+    setActiveMvps((s) => {
+      // ค้นหา MVP ที่ต้องการอัพเดต
+      const existingMvpIndex = s.findIndex(
+        (m) => m.id === mvp.id && m.deathMap === mvp.deathMap
+      );
+
+      // ถ้าพบ ให้อัพเดต
+      if (existingMvpIndex !== -1) {
+        const newState = [...s];
+        newState[existingMvpIndex] = updatedMvp;
+        return newState.sort((a: IMvp, b: IMvp) => {
+          const bothHaveDeathTime = a.deathTime && b.deathTime;
+          if (!bothHaveDeathTime) {
+            return 0;
+          }
+          return dayjs(a.deathTime)
+            .add(getMvpRespawnTime(a), 'ms')
+            .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
+        });
+      }
+
+      // ถ้าไม่พบ ให้เพิ่มใหม่
+      return [...s, updatedMvp].sort((a: IMvp, b: IMvp) => {
+        const bothHaveDeathTime = a.deathTime && b.deathTime;
+        if (!bothHaveDeathTime) {
+          return 0;
+        }
+        return dayjs(a.deathTime)
+          .add(getMvpRespawnTime(a), 'ms')
+          .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
+      });
+    });
   }, []);
 
   const closeEditMvpModal = useCallback(() => setEditingMvp(undefined), []);
@@ -80,9 +145,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
   //const clearActiveMvps = useCallback(() => setActiveMvps([]), []);
 
   useEffect(() => {
+    console.log('Loading active MVPs');
     async function loadActiveMvps() {
       setIsLoading(true);
       const savedActiveMvps = await loadMvpsFromLocalStorage(server);
+      console.log('Loaded MVPs from localStorage:', savedActiveMvps);
       setActiveMvps(savedActiveMvps || []);
       setIsLoading(false);
     }
@@ -126,6 +193,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         editingMvp,
         resetMvpTimer,
         killMvp,
+        updateMvp, // เพิ่มฟังก์ชันใหม่
         removeMvpByMap,
         setEditingMvp,
         closeEditMvpModal,

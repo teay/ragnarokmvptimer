@@ -14,6 +14,7 @@ import { ModalSelectMap } from '../ModalSelectMap';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
 
+
 import {
   Modal,
   SpriteWrapper,
@@ -27,7 +28,9 @@ import {
 
 export function ModalEditMvp() {
   useScrollBlock(true);
-  const { killMvp, editingMvp: mvp, closeEditMvpModal } = useMvpsContext();
+  // const { killMvp, editingMvp: mvp, closeEditMvpModal } = useMvpsContext();
+  // ใน ModalEditMvp/index.tsx
+  const { killMvp, updateMvp, editingMvp: mvp, closeEditMvpModal } = useMvpsContext();
   const { animatedSprites } = useSettings();
 
   const [newTime, setNewTime] = useState<Date | null>(
@@ -42,16 +45,24 @@ export function ModalEditMvp() {
   const canChangeMap = !mvp.deathMap;
   const hasMoreThanOneMap = mvp.spawn.length > 1;
 
+
   function handleConfirm() {
     if (!selectedMap) return;
-
+  
     const updatedMvp: IMvp = {
       ...mvp,
       deathMap: selectedMap,
       deathPosition: markCoordinates,
     };
-
-    killMvp(updatedMvp, newTime);
+  
+    if (mvp.deathTime) {
+      // ถ้ามี deathTime แสดงว่าเป็น MVP ที่มีอยู่แล้ว ให้อัพเดต
+      updateMvp(updatedMvp, newTime);
+    } else {
+      // ถ้าไม่มี deathTime แสดงว่าเป็น MVP ใหม่ ให้ใช้ killMvp
+      killMvp(updatedMvp, newTime);
+    }
+    
     closeEditMvpModal();
   }
 

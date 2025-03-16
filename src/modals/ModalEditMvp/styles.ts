@@ -1,6 +1,10 @@
-import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
-import { styled } from '@linaria/react';
+// import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
+// import { styled } from '@linaria/react';
 
+// src/modals/ModalEditMvp/styles.ts
+import { styled } from "@linaria/react";
+// Don't import ModalPrimaryButton here if it causes issues
+// import { ModalPrimaryButton } from "@/ui/ModalPrimaryButton";
 export const Modal = styled.div`
   width: 100%;
   max-width: 500px;
@@ -78,7 +82,7 @@ export const Footer = styled.footer`
   }
 `;
 
-export const ChangeMapButton = styled(ModalPrimaryButton)`
+export const ChangeMapButton = styled.button`
   font-weight: 500;
   background-color: transparent;
   border: 3px solid var(--modal_changeMap_border);
