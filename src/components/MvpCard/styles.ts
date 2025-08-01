@@ -20,6 +20,7 @@ export const BottomControls = styled.div`
   align-items: center;
   gap: 10px;
   margin-top: 15px;
+  width: 100%; /* Make it full width */
 `;
 
 export const Details = styled.div`
@@ -37,11 +38,11 @@ export const Bold = styled.span`
 
 export const Header = styled.div`
   display: flex;
-  flex-direction: row; /* Changed to row */
-  justify-content: space-between; /* Space between ID and Name */
-  align-items: center; /* Align items vertically */
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
-  padding: 0 10px; /* Add some padding */
+  padding: 0 10px;
 `;
 
 export const ID = styled.span`
@@ -73,7 +74,7 @@ export const Tombstone = styled.p`
 
 const Button = styled.button`
   width: 100%;
-  padding: 5px 20px;
+  padding: 8px 20px;
 
   border: 0;
   border-radius: 4px;
@@ -95,23 +96,23 @@ export const EditButton = styled(Button)`
   background-color: var(--mvpCard_editButton);
 `;
 
-export const Controls = styled.div<{ isActive?: boolean }>`
+export const Controls = styled.div`
   display: flex;
   align-items: center;
-  flex-direction: row; /* Always row */
-
+  flex-direction: column; /* Always column */
+  width: 100%; /* Always full width */
   margin-top: 10px;
   gap: 10px;
+  padding: 0 30px; /* Increased padding */
 `;
 
 export const Control = styled.button`
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* Changed to row */
   align-items: center;
   justify-content: center;
-  gap: 4px;
-
-  width: auto;
+  gap: 8px; /* Adjusted gap */
+  width: 100%; /* Make control buttons full width */
   height: auto;
   padding: 8px 12px;
   border-radius: 4px;
@@ -148,6 +149,6 @@ export const Control = styled.button`
 `;
 
 export const ControlText = styled.span`
-  font-size: 1.1rem;
+  font-size: 1.4rem; /* Increased font size */
   color: #fff;
 `;

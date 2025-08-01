@@ -122,7 +122,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
             </BottomControls>
           </>
         ) : (
-          <Controls isActive={!isActive}>
+          <Controls>
             <KilledNow onClick={handleKilledNow}>
               <FormattedMessage id='killed_now' />
             </KilledNow>
