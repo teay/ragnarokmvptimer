@@ -68,10 +68,45 @@
       gtag('js', new Date());
       gtag('config', 'G-JZ65XX6493');
     </script>
+    <style>
+      body {
+        margin: 0;
+        background-color: #000; /* สีพื้นหลังเริ่มต้น */
+        min-height: 100vh;
+      }
+      .initial-loading-spinner {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #f89200; /* ใช้สี primary ของคุณ */
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <div id="root" style="display: none;"></div>
+    <div id="initial-loading" class="initial-loading-spinner"></div>
     <script type="module" src="/src/index.tsx"></script>
+    <script>
+      // ซ่อน initial spinner เมื่อ React โหลดเสร็จ
+      window.addEventListener('load', () => {
+        const root = document.getElementById('root');
+        const initialLoading = document.getElementById('initial-loading');
+        if (root && initialLoading) {
+          root.style.display = 'flex'; // หรือ block, ตาม display ของ root
+          initialLoading.style.display = 'none';
+        }
+      });
+    </script>
   </body>
 </html>

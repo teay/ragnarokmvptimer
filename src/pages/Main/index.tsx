@@ -6,6 +6,7 @@ import { useMvpsContext } from '@/contexts/MvpsContext';
 import { MvpsContainerFilter } from '@/components/MvpsContainerFilter';
 import { MvpCardSkeleton } from '@/components/Skeletons/MvpCardSkeleton';
 import { ModalEditMvp } from '@/modals';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
 
 import { sortBy } from '@/utils/sort';
 
@@ -46,6 +47,7 @@ export function Main() {
 
   return (
     <>
+      {isLoading && <LoadingOverlay />}
       <Container>
         {activeMvps.length > 0 && (
           <Section>
