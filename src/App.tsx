@@ -22,7 +22,7 @@ import { LOCALES } from './locales';
 import { messages } from './locales/messages';
 
 export default function App() {
-  console.log('App rendering');
+  
   const { language } = useSettings();
   const {
     hasNotificationPermission,

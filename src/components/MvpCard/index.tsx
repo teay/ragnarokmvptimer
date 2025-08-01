@@ -36,9 +36,8 @@ interface MvpCardProps {
 }
 
 export function MvpCard({ mvp }: MvpCardProps) {
-  console.log('MvpCard re-rendered for:', mvp.id, mvp.deathMap); // เพิ่มบรรทัดนี้
-  console.log('Rendering MvpCard', mvp); // ใส่ตรงนี้
-
+  
+  
   const { killMvp, resetMvpTimer, removeMvpByMap, setEditingMvp } =
     useMvpsContext();
   const { respawnAsCountdown, animatedSprites } = useSettings();

@@ -38,7 +38,7 @@ interface MvpsContextData {
 export const MvpsContext = createContext({} as MvpsContextData);
 
 export function MvpProvider({ children }: MvpProviderProps) {
-  console.log('MvpProvider initializing');
+  
   
   const { server } = useSettings();
 
@@ -81,7 +81,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
         newState = [...s, killedMvp];
       }
 
-      console.log('killMvp: newState', newState);
       saveActiveMvpsToLocalStorage(newState, server);
 
       return newState.sort((a: IMvp, b: IMvp) => {
@@ -115,7 +114,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
         newState = [...s, updatedMvp];
       }
 
-      console.log('updateMvp: newState', newState);
       saveActiveMvpsToLocalStorage(newState, server);
 
       return newState.sort((a: IMvp, b: IMvp) => {
@@ -142,7 +140,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, [activeMvps, originalAllMvps]);
 
   useEffect(() => {
-    console.log('Loading active MVPs for server:', server);
     async function loadActiveMvpsOnly() {
       setIsLoading(true);
       const savedActiveMvps = await loadMvpsFromLocalStorage(server);
@@ -156,7 +153,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
     // โหลด originalAllMvps หลังจาก activeMvps โหลดเสร็จและ isLoading เป็น false
     if (isLoading) return; 
 
-    console.log('Loading all MVPs data for server:', server);
     async function loadOriginalAllMvps() {
       const data = await getServerData(server);
       setOriginalAllMvps(data);
