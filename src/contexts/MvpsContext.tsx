@@ -5,6 +5,7 @@ import {
   useEffect,
   ReactNode,
   useCallback,
+  useMemo,
 } from 'react';
 import dayjs from 'dayjs';
 
@@ -44,7 +45,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [editingMvp, setEditingMvp] = useState<IMvp>();
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
-  const [allMvps, setAllMvps] = useState<IMvp[]>([]);
+  const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
 
   const resetMvpTimer = useCallback((mvp: IMvp) => {
     const updatedMvp = { ...mvp, deathTime: new Date() };
@@ -60,34 +61,28 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, []);
 
   const killMvp = useCallback((mvp: IMvp, deathTime = new Date()) => {
-    const killedMvp = {
-      ...mvp,
-      deathTime,
-    };
-
     setActiveMvps((s) => {
-      // ตรวจสอบว่า MVP นี้มีอยู่แล้วหรือไม่ (ตรวจสอบทั้ง id และ deathMap)
+      const killedMvp = {
+        ...mvp,
+        deathTime,
+      };
+
       const existingMvpIndex = s.findIndex(
         (m) => m.id === mvp.id && m.deathMap === mvp.deathMap
       );
 
-      // ถ้ามีอยู่แล้ว ให้อัพเดต
+      let newState;
       if (existingMvpIndex !== -1) {
-        const newState = [...s];
+        newState = [...s];
         newState[existingMvpIndex] = killedMvp;
-        return newState.sort((a: IMvp, b: IMvp) => {
-          const bothHaveDeathTime = a.deathTime && b.deathTime;
-          if (!bothHaveDeathTime) {
-            return 0;
-          }
-          return dayjs(a.deathTime)
-            .add(getMvpRespawnTime(a), 'ms')
-            .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
-        });
+      } else {
+        newState = [...s, killedMvp];
       }
 
-      // ถ้ายังไม่มี ให้เพิ่มใหม่
-      return [...s, killedMvp].sort((a: IMvp, b: IMvp) => {
+      console.log('killMvp: newState', newState);
+      saveActiveMvpsToLocalStorage(newState, server);
+
+      return newState.sort((a: IMvp, b: IMvp) => {
         const bothHaveDeathTime = a.deathTime && b.deathTime;
         if (!bothHaveDeathTime) {
           return 0;
@@ -97,38 +92,31 @@ export function MvpProvider({ children }: MvpProviderProps) {
           .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
       });
     });
-  }, []);
+  }, [server]);
 
-  // เพิ่มฟังก์ชัน updateMvp เพื่อแก้ไข MVP ที่มีอยู่แล้ว
   const updateMvp = useCallback((mvp: IMvp, deathTime = mvp.deathTime) => {
-    const updatedMvp = {
-      ...mvp,
-      deathTime,
-    };
-
     setActiveMvps((s) => {
-      // ค้นหา MVP ที่ต้องการอัพเดต
+      const updatedMvp = {
+        ...mvp,
+        deathTime,
+      };
+
       const existingMvpIndex = s.findIndex(
         (m) => m.id === mvp.id && m.deathMap === mvp.deathMap
       );
 
-      // ถ้าพบ ให้อัพเดต
+      let newState;
       if (existingMvpIndex !== -1) {
-        const newState = [...s];
+        newState = [...s];
         newState[existingMvpIndex] = updatedMvp;
-        return newState.sort((a: IMvp, b: IMvp) => {
-          const bothHaveDeathTime = a.deathTime && b.deathTime;
-          if (!bothHaveDeathTime) {
-            return 0;
-          }
-          return dayjs(a.deathTime)
-            .add(getMvpRespawnTime(a), 'ms')
-            .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
-        });
+      } else {
+        newState = [...s, updatedMvp];
       }
 
-      // ถ้าไม่พบ ให้เพิ่มใหม่
-      return [...s, updatedMvp].sort((a: IMvp, b: IMvp) => {
+      console.log('updateMvp: newState', newState);
+      saveActiveMvpsToLocalStorage(newState, server);
+
+      return newState.sort((a: IMvp, b: IMvp) => {
         const bothHaveDeathTime = a.deathTime && b.deathTime;
         if (!bothHaveDeathTime) {
           return 0;
@@ -138,52 +126,32 @@ export function MvpProvider({ children }: MvpProviderProps) {
           .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
       });
     });
-  }, []);
+  }, [server]);
 
   const closeEditMvpModal = useCallback(() => setEditingMvp(undefined), []);
 
-  //const clearActiveMvps = useCallback(() => setActiveMvps([]), []);
+  const allMvps = useMemo(() => {
+    const activeMvpIds = new Set(activeMvps.map((mvp) => mvp.id));
+    const combinedMvps = [
+      ...activeMvps,
+      ...originalAllMvps.filter((mvp) => !activeMvpIds.has(mvp.id)),
+    ];
+    return combinedMvps;
+  }, [activeMvps, originalAllMvps]);
 
   useEffect(() => {
-    console.log('Loading active MVPs');
-    async function loadActiveMvps() {
+    console.log('Loading data for server:', server);
+    async function loadData() {
       setIsLoading(true);
       const savedActiveMvps = await loadMvpsFromLocalStorage(server);
-      console.log('Loaded MVPs from localStorage:', savedActiveMvps);
       setActiveMvps(savedActiveMvps || []);
+
+      const data = await getServerData(server);
+      setOriginalAllMvps(data);
       setIsLoading(false);
     }
-    loadActiveMvps();
+    loadData();
   }, [server]);
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    async function filterAllMvps() {
-      const originalServerData = await getServerData(server);
-      const activeSpawns = activeMvps.map((m) => m.deathMap);
-      const activeIds = activeMvps.map((m) => m.id);
-
-      const filteredAllMvps = originalServerData
-        .map((mvp) => {
-          const isActive = activeIds.includes(mvp.id);
-          if (!isActive) return mvp;
-
-          return {
-            ...mvp,
-            spawn: mvp.spawn.filter(
-              (spawn) => !activeSpawns.includes(spawn.mapname)
-            ),
-          };
-        })
-        .filter((mvp) => mvp.spawn.length > 0);
-
-      setAllMvps(filteredAllMvps);
-    }
-
-    filterAllMvps();
-    saveActiveMvpsToLocalStorage(activeMvps, server);
-  }, [isLoading, activeMvps, server]);
 
   return (
     <MvpsContext.Provider
@@ -193,11 +161,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
         editingMvp,
         resetMvpTimer,
         killMvp,
-        updateMvp, // เพิ่มฟังก์ชันใหม่
+        updateMvp,
         removeMvpByMap,
         setEditingMvp,
         closeEditMvpModal,
-        //clearActiveMvps,
         isLoading,
       }}
     >

@@ -79,7 +79,7 @@ export function Main() {
           {displayAllMvps.length > 0 && (
             <MvpsContainer>
               {displayAllMvps.map((mvp: IMvp) => (
-                <MvpCard key={mvp.id} mvp={mvp} />
+                <MvpCard key={`${mvp.id}-${mvp.deathMap}`} mvp={mvp} />
               ))}
             </MvpsContainer>
           )}

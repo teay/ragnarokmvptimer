@@ -27,6 +27,7 @@ import {
   KilledNow,
   EditButton,
   Details,
+  Tombstone,
 } from './styles';
 
 interface MvpCardProps {
@@ -34,6 +35,7 @@ interface MvpCardProps {
 }
 
 export function MvpCard({ mvp }: MvpCardProps) {
+  console.log('MvpCard re-rendered for:', mvp.id, mvp.deathMap); // เพิ่มบรรทัดนี้
   console.log('Rendering MvpCard', mvp); // ใส่ตรงนี้
 
   const { killMvp, resetMvpTimer, removeMvpByMap, setEditingMvp } =
@@ -90,15 +92,18 @@ export function MvpCard({ mvp }: MvpCardProps) {
 
             <MapName>
               <FormattedMessage id='map' />
-              {`
-`}
+              {
+}
               <Bold>{mvp.deathMap}</Bold>
             </MapName>
 
+            <Tombstone>
+              <FormattedMessage id='when_was_mvp_killed' />
+              <br />
+              <Bold>{dayjs(mvp.deathTime).format('DD/MM/YYYY HH:mm A')}</Bold>
+            </Tombstone>
+
             <Controls>
-              <Control onClick={() => setIsMapModalOpen(true)} title='Show map'>
-                <Map />
-              </Control>
               <Control onClick={() => resetMvpTimer(mvp)} title='Reset timer'>
                 <RefreshCcw />
               </Control>

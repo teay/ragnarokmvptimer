@@ -113,7 +113,7 @@ export function ModalEditMvp() {
                 (<FormattedMessage id='optional_mark' />)
               </Optional>
             </Question>
-            <Map mapName={selectedMap} onChange={setMarkCoordinates} />
+            <Map mapName={selectedMap} onChange={setMarkCoordinates} coordinates={markCoordinates} />
           </>
         )}
 

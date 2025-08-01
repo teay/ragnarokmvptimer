@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 
 import { getMapImg } from '@/utils';
 import { MapMark } from '../MapMark';
@@ -21,8 +21,6 @@ export function Map({
   onChange,
   coordinates = defaultCoordinates,
 }: MapProps) {
-  const [markCoordinates, setMarkCoordinates] = useState<IMapMark>(coordinates);
-
   const mapMark = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       if (!onChange) return;
@@ -32,16 +30,10 @@ export function Map({
         x: offsetX,
         y: offsetY,
       };
-      setMarkCoordinates(newCoords);
       onChange(newCoords);
     },
     [onChange]
   );
-
-  useEffect(() => {
-    if (!onChange) return;
-    setMarkCoordinates(defaultCoordinates);
-  }, [mapName]);
 
   return (
     <div>
@@ -52,8 +44,8 @@ export function Map({
         clickable={!!onChange}
         loading='lazy'
       />
-      {(markCoordinates.x !== -1 || markCoordinates.y !== -1) && (
-        <MapMark x={markCoordinates.x} y={markCoordinates.y} />
+      {(coordinates.x !== -1 || coordinates.y !== -1) && (
+        <MapMark x={coordinates.x} y={coordinates.y} />
       )}
     </div>
   );
