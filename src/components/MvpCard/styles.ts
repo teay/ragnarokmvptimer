@@ -11,7 +11,7 @@ export const Container = styled.div`
   border-radius: 8px;
 
   background-color: var(--mvpCard_bg);
-  border: 2px solid red; /* Added red border for debugging */
+  border: none; /* Removed red border */
 `;
 
 export const BottomControls = styled.div`
@@ -20,7 +20,8 @@ export const BottomControls = styled.div`
   align-items: center;
   gap: 10px;
   margin-top: 15px;
-  width: 100%; /* Make it full width */
+  width: 100%;
+  padding: 0; /* Removed horizontal padding */
 `;
 
 export const Details = styled.div`
@@ -73,8 +74,9 @@ export const Tombstone = styled.p`
 `;
 
 const Button = styled.button`
-  width: 100%;
-  padding: 8px 20px;
+  width: 200px; /* Fixed width */
+  margin: 0 auto; /* Center the button */
+  padding: 10px 20px;
 
   border: 0;
   border-radius: 4px;
@@ -103,18 +105,20 @@ export const Controls = styled.div`
   width: 100%; /* Always full width */
   margin-top: 10px;
   gap: 10px;
-  padding: 0 30px; /* Increased padding */
+  padding: 0; /* Removed horizontal padding */
 `;
 
 export const Control = styled.button`
   display: flex;
-  flex-direction: row; /* Changed to row */
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 8px; /* Adjusted gap */
-  width: 100%; /* Make control buttons full width */
+  gap: 8px;
+  width: 200px; /* Fixed width */
+  margin: 0 auto; /* Center the button */
   height: auto;
-  padding: 8px 12px;
+  padding: 10px 12px;
+  border: 0; /* Removed red border */
   border-radius: 4px;
 
   font-weight: bolder;

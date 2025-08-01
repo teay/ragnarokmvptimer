@@ -8,7 +8,6 @@ export const Container = styled.main`
   padding-bottom: 30px;
   background-color: var(--secondary);
   width: 100%;
-  border: 2px solid red; /* Added red border for debugging */
 `;
 
 export const Section = styled.div`
@@ -32,7 +31,19 @@ export const MvpsContainer = styled.div`
   grid-gap: 2.5rem;
   width: 100%;
   justify-items: center;
-  max-width: 130rem; /* Increased max-width again */
+  max-width: 130rem;
   padding: 1rem;
-  border: 2px solid red; /* Added red border for debugging */
+  
+
+  @media (max-width: 75em) { /* ~1200px */
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 56.25em) { /* ~900px */
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 37.5em) { /* ~600px */
+    grid-template-columns: 1fr;
+  }
 `;
