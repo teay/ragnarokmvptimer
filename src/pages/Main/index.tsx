@@ -37,6 +37,9 @@ export function Main() {
     ? allMvpsFilteredAndSorted.reverse()
     : allMvpsFilteredAndSorted;
 
+  const activeMvpIds = new Set(activeMvps.map((mvp) => mvp.id));
+  const nonActiveMvps = displayAllMvps.filter((mvp) => !activeMvpIds.has(mvp.id));
+
   return (
     <>
       <Container>
@@ -76,9 +79,9 @@ export function Main() {
             </MvpsContainer>
           )}
 
-          {displayAllMvps.length > 0 && (
+          {nonActiveMvps.length > 0 && (
             <MvpsContainer>
-              {displayAllMvps.map((mvp: IMvp) => (
+              {nonActiveMvps.map((mvp: IMvp) => (
                 <MvpCard key={`${mvp.id}-${mvp.deathMap}`} mvp={mvp} />
               ))}
             </MvpsContainer>
