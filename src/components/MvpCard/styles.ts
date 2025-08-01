@@ -98,16 +98,17 @@ export const Control = styled.button`
   align-items: center;
   justify-content: center;
 
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: auto;
+  height: auto;
+  padding: 8px 12px; /* เพิ่ม padding */
+  border-radius: 4px; /* ปรับ border-radius */
 
   font-weight: bolder;
 
   svg {
-    stroke-width: 3px;
-    width: 17px;
-    height: 17px;
+    stroke-width: 2px; /* ปรับ stroke-width */
+    width: 24px; /* เพิ่มขนาดไอคอน */
+    height: 24px; /* เพิ่มขนาดไอคอน */
     color: #fff;
   }
 
@@ -131,8 +132,4 @@ export const Control = styled.button`
   &:nth-child(3) {
     background-color: var(--mvpCard_controls_delete);
   }
-
-  /* :nth-child(4) {
-    background-color: var(--mvpCard_controls_edit);
-  } */
 `;
