@@ -95,20 +95,22 @@ export const Controls = styled.div<{ isActive?: boolean }>`
 
 export const Control = styled.button`
   display: flex;
+  flex-direction: column; /* เปลี่ยนเป็น column */
   align-items: center;
   justify-content: center;
+  gap: 4px; /* เพิ่ม gap ระหว่างไอคอนกับข้อความ */
 
   width: auto;
   height: auto;
-  padding: 8px 12px; /* เพิ่ม padding */
-  border-radius: 4px; /* ปรับ border-radius */
+  padding: 8px 12px;
+  border-radius: 4px;
 
   font-weight: bolder;
 
   svg {
-    stroke-width: 2px; /* ปรับ stroke-width */
-    width: 24px; /* เพิ่มขนาดไอคอน */
-    height: 24px; /* เพิ่มขนาดไอคอน */
+    stroke-width: 2px;
+    width: 24px;
+    height: 24px;
     color: #fff;
   }
 
@@ -132,4 +134,9 @@ export const Control = styled.button`
   &:nth-child(3) {
     background-color: var(--mvpCard_controls_delete);
   }
+`;
+
+export const ControlText = styled.span`
+  font-size: 1.1rem; /* ขนาดตัวอักษรสำหรับข้อความใต้ไอคอน */
+  color: #fff;
 `;

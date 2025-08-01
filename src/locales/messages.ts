@@ -59,6 +59,9 @@ export const messages = {
     notification_sound: 'Notification sound',
     when_was_mvp_killed: 'When was mvp killed?',
     wheres_mvp_tombstone: 'Where is the MVP tombstone?',
+    reset_timer: 'Reset Timer',
+    remove_mvp: 'Remove MVP',
+    edit_mvp: 'Edit MVP',
   },
   [LOCALES.PORTUGUESE]: {
     under_development: 'Em desenvolvimento',
@@ -117,5 +120,8 @@ export const messages = {
     notification_sound: 'Som de notificação',
     when_was_mvp_killed: 'Quando o mvp foi morto?',
     wheres_mvp_tombstone: 'Onde está o túmulo do MVP?',
+    reset_timer: 'Reiniciar Timer',
+    remove_mvp: 'Remover MVP',
+    edit_mvp: 'Editar MVP',
   },
 };

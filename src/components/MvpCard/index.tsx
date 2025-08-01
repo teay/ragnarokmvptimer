@@ -28,6 +28,7 @@ import {
   EditButton,
   Details,
   Tombstone,
+  ControlText,
 } from './styles';
 
 interface MvpCardProps {
@@ -106,18 +107,21 @@ export function MvpCard({ mvp }: MvpCardProps) {
             <Controls>
               <Control onClick={() => resetMvpTimer(mvp)} title='Reset timer'>
                 <RefreshCcw />
+                <ControlText><FormattedMessage id='reset_timer' /></ControlText>
               </Control>
               <Control
                 onClick={() => removeMvpByMap(mvp.id, mvp.deathMap)}
                 title='Remove this mvp'
               >
                 <Trash2 />
+                <ControlText><FormattedMessage id='remove_mvp' /></ControlText>
               </Control>
               <Control
                 onClick={() => setEditingMvp(mvp)}
                 title='Edit this mvp'
               >
                 <Edit2 />
+                <ControlText><FormattedMessage id='edit_mvp' /></ControlText>
               </Control>
             </Controls>
           </Details>
