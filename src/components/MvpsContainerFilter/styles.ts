@@ -9,6 +9,7 @@ export const Container = styled.div`
   margin: 0 auto; /* Center horizontally */
   width: 100%;
   align-items: center;
+  border: 2px solid red; /* Added red border for debugging */
 `;
 
 export const SearchContainer = styled.div`

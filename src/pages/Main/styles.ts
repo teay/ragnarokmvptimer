@@ -8,6 +8,7 @@ export const Container = styled.main`
   padding-bottom: 30px;
   background-color: var(--secondary);
   width: 100%;
+  border: 2px solid red; /* Added red border for debugging */
 `;
 
 export const Section = styled.div`
@@ -31,6 +32,7 @@ export const MvpsContainer = styled.div`
   grid-gap: 2.5rem;
   width: 100%;
   justify-items: center;
-  max-width: 112rem;
+  max-width: 130rem; /* Increased max-width again */
   padding: 1rem;
+  border: 2px solid red; /* Added red border for debugging */
 `;

@@ -11,7 +11,7 @@ export const Container = styled.div`
   border-radius: 8px;
 
   background-color: var(--mvpCard_bg);
-  border: none;
+  border: 2px solid red; /* Added red border for debugging */
 `;
 
 export const BottomControls = styled.div`
