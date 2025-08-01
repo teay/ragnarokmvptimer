@@ -55,10 +55,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, []);
 
   const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
-    setActiveMvps((state) =>
-      state.filter((m) => mvpID !== m.id || m.deathMap !== deathMap)
-    );
-  }, []);
+    setActiveMvps((state) => {
+      const newState = state.filter((m) => mvpID !== m.id || m.deathMap !== deathMap);
+      saveActiveMvpsToLocalStorage(newState, server);
+      return newState;
+    });
+  }, [server]);
 
   const killMvp = useCallback((mvp: IMvp, deathTime = new Date()) => {
     setActiveMvps((s) => {
@@ -140,18 +142,27 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, [activeMvps, originalAllMvps]);
 
   useEffect(() => {
-    console.log('Loading data for server:', server);
-    async function loadData() {
+    console.log('Loading active MVPs for server:', server);
+    async function loadActiveMvpsOnly() {
       setIsLoading(true);
       const savedActiveMvps = await loadMvpsFromLocalStorage(server);
       setActiveMvps(savedActiveMvps || []);
+      setIsLoading(false); // ตั้งค่าเป็น false ทันทีที่โหลด activeMvps เสร็จ
+    }
+    loadActiveMvpsOnly();
+  }, [server]);
 
+  useEffect(() => {
+    // โหลด originalAllMvps หลังจาก activeMvps โหลดเสร็จและ isLoading เป็น false
+    if (isLoading) return; 
+
+    console.log('Loading all MVPs data for server:', server);
+    async function loadOriginalAllMvps() {
       const data = await getServerData(server);
       setOriginalAllMvps(data);
-      setIsLoading(false);
     }
-    loadData();
-  }, [server]);
+    loadOriginalAllMvps();
+  }, [server, isLoading]);
 
   return (
     <MvpsContext.Provider

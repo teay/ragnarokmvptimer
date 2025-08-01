@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import { MvpCard } from '@/components/MvpCard';
@@ -39,6 +39,10 @@ export function Main() {
 
   const activeMvpIds = new Set(activeMvps.map((mvp) => mvp.id));
   const nonActiveMvps = displayAllMvps.filter((mvp) => !activeMvpIds.has(mvp.id));
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <>
