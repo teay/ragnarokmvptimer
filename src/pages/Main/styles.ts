@@ -7,6 +7,7 @@ export const Container = styled.main`
   flex: 1;
   padding-bottom: 30px;
   background-color: var(--secondary);
+  width: 100%;
 `;
 
 export const Section = styled.div`
@@ -16,6 +17,7 @@ export const Section = styled.div`
   align-items: center;
   padding: 10px 0;
   gap: 15px;
+  width: 100%;
 `;
 
 export const SectionTitle = styled.span`
@@ -26,17 +28,9 @@ export const SectionTitle = styled.span`
 export const MvpsContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-gap: 1.5rem;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  @media (max-width: ${1000 / 16}em) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: ${650 / 16}em) {
-    grid-template-columns: repeat(1, 1fr);
-  }
+  grid-gap: 2.5rem;
+  width: 100%;
+  justify-items: center;
+  max-width: 112rem;
+  padding: 1rem;
 `;

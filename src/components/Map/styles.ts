@@ -5,7 +5,8 @@ interface MapImgProps {
 }
 
 export const MapImg = styled.img<MapImgProps>`
-  width: 25rem;
+  width: 100%;
   height: 25rem;
+  object-fit: cover;
   cursor: ${({ clickable }) => (clickable ? 'pointer' : 'default')};
 `;

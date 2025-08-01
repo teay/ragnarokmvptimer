@@ -5,13 +5,22 @@ export const Container = styled.div`
   flex-direction: column;
   align-items: center;
 
-  width: 220px;
-  padding: 10px 0;
+  width: 28rem;
+  padding: 0px 0px 10px 0px;
 
   border-radius: 8px;
 
   background-color: var(--mvpCard_bg);
-  border: 1px solid var(--primary);
+  border: none;
+`;
+
+export const Details = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+  align-items: center;
 `;
 
 export const Bold = styled.span`
@@ -40,6 +49,13 @@ export const MapName = styled.span`
   white-space: pre-wrap;
   margin-top: 5px;
   color: var(--mvpCard_text);
+`;
+
+export const Tombstone = styled.p`
+  font-size: 1.25rem;
+  text-align: center;
+  line-height: 1.2;
+  white-space: pre-wrap;
 `;
 
 const Button = styled.button`

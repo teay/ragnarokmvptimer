@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import { MvpSprite } from '../MvpSprite';
 import { MvpCardCountdown } from '../MvpCardCountdown';
 import { ModalMvpMap } from '@/modals';
+import { Map as MvpMap } from '../Map';
 
 import { useNotification } from '@/hooks';
 
@@ -25,6 +26,7 @@ import {
   Bold,
   KilledNow,
   EditButton,
+  Details,
 } from './styles';
 
 interface MvpCardProps {
@@ -64,14 +66,14 @@ export function MvpCard({ mvp }: MvpCardProps) {
     <>
       <Container>
         <Header>
-          <ID>{`(${mvp.id})`}</ID>
+          <ID>{`((${mvp.id}))`}</ID>
           <Name>{mvp.name}</Name>
         </Header>
 
         <MvpSprite id={mvp.id} name={mvp.name} animated={animatedSprites} />
 
         {isActive ? (
-          <>
+          <Details>
             <MvpCardCountdown
               nextRespawn={nextRespawn}
               respawnAsCountdown={respawnAsCountdown}
@@ -84,9 +86,12 @@ export function MvpCard({ mvp }: MvpCardProps) {
               }
             />
 
+            <MvpMap mapName={mvp.deathMap} coordinates={mvp.deathPosition} />
+
             <MapName>
               <FormattedMessage id='map' />
-              {'\n'}
+              {`
+`}
               <Bold>{mvp.deathMap}</Bold>
             </MapName>
 
@@ -110,7 +115,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
                 <Edit2 />
               </Control>
             </Controls>
-          </>
+          </Details>
         ) : (
           <Controls isActive={!isActive}>
             <KilledNow onClick={handleKilledNow}>

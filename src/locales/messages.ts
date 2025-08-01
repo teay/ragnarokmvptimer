@@ -57,6 +57,8 @@ export const messages = {
     change_map: 'Change the map',
     every: 'Every',
     notification_sound: 'Notification sound',
+    when_was_mvp_killed: 'When was mvp killed?',
+    wheres_mvp_tombstone: 'Where is the MVP tombstone?',
   },
   [LOCALES.PORTUGUESE]: {
     under_development: 'Em desenvolvimento',
@@ -113,5 +115,7 @@ export const messages = {
     change_map: 'Mudar o mapa',
     every: 'A cada',
     notification_sound: 'Som de notificação',
+    when_was_mvp_killed: 'Quando o mvp foi morto?',
+    wheres_mvp_tombstone: 'Onde está o túmulo do MVP?',
   },
 };
