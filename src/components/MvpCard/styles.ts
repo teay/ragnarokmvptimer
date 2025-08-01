@@ -144,11 +144,11 @@ export const Control = styled.button`
   }
 
   &:nth-child(2) {
-    background-color: var(--mvpCard_controls_edit);
+    background-color: var(--mvpCard_controls_delete);
   }
 
   &:nth-child(3) {
-    background-color: var(--mvpCard_controls_delete);
+    background-color: var(--mvpCard_controls_edit);
   }
 `;
 
