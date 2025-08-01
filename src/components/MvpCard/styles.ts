@@ -6,12 +6,20 @@ export const Container = styled.div`
   align-items: center;
 
   width: 28rem;
-  padding: 0px 0px 10px 0px;
+  padding: 10px;
 
   border-radius: 8px;
 
   background-color: var(--mvpCard_bg);
   border: none;
+`;
+
+export const BottomControls = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
 `;
 
 export const Details = styled.div`
@@ -29,8 +37,11 @@ export const Bold = styled.span`
 
 export const Header = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row; /* Changed to row */
+  justify-content: space-between; /* Space between ID and Name */
+  align-items: center; /* Align items vertically */
+  width: 100%;
+  padding: 0 10px; /* Add some padding */
 `;
 
 export const ID = styled.span`
@@ -87,18 +98,18 @@ export const EditButton = styled(Button)`
 export const Controls = styled.div<{ isActive?: boolean }>`
   display: flex;
   align-items: center;
-  flex-direction: ${({ isActive }) => (isActive ? 'column' : 'row')};
+  flex-direction: row; /* Always row */
 
-  margin-top: ${({ isActive }) => (isActive ? 35 : 8)}px;
+  margin-top: 10px;
   gap: 10px;
 `;
 
 export const Control = styled.button`
   display: flex;
-  flex-direction: column; /* เปลี่ยนเป็น column */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px; /* เพิ่ม gap ระหว่างไอคอนกับข้อความ */
+  gap: 4px;
 
   width: auto;
   height: auto;
@@ -137,6 +148,6 @@ export const Control = styled.button`
 `;
 
 export const ControlText = styled.span`
-  font-size: 1.1rem; /* ขนาดตัวอักษรสำหรับข้อความใต้ไอคอน */
+  font-size: 1.1rem;
   color: #fff;
 `;

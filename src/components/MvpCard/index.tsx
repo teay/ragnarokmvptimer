@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Map, RefreshCcw, Trash2, Edit2 } from '@styled-icons/feather';
+import { RefreshCcw, Trash2, Edit2 } from '@styled-icons/feather';
 import { FormattedMessage } from 'react-intl';
 import dayjs from 'dayjs';
 
@@ -26,9 +26,9 @@ import {
   Bold,
   KilledNow,
   EditButton,
-  Details,
   Tombstone,
   ControlText,
+  BottomControls,
 } from './styles';
 
 interface MvpCardProps {
@@ -36,16 +36,11 @@ interface MvpCardProps {
 }
 
 export function MvpCard({ mvp }: MvpCardProps) {
-  
-  
   const { killMvp, resetMvpTimer, removeMvpByMap, setEditingMvp } =
     useMvpsContext();
   const { respawnAsCountdown, animatedSprites } = useSettings();
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
-
-  // โค้ดอื่นๆ...
-
 
   const isActive = !!mvp.deathMap;
 
@@ -75,7 +70,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
         <MvpSprite id={mvp.id} name={mvp.name} animated={animatedSprites} />
 
         {isActive ? (
-          <Details>
+          <>
             <MvpCardCountdown
               nextRespawn={nextRespawn}
               respawnAsCountdown={respawnAsCountdown}
@@ -90,40 +85,42 @@ export function MvpCard({ mvp }: MvpCardProps) {
 
             <MvpMap mapName={mvp.deathMap} coordinates={mvp.deathPosition} />
 
-            <MapName>
-              <FormattedMessage id='map' />
-              {
+            <BottomControls>
+              <MapName>
+                <FormattedMessage id='map' />
+                {
 }
-              <Bold>{mvp.deathMap}</Bold>
-            </MapName>
+                <Bold>{mvp.deathMap}</Bold>
+              </MapName>
 
-            <Tombstone>
-              <FormattedMessage id='when_was_mvp_killed' />
-              <br />
-              <Bold>{dayjs(mvp.deathTime).format('DD/MM/YYYY HH:mm A')}</Bold>
-            </Tombstone>
+              <Tombstone>
+                <FormattedMessage id='when_was_mvp_killed' />
+                <br />
+                <Bold>{dayjs(mvp.deathTime).format('DD/MM/YYYY HH:mm A')}</Bold>
+              </Tombstone>
 
-            <Controls>
-              <Control onClick={() => resetMvpTimer(mvp)} title='Reset timer'>
-                <RefreshCcw />
-                <ControlText><FormattedMessage id='reset_timer' /></ControlText>
-              </Control>
-              <Control
-                onClick={() => removeMvpByMap(mvp.id, mvp.deathMap)}
-                title='Remove this mvp'
-              >
-                <Trash2 />
-                <ControlText><FormattedMessage id='remove_mvp' /></ControlText>
-              </Control>
-              <Control
-                onClick={() => setEditingMvp(mvp)}
-                title='Edit this mvp'
-              >
-                <Edit2 />
-                <ControlText><FormattedMessage id='edit_mvp' /></ControlText>
-              </Control>
-            </Controls>
-          </Details>
+              <Controls>
+                <Control onClick={() => resetMvpTimer(mvp)} title='Reset timer'>
+                  <RefreshCcw />
+                  <ControlText><FormattedMessage id='reset_timer' /></ControlText>
+                </Control>
+                <Control
+                  onClick={() => removeMvpByMap(mvp.id, mvp.deathMap)}
+                  title='Remove this mvp'
+                >
+                  <Trash2 />
+                  <ControlText><FormattedMessage id='remove_mvp' /></ControlText>
+                </Control>
+                <Control
+                  onClick={() => setEditingMvp(mvp)}
+                  title='Edit this mvp'
+                >
+                  <Edit2 />
+                  <ControlText><FormattedMessage id='edit_mvp' /></ControlText>
+                </Control>
+              </Controls>
+            </BottomControls>
+          </>
         ) : (
           <Controls isActive={!isActive}>
             <KilledNow onClick={handleKilledNow}>

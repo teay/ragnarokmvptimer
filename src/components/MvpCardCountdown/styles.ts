@@ -11,6 +11,7 @@ export const Container = styled.div`
   text-align: center;
   white-space: pre-wrap;
   color: var(--mvpCard_text);
+  width: 100%; /* เพิ่มความกว้างเต็ม */
 `;
 
 export const RespawnTimeText = styled.span<TimerProps>`
