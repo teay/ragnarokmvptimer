@@ -28,7 +28,7 @@ interface MvpsContextData {
   isLoading: boolean;
   resetMvpTimer: (mvp: IMvp) => void;
   killMvp: (mvp: IMvp, time?: Date | null) => void;
-  updateMvp: (mvp: IMvp, time?: Date | null) => void; // เพิ่มฟังก์ชันใหม่
+  updateMvp: (mvp: IMvp, time?: Date | null) => void;
   removeMvpByMap: (mvpID: number, deathMap: string) => void;
   setEditingMvp: (mvp: IMvp) => void;
   closeEditMvpModal: () => void;
@@ -37,9 +37,19 @@ interface MvpsContextData {
 
 export const MvpsContext = createContext({} as MvpsContextData);
 
+function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
+  return mvps.sort((a: IMvp, b: IMvp) => {
+    const bothHaveDeathTime = a.deathTime && b.deathTime;
+    if (!bothHaveDeathTime) {
+      return 0;
+    }
+    return dayjs(a.deathTime)
+      .add(getMvpRespawnTime(a), 'ms')
+      .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
+  });
+}
+
 export function MvpProvider({ children }: MvpProviderProps) {
-  
-  
   const { server } = useSettings();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +60,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const resetMvpTimer = useCallback((mvp: IMvp) => {
     const updatedMvp = { ...mvp, deathTime: new Date() };
     setActiveMvps((state) =>
-      state.map((m) => (m.deathMap === mvp.deathMap ? updatedMvp : m))
+      sortMvpsByRespawnTime(state.map((m) => (m.deathMap === mvp.deathMap ? updatedMvp : m)))
     );
   }, []);
 
@@ -58,7 +68,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setActiveMvps((state) => {
       const newState = state.filter((m) => mvpID !== m.id || m.deathMap !== deathMap);
       saveActiveMvpsToLocalStorage(newState, server);
-      return newState;
+      return sortMvpsByRespawnTime(newState);
     });
   }, [server]);
 
@@ -83,15 +93,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
       saveActiveMvpsToLocalStorage(newState, server);
 
-      return newState.sort((a: IMvp, b: IMvp) => {
-        const bothHaveDeathTime = a.deathTime && b.deathTime;
-        if (!bothHaveDeathTime) {
-          return 0;
-        }
-        return dayjs(a.deathTime)
-          .add(getMvpRespawnTime(a), 'ms')
-          .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
-      });
+      return sortMvpsByRespawnTime(newState);
     });
   }, [server]);
 
@@ -116,15 +118,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
       saveActiveMvpsToLocalStorage(newState, server);
 
-      return newState.sort((a: IMvp, b: IMvp) => {
-        const bothHaveDeathTime = a.deathTime && b.deathTime;
-        if (!bothHaveDeathTime) {
-          return 0;
-        }
-        return dayjs(a.deathTime)
-          .add(getMvpRespawnTime(a), 'ms')
-          .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
-      });
+      return sortMvpsByRespawnTime(newState);
     });
   }, [server]);
 
@@ -143,15 +137,14 @@ export function MvpProvider({ children }: MvpProviderProps) {
     async function loadActiveMvpsOnly() {
       setIsLoading(true);
       const savedActiveMvps = await loadMvpsFromLocalStorage(server);
-      setActiveMvps(savedActiveMvps || []);
-      setIsLoading(false); // ตั้งค่าเป็น false ทันทีที่โหลด activeMvps เสร็จ
+      setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
+      setIsLoading(false);
     }
     loadActiveMvpsOnly();
   }, [server]);
 
   useEffect(() => {
-    // โหลด originalAllMvps หลังจาก activeMvps โหลดเสร็จและ isLoading เป็น false
-    if (isLoading) return; 
+    if (isLoading) return;
 
     async function loadOriginalAllMvps() {
       const data = await getServerData(server);
