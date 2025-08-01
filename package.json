@@ -54,7 +54,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RagnarokMvpTimer/frontend.git"
+    "url": "git+https://github.com/teay/ragnarokmvptimer.git"
   },
   "eslintConfig": {
     "extends": [
