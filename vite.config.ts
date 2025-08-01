@@ -36,6 +36,7 @@ export default defineConfig({
       },
     }),
     VitePWA({
+      base: '/ragnarokmvptimer/',
       injectRegister: false,
       registerType: 'autoUpdate',
       devOptions: {
