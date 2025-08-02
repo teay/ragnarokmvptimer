@@ -23,6 +23,7 @@ export const Section = styled.div`
 export const SectionTitle = styled.span`
   font-weight: bold;
   color: var(--text);
+  font-size: 2.0rem;
 `;
 
 export const MvpsContainer = styled.div`
