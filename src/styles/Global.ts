@@ -22,7 +22,7 @@ export const globals = css`
     html[data-theme='light'] {
       color-scheme: light;
       --primary: #f89200;
-      --secondary: #f6f8fa;
+      --secondary: rgba(123, 124, 125, 1);
 
       --text: #000;
       --header_text: #fff;
@@ -35,7 +35,7 @@ export const globals = css`
 
       --mvpCard_id: #421411;
       --mvpCard_name: #f89200;
-      --mvpCard_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.2), rgba(144, 238, 144, 0.2)), url('/noise.png'); /* Added noise, opacity 0.2 */
+      --mvpCard_bg: linear-gradient(to top right, rgba(80, 100, 110, 0.2), rgba(60, 100, 60, 0.2)), url('/noise.png'); /* Added noise, opacity 0.2 */
       background-blend-mode: overlay; /* Added for noise effect */
       --mvpCard_text: #421411;
       --mvpCard_killButton: #d10000; /* Reverted to original */
@@ -52,7 +52,7 @@ export const globals = css`
       --switch_bg: #ffa800;
       --switch_handle: #f6f8fa;
 
-      --modal_bg: linear-gradient(to top right, rgba(173, 216, 230, 1.0), rgba(144, 238, 144, 1.0)), url('/noise.png'); /* Added noise, opacity 1.0 */
+      --modal_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.8), rgba(144, 238, 144, 0.8)), url('/noise.png'); /* Added noise, opacity 0.8 */
       background-blend-mode: overlay; /* Added for noise effect */
       --modal_text: #421411;
       --modal_backdrop_filter: blur(20px);
@@ -106,7 +106,7 @@ export const globals = css`
 
       --mvpCard_id: #fff;
       --mvpCard_name: #fff;
-      --mvpCard_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.2), rgba(64, 64, 64, 0.2)), url('/noise.png'); /* Adjusted opacity */
+      --mvpCard_bg: linear-gradient(to top right, rgba(20, 20, 20, 0.2), rgba(30, 30, 30, 0.2)), url('/noise.png'); /* Adjusted opacity */
       background-blend-mode: overlay; /* Added for noise effect */
       --mvpCard_text: #fff;
       --mvpCard_killButton: #d10000; /* Reverted to original */
@@ -122,7 +122,7 @@ export const globals = css`
       --switch_bg: #fff;
       --switch_handle: #000;
 
-      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 1.0), rgba(64, 64, 64, 1.0)), url('/noise.png'); /* Added noise, opacity 1.0 */
+      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8)), url('/noise.png'); /* Added noise, opacity 0.8 */
       background-blend-mode: overlay; /* Added for noise effect */
       --modal_text: #fff;
       --modal_backdrop_filter: blur(20px);
