@@ -2,47 +2,42 @@ import { styled } from '@linaria/react';
 
 export const FooterContainer = styled.footer`
   display: flex;
-  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
 
-  background-color: var(--primary);
+  width: 100%;
+  height: 150px; /* Increased height */
+  margin-top: 2rem;
+
+  background-color: var(--footer_bg);
+  backdrop-filter: var(--footer_backdrop_filter);
+  box-shadow: var(--footer_box_shadow);
 `;
 
 export const Main = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-
-  margin: 15px auto;
+  gap: 1rem;
 `;
 
 export const Text = styled.span`
-  display: flex;
-  flex-direction: row;
-  gap: 5px;
-  flex-wrap: wrap;
-  justify-content: center;
-
-  font-weight: 500;
-
+  font-size: 1.8rem; /* Increased font size */
   color: var(--footer_text);
 `;
 
 export const Bold = styled.span`
-  font-weight: 500;
+  font-weight: bold;
 `;
 
 export const Link = styled.a`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 5px;
-
-  text-decoration: none;
+  font-size: 1.8rem; /* Increased font size */
   color: var(--footer_link);
+  text-decoration: none;
 
-  > svg {
-    stroke-width: 3px;
+  &:hover {
+    text-decoration: underline;
   }
 `;

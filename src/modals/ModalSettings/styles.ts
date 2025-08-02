@@ -4,9 +4,7 @@ export const Modal = styled.div`
   width: 100%;
   max-width: 500px;
 
-  padding: 1.6rem;
-  padding-bottom: 2.4rem;
-  margin: 0 1rem;
+  padding: 3rem 2rem; /* Adjusted padding */
   gap: 2rem;
 
   border-radius: 6px;
@@ -15,7 +13,9 @@ export const Modal = styled.div`
   align-items: center;
   flex-direction: column;
 
-  position: relative;
+  position: relative; /* Reverted to relative */
+  max-height: 90vh; /* Applied universally */
+  overflow-y: auto; /* Applied universally */
 
   &::before {
     content: '';
@@ -37,14 +37,12 @@ export const Modal = styled.div`
   border: none;
 
   @media (max-width: ${1000 / 16}em) {
-    overflow-y: auto;
-    max-height: 85vh;
+    /* Removed overflow-y and max-height from here */
   }
 `;
 
 export const Title = styled.span`
   color: var(--modal_name);
-  margin-top: -4rem;
 
   font-size: 2.4rem;
   font-weight: 600;

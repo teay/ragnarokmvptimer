@@ -27,6 +27,11 @@ export const globals = css`
       --text: #000;
       --header_text: #fff;
 
+      --header_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.8), rgba(144, 238, 144, 0.8)), url('/noise.png');
+      background-blend-mode: overlay;
+      --header_backdrop_filter: blur(10px);
+      --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
+
       --warning_header_bg: #1b1c1d;
       --warning_header_text: #fff;
 
@@ -73,17 +78,21 @@ export const globals = css`
       --modal_changeMap_text: #000;
       --modal_changeMap_selectedMapBorder: #ffa800;
 
-      --filterSearch_bg: #fff;
+      --filterSearch_bg: rgba(128, 128, 128, 0.5); /* Adjusted for Glass UI */
       --filterSearch_border: #f89200;
       --filterSearch_text: #000;
       --filterSearch_border_focus: #000;
 
-      --languagePicker_bg: #f6f8fa;
+      --languagePicker_bg: rgba(128, 128, 128, 0.5); /* Adjusted for Glass UI */
       --languagePicker_border: #f89200;
       --languagePicker_text: #421411;
 
       --footer_text: #000;
       --footer_link: #53338d;
+      --footer_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.8), rgba(144, 238, 144, 0.8)), url('/noise.png');
+      background-blend-mode: overlay;
+      --footer_backdrop_filter: blur(10px);
+      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.1);
 
       --pulse_color: #e5e5e5;
 
@@ -97,6 +106,11 @@ export const globals = css`
 
       --text: #fff;
       --header_text: #fff;
+
+      --header_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8)), url('/noise.png');
+      background-blend-mode: overlay;
+      --header_backdrop_filter: blur(10px);
+      --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.5);
 
       --warning_header_bg: #f89200;
       --warning_header_text: #000;
@@ -122,7 +136,7 @@ export const globals = css`
       --switch_bg: #fff;
       --switch_handle: #000;
 
-      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8)), url('/noise.png'); /* Added noise, opacity 0.8 */
+      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8)), url('/noise.png');
       background-blend-mode: overlay; /* Added for noise effect */
       --modal_text: #fff;
       --modal_backdrop_filter: blur(20px);
@@ -143,17 +157,21 @@ export const globals = css`
       --modal_changeMap_text: #fff;
       --modal_changeMap_selectedMapBorder: #ffa800;
 
-      --filterSearch_bg: #262626;
+      --filterSearch_bg: rgba(38, 38, 38, 0.7); /* Adjusted for Glass UI */
       --filterSearch_border: #1b1c1d;
       --filterSearch_text: #fff;
       --filterSearch_border_focus: #fff;
 
-      --languagePicker_bg: #454545;
+      --languagePicker_bg: rgba(69, 69, 69, 0.7); /* Adjusted for Glass UI */
       --languagePicker_border: #1b1c1d;
       --languagePicker_text: #fff;
 
       --footer_text: #fff;
       --footer_link: #f89200;
+      --footer_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8)), url('/noise.png');
+      background-blend-mode: overlay;
+      --footer_backdrop_filter: blur(10px);
+      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.5);
 
       --pulse_color: #404040;
 

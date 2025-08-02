@@ -1,83 +1,119 @@
 import { styled } from '@linaria/react';
-import { Search, ArrowUp, ArrowDown, XCircle } from '@styled-icons/feather';
+import { Search, XCircle, ArrowUp, ArrowDown } from '@styled-icons/feather';
 
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-width: 40rem; /* Set max-width */
-  margin: 0 auto; /* Center horizontally */
-  width: 100%;
   align-items: center;
+  gap: 1.6rem;
+
+  width: 100%;
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+
+  border-radius: 8px;
+
+  background-color: var(--mvpCard_bg); /* Reusing mvpCard_bg for consistency */
+  backdrop-filter: var(--mvpCard_backdrop_filter); /* Reusing mvpCard_backdrop_filter */
+  box-shadow: 0px 8px 20px 5px rgba(0, 0, 0, 0.2); /* Floating effect */
 `;
 
 export const SearchContainer = styled.div`
-  display: flex;
-  align-items: center;
-  padding: 8px; /* Increased padding */
-  gap: 8px; /* Increased gap */
-  border-radius: 8px;
-  background-color: var(--filterSearch_bg);
-  border: 1px solid var(--filterSearch_border);
-  width: 100%; /* Make it full width */
-
-  &:focus-within {
-    border-color: var(--filterSearch_border_focus);
-  }
-`;
-
-export const SearchInput = styled.input`
-  color: var(--filterSearch_text);
-  font-size: 1.6rem; /* Increased font size */
-  background: none;
+  position: relative;
   width: 100%;
+  max-width: 300px;
 `;
 
 export const SearchIcon = styled(Search)`
-  width: 24px;
-  height: 24px;
-  padding: 1px;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--filterSearch_text);
-  stroke-width: 2px;
+  width: 20px;
+  height: 20px;
 `;
 
-export const ClearButton = styled(XCircle)`
-  width: 20px; /* Increased size */
-  height: 20px; /* Increased size */
-  stroke-width: 2px;
+export const SearchInput = styled.input`
+  width: 100%;
+  max-width: 300px;
+  padding: 1rem 1rem 1rem 40px; /* Adjusted padding for icon */
+  border-radius: 4px;
+  border: 1px solid var(--filterSearch_border);
+  background-color: var(--filterSearch_bg);
   color: var(--filterSearch_text);
+  transition: transform 0.2s ease-in-out;
+
+  &:focus {
+    border-color: var(--filterSearch_border_focus);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+`;
+
+export const ClearButton = styled(XCircle)<{ visibility: string }>`
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--filterSearch_text);
+  width: 20px;
+  height: 20px;
   cursor: pointer;
+  visibility: ${({ visibility }) => visibility};
 `;
 
 export const SortContainer = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 4px;
-  border-radius: 8px;
-  background-color: var(--filterSearch_bg);
+  gap: 1rem;
+  width: 100%;
+  max-width: 300px;
+`;
+
+export const SortSelect = styled.select`
+  flex: 1;
+  padding: 1rem;
+  border-radius: 4px;
   border: 1px solid var(--filterSearch_border);
-  width: 100%; /* Make it full width */
-  padding: 4px 8px; /* Added padding */
+  background-color: var(--filterSearch_bg);
+  color: var(--filterSearch_text);
+  transition: transform 0.2s ease-in-out;
+
+  &:focus {
+    border-color: var(--filterSearch_border_focus);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 `;
 
 export const Reverse = styled.button`
-  border-left: thin solid var(--filterSearch_text);
-  margin: 5px 0;
-  padding: 0 8px;
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  background-color: var(--primary);
+  color: var(--header_text);
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.8;
+  }
 `;
 
 export const UpArrow = styled(ArrowUp)`
-  width: 24px;
-  height: 24px;
-  color: var(--filterSearch_text);
-  stroke-width: 1.5px;
+  width: 20px;
+  height: 20px;
 `;
 
 export const DownArrow = styled(ArrowDown)`
-  width: 24px;
-  height: 24px;
-  color: var(--filterSearch_text);
-  stroke-width: 1.5px;
+  width: 20px;
+  height: 20px;
 `;
