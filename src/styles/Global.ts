@@ -22,13 +22,16 @@ export const globals = css`
     html[data-theme='light'] {
       color-scheme: light;
       --primary: #f89200;
-      --secondary: rgba(123, 124, 125, 1);
+      --light-glass-r: 150;
+      --light-glass-g: 250;
+      --light-glass-b: 200;
+      --secondary: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
 
       --text: #000;
       --header_text: #fff;
 
-      --header_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.8), rgba(144, 238, 144, 0.8)), url('/noise.png');
-      background-blend-mode: overlay;
+      --header_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.1);
+      background-blend-mode: normal;
       --header_backdrop_filter: blur(10px);
       --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
 
@@ -40,8 +43,8 @@ export const globals = css`
 
       --mvpCard_id: #421411;
       --mvpCard_name: #f89200;
-      --mvpCard_bg: linear-gradient(to top right, rgba(80, 100, 110, 0.2), rgba(60, 100, 60, 0.2)), url('/noise.png'); /* Added noise, opacity 0.2 */
-      background-blend-mode: overlay; /* Added for noise effect */
+      --mvpCard_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.05);
+      background-blend-mode: normal;
       --mvpCard_text: #421411;
       --mvpCard_killButton: #d10000; /* Reverted to original */
       --mvpCard_editButton: #f89200; /* Reverted to original */
@@ -57,8 +60,8 @@ export const globals = css`
       --switch_bg: #ffa800;
       --switch_handle: #f6f8fa;
 
-      --modal_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.8), rgba(144, 238, 144, 0.8)), url('/noise.png'); /* Added noise, opacity 0.8 */
-      background-blend-mode: overlay; /* Added for noise effect */
+      --modal_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.1);
+      background-blend-mode: normal;
       --modal_text: #421411;
       --modal_backdrop_filter: blur(20px);
       --modal_hl: #1b1c1d;
@@ -89,8 +92,8 @@ export const globals = css`
 
       --footer_text: #333;
       --footer_link: #007bff;
-      --footer_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.8), rgba(144, 238, 144, 0.8)), url('/noise.png');
-      background-blend-mode: overlay;
+      --footer_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.1);
+      background-blend-mode: normal;
       --footer_backdrop_filter: blur(10px);
       --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.1);
 
@@ -102,7 +105,7 @@ export const globals = css`
     html.non-glass-ui[data-theme='light'] {
       --secondary: #f6f8fa;
 
-      --header_bg: transparent;
+      --header_bg: #ffffff;
       background-blend-mode: normal;
       --header_backdrop_filter: none;
       --header_box_shadow: none;
@@ -120,7 +123,7 @@ export const globals = css`
 
       --footer_text: #fff;
       --footer_link: #fff;
-      --footer_bg: transparent;
+      --footer_bg: #ffffff;
       background-blend-mode: normal;
       --footer_backdrop_filter: none;
       --footer_box_shadow: none;
@@ -129,13 +132,13 @@ export const globals = css`
     html[data-theme='dark'] {
       color-scheme: dark;
       --primary: #1b1c1d;
-      --secondary: #2e2e2e;
+      --secondary: rgba(75, 125, 100, 0.9);
 
       --text: #fff;
       --header_text: #fff;
 
-      --header_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8)), url('/noise.png');
-      background-blend-mode: overlay;
+      --header_bg: rgba(90, 140, 115, 0.1);
+      background-blend-mode: normal;
       --header_backdrop_filter: blur(10px);
       --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.5);
 
@@ -147,8 +150,8 @@ export const globals = css`
 
       --mvpCard_id: #fff;
       --mvpCard_name: #fff;
-      --mvpCard_bg: linear-gradient(to top right, rgba(20, 20, 20, 0.2), rgba(30, 30, 30, 0.2)), url('/noise.png'); /* Adjusted opacity */
-      background-blend-mode: overlay; /* Added for noise effect */
+      --mvpCard_bg: rgba(75, 125, 100, 0.05);
+      background-blend-mode: normal;
       --mvpCard_text: #fff;
       --mvpCard_killButton: #d10000; /* Reverted to original */
       --mvpCard_editButton: #f89200; /* Reverted to original */
@@ -163,8 +166,8 @@ export const globals = css`
       --switch_bg: #fff;
       --switch_handle: #000;
 
-      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8)), url('/noise.png');
-      background-blend-mode: overlay; /* Added for noise effect */
+      --modal_bg: rgba(90, 140, 115, 0.1);
+      background-blend-mode: normal;
       --modal_text: #fff;
       --modal_backdrop_filter: blur(20px);
       --modal_hl: #fff;
@@ -195,8 +198,8 @@ export const globals = css`
 
       --footer_text: #fff;
       --footer_link: #f89200;
-      --footer_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8)), url('/noise.png');
-      background-blend-mode: overlay;
+      --footer_bg: rgba(90, 140, 115, 0.1);
+      background-blend-mode: normal;
       --footer_backdrop_filter: blur(10px);
       --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.5);
 
@@ -208,7 +211,7 @@ export const globals = css`
     html.non-glass-ui[data-theme='dark'] {
       --secondary: #262626;
 
-      --header_bg: transparent;
+      --header_bg: #333333;
       background-blend-mode: normal;
       --header_backdrop_filter: none;
       --header_box_shadow: none;
@@ -224,7 +227,7 @@ export const globals = css`
 
       --languagePicker_bg: #454545;
 
-      --footer_bg: transparent;
+      --footer_bg: #333333;
       background-blend-mode: normal;
       --footer_backdrop_filter: none;
       --footer_box_shadow: none;

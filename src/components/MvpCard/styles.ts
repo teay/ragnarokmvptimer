@@ -79,7 +79,7 @@ export const Header = styled.div`
 `;
 
 export const ID = styled.span`
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--mvpCard_id);
 `;
@@ -87,7 +87,7 @@ export const ID = styled.span`
 export const Name = styled.span`
   font-weight: bold;
   color: var(--mvpCard_name);
-  font-size: 1.6rem;
+  font-size: 2.0rem;
 `;
 
 export const MapName = styled.span`
@@ -95,11 +95,11 @@ export const MapName = styled.span`
   white-space: pre-wrap;
   margin-top: 5px;
   color: var(--mvpCard_text);
-  font-size: 1.6rem;
+  font-size: 1.8rem;
 `;
 
 export const Tombstone = styled.p`
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   text-align: center;
   line-height: 1.2;
   white-space: pre-wrap;
@@ -186,6 +186,6 @@ export const Control = styled.button`
 `;
 
 export const ControlText = styled.span`
-  font-size: 1.4rem; /* Increased font size */
+  font-size: 1.6rem;
   color: #fff;
 `;

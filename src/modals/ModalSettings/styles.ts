@@ -14,7 +14,7 @@ export const Modal = styled.div`
 export const Title = styled.span`
   color: var(--modal_name);
 
-  font-size: 2.4rem;
+  font-size: 2.8rem;
   font-weight: 600;
 `;
 
@@ -60,7 +60,7 @@ export const Setting = styled.div<{ disabled?: boolean }>`
 export const SettingName = styled.span`
   color: var(---modal_text);
 
-  font-size: 1.8rem;
+  font-size: 2.0rem;
   font-weight: 500;
 
   display: flex;
