@@ -51,8 +51,9 @@ export const globals = css`
       --switch_bg: #ffa800;
       --switch_handle: #f6f8fa;
 
-      --modal_bg: #fff;
+      --modal_bg: rgba(255, 255, 255, 0.5);
       --modal_text: #421411;
+      --modal_backdrop_filter: blur(20px);
       --modal_hl: #1b1c1d;
       --modal_name: #ffa800;
       --modal_time: #ffa800;
@@ -118,9 +119,9 @@ export const globals = css`
       --switch_bg: #fff;
       --switch_handle: #000;
 
-      --modal_bg: rgba(38, 38, 38, 0.2);
+      --modal_bg: rgba(38, 38, 38, 0.6);
       --modal_text: #fff;
-      --modal_backdrop_filter: blur(10px);
+      --modal_backdrop_filter: blur(20px);
       --modal_hl: #fff;
       --modal_name: #f89200;
       --modal_time: #f89200;
