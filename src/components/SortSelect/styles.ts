@@ -9,9 +9,19 @@ export const Select = styled.select`
   font-weight: 500;
   cursor: pointer;
 
-  border: none;
-  background: none;
+  border: 1px solid var(--filterSearch_border);
+  background-color: var(--filterSearch_bg);
   outline: none;
+  padding: 1rem;
+  transition: transform 0.2s ease-in-out;
+
+  &:focus {
+    border-color: var(--filterSearch_border_focus);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 `;
 
 export const Option = styled.option`

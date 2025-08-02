@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import ReactDOM from 'react-dom';
 import { Container } from './styles';
 
 interface Props {
@@ -6,5 +7,8 @@ interface Props {
 }
 
 export function ModalBase({ children }: Props) {
-  return <Container>{children}</Container>;
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot) return null;
+
+  return ReactDOM.createPortal(<Container>{children}</Container>, modalRoot);
 }

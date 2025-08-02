@@ -17,6 +17,11 @@ export const Container = styled.div`
   background-color: var(--mvpCard_bg); /* Reusing mvpCard_bg for consistency */
   backdrop-filter: var(--mvpCard_backdrop_filter); /* Reusing mvpCard_backdrop_filter */
   box-shadow: 0px 8px 20px 5px rgba(0, 0, 0, 0.2); /* Floating effect */
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 `;
 
 export const SearchContainer = styled.div`
@@ -43,14 +48,10 @@ export const SearchInput = styled.input`
   border: 1px solid var(--filterSearch_border);
   background-color: var(--filterSearch_bg);
   color: var(--filterSearch_text);
-  transition: transform 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
 
   &:focus {
     border-color: var(--filterSearch_border_focus);
-  }
-
-  &:hover {
-    transform: translateY(-2px);
   }
 `;
 
@@ -81,14 +82,10 @@ export const SortSelect = styled.select`
   border: 1px solid var(--filterSearch_border);
   background-color: var(--filterSearch_bg);
   color: var(--filterSearch_text);
-  transition: transform 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
 
   &:focus {
     border-color: var(--filterSearch_border_focus);
-  }
-
-  &:hover {
-    transform: translateY(-2px);
   }
 `;
 

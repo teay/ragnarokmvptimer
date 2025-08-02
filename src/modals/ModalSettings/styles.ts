@@ -4,18 +4,31 @@ export const Modal = styled.div`
   width: 100%;
   max-width: 500px;
 
-  padding: 3rem 2rem; /* Adjusted padding */
-  gap: 2rem;
-
-  border-radius: 6px;
-
   display: flex;
-  align-items: center;
   flex-direction: column;
+  align-items: flex-start;
+  margin-top: 5vh;
+  z-index: 10000;
+`;
 
-  position: relative; /* Reverted to relative */
-  max-height: 90vh; /* Applied universally */
-  overflow-y: auto; /* Applied universally */
+export const Title = styled.span`
+  color: var(--modal_name);
+
+  font-size: 2.4rem;
+  font-weight: 600;
+`;
+
+export const SettingsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 3rem;
+  padding: 3rem 2rem;
+  border-radius: 6px;
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
 
   &::before {
     content: '';
@@ -35,26 +48,6 @@ export const Modal = styled.div`
   }
   box-shadow: 0px 8px 20px 5px rgba(0, 0, 0, 0.2);
   border: none;
-
-  @media (max-width: ${1000 / 16}em) {
-    /* Removed overflow-y and max-height from here */
-  }
-`;
-
-export const Title = styled.span`
-  color: var(--modal_name);
-
-  font-size: 2.4rem;
-  font-weight: 600;
-`;
-
-export const SettingsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  gap: 3rem;
-  padding: 0 2rem;
 `;
 
 export const Setting = styled.div<{ disabled?: boolean }>`

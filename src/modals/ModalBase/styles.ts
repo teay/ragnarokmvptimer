@@ -3,7 +3,7 @@ import { styled } from '@linaria/react';
 export const Container = styled.div`
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* Changed from center to flex-start */
 
   position: fixed;
   top: 0;
