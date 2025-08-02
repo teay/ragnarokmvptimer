@@ -11,5 +11,6 @@ export const Container = styled.div`
   right: 0;
   bottom: 0;
 
-  background: rgba(0, 0, 0, 0.5);
+  background-color: var(--modal_bg);
+  backdrop-filter: var(--modal_backdrop_filter);
 `;

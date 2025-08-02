@@ -118,8 +118,9 @@ export const globals = css`
       --switch_bg: #fff;
       --switch_handle: #000;
 
-      --modal_bg: #262626;
+      --modal_bg: rgba(38, 38, 38, 0.2);
       --modal_text: #fff;
+      --modal_backdrop_filter: blur(10px);
       --modal_hl: #fff;
       --modal_name: #f89200;
       --modal_time: #f89200;

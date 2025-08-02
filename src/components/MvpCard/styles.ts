@@ -11,6 +11,7 @@ export const Container = styled.div`
   border-radius: 8px;
 
   background-color: var(--mvpCard_bg);
+  backdrop-filter: var(--mvpCard_backdrop_filter);
   border: none; /* Removed red border */
 `;
 
