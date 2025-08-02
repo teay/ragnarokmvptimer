@@ -13,6 +13,25 @@ export const Container = styled.div<{ isEditing: boolean }>`
   background-color: var(--mvpCard_bg);
   backdrop-filter: var(--mvpCard_backdrop_filter);
   border: none;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 255, 255, 0.1),
+      transparent 50%,
+      rgba(255, 255, 255, 0.05)
+    );
+    pointer-events: none;
+    border-radius: 8px;
+  }
+
   ${({ isEditing }) =>
     isEditing
       ? `

@@ -13,4 +13,5 @@ export const Container = styled.div`
 
   background-color: var(--modal_bg);
   backdrop-filter: var(--modal_backdrop_filter);
+  z-index: 9999;
 `;

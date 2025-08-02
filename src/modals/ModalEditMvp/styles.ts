@@ -22,7 +22,24 @@ export const Modal = styled.div`
   align-items: center;
   flex-direction: column;
 
-  background-color: var(--modal_bg);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 255, 255, 0.1),
+      transparent 50%,
+      rgba(255, 255, 255, 0.05)
+    );
+    pointer-events: none;
+    border-radius: 6px;
+  }
   box-shadow: 5px 5px 15px 0px rgba(0, 0, 0, 0.5);
   border: none;
 
