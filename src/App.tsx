@@ -17,13 +17,15 @@ import { Footer } from './components/Footer';
 import { useSettings } from './contexts/SettingsContext';
 import { MvpProvider } from './contexts/MvpsContext';
 import { useNotification } from './hooks';
+import { useTheme } from './hooks';
 
 import { LOCALES } from './locales';
 import { messages } from './locales/messages';
 
 export default function App() {
   
-  const { language } = useSettings();
+  const { language, isGlassUIEnabled } = useSettings();
+  const { theme } = useTheme();
   const {
     hasNotificationPermission,
     isNotificationPermissionDenied,
@@ -33,6 +35,24 @@ export default function App() {
   useEffect(() => {
     dayjs.locale(language);
   }, [language]);
+
+  useEffect(() => {
+    const html = document.querySelector('html');
+    if (html) {
+      if (!isGlassUIEnabled) {
+        html.classList.add('non-glass-ui');
+      } else {
+        html.classList.remove('non-glass-ui');
+      }
+    }
+  }, [isGlassUIEnabled]);
+
+  useEffect(() => {
+    const html = document.querySelector('html');
+    if (html) {
+      html.dataset.theme = theme;
+    }
+  }, [theme]);
 
   return (
     <>

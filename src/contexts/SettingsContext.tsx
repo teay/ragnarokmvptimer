@@ -16,6 +16,8 @@ interface SettingsContextData {
   toggle24HourFormat: () => void;
   isNotificationSoundEnabled: boolean;
   toggleNotificationSound: () => void;
+  isGlassUIEnabled: boolean;
+  toggleGlassUI: () => void;
   language: string;
   changeLanguage: (id: string) => void;
   server: string;
@@ -62,6 +64,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
+  const toggleGlassUI = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isGlassUIEnabled: !prev.isGlassUIEnabled,
+    }));
+  }, [setSettings]);
+
   const changeLanguage = useCallback(
     (language: string) => {
       setSettings((prev) => ({
@@ -96,6 +105,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         use24HourFormat: true, // temporary
         toggle24HourFormat,
         toggleNotificationSound,
+        toggleGlassUI,
         changeLanguage,
         changeServer,
         //resetSettings,

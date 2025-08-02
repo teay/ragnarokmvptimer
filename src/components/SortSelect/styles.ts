@@ -30,4 +30,9 @@ export const Option = styled.option`
 
   color: var(--filterSearch_text);
   background-color: var(--filterSearch_bg);
+
+  &:checked,
+  &:hover {
+    background-color: rgba(128, 128, 128, 0.7); /* Darker for selected/hovered state */
+  }
 `;

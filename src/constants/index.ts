@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   animatedSprites: false,
   use24HourFormat: true,
   isNotificationSoundEnabled: true,
+  isGlassUIEnabled: false,
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,
 };

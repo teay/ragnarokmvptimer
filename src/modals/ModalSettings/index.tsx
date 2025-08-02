@@ -39,6 +39,8 @@ export function ModalSettings({ onClose }: Props) {
     toggle24HourFormat,
     isNotificationSoundEnabled,
     toggleNotificationSound,
+    isGlassUIEnabled,
+    toggleGlassUI,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -115,6 +117,14 @@ export function ModalSettings({ onClose }: Props) {
                 onChange={toggleNotificationSound}
                 checked={isNotificationSoundEnabled}
               />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='glass_ui' defaultMessage='Glass UI' />
+              </SettingName>
+
+              <Switch onChange={toggleGlassUI} checked={isGlassUIEnabled} />
             </Setting>
 
             <SettingSecondary>
