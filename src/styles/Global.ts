@@ -51,7 +51,7 @@ export const globals = css`
       --switch_bg: #ffa800;
       --switch_handle: #f6f8fa;
 
-      --modal_bg: rgba(255, 255, 255, 0.5);
+      --modal_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.5), rgba(144, 238, 144, 0.5));
       --modal_text: #421411;
       --modal_backdrop_filter: blur(20px);
       --modal_hl: #1b1c1d;
@@ -119,7 +119,7 @@ export const globals = css`
       --switch_bg: #fff;
       --switch_handle: #000;
 
-      --modal_bg: rgba(38, 38, 38, 0.6);
+      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.6), rgba(64, 64, 64, 0.6));
       --modal_text: #fff;
       --modal_backdrop_filter: blur(20px);
       --modal_hl: #fff;
