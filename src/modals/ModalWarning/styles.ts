@@ -83,7 +83,7 @@ export const Title = styled.h3`
 `;
 
 export const Description = styled.p`
-  font-weight: 500;
+  font-weight: 600;
   color: var(---modal_text);
 `;
 

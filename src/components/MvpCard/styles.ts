@@ -97,6 +97,7 @@ export const Tombstone = styled.p`
   text-align: center;
   line-height: 1.2;
   white-space: pre-wrap;
+  font-weight: bold;
 `;
 
 const Button = styled.button`

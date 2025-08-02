@@ -35,7 +35,8 @@ export const globals = css`
 
       --mvpCard_id: #421411;
       --mvpCard_name: #f89200;
-      --mvpCard_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.2), rgba(144, 238, 144, 0.2));
+      --mvpCard_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.2), rgba(144, 238, 144, 0.2)), url('/noise.png'); /* Added noise, opacity 0.2 */
+      background-blend-mode: overlay; /* Added for noise effect */
       --mvpCard_text: #421411;
       --mvpCard_killButton: #d10000; /* Reverted to original */
       --mvpCard_editButton: #f89200; /* Reverted to original */
@@ -51,7 +52,8 @@ export const globals = css`
       --switch_bg: #ffa800;
       --switch_handle: #f6f8fa;
 
-      --modal_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.8), rgba(144, 238, 144, 0.8));
+      --modal_bg: linear-gradient(to top right, rgba(173, 216, 230, 1.0), rgba(144, 238, 144, 1.0)), url('/noise.png'); /* Added noise, opacity 1.0 */
+      background-blend-mode: overlay; /* Added for noise effect */
       --modal_text: #421411;
       --modal_backdrop_filter: blur(20px);
       --modal_hl: #1b1c1d;
@@ -104,7 +106,8 @@ export const globals = css`
 
       --mvpCard_id: #fff;
       --mvpCard_name: #fff;
-      --mvpCard_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.2), rgba(64, 64, 64, 0.2)); /* Adjusted opacity */
+      --mvpCard_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.2), rgba(64, 64, 64, 0.2)), url('/noise.png'); /* Adjusted opacity */
+      background-blend-mode: overlay; /* Added for noise effect */
       --mvpCard_text: #fff;
       --mvpCard_killButton: #d10000; /* Reverted to original */
       --mvpCard_editButton: #f89200; /* Reverted to original */
@@ -119,7 +122,8 @@ export const globals = css`
       --switch_bg: #fff;
       --switch_handle: #000;
 
-      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8));
+      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 1.0), rgba(64, 64, 64, 1.0)), url('/noise.png'); /* Added noise, opacity 1.0 */
+      background-blend-mode: overlay; /* Added for noise effect */
       --modal_text: #fff;
       --modal_backdrop_filter: blur(20px);
       --modal_hl: #fff;

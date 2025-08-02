@@ -71,7 +71,7 @@ export const Question = styled.span`
   color: var(---modal_text);
 
   font-size: 1.8rem;
-  font-weight: 600;
+  font-weight: 700;
 
   display: flex;
   flex-direction: column;
