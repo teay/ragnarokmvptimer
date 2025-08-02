@@ -20,7 +20,7 @@ export const Button = styled.button<{
   border-radius: 0.8rem;
 
   color: white;
-  background-color: var(--modal_button);
+  background-color: var(--modal_button); /* This will now use the adjusted --modal_button from Global.ts */
 
   &:hover {
     opacity: 0.8;

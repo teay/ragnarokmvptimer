@@ -35,14 +35,14 @@ export const globals = css`
 
       --mvpCard_id: #421411;
       --mvpCard_name: #f89200;
-      --mvpCard_bg: #fff;
+      --mvpCard_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.2), rgba(144, 238, 144, 0.2));
       --mvpCard_text: #421411;
-      --mvpCard_killButton: #d10000;
-      --mvpCard_editButton: #f89200;
+      --mvpCard_killButton: #d10000; /* Reverted to original */
+      --mvpCard_editButton: #f89200; /* Reverted to original */
 
-      --mvpCard_controls_showMap: #00a8ff;
-      --mvpCard_controls_edit: #f89200;
-      --mvpCard_controls_delete: #d10000;
+      --mvpCard_controls_showMap: #00a8ff; /* Reverted to original */
+      --mvpCard_controls_edit: #f89200; /* Reverted to original */
+      --mvpCard_controls_delete: #d10000; /* Reverted to original */
 
       --timers_passed: #d10000;
       --timers_normal: #421411;
@@ -51,13 +51,13 @@ export const globals = css`
       --switch_bg: #ffa800;
       --switch_handle: #f6f8fa;
 
-      --modal_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.5), rgba(144, 238, 144, 0.5));
+      --modal_bg: linear-gradient(to top right, rgba(173, 216, 230, 0.8), rgba(144, 238, 144, 0.8));
       --modal_text: #421411;
       --modal_backdrop_filter: blur(20px);
       --modal_hl: #1b1c1d;
       --modal_name: #ffa800;
       --modal_time: #ffa800;
-      --modal_button: #f89200;
+      --modal_button: #f89200; /* Reverted to original */
 
       --modal_datePicker_border: #000;
 
@@ -104,13 +104,13 @@ export const globals = css`
 
       --mvpCard_id: #fff;
       --mvpCard_name: #fff;
-      --mvpCard_bg: #262626;
+      --mvpCard_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.2), rgba(64, 64, 64, 0.2)); /* Adjusted opacity */
       --mvpCard_text: #fff;
-      --mvpCard_killButton: #d10000;
-      --mvpCard_editButton: #f89200;
-      --mvpCard_controls_showMap: #00a8ff;
-      --mvpCard_controls_edit: #f89200;
-      --mvpCard_controls_delete: #d10000;
+      --mvpCard_killButton: #d10000; /* Reverted to original */
+      --mvpCard_editButton: #f89200; /* Reverted to original */
+      --mvpCard_controls_showMap: #00a8ff; /* Reverted to original */
+      --mvpCard_controls_edit: #f89200; /* Reverted to original */
+      --mvpCard_controls_delete: #d10000; /* Reverted to original */
 
       --timers_passed: #d10000;
       --timers_normal: #fff;
@@ -119,13 +119,13 @@ export const globals = css`
       --switch_bg: #fff;
       --switch_handle: #000;
 
-      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.6), rgba(64, 64, 64, 0.6));
+      --modal_bg: linear-gradient(to top right, rgba(46, 46, 46, 0.8), rgba(64, 64, 64, 0.8));
       --modal_text: #fff;
       --modal_backdrop_filter: blur(20px);
       --modal_hl: #fff;
       --modal_name: #f89200;
       --modal_time: #f89200;
-      --modal_button: #f89200;
+      --modal_button: #f89200; /* Reverted to original */
 
       --modal_datePicker_border: #fff;
 
@@ -161,16 +161,6 @@ export const globals = css`
     }
 
     body,
-    button,
-    input,
-    textarea {
-      font-size: 1.6rem;
-    }
-
-    a {
-      text-decoration: none;
-    }
-
     button,
     input {
       border: 0;

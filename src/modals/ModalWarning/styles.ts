@@ -98,7 +98,7 @@ export const CancelButton = styled.button`
   color: #9ca394;
   background-color: transparent;
 
-  border: 1px solid #9ca394;
+  border: 1px solid #9ca394; /* Reverted to original */
   border-radius: 0.8rem;
   padding: 0.625rem 2rem;
 
@@ -109,7 +109,7 @@ export const CancelButton = styled.button`
 
 export const DeleteButton = styled.button`
   color: #fff;
-  background-color: #d10000;
+  background-color: #d10000; /* Reverted to original */
   border-radius: 0.8rem;
 
   padding: 0.625rem 2rem;
