@@ -14,6 +14,12 @@ export const Container = styled.div<{ isEditing: boolean }>`
   backdrop-filter: var(--mvpCard_backdrop_filter);
   border: none;
   position: relative;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 12px 25px 8px rgba(0, 0, 0, 0.3);
+  }
 
   &::before {
     content: '';

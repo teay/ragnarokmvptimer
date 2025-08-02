@@ -8,7 +8,9 @@ export const Container = styled.header`
   height: 75px;
   padding: 0 30px;
 
-  background-color: var(--primary);
+  background-color: var(--header_bg);
+  backdrop-filter: var(--header_backdrop_filter);
+  box-shadow: var(--header_box_shadow);
 
   @media (max-width: 768px) {
     padding: 0 15px;
