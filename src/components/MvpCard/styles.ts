@@ -1,6 +1,6 @@
 import { styled } from '@linaria/react';
 
-export const Container = styled.div`
+export const Container = styled.div<{ isEditing: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12,7 +12,13 @@ export const Container = styled.div`
 
   background-color: var(--mvpCard_bg);
   backdrop-filter: var(--mvpCard_backdrop_filter);
-  border: none; /* Removed red border */
+  border: none;
+  ${({ isEditing }) =>
+    isEditing
+      ? `
+    box-shadow: 5px 5px 15px 0px rgba(0, 0, 0, 0.5);
+  `
+      : ''}
 `;
 
 export const BottomControls = styled.div`

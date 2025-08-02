@@ -16,6 +16,8 @@ export const Modal = styled.div`
   flex-direction: column;
 
   background-color: var(--modal_bg);
+  box-shadow: 5px 5px 15px 0px rgba(0, 0, 0, 0.5);
+  border: none;
 
   @media (max-width: ${1000 / 16}em) {
     overflow-y: auto;

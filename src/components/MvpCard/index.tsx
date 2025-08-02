@@ -36,13 +36,14 @@ interface MvpCardProps {
 }
 
 export function MvpCard({ mvp }: MvpCardProps) {
-  const { killMvp, resetMvpTimer, removeMvpByMap, setEditingMvp } =
+  const { killMvp, resetMvpTimer, removeMvpByMap, setEditingMvp, editingMvp } =
     useMvpsContext();
   const { respawnAsCountdown, animatedSprites } = useSettings();
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const isActive = !!mvp.deathMap;
+  const isEditing = editingMvp?.id === mvp.id;
 
   const nextRespawn = useMemo(
     () => dayjs(mvp.deathTime).add(getMvpRespawnTime(mvp), 'ms'),
@@ -61,7 +62,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
 
   return (
     <>
-      <Container>
+      <Container isEditing={isEditing}>
         <Header>
           <ID>{`((${mvp.id}))`}</ID>
           <Name>{mvp.name}</Name>
