@@ -35,7 +35,7 @@ export const Container = styled.div<{ isEditing: boolean }>`
   ${({ isEditing }) =>
     isEditing
       ? `
-    box-shadow: 5px 5px 15px 0px rgba(0, 0, 0, 0.5);
+    box-shadow: 5px 5px 15px 0px rgba(0, 0, 0, 0.5), inset 0 0 10px 0px rgba(0, 0, 0, 0.3);
   `
       : ''}
 `;

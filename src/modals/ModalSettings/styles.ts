@@ -33,7 +33,7 @@ export const Modal = styled.div`
     pointer-events: none;
     border-radius: 6px;
   }
-  box-shadow: 5px 5px 15px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: 5px 5px 15px 0px rgba(0, 0, 0, 0.5), inset 0 0 10px 0px rgba(0, 0, 0, 0.3);
   border: none;
 
   @media (max-width: ${1000 / 16}em) {
