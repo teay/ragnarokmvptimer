@@ -152,13 +152,13 @@ export const globals = css`
       --quaternary: #1A1A2E; /* Even darker for main body background */
       --border: #4A4A6A;
 
-      --text: #E0E0E0;
+      --text: #FFFFFF;
       --header_text: var(--text);
 
-            --header_bg: var(--tertiary);
+            --header_bg: rgba(44, 44, 74, 0.1);
       background-blend-mode: normal;
-      --header_backdrop_filter: none;
-      --header_box_shadow: none;
+      --header_backdrop_filter: blur(10px);
+      --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
 
       --warning_header_bg: transparent;
       --warning_header_text: #000;
@@ -168,7 +168,7 @@ export const globals = css`
 
       --mvpCard_id: var(--text);
       --mvpCard_name: var(--primary);
-      --mvpCard_bg: var(--tertiary);
+      --mvpCard_bg: rgba(44, 44, 74, 0.05);
       background-blend-mode: normal;
       --mvpCard_text: var(--text);
       --mvpCard_killButton: #F25858;
@@ -186,10 +186,9 @@ export const globals = css`
       --switch_bg: var(--primary);
       --switch_handle: var(--quaternary);
 
-      --modal_bg: var(--tertiary);
+      --modal_bg: rgba(44, 44, 74, 0.1);
       background-blend-mode: normal;
-      --modal_text: var(--text);
-      --modal_backdrop_filter: none;
+      --modal_backdrop_filter: blur(20px);
       --modal_hl: var(--text);
       --modal_name: var(--primary);
       --modal_time: var(--primary);
@@ -207,21 +206,23 @@ export const globals = css`
       --modal_changeMap_text: var(--text);
       --modal_changeMap_selectedMapBorder: var(--secondary);
 
-      --filterSearch_bg: var(--tertiary);
+      --filterSearch_bg: rgba(44, 44, 74, 0.1);
       --filterSearch_border: var(--border);
       --filterSearch_text: var(--text);
       --filterSearch_border_focus: var(--primary);
+      backdrop-filter: blur(10px);
 
-      --languagePicker_bg: var(--tertiary);
+      --languagePicker_bg: rgba(44, 44, 74, 0.1);
       --languagePicker_border: var(--border);
       --languagePicker_text: var(--text);
+      backdrop-filter: blur(10px);
 
       --footer_text: var(--text);
       --footer_link: var(--primary);
-      --footer_bg: var(--tertiary);
+      --footer_bg: rgba(44, 44, 74, 0.1);
       background-blend-mode: normal;
-      --footer_backdrop_filter: none;
-      --footer_box_shadow: none;
+      --footer_backdrop_filter: blur(10px);
+      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.1);
 
       --pulse_color: #404040;
 
