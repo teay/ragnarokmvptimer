@@ -152,20 +152,20 @@ export const globals = css`
       --text: #FFFFFF;
       --header_text: #FFFFFF;
 
-      --header_bg: rgba(20, 20, 30, 0.1);
+      --header_bg: transparent;
       background-blend-mode: normal;
-      --header_backdrop_filter: blur(10px);
-      --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.5);
+      --header_backdrop_filter: none;
+      --header_box_shadow: none;
 
-      --warning_header_bg: #F25858;
+      --warning_header_bg: transparent;
       --warning_header_text: #000;
 
-      --scrollbar_bg: #121212;
-      --scrollbar_thumb: #5865F2;
+      --scrollbar_bg: transparent;
+      --scrollbar_thumb: transparent;
 
       --mvpCard_id: #FFFFFF;
       --mvpCard_name: #FFFFFF;
-      --mvpCard_bg: rgba(88, 101, 242, 0.05);
+      --mvpCard_bg: transparent;
       background-blend-mode: normal;
       --mvpCard_text: #FFFFFF;
       --mvpCard_killButton: #F25858;
@@ -181,10 +181,10 @@ export const globals = css`
       --switch_bg: #FFFFFF;
       --switch_handle: #121212;
 
-      --modal_bg: rgba(20, 20, 30, 0.1);
+      --modal_bg: transparent;
       background-blend-mode: normal;
       --modal_text: #FFFFFF;
-      --modal_backdrop_filter: blur(20px);
+      --modal_backdrop_filter: none;
       --modal_hl: #FFFFFF;
       --modal_name: #5865F2;
       --modal_time: #5865F2;
@@ -192,7 +192,7 @@ export const globals = css`
 
       --modal_datePicker_border: #FFFFFF;
 
-      --modal_serverSelect_bg: #212121;
+      --modal_serverSelect_bg: transparent;
       --modal_serverSelect_bgActive: #5865F2;
       --modal_serverSelect_text: #FFFFFF;
       --modal_serverSelect_textActive: #FFFFFF;
@@ -202,21 +202,21 @@ export const globals = css`
       --modal_changeMap_text: #FFFFFF;
       --modal_changeMap_selectedMapBorder: #8B5CF6;
 
-      --filterSearch_bg: rgba(38, 38, 38, 0.7);
-      --filterSearch_border: #1b1c1d;
+      --filterSearch_bg: transparent;
+      --filterSearch_border: transparent;
       --filterSearch_text: #FFFFFF;
-      --filterSearch_border_focus: #FFFFFF;
+      --filterSearch_border_focus: transparent;
 
-      --languagePicker_bg: rgba(69, 69, 69, 0.7);
-      --languagePicker_border: #1b1c1d;
+      --languagePicker_bg: transparent;
+      --languagePicker_border: transparent;
       --languagePicker_text: #FFFFFF;
 
       --footer_text: #FFFFFF;
       --footer_link: #5865F2;
-      --footer_bg: rgba(20, 20, 30, 0.1);
+      --footer_bg: transparent;
       background-blend-mode: normal;
-      --footer_backdrop_filter: blur(10px);
-      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.5);
+      --footer_backdrop_filter: none;
+      --footer_box_shadow: none;
 
       --pulse_color: #404040;
 
@@ -252,7 +252,25 @@ export const globals = css`
       font-size: 62.5%;
     }
 
-    body,
+    body {
+      height: 100vh;
+      background: linear-gradient(270deg, var(--primary), var(--secondary));
+      background-size: 400% 400%;
+      animation: gradientAnimation 15s ease infinite;
+    }
+
+    @keyframes gradientAnimation {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
     button,
     input {
       border: 0;
