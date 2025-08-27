@@ -87,7 +87,7 @@ export const ID = styled.span`
 export const Name = styled.span`
   font-weight: bold;
   color: var(--mvpCard_name);
-  font-size: 2.0rem;
+  font-size: 2.2rem;
 `;
 
 export const MapName = styled.span`

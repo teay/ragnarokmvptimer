@@ -7,5 +7,6 @@ export const Button = styled.button`
 
   &:hover {
     opacity: 0.8;
+    text-shadow: 0 0 10px var(--secondary);
   }
 `;

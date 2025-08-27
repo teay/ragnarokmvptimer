@@ -6,18 +6,22 @@ export const Button = styled.button`
   justify-content: center;
   align-self: flex-end;
   background: none;
-  color: var(---modal_text);
+  color: var(--modal_text);
 
   width: 2rem;
   height: 2rem;
 
   > svg {
     stroke-width: 2.5px;
+    transition: all 0.2s;
+  }
 
-    &:hover {
+  &:hover {
+    > svg {
       width: 1.8rem;
       height: 1.8rem;
       opacity: 0.7;
+      filter: drop-shadow(0 0 5px var(--secondary));
     }
   }
 `;

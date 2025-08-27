@@ -14,6 +14,10 @@ export const Container = styled.div`
     opacity: 0.8;
     animation: rotate 4s linear infinite;
 
+    > svg {
+      filter: drop-shadow(0 0 5px var(--secondary));
+    }
+
     @keyframes rotate {
       from {
         transform: rotate(0deg);

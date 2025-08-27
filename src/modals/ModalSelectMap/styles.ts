@@ -68,7 +68,7 @@ export const MapCard = styled.button<{ isSelected: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(---modal_text);
+  color: var(--modal_text);
   background: none;
   cursor: pointer;
 
@@ -95,3 +95,4 @@ export const MapRespawnTime = styled.div`
   align-items: center;
   gap: 0.8rem;
 `;
+

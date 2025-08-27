@@ -15,7 +15,7 @@ export const ModalPrimaryButton = styled.button<ModalPrimaryButtonProps>`
   min-width: 70px;
   border: none;
   border-radius: 5px;
-  background-color: #f5950f;
+  background-color: var(--primary);
   color: #fff;
   font-weight: bold;
   cursor: pointer;
@@ -33,5 +33,5 @@ export const ModalPrimaryButton = styled.button<ModalPrimaryButtonProps>`
   padding: ${({ size }) =>
     size === 'sm' ? '6px 10px' : size === 'lg' ? '10px 20px' : '8px 15px'};
   font-size: ${({ size }) =>
-    size === 'sm' ? '0.8rem' : size === 'lg' ? '1.1rem' : '1rem'};
+    size === 'sm' ? '0.8rem' : size === 'lg' ? '1.4rem' : '1.2rem'};
 `;
