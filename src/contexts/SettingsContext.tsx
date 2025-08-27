@@ -22,6 +22,8 @@ interface SettingsContextData {
   changeLanguage: (id: string) => void;
   server: string;
   changeServer: (id: string) => void;
+  font: string;
+  changeFont: () => void;
   //resetSettings: () => void;
 }
 

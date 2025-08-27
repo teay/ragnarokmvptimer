@@ -229,6 +229,16 @@ export const globals = css`
       color: var(--text);
     }
 
+    /* Aggressive override for MvpCard text */
+    .cujd8eq span {
+      color: #E0E0E0 !important;
+    }
+
+    /* Aggressive override for ModalSelectMap text */
+    .m12h3ctv span {
+      color: #E0E0E0 !important;
+    }
+
     html.non-glass-ui[data-theme='dark'] {
       --secondary: #262626;
 
