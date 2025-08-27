@@ -45,7 +45,7 @@ export const globals = css`
       --text: #000;
       --header_text: #fff;
 
-      --header_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.1);
+      --header_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
       background-blend-mode: normal;
       --header_backdrop_filter: blur(10px);
       --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
@@ -58,7 +58,7 @@ export const globals = css`
 
       --mvpCard_id: #421411;
       --mvpCard_name: #f89200;
-      --mvpCard_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.05);
+      --mvpCard_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
       background-blend-mode: normal;
       --mvpCard_text: #421411;
       --mvpCard_killButton: #d10000; /* Reverted to original */
@@ -75,7 +75,7 @@ export const globals = css`
       --switch_bg: #ffa800;
       --switch_handle: #f6f8fa;
 
-      --modal_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.1);
+      --modal_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
       background-blend-mode: normal;
       --modal_text: #421411;
       --modal_backdrop_filter: blur(20px);
@@ -96,21 +96,21 @@ export const globals = css`
       --modal_changeMap_text: #000;
       --modal_changeMap_selectedMapBorder: #ffa800;
 
-      --filterSearch_bg: rgba(128, 128, 128, 0.5); /* Adjusted for Glass UI */
+      --filterSearch_bg: rgba(128, 128, 128, 0.9); /* Adjusted for Glass UI */
       --filterSearch_border: #f89200;
       --filterSearch_text: #000;
       --filterSearch_border_focus: #000;
 
-      --languagePicker_bg: rgba(128, 128, 128, 0.5); /* Adjusted for Glass UI */
+      --languagePicker_bg: rgba(128, 128, 128, 0.9); /* Adjusted for Glass UI */
       --languagePicker_border: #f89200;
       --languagePicker_text: #421411;
 
       --footer_text: #333;
       --footer_link: #007bff;
-      --footer_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.1);
+      --footer_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
       background-blend-mode: normal;
       --footer_backdrop_filter: blur(10px);
-      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.1);
+      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.9);
 
       --pulse_color: #e5e5e5;
 
@@ -146,13 +146,16 @@ export const globals = css`
 
     html[data-theme='dark'] {
       color-scheme: dark;
-      --primary: #5865F2;
-      --secondary: #8B5CF6;
+      --primary: #6A5ACD; /* SlateBlue */
+      --secondary: #8A2BE2; /* BlueViolet */
+      --tertiary: #2C2C4A; /* Dark Blue/Purple for backgrounds */
+      --quaternary: #1A1A2E; /* Even darker for main body background */
+      --border: #4A4A6A;
 
-      --text: #FFFFFF;
-      --header_text: #FFFFFF;
+      --text: #E0E0E0;
+      --header_text: var(--text);
 
-      --header_bg: transparent;
+      --header_bg: rgba(20, 20, 30, 0.9);
       background-blend-mode: normal;
       --header_backdrop_filter: none;
       --header_box_shadow: none;
@@ -161,59 +164,61 @@ export const globals = css`
       --warning_header_text: #000;
 
       --scrollbar_bg: transparent;
-      --scrollbar_thumb: transparent;
+      --scrollbar_thumb: var(--primary);
 
-      --mvpCard_id: #FFFFFF;
-      --mvpCard_name: #FFFFFF;
-      --mvpCard_bg: transparent;
+      --mvpCard_id: var(--text);
+      --mvpCard_name: var(--primary);
+      --mvpCard_bg: var(--tertiary);
       background-blend-mode: normal;
-      --mvpCard_text: #FFFFFF;
+      --mvpCard_text: var(--text);
       --mvpCard_killButton: #F25858;
-      --mvpCard_editButton: #5865F2;
-      --mvpCard_controls_showMap: #58A6F2;
-      --mvpCard_controls_edit: #5865F2;
+      --mvpCard_editButton: var(--primary);
+      --mvpCard_controls_showMap: var(--primary);
+      --mvpCard_controls_edit: var(--primary);
       --mvpCard_controls_delete: #F25858;
+
+            --scrollbar_thumb: var(--primary);
 
       --timers_passed: #F25858;
       --timers_normal: #FFFFFF;
       --timers_respawning: #58F28B;
 
-      --switch_bg: #FFFFFF;
-      --switch_handle: #121212;
+      --switch_bg: var(--primary);
+      --switch_handle: var(--quaternary);
 
-      --modal_bg: transparent;
+      --modal_bg: var(--tertiary);
       background-blend-mode: normal;
-      --modal_text: #FFFFFF;
+      --modal_text: var(--text);
       --modal_backdrop_filter: none;
-      --modal_hl: #FFFFFF;
-      --modal_name: #5865F2;
-      --modal_time: #5865F2;
-      --modal_button: #5865F2;
+      --modal_hl: var(--text);
+      --modal_name: var(--primary);
+      --modal_time: var(--primary);
+      --modal_button: var(--primary);
 
-      --modal_datePicker_border: #FFFFFF;
+      --modal_datePicker_border: var(--border);
 
-      --modal_serverSelect_bg: transparent;
-      --modal_serverSelect_bgActive: #5865F2;
-      --modal_serverSelect_text: #FFFFFF;
-      --modal_serverSelect_textActive: #FFFFFF;
+      --modal_serverSelect_bg: var(--tertiary);
+      --modal_serverSelect_bgActive: var(--primary);
+      --modal_serverSelect_text: var(--text);
+      --modal_serverSelect_textActive: var(--text);
       --modal_serverSelect_border: transparent;
 
-      --modal_changeMap_border: #58A6F2;
-      --modal_changeMap_text: #FFFFFF;
-      --modal_changeMap_selectedMapBorder: #8B5CF6;
+      --modal_changeMap_border: var(--primary);
+      --modal_changeMap_text: var(--text);
+      --modal_changeMap_selectedMapBorder: var(--secondary);
 
-      --filterSearch_bg: transparent;
-      --filterSearch_border: transparent;
-      --filterSearch_text: #FFFFFF;
-      --filterSearch_border_focus: transparent;
+      --filterSearch_bg: var(--tertiary);
+      --filterSearch_border: var(--border);
+      --filterSearch_text: var(--text);
+      --filterSearch_border_focus: var(--primary);
 
-      --languagePicker_bg: transparent;
-      --languagePicker_border: transparent;
-      --languagePicker_text: #FFFFFF;
+      --languagePicker_bg: var(--tertiary);
+      --languagePicker_border: var(--border);
+      --languagePicker_text: var(--text);
 
-      --footer_text: #FFFFFF;
-      --footer_link: #5865F2;
-      --footer_bg: transparent;
+      --footer_text: var(--text);
+      --footer_link: var(--primary);
+      --footer_bg: var(--tertiary);
       background-blend-mode: normal;
       --footer_backdrop_filter: none;
       --footer_box_shadow: none;
