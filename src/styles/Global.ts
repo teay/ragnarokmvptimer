@@ -146,8 +146,8 @@ export const globals = css`
 
     html[data-theme='dark'] {
       color-scheme: dark;
-      --primary: #6A5ACD; /* SlateBlue */
-      --secondary: #8A2BE2; /* BlueViolet */
+      --primary: #5543cf96; /* SlateBlue */
+      --secondary: #2c2457ff; /* BlueViolet */
       --tertiary: #2C2C4A; /* Dark Blue/Purple for backgrounds */
       --quaternary: #1A1A2E; /* Even darker for main body background */
       --border: #4A4A6A;
@@ -155,7 +155,7 @@ export const globals = css`
       --text: #E0E0E0;
       --header_text: var(--text);
 
-      --header_bg: rgba(20, 20, 30, 0.9);
+            --header_bg: var(--tertiary);
       background-blend-mode: normal;
       --header_backdrop_filter: none;
       --header_box_shadow: none;
