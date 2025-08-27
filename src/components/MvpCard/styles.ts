@@ -116,7 +116,7 @@ const Button = styled.button`
 
   font-size: 1.6rem;
   font-weight: bold;
-  color: #fff;
+  color: #E0E0E0;
 
   &:hover {
     opacity: 0.8;
@@ -160,7 +160,7 @@ export const Control = styled.button`
     stroke-width: 2px;
     width: 24px;
     height: 24px;
-    color: #fff;
+    color: #E0E0E0;
   }
 
   &:disabled {
@@ -187,5 +187,5 @@ export const Control = styled.button`
 
 export const ControlText = styled.span`
   font-size: 1.6rem;
-  color: #fff;
+  color: #E0E0E0;
 `;

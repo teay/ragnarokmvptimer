@@ -152,13 +152,13 @@ export const globals = css`
       --quaternary: #1A1A2E; /* Even darker for main body background */
       --border: #4A4A6A;
 
-      --text: #FFFFFF;
+      --text: #E0E0E0;
       --header_text: var(--text);
 
-            --header_bg: rgba(44, 44, 74, 0.1);
+            --header_bg: var(--tertiary);
       background-blend-mode: normal;
-      --header_backdrop_filter: blur(10px);
-      --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
+      --header_backdrop_filter: none;
+      --header_box_shadow: none;
 
       --warning_header_bg: transparent;
       --warning_header_text: #000;
@@ -167,8 +167,8 @@ export const globals = css`
       --scrollbar_thumb: var(--primary);
 
       --mvpCard_id: var(--text);
-      --mvpCard_name: var(--primary);
-      --mvpCard_bg: rgba(44, 44, 74, 0.05);
+      --mvpCard_name: #9370DB;
+      --mvpCard_bg: var(--tertiary);
       background-blend-mode: normal;
       --mvpCard_text: var(--text);
       --mvpCard_killButton: #F25858;
@@ -186,11 +186,11 @@ export const globals = css`
       --switch_bg: var(--primary);
       --switch_handle: var(--quaternary);
 
-      --modal_bg: rgba(44, 44, 74, 0.1);
+      --modal_bg: var(--tertiary);
       background-blend-mode: normal;
-      --modal_backdrop_filter: blur(20px);
+      --modal_backdrop_filter: none;
       --modal_hl: var(--text);
-      --modal_name: var(--primary);
+      --modal_name: #9370DB;
       --modal_time: var(--primary);
       --modal_button: var(--primary);
 
@@ -206,23 +206,23 @@ export const globals = css`
       --modal_changeMap_text: var(--text);
       --modal_changeMap_selectedMapBorder: var(--secondary);
 
-      --filterSearch_bg: rgba(44, 44, 74, 0.1);
+      --filterSearch_bg: var(--tertiary);
       --filterSearch_border: var(--border);
       --filterSearch_text: var(--text);
       --filterSearch_border_focus: var(--primary);
-      backdrop-filter: blur(10px);
+      backdrop-filter: none;
 
-      --languagePicker_bg: rgba(44, 44, 74, 0.1);
+      --languagePicker_bg: var(--tertiary);
       --languagePicker_border: var(--border);
       --languagePicker_text: var(--text);
-      backdrop-filter: blur(10px);
+      backdrop-filter: none;
 
       --footer_text: var(--text);
       --footer_link: var(--primary);
-      --footer_bg: rgba(44, 44, 74, 0.1);
+      --footer_bg: var(--tertiary);
       background-blend-mode: normal;
-      --footer_backdrop_filter: blur(10px);
-      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.1);
+      --footer_backdrop_filter: none;
+      --footer_box_shadow: none;
 
       --pulse_color: #404040;
 

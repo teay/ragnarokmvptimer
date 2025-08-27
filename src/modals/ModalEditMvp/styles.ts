@@ -68,7 +68,7 @@ export const Name = styled.span`
 `;
 
 export const Question = styled.span`
-  color: var(--modal_text);
+  color: #E0E0E0;
 
   font-size: 1.8rem;
   font-weight: 700;
@@ -79,7 +79,7 @@ export const Question = styled.span`
 `;
 
 export const Optional = styled.span`
-  color: var(--modal_text);
+  color: #E0E0E0;
   font-size: 1.4rem;
 `;
 
