@@ -94,7 +94,7 @@ export const MapName = styled.span`
   text-align: center;
   white-space: pre-wrap;
   margin-top: 5px;
-  color: var(--mvpCard_text);
+  color: #E0E0E0 !important;
   font-size: 1.8rem;
 `;
 
