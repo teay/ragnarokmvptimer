@@ -24,7 +24,7 @@ import { messages } from './locales/messages';
 
 export default function App() {
   
-  const { language, isGlassUIEnabled } = useSettings();
+  const { language, isGlassUIEnabled, font } = useSettings();
   const { theme } = useTheme();
   const {
     hasNotificationPermission,
@@ -53,6 +53,13 @@ export default function App() {
       html.dataset.theme = theme;
     }
   }, [theme]);
+
+  useEffect(() => {
+    const html = document.querySelector('html');
+    if (html) {
+      html.dataset.font = font;
+    }
+  }, [font]);
 
   return (
     <>

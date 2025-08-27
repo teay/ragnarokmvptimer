@@ -91,6 +91,18 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     [setSettings]
   );
 
+  const changeFont = useCallback(() => {
+    const fonts = ['Jost', 'Orbitron', 'Exo 2'];
+    setSettings((prev) => {
+      const currentIndex = fonts.indexOf(prev.font || 'Jost');
+      const nextIndex = (currentIndex + 1) % fonts.length;
+      return {
+        ...prev,
+        font: fonts[nextIndex],
+      };
+    });
+  }, [setSettings]);
+
   /* const resetSettings = useCallback(() => {
     resetTheme();
     setSettings(DEFAULT_SETTINGS);
@@ -108,6 +120,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleGlassUI,
         changeLanguage,
         changeServer,
+        changeFont,
         //resetSettings,
       }}
     >

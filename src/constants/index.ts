@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS = {
   isGlassUIEnabled: false,
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,
+  font: 'Jost',
 };
 
 export const LOCAL_STORAGE_THEME_KEY = 'theme';

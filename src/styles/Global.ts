@@ -2,6 +2,10 @@ import { css } from '@linaria/core';
 
 export const globals = css`
   :global() {
+    @import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;700&display=swap');
+
     *,
     *::after,
     *::before {
@@ -9,7 +13,18 @@ export const globals = css`
       margin: 0;
       outline: 0;
       box-sizing: border-box;
+    }
+
+    html[data-font='Jost'] {
       font-family: 'Jost', sans-serif;
+    }
+
+    html[data-font='Orbitron'] {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    html[data-font='Exo 2'] {
+      font-family: 'Exo 2', sans-serif;
     }
 
     #root {
@@ -131,74 +146,74 @@ export const globals = css`
 
     html[data-theme='dark'] {
       color-scheme: dark;
-      --primary: #1b1c1d;
-      --secondary: rgba(75, 125, 100, 0.9);
+      --primary: #5865F2;
+      --secondary: #8B5CF6;
 
-      --text: #fff;
-      --header_text: #fff;
+      --text: #FFFFFF;
+      --header_text: #FFFFFF;
 
-      --header_bg: rgba(90, 140, 115, 0.1);
+      --header_bg: rgba(20, 20, 30, 0.1);
       background-blend-mode: normal;
       --header_backdrop_filter: blur(10px);
       --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.5);
 
-      --warning_header_bg: #f89200;
+      --warning_header_bg: #F25858;
       --warning_header_text: #000;
 
-      --scrollbar_bg: #2e2e2e;
-      --scrollbar_thumb: #f89200;
+      --scrollbar_bg: #121212;
+      --scrollbar_thumb: #5865F2;
 
-      --mvpCard_id: #fff;
-      --mvpCard_name: #fff;
-      --mvpCard_bg: rgba(75, 125, 100, 0.05);
+      --mvpCard_id: #FFFFFF;
+      --mvpCard_name: #FFFFFF;
+      --mvpCard_bg: rgba(88, 101, 242, 0.05);
       background-blend-mode: normal;
-      --mvpCard_text: #fff;
-      --mvpCard_killButton: #d10000; /* Reverted to original */
-      --mvpCard_editButton: #f89200; /* Reverted to original */
-      --mvpCard_controls_showMap: #00a8ff; /* Reverted to original */
-      --mvpCard_controls_edit: #f89200; /* Reverted to original */
-      --mvpCard_controls_delete: #d10000; /* Reverted to original */
+      --mvpCard_text: #FFFFFF;
+      --mvpCard_killButton: #F25858;
+      --mvpCard_editButton: #5865F2;
+      --mvpCard_controls_showMap: #58A6F2;
+      --mvpCard_controls_edit: #5865F2;
+      --mvpCard_controls_delete: #F25858;
 
-      --timers_passed: #d10000;
-      --timers_normal: #fff;
-      --timers_respawning: #62831f;
+      --timers_passed: #F25858;
+      --timers_normal: #FFFFFF;
+      --timers_respawning: #58F28B;
 
-      --switch_bg: #fff;
-      --switch_handle: #000;
+      --switch_bg: #FFFFFF;
+      --switch_handle: #121212;
 
-      --modal_bg: rgba(90, 140, 115, 0.1);
+      --modal_bg: rgba(20, 20, 30, 0.1);
       background-blend-mode: normal;
-      --modal_text: #fff;
+      --modal_text: #FFFFFF;
       --modal_backdrop_filter: blur(20px);
-      --modal_hl: #fff;
-      --modal_name: #f89200;
-      --modal_time: #f89200;
-      --modal_button: #f89200; /* Reverted to original */
+      --modal_hl: #FFFFFF;
+      --modal_name: #5865F2;
+      --modal_time: #5865F2;
+      --modal_button: #5865F2;
 
-      --modal_datePicker_border: #fff;
+      --modal_datePicker_border: #FFFFFF;
 
-      --modal_serverSelect_bg: #454545;
-      --modal_serverSelect_bgActive: #f89200;
-      --modal_serverSelect_text: #fff;
-      --modal_serverSelect_textActive: #fff;
+      --modal_serverSelect_bg: #212121;
+      --modal_serverSelect_bgActive: #5865F2;
+      --modal_serverSelect_text: #FFFFFF;
+      --modal_serverSelect_textActive: #FFFFFF;
       --modal_serverSelect_border: transparent;
 
-      --modal_changeMap_border: #00a8ff;
-      --modal_changeMap_text: #fff;
-      --modal_changeMap_selectedMapBorder: #ffa800;
+      --modal_changeMap_border: #58A6F2;
+      --modal_changeMap_text: #FFFFFF;
+      --modal_changeMap_selectedMapBorder: #8B5CF6;
 
-      --filterSearch_bg: rgba(38, 38, 38, 0.7); /* Adjusted for Glass UI */
+      --filterSearch_bg: rgba(38, 38, 38, 0.7);
       --filterSearch_border: #1b1c1d;
-      --filterSearch_text: #fff;
-      --filterSearch_border_focus: #fff;
+      --filterSearch_text: #FFFFFF;
+      --filterSearch_border_focus: #FFFFFF;
 
-      --languagePicker_bg: rgba(69, 69, 69, 0.7); /* Adjusted for Glass UI */
+      --languagePicker_bg: rgba(69, 69, 69, 0.7);
       --languagePicker_border: #1b1c1d;
-      --languagePicker_text: #fff;
+      --languagePicker_text: #FFFFFF;
 
-      --footer_text: #fff;
-      --footer_link: #f89200;
-      --footer_bg: rgba(90, 140, 115, 0.1);
+      --footer_text: #FFFFFF;
+      --footer_link: #5865F2;
+      --footer_bg: rgba(20, 20, 30, 0.1);
       background-blend-mode: normal;
       --footer_backdrop_filter: blur(10px);
       --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.5);

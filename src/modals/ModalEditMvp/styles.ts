@@ -68,7 +68,7 @@ export const Name = styled.span`
 `;
 
 export const Question = styled.span`
-  color: var(---modal_text);
+  color: var(--modal_text);
 
   font-size: 1.8rem;
   font-weight: 700;
@@ -79,8 +79,8 @@ export const Question = styled.span`
 `;
 
 export const Optional = styled.span`
-  color: var(---modal_text);
-  font-size: 1.2rem;
+  color: var(--modal_text);
+  font-size: 1.4rem;
 `;
 
 export const DateTimePicker = styled.input`
@@ -117,11 +117,11 @@ export const ChangeMapButton = styled.button<{ size?: 'sm' | 'md' | 'lg' }>`
     '10px 20px'};
   font-size: ${({ size }) => 
     size === 'sm' ? '0.9rem' : 
-    size === 'lg' ? '1.2rem' : 
+    size === 'lg' ? '1.4rem' : 
     '1.1rem'};
   border: none;
   border-radius: 5px;
-  background-color: #6c757d;
+  background-color: var(--primary);
   color: #fff;
   font-weight: bold;
   cursor: pointer;
@@ -129,5 +129,6 @@ export const ChangeMapButton = styled.button<{ size?: 'sm' | 'md' | 'lg' }>`
 
   &:hover {
     filter: brightness(0.9);
+    box-shadow: 0 0 15px var(--secondary);
   }
 `;

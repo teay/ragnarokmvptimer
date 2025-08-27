@@ -117,3 +117,17 @@ export const ClearButton = styled.button`
     color: white;
   }
 `;
+
+export const FontButton = styled.button`
+  padding: 5px 15px;
+  border: 0;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #fff;
+  background-color: var(--primary);
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;

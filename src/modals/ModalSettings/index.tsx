@@ -22,6 +22,7 @@ import {
   SettingSecondary,
   ThemeContainer,
   ClearButton,
+  FontButton,
 } from './styles';
 
 type Props = {
@@ -41,6 +42,8 @@ export function ModalSettings({ onClose }: Props) {
     toggleNotificationSound,
     isGlassUIEnabled,
     toggleGlassUI,
+    font,
+    changeFont,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -125,6 +128,14 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch onChange={toggleGlassUI} checked={isGlassUIEnabled} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='font' defaultMessage='Font' />
+              </SettingName>
+
+              <FontButton onClick={changeFont}>{font}</FontButton>
             </Setting>
 
             <SettingSecondary>
