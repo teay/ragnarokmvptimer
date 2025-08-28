@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import LuminousParticlesBackground from './components/LuminousParticlesBackground';
+import { SparkleEffect } from './components/SparkleEffect';
 import { IntlProvider } from 'react-intl';
 
 import dayjs from 'dayjs';
@@ -25,7 +26,7 @@ import { messages } from './locales/messages';
 
 export default function App() {
   
-  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font } = useSettings(); // Add new setting
+  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font, isSparkleEffectEnabled } = useSettings(); // Add new setting
   const { theme } = useTheme();
   const {
     hasNotificationPermission,
@@ -72,6 +73,7 @@ export default function App() {
   return (
     <>
       {isAnimatedBackgroundEnabled && <LuminousParticlesBackground />} {/* Conditionally render */}
+      {isSparkleEffectEnabled && <SparkleEffect />} {/* Conditionally render SparkleEffect */}
       <IntlProvider
         messages={messages[language]}
         locale={language}

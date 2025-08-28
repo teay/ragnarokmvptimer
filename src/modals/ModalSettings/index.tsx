@@ -61,6 +61,8 @@ export function ModalSettings({ onClose }: Props) {
     changeParticleEffect,
     font,
     changeFont,
+    isSparkleEffectEnabled,
+    toggleSparkleEffect,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -153,6 +155,14 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch onChange={toggleAnimatedBackground} checked={isAnimatedBackgroundEnabled} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='sparkle_effect' defaultMessage='Sparkle Effect' />
+              </SettingName>
+
+              <Switch onChange={toggleSparkleEffect} checked={isSparkleEffectEnabled} />
             </Setting>
 
             <Setting>

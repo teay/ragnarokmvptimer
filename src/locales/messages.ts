@@ -62,6 +62,7 @@ export const messages = {
     reset_timer: 'Reset Timer',
     remove_mvp: 'Remove MVP',
     edit_mvp: 'Edit MVP',
+    sparkle_effect: 'Sparkle Effect',
   },
   [LOCALES.PORTUGUESE]: {
     under_development: 'Em desenvolvimento',
@@ -123,5 +124,6 @@ export const messages = {
     reset_timer: 'Reiniciar Timer',
     remove_mvp: 'Remover MVP',
     edit_mvp: 'Editar MVP',
+    sparkle_effect: 'Efeito de Brilho',
   },
 };
