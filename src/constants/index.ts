@@ -8,6 +8,7 @@ export const DEFAULT_SERVER = 'iRO';
 
 export const DEFAULT_SETTINGS = {
   respawnAsCountdown: true,
+  hideActiveContent: false,
   animatedSprites: false,
   use24HourFormat: true,
   isNotificationSoundEnabled: true,

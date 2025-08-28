@@ -18,7 +18,7 @@ import { Footer } from './components/Footer';
 
 import { useSettings } from './contexts/SettingsContext';
 import { MvpProvider } from './contexts/MvpsContext';
-import { useNotification } from './hooks';
+import { useNotification, useKey } from './hooks';
 import { useTheme } from './hooks';
 
 import { LOCALES } from './locales';
@@ -26,13 +26,15 @@ import { messages } from './locales/messages';
 
 export default function App() {
   
-  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font, isSparkleEffectEnabled, sparkleDensity, isFallingElementsEnabled } = useSettings(); // Add new setting
+  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font, isSparkleEffectEnabled, sparkleDensity, isFallingElementsEnabled, hideActiveContent, toggleHideActiveContent } = useSettings(); // Add new setting
   const { theme } = useTheme();
   const {
     hasNotificationPermission,
     isNotificationPermissionDenied,
     browserSupportsNotifications,
   } = useNotification();
+
+  useKey('Escape', toggleHideActiveContent);
 
   useEffect(() => {
     dayjs.locale(language);
@@ -79,28 +81,32 @@ export default function App() {
         locale={language}
         defaultLocale={LOCALES.ENGLISH}
       >
-        {!hasNotificationPermission && (
-          <WarningHeader
-            text={
-              messages[language][
-                !browserSupportsNotifications
-                  ? 'notifications_not_supported'
-                  : isNotificationPermissionDenied
-                  ? 'denied_notifications'
-                  : 'disabled_notifications'
-              ]
-            }
-          />
+        {!hideActiveContent && (
+          <>
+            {!hasNotificationPermission && (
+              <WarningHeader
+                text={
+                  messages[language][
+                    !browserSupportsNotifications
+                      ? 'notifications_not_supported'
+                      : isNotificationPermissionDenied
+                      ? 'denied_notifications'
+                      : 'disabled_notifications'
+                  ]
+                }
+              />
+            )}
+
+            <Header />
+
+            <MvpProvider>
+              <Main />
+            </MvpProvider>
+
+            <Footer />
+            <WarningHeader text={messages[language]['under_development']} />
+          </>
         )}
-
-        <Header />
-
-        <MvpProvider>
-          <Main />
-        </MvpProvider>
-
-        <Footer />
-        <WarningHeader text={messages[language]['under_development']} />
       </IntlProvider>
     </>
   );

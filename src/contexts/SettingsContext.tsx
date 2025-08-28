@@ -10,6 +10,8 @@ interface SettingsProviderProps {
 interface SettingsContextData {
   respawnAsCountdown: boolean;
   toggleRespawnCountdown: () => void;
+  hideActiveContent: boolean;
+  toggleHideActiveContent: () => void;
   animatedSprites: boolean;
   toggleAnimatedSprites: () => void;
   use24HourFormat: boolean;
@@ -73,6 +75,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       })),
     [setSettings]
   );
+
+  const toggleHideActiveContent = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      hideActiveContent: !prev.hideActiveContent,
+    }));
+  }, [setSettings]);
 
   const toggleAnimatedSprites = useCallback(() => {
     setSettings((prev) => ({
@@ -264,6 +273,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       value={{
         ...settings,
         toggleRespawnCountdown,
+        toggleHideActiveContent,
         toggleAnimatedSprites,
         toggle24HourFormat,
         toggleNotificationSound,
