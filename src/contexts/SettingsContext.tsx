@@ -24,6 +24,17 @@ interface SettingsContextData {
   changeServer: (id: string) => void;
   font: string;
   changeFont: () => void;
+  isAnimatedBackgroundEnabled: boolean;
+  backgroundEffectMode: 'full' | 'top' | 'bottom' | 'center';
+  changeBackgroundEffectMode: (mode: 'full' | 'top' | 'bottom' | 'center') => void;
+  particleDensity: 'low' | 'medium' | 'high';
+  changeParticleDensity: (density: 'low' | 'medium' | 'high') => void;
+  particleColor: string;
+  changeParticleColor: (color: string) => void;
+  waveAmplitude: number;
+  changeWaveAmplitude: (amplitude: number) => void;
+  waveColor: string;
+  changeWaveColor: (color: string) => void;
   //resetSettings: () => void;
 }
 
@@ -93,6 +104,56 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     [setSettings]
   );
 
+  const changeBackgroundEffectMode = useCallback(
+    (mode: 'full' | 'top' | 'bottom' | 'center') => {
+      setSettings((prev) => ({
+        ...prev,
+        backgroundEffectMode: mode,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeParticleDensity = useCallback(
+    (density: 'low' | 'medium' | 'high') => {
+      setSettings((prev) => ({
+        ...prev,
+        particleDensity: density,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeParticleColor = useCallback(
+    (color: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        particleColor: color,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeWaveAmplitude = useCallback(
+    (amplitude: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        waveAmplitude: amplitude,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeWaveColor = useCallback(
+    (color: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        waveColor: color,
+      }));
+    },
+    [setSettings]
+  );
+
   const changeFont = useCallback(() => {
     const fonts = ['Jost', 'Orbitron', 'Exo 2'];
     setSettings((prev) => {
@@ -103,6 +164,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         font: fonts[nextIndex],
       };
     });
+  }, [setSettings]);
+
+  const toggleAnimatedBackground = useCallback(() => { // New toggle implementation
+    setSettings((prev) => ({
+      ...prev,
+      isAnimatedBackgroundEnabled: !prev.isAnimatedBackgroundEnabled,
+    }));
   }, [setSettings]);
 
   /* const resetSettings = useCallback(() => {
@@ -123,6 +191,18 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeLanguage,
         changeServer,
         changeFont,
+        isAnimatedBackgroundEnabled: settings.isAnimatedBackgroundEnabled,
+        toggleAnimatedBackground,
+        backgroundEffectMode: settings.backgroundEffectMode,
+        changeBackgroundEffectMode,
+        particleDensity: settings.particleDensity,
+        changeParticleDensity,
+        particleColor: settings.particleColor,
+        changeParticleColor,
+        waveAmplitude: settings.waveAmplitude,
+        changeWaveAmplitude,
+        waveColor: settings.waveColor,
+        changeWaveColor,
         //resetSettings,
       }}
     >

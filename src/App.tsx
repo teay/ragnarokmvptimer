@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import LuminousParticlesBackground from './components/LuminousParticlesBackground';
 import { IntlProvider } from 'react-intl';
 
 import dayjs from 'dayjs';
@@ -24,7 +25,7 @@ import { messages } from './locales/messages';
 
 export default function App() {
   
-  const { language, isGlassUIEnabled, font } = useSettings();
+  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, font } = useSettings(); // Add new setting
   const { theme } = useTheme();
   const {
     hasNotificationPermission,
@@ -63,6 +64,7 @@ export default function App() {
 
   return (
     <>
+      {isAnimatedBackgroundEnabled && <LuminousParticlesBackground />} {/* Conditionally render */}
       <IntlProvider
         messages={messages[language]}
         locale={language}
