@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS = {
   waveColor: 'rgba(0, 255, 255, 0.1)', // New: default wave color (faint cyan)
   isMainContentTransparent: false, // New setting for main content transparency
   isSparkleEffectEnabled: false,
+  sparkleDensity: 50,
   particleEffect: 'default' as 'default' | 'gravity',
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,
