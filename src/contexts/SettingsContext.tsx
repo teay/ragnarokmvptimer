@@ -40,6 +40,8 @@ interface SettingsContextData {
   toggleMainContentTransparency: () => void; // New toggle
   particleEffect: 'default' | 'gravity';
   changeParticleEffect: (effect: 'default' | 'gravity') => void;
+  isSparkleEffectEnabled: boolean;
+  toggleSparkleEffect: () => void;
   //resetSettings: () => void;
 }
 
@@ -51,6 +53,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     LOCAL_STORAGE_SETTINGS_KEY,
     DEFAULT_SETTINGS
   );
+
+  const { isSparkleEffectEnabled } = settings;
 
   const toggleRespawnCountdown = useCallback(
     () =>
@@ -195,6 +199,15 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     });
   }, [setSettings]);
 
+  const toggleSparkleEffect = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isSparkleEffectEnabled: !prev.isSparkleEffectEnabled,
+    }));
+  }, [setSettings]);
+
+  /* const resetSettings = useCallback(() => {
+
   
 
   /* const resetSettings = useCallback(() => {
@@ -222,6 +235,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeWaveColor,
         toggleMainContentTransparency,
         changeParticleEffect,
+        toggleSparkleEffect,
       }}
     >
       {children}
