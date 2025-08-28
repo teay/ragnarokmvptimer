@@ -35,6 +35,8 @@ export function ModalSettings({ onClose }: Props) {
   const {
     respawnAsCountdown,
     toggleRespawnCountdown,
+    hideActiveContent,
+    toggleHideActiveContent,
     animatedSprites,
     toggleAnimatedSprites,
     use24HourFormat,
@@ -100,6 +102,17 @@ export function ModalSettings({ onClose }: Props) {
           </Title>
 
           <SettingsContainer>
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='hide_active_content' defaultMessage='Hide Active Content' />
+              </SettingName>
+
+              <Switch
+                onChange={toggleHideActiveContent}
+                checked={hideActiveContent}
+              />
+            </Setting>
+
             <Setting>
               <SettingName>
                 <FormattedMessage id='theme' />
