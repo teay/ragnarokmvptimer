@@ -63,6 +63,8 @@ export function ModalSettings({ onClose }: Props) {
     changeFont,
     isSparkleEffectEnabled,
     toggleSparkleEffect,
+    sparkleDensity,
+    changeSparkleDensity,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -164,6 +166,24 @@ export function ModalSettings({ onClose }: Props) {
 
               <Switch onChange={toggleSparkleEffect} checked={isSparkleEffectEnabled} />
             </Setting>
+
+            {isSparkleEffectEnabled && (
+              <Setting>
+                <SettingName>
+                  <FormattedMessage id='sparkle_density' defaultMessage='Sparkle Density' />
+                </SettingName>
+                <select
+                  value={String(sparkleDensity)}
+                  onChange={(e) => changeSparkleDensity(Number(e.target.value))}
+                >
+                  {[25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 400, 500, 750, 1000].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </Setting>
+            )}
 
             <Setting>
               <SettingName>

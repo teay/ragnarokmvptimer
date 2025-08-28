@@ -42,6 +42,8 @@ interface SettingsContextData {
   changeParticleEffect: (effect: 'default' | 'gravity') => void;
   isSparkleEffectEnabled: boolean;
   toggleSparkleEffect: () => void;
+  sparkleDensity: number;
+  changeSparkleDensity: (density: number) => void;
   //resetSettings: () => void;
 }
 
@@ -54,7 +56,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     DEFAULT_SETTINGS
   );
 
-  const { isSparkleEffectEnabled } = settings;
+  const { isSparkleEffectEnabled, sparkleDensity } = settings;
 
   const toggleRespawnCountdown = useCallback(
     () =>
@@ -206,6 +208,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
+  const changeSparkleDensity = useCallback((density: number) => {
+    setSettings((prev) => ({
+      ...prev,
+      sparkleDensity: density,
+    }));
+  }, [setSettings]);
+
   /* const resetSettings = useCallback(() => {
 
   
@@ -235,7 +244,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeWaveColor,
         toggleMainContentTransparency,
         changeParticleEffect,
+        isSparkleEffectEnabled,
         toggleSparkleEffect,
+        sparkleDensity,
+        changeSparkleDensity,
       }}
     >
       {children}
