@@ -35,6 +35,8 @@ interface SettingsContextData {
   changeWaveAmplitude: (amplitude: number) => void;
   waveColor: string;
   changeWaveColor: (color: string) => void;
+  isMainContentTransparent: boolean; // New setting
+  toggleMainContentTransparency: () => void; // New toggle
   //resetSettings: () => void;
 }
 
@@ -154,6 +156,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     [setSettings]
   );
 
+  const toggleMainContentTransparency = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isMainContentTransparent: !prev.isMainContentTransparent,
+    }));
+  }, [setSettings]);
+
   const changeFont = useCallback(() => {
     const fonts = ['Jost', 'Orbitron', 'Exo 2'];
     setSettings((prev) => {
@@ -203,6 +212,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeWaveAmplitude,
         waveColor: settings.waveColor,
         changeWaveColor,
+        isMainContentTransparent: settings.isMainContentTransparent, // Add new setting to value
+        toggleMainContentTransparency, // Add new toggle to value
         //resetSettings,
       }}
     >

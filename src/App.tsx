@@ -25,7 +25,7 @@ import { messages } from './locales/messages';
 
 export default function App() {
   
-  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, font } = useSettings(); // Add new setting
+  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font } = useSettings(); // Add new setting
   const { theme } = useTheme();
   const {
     hasNotificationPermission,
@@ -45,8 +45,15 @@ export default function App() {
       } else {
         html.classList.remove('non-glass-ui');
       }
+
+      // Add/remove class for main content transparency
+      if (isMainContentTransparent) {
+        html.classList.add('transparent-main-content');
+      } else {
+        html.classList.remove('transparent-main-content');
+      }
     }
-  }, [isGlassUIEnabled]);
+  }, [isGlassUIEnabled, isMainContentTransparent]); // Add isMainContentTransparent to dependencies
 
   useEffect(() => {
     const html = document.querySelector('html');
