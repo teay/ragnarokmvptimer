@@ -195,14 +195,6 @@ export function ModalSettings({ onClose }: Props) {
               <FontButton onClick={changeFont}>{font}</FontButton>
             </Setting>
 
-            <Setting>
-              <SettingName>
-                <FormattedMessage id='falling_elements' defaultMessage='Falling Elements' />
-              </SettingName>
-
-              <Switch onChange={toggleFallingElements} checked={!!isFallingElementsEnabled} />
-            </Setting>
-
             {/* New Background Effect Settings */}
             <Setting>
               <SettingName>

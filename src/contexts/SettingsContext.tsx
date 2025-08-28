@@ -44,8 +44,6 @@ interface SettingsContextData {
   toggleSparkleEffect: () => void;
   sparkleDensity: number;
   changeSparkleDensity: (density: number) => void;
-  isFallingElementsEnabled: boolean;
-  toggleFallingElements: () => void;
   //resetSettings: () => void;
 }
 
@@ -217,13 +215,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
-  const toggleFallingElements = useCallback(() => {
-    setSettings((prev) => ({
-      ...prev,
-      isFallingElementsEnabled: !prev.isFallingElementsEnabled,
-    }));
-  }, [setSettings]);
-
   /* const resetSettings = useCallback(() => {
 
   
@@ -255,7 +246,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeParticleEffect,
         toggleSparkleEffect,
         changeSparkleDensity,
-        toggleFallingElements,
       }}
     >
       {children}
