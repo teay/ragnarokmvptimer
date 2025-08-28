@@ -42,6 +42,7 @@ export function Map({
         alt={mapName}
         onClick={mapMark}
         clickable={!!onChange}
+        isSelected={coordinates.x !== -1 || coordinates.y !== -1}
         loading='lazy'
       />
       {(coordinates.x !== -1 || coordinates.y !== -1) && (

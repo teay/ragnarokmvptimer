@@ -91,7 +91,7 @@ export const globals = css`
 
       --modal_changeMap_border: var(--primary); /* From dark theme */
       --modal_changeMap_text: var(--text); /* From dark theme */
-      --modal_changeMap_selectedMapBorder: var(--secondary); /* From dark theme */
+      --modal_changeMap_selectedMapBorder: yellow; /* From dark theme */
 
       --filterSearch_bg: var(--tertiary); /* From dark theme */
       --filterSearch_border: var(--border); /* From dark theme */
