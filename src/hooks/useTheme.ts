@@ -27,17 +27,7 @@ export function useTheme() {
   );
 
   function toggleTheme() {
-    switch (theme) {
-      case 'system':
-        setTheme('dark');
-        break;
-      case 'dark':
-        setTheme('light');
-        break;
-      case 'light':
-        setTheme('dark');
-        break;
-    }
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   }
 
   function resetTheme() {

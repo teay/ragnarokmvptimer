@@ -16,6 +16,12 @@ interface SettingsContextData {
   toggle24HourFormat: () => void;
   isNotificationSoundEnabled: boolean;
   toggleNotificationSound: () => void;
+  isNotificationPopupEnabled: boolean;
+  toggleNotificationPopup: () => void;
+  isNotificationFlashEnabled: boolean;
+  toggleNotificationFlash: () => void;
+  isNotificationVoiceEnabled: boolean;
+  toggleNotificationVoice: () => void;
   isGlassUIEnabled: boolean;
   toggleGlassUI: () => void;
   language: string;
@@ -44,7 +50,8 @@ interface SettingsContextData {
   toggleSparkleEffect: () => void;
   sparkleDensity: number;
   changeSparkleDensity: (density: number) => void;
-  //resetSettings: () => void;
+  isFallingElementsEnabled: boolean;
+  toggleFallingElements: () => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -85,6 +92,27 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       isNotificationSoundEnabled: !prev.isNotificationSoundEnabled,
+    }));
+  }, [setSettings]);
+
+  const toggleNotificationPopup = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isNotificationPopupEnabled: !prev.isNotificationPopupEnabled,
+    }));
+  }, [setSettings]);
+
+  const toggleNotificationFlash = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isNotificationFlashEnabled: !prev.isNotificationFlashEnabled,
+    }));
+  }, [setSettings]);
+
+  const toggleNotificationVoice = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isNotificationVoiceEnabled: !prev.isNotificationVoiceEnabled,
     }));
   }, [setSettings]);
 
@@ -215,6 +243,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
+  const toggleFallingElements = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isFallingElementsEnabled: !prev.isFallingElementsEnabled,
+    }));
+  }, [setSettings]);
+
   /* const resetSettings = useCallback(() => {
 
   
@@ -232,6 +267,9 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleAnimatedSprites,
         toggle24HourFormat,
         toggleNotificationSound,
+        toggleNotificationPopup,
+        toggleNotificationFlash,
+        toggleNotificationVoice,
         toggleGlassUI,
         changeLanguage,
         changeServer,
@@ -246,6 +284,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeParticleEffect,
         toggleSparkleEffect,
         changeSparkleDensity,
+        toggleFallingElements,
       }}
     >
       {children}

@@ -9,8 +9,19 @@ export function usePersistedState<T>(
   const [state, setState] = useState(() => {
     try {
       const storageValue = localStorage.getItem(key);
-      return storageValue ? JSON.parse(storageValue) : initialState;
+      if (storageValue) {
+        try {
+          const parsedValue = JSON.parse(storageValue);
+          // Merge with initialState to ensure all properties are present
+          return { ...initialState, ...parsedValue };
+        } catch (error) {
+          console.error("Error parsing stored value:", error);
+          return initialState;
+        }
+      }
+      return initialState;
     } catch (error) {
+      console.error("Error accessing localStorage:", error);
       return initialState;
     }
   });
