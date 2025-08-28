@@ -38,6 +38,8 @@ interface SettingsContextData {
   changeWaveColor: (color: string) => void;
   isMainContentTransparent: boolean; // New setting
   toggleMainContentTransparency: () => void; // New toggle
+  particleEffect: 'default' | 'gravity';
+  changeParticleEffect: (effect: 'default' | 'gravity') => void;
   //resetSettings: () => void;
 }
 
@@ -171,6 +173,16 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
+  const changeParticleEffect = useCallback(
+    (effect: 'default' | 'gravity') => {
+      setSettings((prev) => ({
+        ...prev,
+        particleEffect: effect,
+      }));
+    },
+    [setSettings]
+  );
+
   const changeFont = useCallback(() => {
     const fonts = ['Jost', 'Orbitron', 'Exo 2'];
     setSettings((prev) => {
@@ -209,6 +221,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeWaveAmplitude,
         changeWaveColor,
         toggleMainContentTransparency,
+        changeParticleEffect,
       }}
     >
       {children}

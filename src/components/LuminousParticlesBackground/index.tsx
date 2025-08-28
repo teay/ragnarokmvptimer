@@ -29,6 +29,7 @@ const LuminousParticlesBackground: React.FC = () => {
     particleColor,
     waveAmplitude,
     waveColor,
+    particleEffect,
   } = useSettings(); // Get settings from context
 
   useEffect(() => {
@@ -39,24 +40,27 @@ const LuminousParticlesBackground: React.FC = () => {
     if (!ctx) return;
 
     let animationFrameId: number;
-    const particles: Particle[] = [];
 
     // Determine number of particles based on density setting
     const getNumParticles = (density: 'low' | 'medium' | 'high') => {
       switch (density) {
-        case 'low': return 50;
-        case 'medium': return 100;
-        case 'high': return 200;
-        default: return 100;
+        case 'low':
+          return 50;
+        case 'medium':
+          return 100;
+        case 'high':
+          return 200;
+        default:
+          return 100;
       }
     };
 
     // Initialize particles
     const initParticles = () => {
-      particles.length = 0; // Clear existing particles
+      const newParticles: Particle[] = []; // Clear existing particles
       const currentNumParticles = getNumParticles(particleDensity); // Use setting
       for (let i = 0; i < currentNumParticles; i++) {
-        particles.push({
+        newParticles.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
           radius: Math.random() * 3 + 1, // Random radius between 1 and 4
@@ -65,13 +69,16 @@ const LuminousParticlesBackground: React.FC = () => {
           vy: (Math.random() - 0.5) * 0.5,
         });
       }
+      return newParticles;
     };
+
+    let particles = initParticles();
 
     // Set canvas dimensions and initialize particles on resize
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      initParticles(); // Re-initialize particles on resize
+      particles = initParticles(); // Re-initialize particles on resize
     };
 
     window.addEventListener('resize', handleResize);
@@ -102,28 +109,67 @@ const LuminousParticlesBackground: React.FC = () => {
       ctx.beginPath();
       ctx.moveTo(0, waveBaseY);
       for (let i = 0; i < canvas.width; i++) {
-        ctx.lineTo(
-          i,
+        const waveY =
           waveBaseY +
-            Math.sin(i * 0.005 + Date.now() * 0.0005) * (waveAmplitude / 2) + // Use waveAmplitude
-            Math.cos(i * 0.01 + Date.now() * 0.0003) * (waveAmplitude / 4) // Use waveAmplitude
-        );
+          Math.sin(i * 0.005 + Date.now() * 0.0005) * (waveAmplitude / 2) +
+          Math.cos(i * 0.01 + Date.now() * 0.0003) * (waveAmplitude / 4);
+        ctx.lineTo(i, waveY);
       }
       ctx.strokeStyle = waveColor; // Use waveColor
       ctx.lineWidth = 1;
       ctx.stroke();
 
       // --- Sparkling/glittering particles ---
-      particles.forEach(particle => {
-        // Update position
-        particle.x += particle.vx;
-        particle.y += particle.vy;
+      particles.forEach((particle, index) => {
+        if (particleEffect === 'gravity') {
+          // Add gravity
+          particle.vy += 0.05;
 
-        // Wrap around edges
-        if (particle.x < 0) particle.x = canvas.width;
-        if (particle.x > canvas.width) particle.x = 0;
-        if (particle.y < 0) particle.y = canvas.height;
-        if (particle.y > canvas.height) particle.y = 0;
+          // Update position
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+
+          // Wave collision
+          const waveY =
+            waveBaseY +
+            Math.sin(particle.x * 0.005 + Date.now() * 0.0005) *
+              (waveAmplitude / 2) +
+            Math.cos(particle.x * 0.01 + Date.now() * 0.0003) *
+              (waveAmplitude / 4);
+
+          if (particle.y + particle.radius > waveY) {
+            particle.y = waveY - particle.radius;
+            particle.vy *= -0.6; // Bounce with damping
+          }
+
+          // Wrap around edges (for x-axis)
+          if (particle.x < 0) particle.x = canvas.width;
+          if (particle.x > canvas.width) particle.x = 0;
+
+          // Particle-particle collision
+          for (let j = index + 1; j < particles.length; j++) {
+            const otherParticle = particles[j];
+            const dx = otherParticle.x - particle.x;
+            const dy = otherParticle.y - particle.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < particle.radius + otherParticle.radius) {
+              // On collision, remove both particles
+              particles.splice(j, 1);
+              particles.splice(index, 1);
+            }
+          }
+        } else {
+          // Update position
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+
+          // Wrap around edges
+          if (particle.x < 0) particle.x = canvas.width;
+          if (particle.x > canvas.width) particle.x = 0;
+          if (particle.y < 0) particle.y = canvas.height;
+          if (particle.y > canvas.height) particle.y = 0;
+        }
 
         // Only draw particles within the selected mode's area
         if (particle.y >= drawAreaStartY && particle.y <= drawAreaEndY) {
@@ -138,6 +184,23 @@ const LuminousParticlesBackground: React.FC = () => {
       });
       ctx.shadowBlur = 0; // Reset shadow after drawing all particles
 
+      // Respawn particles if needed
+      if (particleEffect === 'gravity') {
+        const currentNumParticles = getNumParticles(particleDensity);
+        if (particles.length < currentNumParticles) {
+          for (let i = 0; i < currentNumParticles - particles.length; i++) {
+            particles.push({
+              x: Math.random() * canvas.width,
+              y: Math.random() * drawAreaEndY,
+              radius: Math.random() * 3 + 1,
+              color: particleColor,
+              vx: (Math.random() - 0.5) * 0.5,
+              vy: (Math.random() - 0.5) * 0.5,
+            });
+          }
+        }
+      }
+
       animationFrameId = requestAnimationFrame(animate);
     };
 
@@ -148,7 +211,14 @@ const LuminousParticlesBackground: React.FC = () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [
+    backgroundEffectMode,
+    particleDensity,
+    particleColor,
+    waveAmplitude,
+    waveColor,
+    particleEffect,
+  ]);
 
   return <canvas ref={canvasRef} className={backgroundStyles} />;
 };
