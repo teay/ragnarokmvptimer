@@ -65,6 +65,8 @@ export function ModalSettings({ onClose }: Props) {
     toggleSparkleEffect,
     sparkleDensity,
     changeSparkleDensity,
+    isFallingElementsEnabled,
+    toggleFallingElements,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -191,6 +193,14 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <FontButton onClick={changeFont}>{font}</FontButton>
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='falling_elements' defaultMessage='Falling Elements' />
+              </SettingName>
+
+              <Switch onChange={toggleFallingElements} checked={!!isFallingElementsEnabled} />
             </Setting>
 
             {/* New Background Effect Settings */}

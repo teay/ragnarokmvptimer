@@ -44,6 +44,8 @@ interface SettingsContextData {
   toggleSparkleEffect: () => void;
   sparkleDensity: number;
   changeSparkleDensity: (density: number) => void;
+  isFallingElementsEnabled: boolean;
+  toggleFallingElements: () => void;
   //resetSettings: () => void;
 }
 
@@ -56,7 +58,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     DEFAULT_SETTINGS
   );
 
-  const { isSparkleEffectEnabled, sparkleDensity } = settings;
+  const { isSparkleEffectEnabled, sparkleDensity, isFallingElementsEnabled } = settings;
 
   const toggleRespawnCountdown = useCallback(
     () =>
@@ -215,6 +217,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
+  const toggleFallingElements = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isFallingElementsEnabled: !prev.isFallingElementsEnabled,
+    }));
+  }, [setSettings]);
+
   /* const resetSettings = useCallback(() => {
 
   
@@ -244,10 +253,9 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeWaveColor,
         toggleMainContentTransparency,
         changeParticleEffect,
-        isSparkleEffectEnabled,
         toggleSparkleEffect,
-        sparkleDensity,
         changeSparkleDensity,
+        toggleFallingElements,
       }}
     >
       {children}

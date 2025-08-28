@@ -1,0 +1,1 @@
+/* No specific styles needed here as they are defined within index.tsx */
