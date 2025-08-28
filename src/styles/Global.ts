@@ -33,86 +33,85 @@ export const globals = css`
       min-height: 100vh;
     }
 
-    :root,
     html[data-theme='light'] {
-      color-scheme: light;
-      --primary: #f89200;
-      --light-glass-r: 150;
-      --light-glass-g: 250;
-      --light-glass-b: 200;
-      --secondary: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
+      color-scheme: dark; /* Changed to dark color scheme */
+      --primary: #6553df96; /* Brighter version of dark primary */
+      --secondary: #3c3467ff; /* Brighter version of dark secondary */
+      --tertiary: #3C3C5A; /* Brighter version of dark tertiary */
+      --quaternary: #2A2A3E; /* Brighter version of dark quaternary */
+      --border: #5A5A7A; /* Brighter version of dark border */
 
-      --text: #000;
-      --header_text: #fff;
+      --text: #E0E0E0; /* Keep dark theme text color */
+      --header_text: var(--text);
 
-      --header_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
+      --header_bg: var(--tertiary);
       background-blend-mode: normal;
-      --header_backdrop_filter: blur(10px);
-      --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
+      --header_backdrop_filter: blur(10px); /* Keep glass effect */
+      --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
 
-      --warning_header_bg: #1b1c1d;
-      --warning_header_text: #fff;
+      --warning_header_bg: transparent; /* From dark theme */
+      --warning_header_text: #000; /* From dark theme */
 
-      --scrollbar_bg: #f6f8fa;
-      --scrollbar_thumb: #f89200;
+      --scrollbar_bg: transparent; /* From dark theme */
+      --scrollbar_thumb: var(--primary); /* From dark theme */
 
-      --mvpCard_id: #421411;
-      --mvpCard_name: #f89200;
-      --mvpCard_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
+      --mvpCard_id: var(--text); /* From dark theme */
+      --mvpCard_name: #9370DB; /* From dark theme */
+      --mvpCard_bg: var(--tertiary);
       background-blend-mode: normal;
-      --mvpCard_text: #421411;
-      --mvpCard_killButton: #d10000; /* Reverted to original */
-      --mvpCard_editButton: #f89200; /* Reverted to original */
+      --mvpCard_text: var(--text); /* From dark theme */
+      --mvpCard_killButton: #F25858; /* From dark theme */
+      --mvpCard_editButton: var(--primary); /* From dark theme */
+      --mvpCard_controls_showMap: var(--primary); /* From dark theme */
+      --mvpCard_controls_edit: var(--primary); /* From dark theme */
+      --mvpCard_controls_delete: #F25858; /* From dark theme */
 
-      --mvpCard_controls_showMap: #00a8ff; /* Reverted to original */
-      --mvpCard_controls_edit: #f89200; /* Reverted to original */
-      --mvpCard_controls_delete: #d10000; /* Reverted to original */
+      --timers_passed: #F25858; /* From dark theme */
+      --timers_normal: #FFFFFF; /* From dark theme */
+      --timers_respawning: #58F28B; /* From dark theme */
 
-      --timers_passed: #d10000;
-      --timers_normal: #421411;
-      --timers_respawning: #62831f;
+      --switch_bg: var(--primary); /* From dark theme */
+      --switch_handle: var(--quaternary); /* From dark theme */
 
-      --switch_bg: #ffa800;
-      --switch_handle: #f6f8fa;
-
-      --modal_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
+      --modal_bg: var(--tertiary);
       background-blend-mode: normal;
-      --modal_text: #421411;
-      --modal_backdrop_filter: blur(20px);
-      --modal_hl: #1b1c1d;
-      --modal_name: #ffa800;
-      --modal_time: #ffa800;
-      --modal_button: #f89200; /* Reverted to original */
+      --modal_backdrop_filter: blur(20px); /* Keep glass effect */
+      --modal_hl: var(--text); /* From dark theme */
+      --modal_name: #9370DB; /* From dark theme */
+      --modal_time: var(--primary); /* From dark theme */
+      --modal_button: var(--primary); /* From dark theme */
 
-      --modal_datePicker_border: #000;
+      --modal_datePicker_border: var(--border); /* From dark theme */
 
-      --modal_serverSelect_bg: #f6f8fa;
-      --modal_serverSelect_bgActive: #f89200;
-      --modal_serverSelect_text: #000;
-      --modal_serverSelect_textActive: #fff;
-      --modal_serverSelect_border: #f89200;
+      --modal_serverSelect_bg: var(--tertiary); /* From dark theme */
+      --modal_serverSelect_bgActive: var(--primary); /* From dark theme */
+      --modal_serverSelect_text: var(--text); /* From dark theme */
+      --modal_serverSelect_textActive: var(--text); /* From dark theme */
+      --modal_serverSelect_border: transparent; /* From dark theme */
 
-      --modal_changeMap_border: #00a8ff;
-      --modal_changeMap_text: #000;
-      --modal_changeMap_selectedMapBorder: #ffa800;
+      --modal_changeMap_border: var(--primary); /* From dark theme */
+      --modal_changeMap_text: var(--text); /* From dark theme */
+      --modal_changeMap_selectedMapBorder: var(--secondary); /* From dark theme */
 
-      --filterSearch_bg: rgba(128, 128, 128, 0.9); /* Adjusted for Glass UI */
-      --filterSearch_border: #f89200;
-      --filterSearch_text: #000;
-      --filterSearch_border_focus: #000;
+      --filterSearch_bg: var(--tertiary); /* From dark theme */
+      --filterSearch_border: var(--border); /* From dark theme */
+      --filterSearch_text: var(--text); /* From dark theme */
+      --filterSearch_border_focus: var(--primary); /* From dark theme */
+      backdrop-filter: blur(10px); /* Add glass effect */
 
-      --languagePicker_bg: rgba(128, 128, 128, 0.9); /* Adjusted for Glass UI */
-      --languagePicker_border: #f89200;
-      --languagePicker_text: #421411;
+      --languagePicker_bg: var(--tertiary); /* From dark theme */
+      --languagePicker_border: var(--border); /* From dark theme */
+      --languagePicker_text: var(--text); /* From dark theme */
+      backdrop-filter: blur(10px); /* Add glass effect */
 
-      --footer_text: #333;
-      --footer_link: #007bff;
-      --footer_bg: rgba(var(--light-glass-r), var(--light-glass-g), var(--light-glass-b), 0.9);
+      --footer_text: var(--text); /* From dark theme */
+      --footer_link: var(--primary); /* From dark theme */
+      --footer_bg: var(--tertiary);
       background-blend-mode: normal;
-      --footer_backdrop_filter: blur(10px);
-      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.9);
+      --footer_backdrop_filter: blur(10px); /* Keep glass effect */
+      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
 
-      --pulse_color: #e5e5e5;
+      --pulse_color: #404040; /* From dark theme */
 
       color: var(--text);
     }
