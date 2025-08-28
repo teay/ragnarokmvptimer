@@ -11,6 +11,9 @@ export const DEFAULT_SETTINGS = {
   animatedSprites: false,
   use24HourFormat: true,
   isNotificationSoundEnabled: true,
+  isNotificationPopupEnabled: true,
+  isNotificationFlashEnabled: true,
+  isNotificationVoiceEnabled: true,
   isGlassUIEnabled: false,
   isAnimatedBackgroundEnabled: true, // New setting
   backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center', // New: default to full screen
@@ -21,6 +24,7 @@ export const DEFAULT_SETTINGS = {
   isMainContentTransparent: false, // New setting for main content transparency
   isSparkleEffectEnabled: false,
   sparkleDensity: 50,
+  isFallingElementsEnabled: false,
   particleEffect: 'default' as 'default' | 'gravity',
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,

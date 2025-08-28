@@ -41,6 +41,12 @@ export function ModalSettings({ onClose }: Props) {
     toggle24HourFormat,
     isNotificationSoundEnabled,
     toggleNotificationSound,
+    isNotificationPopupEnabled,
+    toggleNotificationPopup,
+    isNotificationFlashEnabled,
+    toggleNotificationFlash,
+    isNotificationVoiceEnabled,
+    toggleNotificationVoice,
     isGlassUIEnabled,
     toggleGlassUI,
     isAnimatedBackgroundEnabled,
@@ -65,7 +71,7 @@ export function ModalSettings({ onClose }: Props) {
     toggleSparkleEffect,
     sparkleDensity,
     changeSparkleDensity,
-    isFallingElementsEnabled,
+    isFallingElementsEnabled = false,
     toggleFallingElements,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
@@ -147,6 +153,39 @@ export function ModalSettings({ onClose }: Props) {
 
             <Setting>
               <SettingName>
+                <FormattedMessage id='notification_popup' defaultMessage='Notification Popup' />
+              </SettingName>
+
+              <Switch
+                onChange={toggleNotificationPopup}
+                checked={isNotificationPopupEnabled}
+              />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='notification_flash' defaultMessage='Notification Flash' />
+              </SettingName>
+
+              <Switch
+                onChange={toggleNotificationFlash}
+                checked={isNotificationFlashEnabled}
+              />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='notification_voice' defaultMessage='Notification Voice' />
+              </SettingName>
+
+              <Switch
+                onChange={toggleNotificationVoice}
+                checked={isNotificationVoiceEnabled}
+              />
+            </Setting>
+
+            <Setting>
+              <SettingName>
                 <FormattedMessage id='glass_ui' defaultMessage='Glass UI' />
               </SettingName>
 
@@ -193,6 +232,14 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <FontButton onClick={changeFont}>{font}</FontButton>
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='falling_elements' defaultMessage='Falling Elements' />
+              </SettingName>
+
+              <Switch onChange={toggleFallingElements} checked={isFallingElementsEnabled} />
             </Setting>
 
             {/* New Background Effect Settings */}
