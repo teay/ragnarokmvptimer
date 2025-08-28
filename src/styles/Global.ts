@@ -66,9 +66,9 @@ export const globals = css`
       --mvpCard_controls_edit: var(--primary); /* From dark theme */
       --mvpCard_controls_delete: #F25858; /* From dark theme */
 
-      --timers_passed: #F25858; /* From dark theme */
-      --timers_normal: #FFFFFF; /* From dark theme */
-      --timers_respawning: #58F28B; /* From dark theme */
+      --timers_passed: #F25858; /* Already Respawned (Red) */
+      --timers_normal: #FFFFFF;
+      --timers_respawning: #FFFF00; /* Respawning (Yellow) */
 
       --switch_bg: var(--primary); /* From dark theme */
       --switch_handle: var(--quaternary); /* From dark theme */
@@ -161,7 +161,7 @@ export const globals = css`
 
       --timers_passed: #F25858;
       --timers_normal: #FFFFFF;
-      --timers_respawning: #58F28B;
+      --timers_respawning: #FFFF00;
 
       --switch_bg: var(--primary);
       --switch_handle: var(--quaternary);
@@ -207,11 +207,6 @@ export const globals = css`
       --pulse_color: #404040;
 
       color: var(--text);
-    }
-
-    /* Aggressive override for MvpCard text */
-    .cujd8eq span {
-      color: #E0E0E0 !important;
     }
 
     /* Aggressive override for ModalSelectMap text */
