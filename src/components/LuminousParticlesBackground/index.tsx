@@ -31,6 +31,8 @@ interface LeafParticle {
   vRotation: number;
   size: number;
   image: HTMLImageElement;
+  bounceCount: number; // New: track bounces
+  maxBounces: number; // New: random threshold for disappearance
 }
 
 import { useSettings } from '../../contexts/SettingsContext'; // Import useSettings
@@ -127,6 +129,8 @@ const LuminousParticlesBackground: React.FC = () => {
             vRotation: Math.random() * 1 - 0.5, // Slower rotational velocity
             size: Math.random() * 30 + 20, // Size between 20px and 50px
             image: randomImage,
+            bounceCount: 0, // Initialize bounce count
+            maxBounces: Math.floor(Math.random() * 3) + 3, // Random 3, 4, or 5 bounces
           });
         }
       }
@@ -247,6 +251,9 @@ const LuminousParticlesBackground: React.FC = () => {
 
       // --- Update and draw leaf particles ---
       if (isFallingElementsEnabled && leafImagesLoaded) {
+        // Filter out leaves that have bounced too many times
+        leafParticles = leafParticles.filter(leaf => leaf.bounceCount <= leaf.maxBounces);
+
         leafParticles.forEach((leaf, index) => {
           // Apply gravity
           leaf.vy += 0.05; // Adjust gravity as needed
@@ -265,19 +272,25 @@ const LuminousParticlesBackground: React.FC = () => {
               (waveAmplitude / 4);
 
           if (leaf.y + leaf.size / 2 > waveY) { // Collision with center of leaf
-            leaf.y = waveY - leaf.size / 2; // Position above wave
-            leaf.vy *= -0.6; // Bounce with damping
-            leaf.vx *= 0.9; // Reduce horizontal velocity on bounce
+            if (leaf.vy > 0) { // Only count bounce if moving downwards
+              leaf.y = waveY - leaf.size / 2; // Position above wave
+              leaf.vy *= -0.6; // Bounce with damping
+              leaf.vx *= 0.9; // Reduce horizontal velocity on bounce
+              leaf.bounceCount++; // Increment bounce count
+            }
           }
 
-          // Reset if falls off screen
+          // Reset if falls off screen (and not due to bounce count)
           if (leaf.y > canvas.height + leaf.size) {
-            leaf.y = -leaf.size; // Reset above top
+            // Reset leaf to top, effectively respawning it
+            leaf.y = -leaf.size; 
             leaf.x = Math.random() * canvas.width;
             leaf.vy = Math.random() * 0.5 + 0.5;
             leaf.rotation = Math.random() * 360;
             leaf.vRotation = Math.random() * 1 - 0.5;
             leaf.vx = (Math.random() - 0.5) * 0.2;
+            leaf.bounceCount = 0; // Reset bounce count for new fall
+            leaf.maxBounces = Math.floor(Math.random() * 3) + 3; // New random max bounces
           }
 
           // Draw leaf
@@ -287,6 +300,27 @@ const LuminousParticlesBackground: React.FC = () => {
           ctx.drawImage(leaf.image, -leaf.size / 2, -leaf.size / 2, leaf.size, leaf.size);
           ctx.restore();
         });
+
+        // Continuous spawning of leaves
+        const desiredLeafCount = 30; // This can be made configurable later
+        if (leafParticles.length < desiredLeafCount) {
+          const leavesToSpawn = desiredLeafCount - leafParticles.length;
+          for (let i = 0; i < leavesToSpawn; i++) {
+            const randomImage = leafImageRefs.current[Math.floor(Math.random() * leafImageRefs.current.length)];
+            leafParticles.push({
+              x: Math.random() * canvas.width,
+              y: -Math.random() * canvas.height * 0.5, // Start above viewport, spread out
+              vx: (Math.random() - 0.5) * 0.2,
+              vy: Math.random() * 0.5 + 0.5,
+              rotation: Math.random() * 360,
+              vRotation: Math.random() * 1 - 0.5,
+              size: Math.random() * 30 + 20,
+              image: randomImage,
+              bounceCount: 0,
+              maxBounces: Math.floor(Math.random() * 3) + 3,
+            });
+          }
+        }
       }
 
       ctx.shadowBlur = 0; // Reset shadow after drawing all particles
