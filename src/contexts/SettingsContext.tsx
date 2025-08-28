@@ -25,6 +25,7 @@ interface SettingsContextData {
   font: string;
   changeFont: () => void;
   isAnimatedBackgroundEnabled: boolean;
+  toggleAnimatedBackground: () => void;
   backgroundEffectMode: 'full' | 'top' | 'bottom' | 'center';
   changeBackgroundEffectMode: (mode: 'full' | 'top' | 'bottom' | 'center') => void;
   particleDensity: 'low' | 'medium' | 'high';
@@ -83,6 +84,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       isGlassUIEnabled: !prev.isGlassUIEnabled,
+    }));
+  }, [setSettings]);
+
+  const toggleAnimatedBackground = useCallback(() => { // New toggle implementation
+    setSettings((prev) => ({
+      ...prev,
+      isAnimatedBackgroundEnabled: !prev.isAnimatedBackgroundEnabled,
     }));
   }, [setSettings]);
 
@@ -175,12 +183,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     });
   }, [setSettings]);
 
-  const toggleAnimatedBackground = useCallback(() => { // New toggle implementation
-    setSettings((prev) => ({
-      ...prev,
-      isAnimatedBackgroundEnabled: !prev.isAnimatedBackgroundEnabled,
-    }));
-  }, [setSettings]);
+  
 
   /* const resetSettings = useCallback(() => {
     resetTheme();
@@ -193,28 +196,19 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         ...settings,
         toggleRespawnCountdown,
         toggleAnimatedSprites,
-        use24HourFormat: true, // temporary
         toggle24HourFormat,
         toggleNotificationSound,
         toggleGlassUI,
         changeLanguage,
         changeServer,
         changeFont,
-        isAnimatedBackgroundEnabled: settings.isAnimatedBackgroundEnabled,
         toggleAnimatedBackground,
-        backgroundEffectMode: settings.backgroundEffectMode,
         changeBackgroundEffectMode,
-        particleDensity: settings.particleDensity,
         changeParticleDensity,
-        particleColor: settings.particleColor,
         changeParticleColor,
-        waveAmplitude: settings.waveAmplitude,
         changeWaveAmplitude,
-        waveColor: settings.waveColor,
         changeWaveColor,
-        isMainContentTransparent: settings.isMainContentTransparent, // Add new setting to value
-        toggleMainContentTransparency, // Add new toggle to value
-        //resetSettings,
+        toggleMainContentTransparency,
       }}
     >
       {children}

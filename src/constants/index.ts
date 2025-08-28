@@ -13,8 +13,8 @@ export const DEFAULT_SETTINGS = {
   isNotificationSoundEnabled: true,
   isGlassUIEnabled: false,
   isAnimatedBackgroundEnabled: true, // New setting
-  backgroundEffectMode: 'full', // New: default to full screen
-  particleDensity: 'medium', // New: default particle density
+  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center', // New: default to full screen
+  particleDensity: 'medium' as 'low' | 'medium' | 'high', // New: default particle density
   particleColor: 'rgba(255, 255, 255, 0.8)', // New: default particle color (white)
   waveAmplitude: 10, // New: default wave amplitude
   waveColor: 'rgba(0, 255, 255, 0.1)', // New: default wave color (faint cyan)
