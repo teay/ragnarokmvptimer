@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { css } from '@linaria/core';
 
 const backgroundStyles = css`
@@ -19,6 +19,20 @@ interface Particle {
   vy: number;
 }
 
+// Leaf image paths from FallingElements
+const leafImagePaths = Array.from({ length: 16 }).map((_, i) => `/ragnarokmvptimer/assets/leaves/leaf${i + 1}.png`);
+
+interface LeafParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  rotation: number;
+  vRotation: number;
+  size: number;
+  image: HTMLImageElement;
+}
+
 import { useSettings } from '../../contexts/SettingsContext'; // Import useSettings
 
 const LuminousParticlesBackground: React.FC = () => {
@@ -30,7 +44,31 @@ const LuminousParticlesBackground: React.FC = () => {
     waveAmplitude,
     waveColor,
     particleEffect,
+    isFallingElementsEnabled, // New: for falling leaves
   } = useSettings(); // Get settings from context
+
+  const [leafImagesLoaded, setLeafImagesLoaded] = useState(false);
+  const leafImageRefs = useRef<HTMLImageElement[]>([]);
+
+  useEffect(() => {
+    // Load leaf images
+    const loadLeafImagePromises = leafImagePaths.map((path) => {
+      return new Promise<HTMLImageElement>((resolve) => {
+        const img = new Image();
+        img.src = path;
+        img.onload = () => resolve(img);
+        img.onerror = () => {
+          console.error(`Failed to load leaf image: ${path}`);
+          resolve(img); // Resolve even on error to not block loading
+        };
+      });
+    });
+
+    Promise.all(loadLeafImagePromises).then((loadedImages) => {
+      leafImageRefs.current = loadedImages.filter(img => img.complete && img.naturalWidth > 0);
+      setLeafImagesLoaded(true);
+    });
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -74,11 +112,35 @@ const LuminousParticlesBackground: React.FC = () => {
 
     let particles = initParticles();
 
+    // Initialize leaf particles
+    const initLeafParticles = () => {
+      const newLeafParticles: LeafParticle[] = [];
+      if (isFallingElementsEnabled && leafImageRefs.current.length > 0) {
+        for (let i = 0; i < 30; i++) { // Fixed count for now, can be made configurable
+          const randomImage = leafImageRefs.current[Math.floor(Math.random() * leafImageRefs.current.length)];
+          newLeafParticles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height * 0.5 - canvas.height * 0.5, // Start above viewport
+            vx: (Math.random() - 0.5) * 0.2, // Slower horizontal drift
+            vy: Math.random() * 0.5 + 0.5, // Initial vertical velocity
+            rotation: Math.random() * 360,
+            vRotation: Math.random() * 1 - 0.5, // Slower rotational velocity
+            size: Math.random() * 30 + 20, // Size between 20px and 50px
+            image: randomImage,
+          });
+        }
+      }
+      return newLeafParticles;
+    };
+
+    let leafParticles = initLeafParticles();
+
     // Set canvas dimensions and initialize particles on resize
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       particles = initParticles(); // Re-initialize particles on resize
+      leafParticles = initLeafParticles(); // Re-initialize leaf particles on resize
     };
 
     window.addEventListener('resize', handleResize);
@@ -119,7 +181,7 @@ const LuminousParticlesBackground: React.FC = () => {
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // --- Sparkling/glittering particles ---
+      // --- Update and draw sparkling/glittering particles ---
       particles.forEach((particle, index) => {
         if (particleEffect === 'gravity') {
           // Add gravity
@@ -146,7 +208,7 @@ const LuminousParticlesBackground: React.FC = () => {
           if (particle.x < 0) particle.x = canvas.width;
           if (particle.x > canvas.width) particle.x = 0;
 
-          // Particle-particle collision
+          // Particle-particle collision (simple removal)
           for (let j = index + 1; j < particles.length; j++) {
             const otherParticle = particles[j];
             const dx = otherParticle.x - particle.x;
@@ -182,6 +244,51 @@ const LuminousParticlesBackground: React.FC = () => {
           ctx.fill();
         }
       });
+
+      // --- Update and draw leaf particles ---
+      if (isFallingElementsEnabled && leafImagesLoaded) {
+        leafParticles.forEach((leaf, index) => {
+          // Apply gravity
+          leaf.vy += 0.05; // Adjust gravity as needed
+
+          // Update position
+          leaf.x += leaf.vx;
+          leaf.y += leaf.vy;
+          leaf.rotation += leaf.vRotation; // Apply rotation
+
+          // Wave collision (similar to gravity particles)
+          const waveY =
+            waveBaseY +
+            Math.sin(leaf.x * 0.005 + Date.now() * 0.0005) *
+              (waveAmplitude / 2) +
+            Math.cos(leaf.x * 0.01 + Date.now() * 0.0003) *
+              (waveAmplitude / 4);
+
+          if (leaf.y + leaf.size / 2 > waveY) { // Collision with center of leaf
+            leaf.y = waveY - leaf.size / 2; // Position above wave
+            leaf.vy *= -0.6; // Bounce with damping
+            leaf.vx *= 0.9; // Reduce horizontal velocity on bounce
+          }
+
+          // Reset if falls off screen
+          if (leaf.y > canvas.height + leaf.size) {
+            leaf.y = -leaf.size; // Reset above top
+            leaf.x = Math.random() * canvas.width;
+            leaf.vy = Math.random() * 0.5 + 0.5;
+            leaf.rotation = Math.random() * 360;
+            leaf.vRotation = Math.random() * 1 - 0.5;
+            leaf.vx = (Math.random() - 0.5) * 0.2;
+          }
+
+          // Draw leaf
+          ctx.save();
+          ctx.translate(leaf.x + leaf.size / 2, leaf.y + leaf.size / 2);
+          ctx.rotate(leaf.rotation * Math.PI / 180);
+          ctx.drawImage(leaf.image, -leaf.size / 2, -leaf.size / 2, leaf.size, leaf.size);
+          ctx.restore();
+        });
+      }
+
       ctx.shadowBlur = 0; // Reset shadow after drawing all particles
 
       // Respawn particles if needed
@@ -218,6 +325,8 @@ const LuminousParticlesBackground: React.FC = () => {
     waveAmplitude,
     waveColor,
     particleEffect,
+    isFallingElementsEnabled, // Add dependency
+    leafImagesLoaded, // Add dependency
   ]);
 
   return <canvas ref={canvasRef} className={backgroundStyles} />;
