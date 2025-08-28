@@ -54,6 +54,8 @@ export function ModalSettings({ onClose }: Props) {
     changeWaveAmplitude,
     waveColor,
     changeWaveColor,
+    isMainContentTransparent, // New setting
+    toggleMainContentTransparency, // New toggle
     font,
     changeFont,
   } = useSettings();
@@ -201,6 +203,13 @@ export function ModalSettings({ onClose }: Props) {
                 <FormattedMessage id='wave_color' defaultMessage='Wave Color' />
               </SettingName>
               <input type="color" value={waveColor} onChange={(e) => changeWaveColor(e.target.value)} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='main_content_transparency' defaultMessage='Main Content Transparency' />
+              </SettingName>
+              <Switch onChange={toggleMainContentTransparency} checked={isMainContentTransparent} />
             </Setting>
             {/* End New Background Effect Settings */}
 

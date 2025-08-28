@@ -228,6 +228,21 @@ export const globals = css`
       --footer_box_shadow: none;
     }
 
+    /* Conditional transparency for Main content and MvpCards */
+    html.transparent-main-content[data-theme='light'] {
+      /* Main component background */
+      --secondary: rgba(60, 60, 90, 0.5); /* Semi-transparent brighter dark */
+      /* MvpCard background */
+      --mvpCard_bg: rgba(60, 60, 90, 0.5); /* Semi-transparent brighter dark */
+    }
+
+    html.transparent-main-content[data-theme='dark'] {
+      /* Main component background */
+      --secondary: rgba(44, 44, 74, 0.5); /* Semi-transparent dark */
+      /* MvpCard background */
+      --mvpCard_bg: rgba(44, 44, 74, 0.5); /* Semi-transparent dark */
+    }
+
     html {
       font-size: 62.5%;
     }

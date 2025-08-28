@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS = {
   particleColor: 'rgba(255, 255, 255, 0.8)', // New: default particle color (white)
   waveAmplitude: 10, // New: default wave amplitude
   waveColor: 'rgba(0, 255, 255, 0.1)', // New: default wave color (faint cyan)
+  isMainContentTransparent: false, // New setting for main content transparency
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,
   font: 'Jost',
