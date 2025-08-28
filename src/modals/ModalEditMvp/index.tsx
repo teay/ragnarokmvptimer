@@ -72,7 +72,7 @@ export function ModalEditMvp() {
 
   useKey('Escape', closeEditMvpModal);
 
-  if (canChangeMap && !selectedMap) {
+  if (!selectedMap) {
     return (
       <ModalSelectMap
         spawnMaps={mvp.spawn}

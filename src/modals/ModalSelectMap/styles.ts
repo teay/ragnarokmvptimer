@@ -77,7 +77,9 @@ export const MapCard = styled.button<{ isSelected: boolean }>`
   border-style: solid;
   border-radius: 6px;
   border-color: ${({ isSelected }) =>
-    isSelected ? 'var(--modal_changeMap_selectedMapBorder)' : 'transparent'};
+    isSelected ? 'yellow' : 'transparent'};
+  background-color: none;
+  box-sizing: border-box;
 `;
 
 export const MapDetails = styled.div`
