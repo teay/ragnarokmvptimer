@@ -42,6 +42,18 @@ export function ModalSettings({ onClose }: Props) {
     toggleNotificationSound,
     isGlassUIEnabled,
     toggleGlassUI,
+    isAnimatedBackgroundEnabled,
+    toggleAnimatedBackground,
+    backgroundEffectMode,
+    changeBackgroundEffectMode,
+    particleDensity,
+    changeParticleDensity,
+    particleColor,
+    changeParticleColor,
+    waveAmplitude,
+    changeWaveAmplitude,
+    waveColor,
+    changeWaveColor,
     font,
     changeFont,
   } = useSettings();
@@ -132,11 +144,65 @@ export function ModalSettings({ onClose }: Props) {
 
             <Setting>
               <SettingName>
+                <FormattedMessage id='animated_background' defaultMessage='Animated Background' />
+              </SettingName>
+
+              <Switch onChange={toggleAnimatedBackground} checked={isAnimatedBackgroundEnabled} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
                 <FormattedMessage id='font' defaultMessage='Font' />
               </SettingName>
 
               <FontButton onClick={changeFont}>{font}</FontButton>
             </Setting>
+
+            {/* New Background Effect Settings */}
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='background_effect_mode' defaultMessage='Effect Mode' />
+              </SettingName>
+              <select value={backgroundEffectMode} onChange={(e) => changeBackgroundEffectMode(e.target.value as 'full' | 'top' | 'bottom' | 'center')}>
+                <option value="full">Full Screen</option>
+                <option value="top">Top Half</option>
+                <option value="bottom">Bottom Half</option>
+                <option value="center">Center</option>
+              </select>
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='particle_density' defaultMessage='Particle Density' />
+              </SettingName>
+              <select value={particleDensity} onChange={(e) => changeParticleDensity(e.target.value as 'low' | 'medium' | 'high')}>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='particle_color' defaultMessage='Particle Color' />
+              </SettingName>
+              <input type="color" value={particleColor} onChange={(e) => changeParticleColor(e.target.value)} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='wave_amplitude' defaultMessage='Wave Amplitude' />
+              </SettingName>
+              <input type="number" value={waveAmplitude} onChange={(e) => changeWaveAmplitude(Number(e.target.value))} min="0" max="100" />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='wave_color' defaultMessage='Wave Color' />
+              </SettingName>
+              <input type="color" value={waveColor} onChange={(e) => changeWaveColor(e.target.value)} />
+            </Setting>
+            {/* End New Background Effect Settings */}
 
             <SettingSecondary>
               <SettingName>

@@ -44,7 +44,7 @@ export const globals = css`
       --text: #E0E0E0; /* Keep dark theme text color */
       --header_text: var(--text);
 
-      --header_bg: var(--tertiary);
+      --header_bg: rgba(60, 60, 90, 0.8); /* Semi-transparent for brighter dark theme */
       background-blend-mode: normal;
       --header_backdrop_filter: blur(10px); /* Keep glass effect */
       --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
@@ -106,7 +106,7 @@ export const globals = css`
 
       --footer_text: var(--text); /* From dark theme */
       --footer_link: var(--primary); /* From dark theme */
-      --footer_bg: var(--tertiary);
+      --footer_bg: rgba(60, 60, 90, 0.8); /* Semi-transparent for brighter dark theme */
       background-blend-mode: normal;
       --footer_backdrop_filter: blur(10px); /* Keep glass effect */
       --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
@@ -135,7 +135,7 @@ export const globals = css`
       --text: #E0E0E0;
       --header_text: var(--text);
 
-            --header_bg: var(--tertiary);
+            --header_bg: rgba(44, 44, 74, 0.8); /* Semi-transparent for dark theme */
       background-blend-mode: normal;
       --header_backdrop_filter: none;
       --header_box_shadow: none;
@@ -199,7 +199,7 @@ export const globals = css`
 
       --footer_text: var(--text);
       --footer_link: var(--primary);
-      --footer_bg: var(--tertiary);
+      --footer_bg: rgba(44, 44, 74, 0.8); /* Semi-transparent for dark theme */
       background-blend-mode: normal;
       --footer_backdrop_filter: none;
       --footer_box_shadow: none;
