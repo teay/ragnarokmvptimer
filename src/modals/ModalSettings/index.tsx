@@ -23,6 +23,7 @@ import {
   ThemeContainer,
   ClearButton,
   FontButton,
+  ParticleEffectButton,
 } from './styles';
 
 type Props = {
@@ -56,6 +57,8 @@ export function ModalSettings({ onClose }: Props) {
     changeWaveColor,
     isMainContentTransparent, // New setting
     toggleMainContentTransparency, // New toggle
+    particleEffect,
+    changeParticleEffect,
     font,
     changeFont,
   } = useSettings();
@@ -210,6 +213,17 @@ export function ModalSettings({ onClose }: Props) {
                 <FormattedMessage id='main_content_transparency' defaultMessage='Main Content Transparency' />
               </SettingName>
               <Switch onChange={toggleMainContentTransparency} checked={isMainContentTransparent} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='particle_effect' defaultMessage='Particle Effect' />
+              </SettingName>
+              <div>
+                <ParticleEffectButton active onClick={() => changeParticleEffect(particleEffect === 'default' ? 'gravity' : 'default')}>
+                  {particleEffect === 'default' ? 'Default' : 'Gravity'}
+                </ParticleEffectButton>
+              </div>
             </Setting>
             {/* End New Background Effect Settings */}
 
