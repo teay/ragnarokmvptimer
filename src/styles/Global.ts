@@ -117,28 +117,9 @@ export const globals = css`
     }
 
     html.non-glass-ui[data-theme='light'] {
-      --secondary: #f6f8fa;
-
-      --header_bg: #ffffff;
-      background-blend-mode: normal;
       --header_backdrop_filter: none;
       --header_box_shadow: none;
-
-      --mvpCard_bg: #fff;
-      background-blend-mode: normal;
-
-      --modal_bg: #fff;
-      background-blend-mode: normal;
       --modal_backdrop_filter: none;
-
-      --filterSearch_bg: #fff;
-
-      --languagePicker_bg: #f6f8fa;
-
-      --footer_text: #fff;
-      --footer_link: #fff;
-      --footer_bg: #ffffff;
-      background-blend-mode: normal;
       --footer_backdrop_filter: none;
       --footer_box_shadow: none;
     }
@@ -239,26 +220,10 @@ export const globals = css`
     }
 
     html.non-glass-ui[data-theme='dark'] {
-      --secondary: #262626;
-
-      --header_bg: #333333;
-      background-blend-mode: normal;
       --header_backdrop_filter: none;
       --header_box_shadow: none;
-
-      --mvpCard_bg: #262626;
-      background-blend-mode: normal;
-
-      --modal_bg: #262626;
-      background-blend-mode: normal;
+      --mvpCard_backdrop_filter: none; /* Assuming mvpCard might have one */
       --modal_backdrop_filter: none;
-
-      --filterSearch_bg: #262626;
-
-      --languagePicker_bg: #454545;
-
-      --footer_bg: #333333;
-      background-blend-mode: normal;
       --footer_backdrop_filter: none;
       --footer_box_shadow: none;
     }
