@@ -18,12 +18,7 @@ interface SettingsContextData {
   toggle24HourFormat: () => void;
   isNotificationSoundEnabled: boolean;
   toggleNotificationSound: () => void;
-  isNotificationPopupEnabled: boolean;
-  toggleNotificationPopup: () => void;
-  isNotificationFlashEnabled: boolean;
-  toggleNotificationFlash: () => void;
-  isNotificationVoiceEnabled: boolean;
-  toggleNotificationVoice: () => void;
+  
   isGlassUIEnabled: boolean;
   toggleGlassUI: () => void;
   language: string;
@@ -104,26 +99,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
-  const toggleNotificationPopup = useCallback(() => {
-    setSettings((prev) => ({
-      ...prev,
-      isNotificationPopupEnabled: !prev.isNotificationPopupEnabled,
-    }));
-  }, [setSettings]);
-
-  const toggleNotificationFlash = useCallback(() => {
-    setSettings((prev) => ({
-      ...prev,
-      isNotificationFlashEnabled: !prev.isNotificationFlashEnabled,
-    }));
-  }, [setSettings]);
-
-  const toggleNotificationVoice = useCallback(() => {
-    setSettings((prev) => ({
-      ...prev,
-      isNotificationVoiceEnabled: !prev.isNotificationVoiceEnabled,
-    }));
-  }, [setSettings]);
+  
 
   const toggleGlassUI = useCallback(() => {
     setSettings((prev) => ({
@@ -277,9 +253,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleAnimatedSprites,
         toggle24HourFormat,
         toggleNotificationSound,
-        toggleNotificationPopup,
-        toggleNotificationFlash,
-        toggleNotificationVoice,
+        
         toggleGlassUI,
         changeLanguage,
         changeServer,
