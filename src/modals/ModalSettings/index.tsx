@@ -164,38 +164,7 @@ export function ModalSettings({ onClose }: Props) {
               />
             </Setting>
 
-            <Setting>
-              <SettingName>
-                <FormattedMessage id='notification_popup' defaultMessage='Notification Popup' />
-              </SettingName>
-
-              <Switch
-                onChange={toggleNotificationPopup}
-                checked={isNotificationPopupEnabled}
-              />
-            </Setting>
-
-            <Setting>
-              <SettingName>
-                <FormattedMessage id='notification_flash' defaultMessage='Notification Flash' />
-              </SettingName>
-
-              <Switch
-                onChange={toggleNotificationFlash}
-                checked={isNotificationFlashEnabled}
-              />
-            </Setting>
-
-            <Setting>
-              <SettingName>
-                <FormattedMessage id='notification_voice' defaultMessage='Notification Voice' />
-              </SettingName>
-
-              <Switch
-                onChange={toggleNotificationVoice}
-                checked={isNotificationVoiceEnabled}
-              />
-            </Setting>
+            
 
             <Setting>
               <SettingName>

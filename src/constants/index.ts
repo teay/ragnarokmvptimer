@@ -12,9 +12,7 @@ export const DEFAULT_SETTINGS = {
   animatedSprites: false,
   use24HourFormat: true,
   isNotificationSoundEnabled: true,
-  isNotificationPopupEnabled: true,
-  isNotificationFlashEnabled: true,
-  isNotificationVoiceEnabled: true,
+  
   isGlassUIEnabled: false,
   isAnimatedBackgroundEnabled: true, // New setting
   backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center', // New: default to full screen
