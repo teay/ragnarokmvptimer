@@ -34,11 +34,30 @@ export default function App() {
     browserSupportsNotifications,
   } = useNotification();
 
-  useKey('Escape', toggleHideActiveContent);
+  
+
+  
 
   useEffect(() => {
     dayjs.locale(language);
   }, [language]);
+
+  useEffect(() => {
+    if (hideActiveContent) {
+      const exitHideMode = () => {
+        toggleHideActiveContent();
+        document.removeEventListener('mousemove', exitHideMode);
+        document.removeEventListener('touchstart', exitHideMode);
+      };
+      document.addEventListener('mousemove', exitHideMode);
+      document.addEventListener('touchstart', exitHideMode);
+
+      return () => {
+        document.removeEventListener('mousemove', exitHideMode);
+        document.removeEventListener('touchstart', exitHideMode);
+      };
+    }
+  }, [hideActiveContent, toggleHideActiveContent]);
 
   useEffect(() => {
     const html = document.querySelector('html');

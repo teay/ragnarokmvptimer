@@ -7,6 +7,8 @@ import { MvpsContainerFilter } from '@/components/MvpsContainerFilter';
 import { MvpCardSkeleton } from '@/components/Skeletons/MvpCardSkeleton';
 import { ModalEditMvp } from '@/modals';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
+import { useKey } from '@/hooks';
+import { useSettings } from '@/contexts/SettingsContext';
 
 import { sortBy } from '@/utils/sort';
 
@@ -44,6 +46,14 @@ export function Main() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const { toggleHideActiveContent } = useSettings();
+
+  useKey('Escape', () => {
+    if (!editingMvp) {
+      toggleHideActiveContent();
+    }
+  });
 
   return (
     <>
