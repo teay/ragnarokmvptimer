@@ -43,12 +43,7 @@ export function ModalSettings({ onClose }: Props) {
     toggle24HourFormat,
     isNotificationSoundEnabled,
     toggleNotificationSound,
-    isNotificationPopupEnabled,
-    toggleNotificationPopup,
-    isNotificationFlashEnabled,
-    toggleNotificationFlash,
-    isNotificationVoiceEnabled,
-    toggleNotificationVoice,
+    
     isGlassUIEnabled,
     toggleGlassUI,
     isAnimatedBackgroundEnabled,
