@@ -55,11 +55,14 @@ const DEFAULT_SETTINGS = {
   particleColor: '#000000',
   particleOpacity: 0.5,
   waveAmplitude: 10,
+  waveLineWidth: 5,
   waveColor: '#000000',
   waveOpacity: 0.1,
   animatedBackgroundColor: '#000000',
   animatedBackgroundOpacity: 0.05,
   isMainContentTransparent: false,
+  waveTrailColor: '#000000',
+  waveTrailOpacity: 0.1,
   isSparkleEffectEnabled: false,
   sparkleDensity: 50,
   isFallingElementsEnabled: false,
@@ -68,9 +71,6 @@ const DEFAULT_SETTINGS = {
   server: DEFAULT_SERVER,
   font: 'Jost',
 };
-
-// ---
-// ไฟล์: `src/contexts/SettingsContext.tsx` (ส่วนที่ 2/3)
 
 const LOCAL_STORAGE_THEME_KEY = 'theme';
 const LOCAL_STORAGE_SETTINGS_KEY = 'settings';
@@ -110,6 +110,8 @@ interface SettingsContextData {
   particleOpacity: number;
   changeParticleOpacity: (opacity: number) => void;
   waveAmplitude: number;
+  waveLineWidth: number;
+  changeWaveLineWidth: (width: number) => void;
   waveColor: string;
   changeWaveColor: (color: string) => void;
   waveOpacity: number;
@@ -118,6 +120,10 @@ interface SettingsContextData {
   changeAnimatedBackgroundColor: (color: string) => void;
   animatedBackgroundOpacity: number;
   changeAnimatedBackgroundOpacity: (opacity: number) => void;
+  waveTrailColor: string;
+  changeWaveTrailColor: (color: string) => void;
+  waveTrailOpacity: number;
+  changeWaveTrailOpacity: (opacity: number) => void;
   resetColorsToThemeDefaults: (theme: string) => void;
   isMainContentTransparent: boolean;
   toggleMainContentTransparency: () => void;
@@ -249,199 +255,227 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     [setSettings]
   );
 
-// ---
-// ไฟล์: `src/contexts/SettingsContext.tsx` (ส่วนที่ 3/3)
+  const changeParticleOpacity = useCallback(
+    (opacity: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        particleOpacity: opacity,
+      }));
+    },
+    [setSettings]
+  );
 
-const changeParticleOpacity = useCallback(
-  (opacity: number) => {
+  const changeWaveAmplitude = useCallback(
+    (amplitude: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        waveAmplitude: amplitude,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeWaveLineWidth = useCallback(
+    (width: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        waveLineWidth: width,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeWaveColor = useCallback(
+    (color: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        waveColor: color,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeWaveOpacity = useCallback(
+    (opacity: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        waveOpacity: opacity,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeAnimatedBackgroundColor = useCallback(
+    (color: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        animatedBackgroundColor: color,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeAnimatedBackgroundOpacity = useCallback(
+    (opacity: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        animatedBackgroundOpacity: opacity,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeWaveTrailColor = useCallback(
+    (color: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        waveTrailColor: color,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeWaveTrailOpacity = useCallback(
+    (opacity: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        waveTrailOpacity: opacity,
+      }));
+    },
+    [setSettings]
+  );
+
+  const toggleMainContentTransparency = useCallback(() => {
     setSettings((prev) => ({
       ...prev,
-      particleOpacity: opacity,
+      isMainContentTransparent: !prev.isMainContentTransparent,
     }));
-  },
-  [setSettings]
-);
+  }, [setSettings]);
 
-const changeWaveAmplitude = useCallback(
-  (amplitude: number) => {
-    setSettings((prev) => ({
-      ...prev,
-      waveAmplitude: amplitude,
-    }));
-  },
-  [setSettings]
-);
+  const changeParticleEffect = useCallback(
+    (effect: 'default' | 'gravity') => {
+      setSettings((prev) => ({
+        ...prev,
+        particleEffect: effect,
+      }));
+    },
+    [setSettings]
+  );
 
-const changeWaveColor = useCallback(
-  (color: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      waveColor: color,
-    }));
-  },
-  [setSettings]
-);
-
-const changeWaveOpacity = useCallback(
-  (opacity: number) => {
-    setSettings((prev) => ({
-      ...prev,
-      waveOpacity: opacity,
-    }));
-  },
-  [setSettings]
-);
-
-const changeAnimatedBackgroundColor = useCallback(
-  (color: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      animatedBackgroundColor: color,
-    }));
-  },
-  [setSettings]
-);
-
-const changeAnimatedBackgroundOpacity = useCallback(
-  (opacity: number) => {
-    setSettings((prev) => ({
-      ...prev,
-      animatedBackgroundOpacity: opacity,
-    }));
-  },
-  [setSettings]
-);
-
-const toggleMainContentTransparency = useCallback(() => {
-  setSettings((prev) => ({
-    ...prev,
-    isMainContentTransparent: !prev.isMainContentTransparent,
-  }));
-}, [setSettings]);
-
-const changeParticleEffect = useCallback(
-  (effect: 'default' | 'gravity') => {
-    setSettings((prev) => ({
-      ...prev,
-      particleEffect: effect,
-    }));
-  },
-  [setSettings]
-);
-
-const changeFont = useCallback(() => {
-  const fonts = ['Jost', 'Orbitron', 'Exo 2'];
-  setSettings((prev) => {
-    const currentIndex = fonts.indexOf(prev.font || 'Jost');
-    const nextIndex = (currentIndex + 1) % fonts.length;
-    return {
-      ...prev,
-      font: fonts[nextIndex],
-    };
-  });
-}, [setSettings]);
-
-const toggleSparkleEffect = useCallback(() => {
-  setSettings((prev) => ({
-    ...prev,
-    isSparkleEffectEnabled: !prev.isSparkleEffectEnabled,
-  }));
-}, [setSettings]);
-
-const changeSparkleDensity = useCallback((density: number) => {
-  setSettings((prev) => ({
-    ...prev,
-    sparkleDensity: density,
-  }));
-}, [setSettings]);
-
-const toggleFallingElements = useCallback(() => {
-  setSettings((prev) => ({
-    ...prev,
-    isFallingElementsEnabled: !prev.isFallingElementsEnabled,
-  }));
-}, [setSettings]);
-
-const resetColorsToThemeDefaults = useCallback((theme: string) => {
-  setSettings((prev) => {
-    const defaultDarkColors = {
-      particleColor: '#000000',
-      particleOpacity: 0.5,
-      waveColor: '#000000',
-      waveOpacity: 0.1,
-      animatedBackgroundColor: '#000000',
-      animatedBackgroundOpacity: 0.05,
-    };
-
-    if (theme === 'light') {
+  const changeFont = useCallback(() => {
+    const fonts = ['Jost', 'Orbitron', 'Exo 2'];
+    setSettings((prev) => {
+      const currentIndex = fonts.indexOf(prev.font || 'Jost');
+      const nextIndex = (currentIndex + 1) % fonts.length;
       return {
         ...prev,
-        particleColor: '#01d5ab',
-        particleOpacity: 0.5,
-        waveColor: '#2836f0',
-        waveOpacity: 0.1,
-        animatedBackgroundColor: '#858585',
-        animatedBackgroundOpacity: 1.0,
+        font: fonts[nextIndex],
       };
-    } else if (theme === 'darkest') {
-      return {
-        ...prev,
-        particleColor: '#2a2e8d',
-        particleOpacity: 0.5, // Assuming default opacity for darkest particles
-        waveColor: '#3f15e0',
-        waveOpacity: 0.1, // Assuming default opacity for darkest waves
-        animatedBackgroundColor: '#000000',
-        animatedBackgroundOpacity: 1.0,
-      };
-    } else if (theme === 'dark') {
-      return {
-        ...prev,
-        particleColor: '#fa0000',
-        particleOpacity: 0.5,
-        waveColor: '#0011ff',
-        waveOpacity: 0.1,
-        animatedBackgroundColor: '#333333',
-        animatedBackgroundOpacity: 1.0,
-      };
-    }
-  });
-}, [setSettings]);
+    });
+  }, [setSettings]);
 
-return (
-  <SettingsContext.Provider
-    value={{
-      ...settings,
-      toggleRespawnCountdown,
-      toggleHideActiveContent,
-      toggleAnimatedSprites,
-      toggle24HourFormat,
-      toggleNotificationSound,
-      toggleGlassUI,
-      changeLanguage,
-      changeServer,
-      changeFont,
-      toggleAnimatedBackground,
-      changeBackgroundEffectMode,
-      changeParticleDensity,
-      changeParticleColor,
-      changeParticleOpacity, // Add to context value
-      changeWaveAmplitude,
-      changeWaveColor,
-      changeWaveOpacity, // Add to context value
-      changeAnimatedBackgroundColor,
-      animatedBackgroundOpacity: settings.animatedBackgroundOpacity,
-      changeAnimatedBackgroundOpacity,
-      toggleMainContentTransparency,
-      changeParticleEffect,
-      toggleSparkleEffect,
-      changeSparkleDensity,
-      toggleFallingElements,
-      resetColorsToThemeDefaults,
-    }}
-  >
-    {children}
-  </SettingsContext.Provider>
-);
+  const toggleSparkleEffect = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isSparkleEffectEnabled: !prev.isSparkleEffectEnabled,
+    }));
+  }, [setSettings]);
+
+  const changeSparkleDensity = useCallback((density: number) => {
+    setSettings((prev) => ({
+      ...prev,
+      sparkleDensity: density,
+    }));
+  }, [setSettings]);
+
+  const toggleFallingElements = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      isFallingElementsEnabled: !prev.isFallingElementsEnabled,
+    }));
+  }, [setSettings]);
+
+  const resetColorsToThemeDefaults = useCallback((theme: string) => {
+    setSettings((prev) => {
+      if (theme === 'light') {
+        return {
+          ...prev,
+          particleColor: '#01d5ab',
+          particleOpacity: 0.5,
+          waveColor: '#2836f0',
+          waveOpacity: 0.1,
+          animatedBackgroundColor: '#858585',
+          animatedBackgroundOpacity: 1.0,
+          waveTrailColor: '#2836f0',
+          waveTrailOpacity: 0.2,
+        };
+      } else if (theme === 'darkest') {
+        return {
+          ...prev,
+          particleColor: '#2a2e8d',
+          particleOpacity: 0.5,
+          waveColor: '#3f15e0',
+          waveOpacity: 0.1,
+          animatedBackgroundColor: '#000000',
+          animatedBackgroundOpacity: 1.0,
+          waveTrailColor: '#3f15e0',
+          waveTrailOpacity: 0.2,
+        };
+      } else if (theme === 'dark') {
+        return {
+          ...prev,
+          particleColor: '#fa0000',
+          particleOpacity: 0.5,
+          waveColor: '#0011ff',
+          waveOpacity: 0.1,
+          animatedBackgroundColor: '#333333',
+          animatedBackgroundOpacity: 1.0,
+          waveTrailColor: '#0011ff',
+          waveTrailOpacity: 0.2,
+        };
+      }
+    });
+  }, [setSettings]);
+
+  return (
+    <SettingsContext.Provider
+      value={{
+        ...settings,
+        toggleRespawnCountdown,
+        toggleHideActiveContent,
+        toggleAnimatedSprites,
+        toggle24HourFormat,
+        toggleNotificationSound,
+        toggleGlassUI,
+        changeLanguage,
+        changeServer,
+        changeFont,
+        toggleAnimatedBackground,
+        changeBackgroundEffectMode,
+        changeParticleDensity,
+        changeParticleColor,
+        changeParticleOpacity,
+        changeWaveAmplitude,
+        waveLineWidth: settings.waveLineWidth,
+        changeWaveLineWidth,
+        changeWaveColor,
+        changeWaveOpacity,
+        changeAnimatedBackgroundColor,
+        animatedBackgroundOpacity: settings.animatedBackgroundOpacity,
+        changeAnimatedBackgroundOpacity,
+        toggleMainContentTransparency,
+        changeParticleEffect,
+        toggleSparkleEffect,
+        changeSparkleDensity,
+        toggleFallingElements,
+        resetColorsToThemeDefaults,
+        changeWaveTrailColor,
+        changeWaveTrailOpacity,
+      }}
+    >
+      {children}
+    </SettingsContext.Provider>
+  );
 }
 
 export function useSettings() {
