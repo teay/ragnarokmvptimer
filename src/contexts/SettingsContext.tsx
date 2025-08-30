@@ -1,7 +1,74 @@
-import { createContext, useContext, ReactNode, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useCallback, useState, useEffect } from 'react';
 
-import { usePersistedState, useTheme } from '../hooks';
-import { DEFAULT_SETTINGS, LOCAL_STORAGE_SETTINGS_KEY } from '../constants';
+// Self-contained custom hook for persisting state to localStorage
+const usePersistedState = <T,>(key: string, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
+  const [state, setState] = useState<T>(() => {
+    try {
+      const storedValue = localStorage.getItem(key);
+      return storedValue ? JSON.parse(storedValue) : defaultValue;
+    } catch (error) {
+      console.error("Failed to parse stored state:", error);
+      return defaultValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch (error) {
+      console.error("Failed to save state to localStorage:", error);
+    }
+  }, [key, state]);
+
+  return [state, setState];
+};
+
+// Self-contained mock theme hook for this context
+const useTheme = () => {
+  const resetTheme = useCallback(() => {
+    // This function can be implemented later if needed. For now, it's a placeholder.
+    console.log("Theme reset requested. (Function not implemented)");
+  }, []);
+  return { resetTheme };
+};
+
+// Local definitions to make the component self-contained
+const LOCALES = {
+  ENGLISH: 'en-US',
+};
+
+const DEFAULT_THEME = 'dark';
+const RESPAWN_TIMER_SOON_THRESHOLD_MS = 1000 * 60 * 10; // 10 minutes
+const DEFAULT_LANG = LOCALES.ENGLISH;
+const DEFAULT_SERVER = 'iRO';
+
+const DEFAULT_SETTINGS = {
+  respawnAsCountdown: true,
+  hideActiveContent: false,
+  animatedSprites: false,
+  use24HourFormat: true,
+  isNotificationSoundEnabled: true,
+  isGlassUIEnabled: false,
+  isAnimatedBackgroundEnabled: true,
+  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center',
+  particleDensity: 'medium' as 'low' | 'medium' | 'high',
+  particleColor: 'rgba(0, 0, 0, 0.5)',
+  waveAmplitude: 10,
+  waveColor: 'rgba(0, 0, 0, 0.1)',
+  animatedBackgroundClearColor: 'rgba(0, 0, 0, 0.05)',
+  isMainContentTransparent: false,
+  isSparkleEffectEnabled: false,
+  sparkleDensity: 50,
+  isFallingElementsEnabled: false,
+  particleEffect: 'default' as 'default' | 'gravity',
+  language: DEFAULT_LANG,
+  server: DEFAULT_SERVER,
+  font: 'Jost',
+};
+
+const LOCAL_STORAGE_THEME_KEY = 'theme';
+const LOCAL_STORAGE_SETTINGS_KEY = 'settings';
+const LOCAL_STORAGE_ACTIVE_MVPS_KEY = 'activeMvps';
 
 interface SettingsProviderProps {
   children: ReactNode;
@@ -18,7 +85,6 @@ interface SettingsContextData {
   toggle24HourFormat: () => void;
   isNotificationSoundEnabled: boolean;
   toggleNotificationSound: () => void;
-  
   isGlassUIEnabled: boolean;
   toggleGlassUI: () => void;
   language: string;
@@ -39,8 +105,10 @@ interface SettingsContextData {
   changeWaveAmplitude: (amplitude: number) => void;
   waveColor: string;
   changeWaveColor: (color: string) => void;
-  isMainContentTransparent: boolean; // New setting
-  toggleMainContentTransparency: () => void; // New toggle
+  animatedBackgroundClearColor: string;
+  changeAnimatedBackgroundClearColor: (color: string) => void;
+  isMainContentTransparent: boolean;
+  toggleMainContentTransparency: () => void;
   particleEffect: 'default' | 'gravity';
   changeParticleEffect: (effect: 'default' | 'gravity') => void;
   isSparkleEffectEnabled: boolean;
@@ -60,7 +128,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     DEFAULT_SETTINGS
   );
 
-  const { isSparkleEffectEnabled, sparkleDensity, isFallingElementsEnabled } = settings;
+  const {
+    isSparkleEffectEnabled,
+    sparkleDensity,
+    isFallingElementsEnabled,
+    particleColor,
+    waveColor,
+  } = settings;
 
   const toggleRespawnCountdown = useCallback(
     () =>
@@ -99,8 +173,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
-  
-
   const toggleGlassUI = useCallback(() => {
     setSettings((prev) => ({
       ...prev,
@@ -108,7 +180,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
-  const toggleAnimatedBackground = useCallback(() => { // New toggle implementation
+  const toggleAnimatedBackground = useCallback(() => {
     setSettings((prev) => ({
       ...prev,
       isAnimatedBackgroundEnabled: !prev.isAnimatedBackgroundEnabled,
@@ -185,6 +257,16 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     [setSettings]
   );
 
+  const changeAnimatedBackgroundClearColor = useCallback(
+    (color: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        animatedBackgroundClearColor: color,
+      }));
+    },
+    [setSettings]
+  );
+
   const toggleMainContentTransparency = useCallback(() => {
     setSettings((prev) => ({
       ...prev,
@@ -235,15 +317,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
-  /* const resetSettings = useCallback(() => {
-
-  
-
-  /* const resetSettings = useCallback(() => {
-    resetTheme();
-    setSettings(DEFAULT_SETTINGS);
-  }, [resetTheme, setSettings]); */
-
   return (
     <SettingsContext.Provider
       value={{
@@ -253,7 +326,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleAnimatedSprites,
         toggle24HourFormat,
         toggleNotificationSound,
-        
         toggleGlassUI,
         changeLanguage,
         changeServer,
@@ -264,6 +336,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeParticleColor,
         changeWaveAmplitude,
         changeWaveColor,
+        changeAnimatedBackgroundClearColor,
         toggleMainContentTransparency,
         changeParticleEffect,
         toggleSparkleEffect,
