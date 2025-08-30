@@ -14,9 +14,10 @@ export function useTheme() {
 
   const toggleTheme = useCallback(() => {
     setTheme((prevTheme: string) => {
+      if (prevTheme === 'darkest') return 'dark';
       if (prevTheme === 'dark') return 'light';
-      if (prevTheme === 'light') return 'light-mode';
-      return 'dark';
+      if (prevTheme === 'light') return 'darkest';
+      return 'darkest';
     });
   }, [setTheme]);
 

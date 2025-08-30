@@ -33,7 +33,92 @@ export const globals = css`
       min-height: 100vh;
     }
 
-    html[data-theme='light'] {
+    html[data-theme='darkest'] {
+      color-scheme: dark;
+      --primary: #5543cf96; /* SlateBlue */
+      --secondary: #2c2457ff; /* BlueViolet */
+      --tertiary: #2C2C4A; /* Dark Blue/Purple for backgrounds */
+      --quaternary: #1A1A2E; /* Even darker for main body background */
+      --border: #4A4A6A;
+
+      --text: #E0E0E0;
+      --header_text: var(--text);
+
+      --header_bg: rgba(44, 44, 74, 0.8); /* Semi-transparent for dark theme */
+      background-blend-mode: normal;
+      --header_backdrop_filter: none;
+      --header_box_shadow: none;
+
+      --warning_header_bg: transparent;
+      --warning_header_text: #000;
+
+      --scrollbar_bg: transparent;
+      --scrollbar_thumb: var(--primary);
+
+      --mvpCard_id: var(--text);
+      --mvpCard_name: #9370DB;
+      --mvpCard_bg: var(--tertiary);
+      background-blend-mode: normal;
+      --mvpCard_text: var(--text);
+      --mvpCard_killButton: #F25858;
+      --mvpCard_editButton: var(--primary);
+      --mvpCard_controls_showMap: var(--primary);
+      --mvpCard_controls_edit: var(--primary);
+      --mvpCard_controls_delete: #F25858;
+
+      --scrollbar_thumb: var(--primary);
+
+      --timers_passed: #F25858;
+      --timers_normal: #FFFFFF;
+      --timers_respawning: #FFFF00;
+
+      --switch_bg: var(--primary);
+      --switch_handle: var(--quaternary);
+
+      --modal_bg: var(--tertiary);
+      background-blend-mode: normal;
+      --modal_backdrop_filter: none;
+      --modal_hl: var(--text);
+      --modal_name: #9370DB;
+      --modal_time: var(--primary);
+      --modal_button: var(--primary);
+
+      --modal_datePicker_border: var(--border);
+
+      --modal_serverSelect_bg: var(--tertiary);
+      --modal_serverSelect_bgActive: var(--primary);
+      --modal_serverSelect_text: var(--text);
+      --modal_serverSelect_textActive: var(--text);
+      --modal_serverSelect_border: transparent;
+
+      --modal_changeMap_border: var(--primary);
+      --modal_changeMap_text: var(--text);
+      --modal_changeMap_selectedMapBorder: var(--secondary);
+
+      --filterSearch_bg: var(--tertiary);
+      --filterSearch_border: var(--border);
+      --filterSearch_text: var(--text);
+      --filterSearch_border_focus: var(--primary);
+      backdrop-filter: none;
+
+      --languagePicker_bg: var(--tertiary);
+      --languagePicker_border: var(--border);
+      --languagePicker_text: var(--text);
+      backdrop-filter: none;
+
+      --footer_text: var(--text);
+      --footer_link: var(--primary);
+      --footer_bg: rgba(44, 44, 74, 0.8); /* Semi-transparent for dark theme */
+      background-blend-mode: normal;
+      --footer_backdrop_filter: none;
+      --footer_box_shadow: none;
+
+      --pulse_color: #404040;
+
+      color: var(--text);
+    }
+
+    html[data-theme='dark'] {
       color-scheme: dark; /* Changed to dark color scheme */
       --primary: #6553df96; /* Brighter version of dark primary */
       --secondary: #3c3467ff; /* Brighter version of dark secondary */
@@ -109,108 +194,14 @@ export const globals = css`
       --footer_bg: rgba(60, 60, 90, 0.8); /* Semi-transparent for brighter dark theme */
       background-blend-mode: normal;
       --footer_backdrop_filter: blur(10px); /* Keep glass effect */
-      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
+      --footer_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
 
-            --pulse_color: #808080; /* Even Darker pulse */
-
-      color: var(--text);
-    }
-
-    html.non-glass-ui[data-theme='light'] {
-      --header_backdrop_filter: none;
-      --header_box_shadow: none;
-      --modal_backdrop_filter: none;
-      --footer_backdrop_filter: none;
-      --footer_box_shadow: none;
-    }
-
-    html[data-theme='dark'] {
-      color-scheme: dark;
-      --primary: #5543cf96; /* SlateBlue */
-      --secondary: #2c2457ff; /* BlueViolet */
-      --tertiary: #2C2C4A; /* Dark Blue/Purple for backgrounds */
-      --quaternary: #1A1A2E; /* Even darker for main body background */
-      --border: #4A4A6A;
-
-      --text: #E0E0E0;
-      --header_text: var(--text);
-
-            --header_bg: rgba(44, 44, 74, 0.8); /* Semi-transparent for dark theme */
-      background-blend-mode: normal;
-      --header_backdrop_filter: none;
-      --header_box_shadow: none;
-
-      --warning_header_bg: transparent;
-      --warning_header_text: #000;
-
-      --scrollbar_bg: transparent;
-      --scrollbar_thumb: var(--primary);
-
-      --mvpCard_id: var(--text);
-      --mvpCard_name: #9370DB;
-      --mvpCard_bg: var(--tertiary);
-      background-blend-mode: normal;
-      --mvpCard_text: var(--text);
-      --mvpCard_killButton: #F25858;
-      --mvpCard_editButton: var(--primary);
-      --mvpCard_controls_showMap: var(--primary);
-      --mvpCard_controls_edit: var(--primary);
-      --mvpCard_controls_delete: #F25858;
-
-            --scrollbar_thumb: var(--primary);
-
-      --timers_passed: #F25858;
-      --timers_normal: #FFFFFF;
-      --timers_respawning: #FFFF00;
-
-      --switch_bg: var(--primary);
-      --switch_handle: var(--quaternary);
-
-      --modal_bg: var(--tertiary);
-      background-blend-mode: normal;
-      --modal_backdrop_filter: none;
-      --modal_hl: var(--text);
-      --modal_name: #9370DB;
-      --modal_time: var(--primary);
-      --modal_button: var(--primary);
-
-      --modal_datePicker_border: var(--border);
-
-      --modal_serverSelect_bg: var(--tertiary);
-      --modal_serverSelect_bgActive: var(--primary);
-      --modal_serverSelect_text: var(--text);
-      --modal_serverSelect_textActive: var(--text);
-      --modal_serverSelect_border: transparent;
-
-      --modal_changeMap_border: var(--primary);
-      --modal_changeMap_text: var(--text);
-      --modal_changeMap_selectedMapBorder: var(--secondary);
-
-      --filterSearch_bg: var(--tertiary);
-      --filterSearch_border: var(--border);
-      --filterSearch_text: var(--text);
-      --filterSearch_border_focus: var(--primary);
-      backdrop-filter: none;
-
-      --languagePicker_bg: var(--tertiary);
-      --languagePicker_border: var(--border);
-      --languagePicker_text: var(--text);
-      backdrop-filter: none;
-
-      --footer_text: var(--text);
-      --footer_link: var(--primary);
-      --footer_bg: rgba(44, 44, 74, 0.8); /* Semi-transparent for dark theme */
-      background-blend-mode: normal;
-      --footer_backdrop_filter: none;
-      --footer_box_shadow: none;
-
-      --pulse_color: #404040;
+      --pulse_color: #808080; /* Even Darker pulse */
 
       color: var(--text);
     }
 
-    /* Proposed Light Mode Colors */
-    html[data-theme='light-mode'] {
+    html[data-theme='light'] {
       color-scheme: light;
       --primary: #0056b3; /* Slightly darker blue for primary actions/highlights */
       --secondary: #c0c4c8; /* Main background: Darker light gray */
@@ -286,7 +277,7 @@ export const globals = css`
       --footer_bg: rgba(216, 220, 224, 0.9); /* Footer background: Based on tertiary, less transparent */
       background-blend-mode: normal;
       --footer_backdrop_filter: blur(10px); /* Keep glass effect if desired */
-      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.2);
+      --footer_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
 
       --pulse_color: #c0c0c0; /* Darker pulse */
 
@@ -298,7 +289,7 @@ export const globals = css`
       color: #E0E0E0 !important;
     }
 
-    html.non-glass-ui[data-theme='dark'] {
+    html.non-glass-ui[data-theme='darkest'] {
       --header_backdrop_filter: none;
       --header_box_shadow: none;
       --mvpCard_backdrop_filter: none; /* Assuming mvpCard might have one */
@@ -307,22 +298,38 @@ export const globals = css`
       --footer_box_shadow: none;
     }
 
-    /* Conditional transparency for Main content and MvpCards */
-    html.transparent-main-content[data-theme='light'] {
-      /* Main component background */
-      --secondary: rgba(60, 60, 90, 0.1); /* Semi-transparent brighter dark */
-      /* MvpCard background */
-      --mvpCard_bg: rgba(60, 60, 90, 0.9); /* Semi-transparent brighter dark */
+    html.non-glass-ui[data-theme='dark'] {
+      --header_backdrop_filter: none;
+      --header_box_shadow: none;
+      --modal_backdrop_filter: none;
+      --footer_backdrop_filter: none;
+      --footer_box_shadow: none;
     }
 
-    html.transparent-main-content[data-theme='dark'] {
+    html.non-glass-ui[data-theme='light'] {
+      --header_backdrop_filter: none;
+      --header_box_shadow: none;
+      --modal_backdrop_filter: none;
+      --footer_backdrop_filter: none;
+      --footer_box_shadow: none;
+    }
+
+    /* Conditional transparency for Main content and MvpCards */
+    html.transparent-main-content[data-theme='darkest'] {
       /* Main component background */
       --secondary: rgba(44, 44, 74, 0.1); /* Semi-transparent dark */
       /* MvpCard background */
       --mvpCard_bg: rgba(44, 44, 74, 0.9); /* Semi-transparent dark */
     }
 
-    html.transparent-main-content[data-theme='light-mode'] {
+    html.transparent-main-content[data-theme='dark'] {
+      /* Main component background */
+      --secondary: rgba(60, 60, 90, 0.1); /* Semi-transparent brighter dark */
+      /* MvpCard background */
+      --mvpCard_bg: rgba(60, 60, 90, 0.9); /* Semi-transparent brighter dark */
+    }
+
+    html.transparent-main-content[data-theme='light'] {
       /* Main component background */
       --secondary: rgba(192, 196, 200, 0.1); /* Semi-transparent based on new secondary */
       /* MvpCard background */
