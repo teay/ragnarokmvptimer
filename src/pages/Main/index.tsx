@@ -50,7 +50,8 @@ export function Main() {
   const { toggleHideActiveContent } = useSettings();
 
   useKey('Escape', () => {
-    if (!editingMvp) {
+    const isModalOpen = document.body.style.overflow === 'hidden';
+    if (!editingMvp && !isModalOpen) {
       toggleHideActiveContent();
     }
   });
