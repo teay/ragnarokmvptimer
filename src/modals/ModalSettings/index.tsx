@@ -82,6 +82,9 @@ export function ModalSettings({ onClose }: Props) {
     !isConfirmationModalOpen ? onClose : () => null
   );
 
+  const confirmationTitle = GetTranslateText('clear_data_message');
+  const confirmationDescription = GetTranslateText('clear_data_description');
+
   function handleClearData() {
     clearData();
     setIsConfirmationModalOpen(false);
@@ -318,8 +321,8 @@ export function ModalSettings({ onClose }: Props) {
 
       {isConfirmationModalOpen && (
         <ModalWarning
-          title={GetTranslateText('clear_data_message')}
-          description={GetTranslateText('clear_data_description')}
+          title={confirmationTitle}
+          description={confirmationDescription}
           onConfirm={handleClearData}
           onCancel={() => setIsConfirmationModalOpen(false)}
         />
