@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Trash } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
@@ -24,6 +24,7 @@ import {
   ClearButton,
   FontButton,
   ParticleEffectButton,
+  ThemeButton,
 } from './styles';
 
 type Props = {
@@ -32,6 +33,7 @@ type Props = {
 
 export function ModalSettings({ onClose }: Props) {
   const { theme, toggleTheme } = useTheme();
+  const intl = useIntl();
   const {
     respawnAsCountdown,
     toggleRespawnCountdown,
@@ -86,6 +88,13 @@ export function ModalSettings({ onClose }: Props) {
     window.location.reload();
   }
 
+  const getThemeName = () => {
+    if (theme === 'dark') return intl.formatMessage({ id: 'theme_darkest' });
+    if (theme === 'light') return intl.formatMessage({ id: 'theme_dark' });
+    if (theme === 'light-mode') return intl.formatMessage({ id: 'theme_light' });
+    return '';
+  };
+
   return (
     <>
       <ModalBase>
@@ -110,11 +119,13 @@ export function ModalSettings({ onClose }: Props) {
 
             <Setting>
               <SettingName>
-                <FormattedMessage id='theme' />
+                <FormattedMessage id='theme_label' />
               </SettingName>
 
               <ThemeContainer>
-                <Switch onChange={toggleTheme} checked={theme === 'dark'} />
+                <ThemeButton onClick={toggleTheme}>
+                  {getThemeName()}
+                </ThemeButton>
               </ThemeContainer>
             </Setting>
 

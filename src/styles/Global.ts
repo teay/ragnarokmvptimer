@@ -111,7 +111,7 @@ export const globals = css`
       --footer_backdrop_filter: blur(10px); /* Keep glass effect */
       --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
 
-      --pulse_color: #404040; /* From dark theme */
+            --pulse_color: #808080; /* Even Darker pulse */
 
       color: var(--text);
     }
@@ -209,6 +209,90 @@ export const globals = css`
       color: var(--text);
     }
 
+    /* Proposed Light Mode Colors */
+    html[data-theme='light-mode'] {
+      color-scheme: light;
+      --primary: #0056b3; /* Slightly darker blue for primary actions/highlights */
+      --secondary: #c0c4c8; /* Main background: Darker light gray */
+      --tertiary: #d8dce0; /* Cards/Modals: Darker lighter gray */
+      --quaternary: #a0a4a8; /* Subtle separation: Darker medium gray */
+      --border: #686c70; /* Borders: Even Darker gray */
+
+      --text: #1a1d20; /* Even Darker gray for general text */
+      --header_text: var(--text);
+
+      --header_bg: rgba(216, 220, 224, 0.9); /* Header background: Based on tertiary, less transparent */
+      background-blend-mode: normal;
+      --header_backdrop_filter: blur(10px); /* Keep glass effect if desired */
+      --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2); /* Slightly darker shadow */
+
+      --warning_header_bg: transparent;
+      --warning_header_text: #b01e2e; /* Even Darker red for warnings */
+
+      --scrollbar_bg: transparent;
+      --scrollbar_thumb: var(--primary);
+
+      --mvpCard_id: var(--text);
+      --mvpCard_name: #4a2582; /* Even Darker purple accent for MVP names */
+      --mvpCard_bg: var(--tertiary);
+      background-blend-mode: normal;
+      --mvpCard_text: var(--text);
+      --mvpCard_killButton: #b01e2e; /* Even Darker red */
+      --mvpCard_editButton: var(--primary);
+      --mvpCard_controls_showMap: var(--primary);
+      --mvpCard_controls_edit: var(--primary);
+      --mvpCard_controls_delete: #b01e2e; /* Even Darker red */
+
+      --timers_passed: #b01e2e; /* Even Darker red */
+      --timers_normal: var(--text);
+      --timers_respawning: #c09000; /* Even Darker yellow */
+
+      --switch_bg: var(--primary);
+      --switch_handle: var(--tertiary);
+
+      --modal_bg: var(--tertiary);
+      background-blend-mode: normal;
+      --modal_backdrop_filter: blur(20px); /* Keep glass effect if desired */
+      --modal_hl: var(--text);
+      --modal_name: #5a2d9e;
+      --modal_time: var(--primary);
+      --modal_button: var(--primary);
+
+      --modal_datePicker_border: var(--border);
+
+      --modal_serverSelect_bg: var(--quaternary);
+      --modal_serverSelect_bgActive: var(--primary);
+      --modal_serverSelect_text: var(--text);
+      --modal_serverSelect_textActive: var(--text); /* Change to dark text on active primary */
+      --modal_serverSelect_border: transparent;
+
+      --modal_changeMap_border: var(--primary);
+      --modal_changeMap_text: var(--text);
+      --modal_changeMap_selectedMapBorder: var(--primary);
+
+      --filterSearch_bg: var(--quaternary);
+      --filterSearch_border: var(--border);
+      --filterSearch_text: var(--text);
+      --filterSearch_border_focus: var(--primary);
+      backdrop-filter: blur(10px); /* Keep glass effect if desired */
+
+      --languagePicker_bg: var(--quaternary);
+      --languagePicker_border: var(--border);
+      --languagePicker_text: var(--text);
+      backdrop-filter: blur(10px); /* Keep glass effect if desired */
+
+      --footer_text: var(--text);
+      --footer_link: var(--primary);
+      --footer_bg: rgba(216, 220, 224, 0.9); /* Footer background: Based on tertiary, less transparent */
+      background-blend-mode: normal;
+      --footer_backdrop_filter: blur(10px); /* Keep glass effect if desired */
+      --footer_box_shadow: 0px -4px 10px 0px rgba(0, 0, 0, 0.2);
+
+      --pulse_color: #c0c0c0; /* Darker pulse */
+
+      color: var(--text); /* Default text color */
+    }
+
     /* Aggressive override for ModalSelectMap text */
     .m12h3ctv span {
       color: #E0E0E0 !important;
@@ -226,16 +310,23 @@ export const globals = css`
     /* Conditional transparency for Main content and MvpCards */
     html.transparent-main-content[data-theme='light'] {
       /* Main component background */
-      --secondary: rgba(60, 60, 90, 0.5); /* Semi-transparent brighter dark */
+      --secondary: rgba(60, 60, 90, 0.1); /* Semi-transparent brighter dark */
       /* MvpCard background */
-      --mvpCard_bg: rgba(60, 60, 90, 0.5); /* Semi-transparent brighter dark */
+      --mvpCard_bg: rgba(60, 60, 90, 0.9); /* Semi-transparent brighter dark */
     }
 
     html.transparent-main-content[data-theme='dark'] {
       /* Main component background */
-      --secondary: rgba(44, 44, 74, 0.5); /* Semi-transparent dark */
+      --secondary: rgba(44, 44, 74, 0.1); /* Semi-transparent dark */
       /* MvpCard background */
-      --mvpCard_bg: rgba(44, 44, 74, 0.5); /* Semi-transparent dark */
+      --mvpCard_bg: rgba(44, 44, 74, 0.9); /* Semi-transparent dark */
+    }
+
+    html.transparent-main-content[data-theme='light-mode'] {
+      /* Main component background */
+      --secondary: rgba(192, 196, 200, 0.1); /* Semi-transparent based on new secondary */
+      /* MvpCard background */
+      --mvpCard_bg: rgba(216, 220, 224, 0.9); /* Semi-transparent based on new tertiary */
     }
 
     html {

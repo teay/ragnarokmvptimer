@@ -132,6 +132,20 @@ export const FontButton = styled.button`
   }
 `;
 
+export const ThemeButton = styled.button`
+  padding: 5px 15px;
+  border: 0;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #fff;
+  background-color: var(--primary);
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
 export const ParticleEffectButton = styled.button<{ active: boolean }>`
   padding: 5px 15px;
   border: 0;
