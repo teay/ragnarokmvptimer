@@ -70,6 +70,10 @@ export function ModalSettings({ onClose }: Props) {
     toggleSparkleEffect,
     sparkleDensity,
     changeSparkleDensity,
+    animatedBackgroundColor,
+    changeAnimatedBackgroundColor,
+    animatedBackgroundOpacity,
+    changeAnimatedBackgroundOpacity,
     isFallingElementsEnabled = false,
     toggleFallingElements,
   } = useSettings();
@@ -189,6 +193,20 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch onChange={toggleAnimatedBackground} checked={isAnimatedBackgroundEnabled} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='animated_background_color' defaultMessage='Animated Background Color' />
+              </SettingName>
+              <input type="color" value={animatedBackgroundColor} onChange={(e) => changeAnimatedBackgroundColor(e.target.value)} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='animated_background_opacity' defaultMessage='Background Opacity' />
+              </SettingName>
+              <input type="range" min="0" max="1" step="0.01" value={animatedBackgroundOpacity} onChange={(e) => changeAnimatedBackgroundOpacity(Number(e.target.value))} />
             </Setting>
 
             <Setting>

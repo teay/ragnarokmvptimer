@@ -55,7 +55,8 @@ const DEFAULT_SETTINGS = {
   particleColor: 'rgba(0, 0, 0, 0.5)',
   waveAmplitude: 10,
   waveColor: 'rgba(0, 0, 0, 0.1)',
-  animatedBackgroundClearColor: 'rgba(0, 0, 0, 0.05)',
+  animatedBackgroundColor: '#000000',
+  animatedBackgroundOpacity: 0.05,
   isMainContentTransparent: false,
   isSparkleEffectEnabled: false,
   sparkleDensity: 50,
@@ -105,8 +106,10 @@ interface SettingsContextData {
   changeWaveAmplitude: (amplitude: number) => void;
   waveColor: string;
   changeWaveColor: (color: string) => void;
-  animatedBackgroundClearColor: string;
-  changeAnimatedBackgroundClearColor: (color: string) => void;
+  animatedBackgroundColor: string;
+  changeAnimatedBackgroundColor: (color: string) => void;
+  animatedBackgroundOpacity: number;
+  changeAnimatedBackgroundOpacity: (opacity: number) => void;
   isMainContentTransparent: boolean;
   toggleMainContentTransparency: () => void;
   particleEffect: 'default' | 'gravity';
@@ -257,11 +260,21 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     [setSettings]
   );
 
-  const changeAnimatedBackgroundClearColor = useCallback(
+  const changeAnimatedBackgroundColor = useCallback(
     (color: string) => {
       setSettings((prev) => ({
         ...prev,
-        animatedBackgroundClearColor: color,
+        animatedBackgroundColor: color,
+      }));
+    },
+    [setSettings]
+  );
+
+  const changeAnimatedBackgroundOpacity = useCallback(
+    (opacity: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        animatedBackgroundOpacity: opacity,
       }));
     },
     [setSettings]
@@ -336,7 +349,9 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeParticleColor,
         changeWaveAmplitude,
         changeWaveColor,
-        changeAnimatedBackgroundClearColor,
+        changeAnimatedBackgroundColor,
+        animatedBackgroundOpacity: settings.animatedBackgroundOpacity,
+        changeAnimatedBackgroundOpacity,
         toggleMainContentTransparency,
         changeParticleEffect,
         toggleSparkleEffect,
