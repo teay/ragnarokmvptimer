@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Trash } from '@styled-icons/feather';
 
@@ -56,10 +56,14 @@ export function ModalSettings({ onClose }: Props) {
     changeParticleDensity,
     particleColor,
     changeParticleColor,
+    particleOpacity,
+    changeParticleOpacity,
     waveAmplitude,
     changeWaveAmplitude,
     waveColor,
     changeWaveColor,
+    waveOpacity,
+    changeWaveOpacity,
     isMainContentTransparent, // New setting
     toggleMainContentTransparency, // New toggle
     particleEffect,
@@ -74,10 +78,15 @@ export function ModalSettings({ onClose }: Props) {
     changeAnimatedBackgroundColor,
     animatedBackgroundOpacity,
     changeAnimatedBackgroundOpacity,
+    resetColorsToThemeDefaults,
     isFallingElementsEnabled = false,
     toggleFallingElements,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+
+  useEffect(() => {
+    resetColorsToThemeDefaults(theme);
+  }, [theme, resetColorsToThemeDefaults]);
 
   useScrollBlock(true);
   useKey('Escape', onClose);
@@ -96,9 +105,9 @@ export function ModalSettings({ onClose }: Props) {
   }
 
   const getThemeName = () => {
-    if (theme === 'dark') return intl.formatMessage({ id: 'theme_darkest' });
-    if (theme === 'light') return intl.formatMessage({ id: 'theme_dark' });
-    if (theme === 'light-mode') return intl.formatMessage({ id: 'theme_light' });
+    if (theme === 'darkest') return intl.formatMessage({ id: 'theme_darkest' });
+    if (theme === 'dark') return intl.formatMessage({ id: 'theme_dark' });
+    if (theme === 'light') return intl.formatMessage({ id: 'theme_light' });
     return '';
   };
 
@@ -204,10 +213,12 @@ export function ModalSettings({ onClose }: Props) {
 
             <Setting>
               <SettingName>
-                <FormattedMessage id='animated_background_opacity' defaultMessage='Background Opacity' />
+                <FormattedMessage id='animated_background_opacity' defaultMessage='Animated Background Color Opacity' />
               </SettingName>
               <input type="range" min="0" max="1" step="0.01" value={animatedBackgroundOpacity} onChange={(e) => changeAnimatedBackgroundOpacity(Number(e.target.value))} />
             </Setting>
+
+            
 
             <Setting>
               <SettingName>
@@ -284,6 +295,13 @@ export function ModalSettings({ onClose }: Props) {
 
             <Setting>
               <SettingName>
+                <FormattedMessage id='particle_opacity' defaultMessage='Particle Opacity' />
+              </SettingName>
+              <input type="range" min="0" max="1" step="0.01" value={particleOpacity} onChange={(e) => changeParticleOpacity(Number(e.target.value))} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
                 <FormattedMessage id='wave_amplitude' defaultMessage='Wave Amplitude' />
               </SettingName>
               <input type="number" value={waveAmplitude} onChange={(e) => changeWaveAmplitude(Number(e.target.value))} min="0" max="100" />
@@ -294,6 +312,13 @@ export function ModalSettings({ onClose }: Props) {
                 <FormattedMessage id='wave_color' defaultMessage='Wave Color' />
               </SettingName>
               <input type="color" value={waveColor} onChange={(e) => changeWaveColor(e.target.value)} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='wave_opacity' defaultMessage='Wave Opacity' />
+              </SettingName>
+              <input type="range" min="0" max="1" step="0.01" value={waveOpacity} onChange={(e) => changeWaveOpacity(Number(e.target.value))} />
             </Setting>
 
             <Setting>

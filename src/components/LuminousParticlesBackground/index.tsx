@@ -51,8 +51,10 @@ const LuminousParticlesBackground: React.FC = () => {
     backgroundEffectMode,
     particleDensity,
     particleColor,
+    particleOpacity,
     waveAmplitude,
     waveColor,
+    waveOpacity,
     particleEffect,
     animatedBackgroundColor, // New: for background color
     animatedBackgroundOpacity, // New: for background opacity
