@@ -1,4 +1,7 @@
-import { LOCALES } from '../locales';
+// Local definition to make the component self-contained
+const LOCALES = {
+  ENGLISH: 'en-US',
+};
 
 export const DEFAULT_THEME = 'dark';
 
@@ -12,14 +15,15 @@ export const DEFAULT_SETTINGS = {
   animatedSprites: false,
   use24HourFormat: true,
   isNotificationSoundEnabled: true,
-  
+
   isGlassUIEnabled: false,
   isAnimatedBackgroundEnabled: true, // New setting
   backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center', // New: default to full screen
   particleDensity: 'medium' as 'low' | 'medium' | 'high', // New: default particle density
-  particleColor: 'rgba(0, 0, 0, 0.5)', // Adjusted for light mode
+  particleColor: 'rgba(0, 0, 0, 0.5)', // Original particle color
   waveAmplitude: 10, // New: default wave amplitude
-  waveColor: 'rgba(0, 0, 0, 0.1)', // Adjusted for light mode
+  waveColor: 'rgba(0, 0, 0, 0.1)', // Original wave color
+  animatedBackgroundClearColor: 'rgba(0, 0, 0, 0.05)', // New setting for animated background clear color
   isMainContentTransparent: false, // New setting for main content transparency
   isSparkleEffectEnabled: false,
   sparkleDensity: 50,
