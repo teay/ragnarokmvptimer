@@ -37,6 +37,14 @@ interface LeafParticle {
 
 import { useSettings } from '../../contexts/SettingsContext'; // Import useSettings
 
+// Helper function to convert hex color and alpha to rgba
+const hexToRgba = (hex: string, alpha: number) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const LuminousParticlesBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const {
@@ -46,6 +54,8 @@ const LuminousParticlesBackground: React.FC = () => {
     waveAmplitude,
     waveColor,
     particleEffect,
+    animatedBackgroundColor, // New: for background color
+    animatedBackgroundOpacity, // New: for background opacity
     isFallingElementsEnabled, // New: for falling leaves
   } = useSettings(); // Get settings from context
 
@@ -152,7 +162,7 @@ const LuminousParticlesBackground: React.FC = () => {
 
     const animate = () => {
       // Clear canvas with a slight fade effect for trails
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; // Very slight black overlay
+      ctx.fillStyle = hexToRgba(animatedBackgroundColor, animatedBackgroundOpacity);
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       let drawAreaStartY = 0;
@@ -360,6 +370,8 @@ const LuminousParticlesBackground: React.FC = () => {
     waveColor,
     particleEffect,
     isFallingElementsEnabled, // Add dependency
+    animatedBackgroundColor,
+    animatedBackgroundOpacity, // Add dependency
     leafImagesLoaded, // Add dependency
   ]);
 
