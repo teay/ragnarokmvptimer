@@ -12,8 +12,11 @@ export function usePersistedState<T>(
       if (storageValue) {
         try {
           const parsedValue = JSON.parse(storageValue);
-          // Merge with initialState to ensure all properties are present
-          return { ...initialState, ...parsedValue };
+          // Check if parsedValue is an object before merging
+          if (typeof parsedValue === 'object' && parsedValue !== null && !Array.isArray(parsedValue)) {
+            return { ...initialState, ...parsedValue }; // Merge for objects
+          }
+          return parsedValue; // Directly return for non-objects (like string theme)
         } catch (error) {
           console.error("Error parsing stored value:", error);
           return initialState;

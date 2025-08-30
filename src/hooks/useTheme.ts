@@ -1,23 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { usePersistedState } from './usePersistedState';
 import { DEFAULT_THEME, LOCAL_STORAGE_THEME_KEY } from '@/constants';
 
-function updateHTML() {
-  const currentLocalStorageTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY)
-    ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_THEME_KEY) || '')
-    : '';
-
-  const isLocalStorageDark = currentLocalStorageTheme === 'dark';
-  const missingLocalStorageTheme = !(LOCAL_STORAGE_THEME_KEY in localStorage);
-
-  const userPrefersDarkTheme = window.matchMedia(
-    '(prefers-color-scheme: dark)'
-  ).matches;
-
-  const useDark =
-    isLocalStorageDark || (missingLocalStorageTheme && userPrefersDarkTheme);
-
-  document.documentElement.dataset.theme = useDark ? 'dark' : 'light';
+function updateHTML(theme: string) {
+  document.documentElement.dataset.theme = theme;
 }
 
 export function useTheme() {
@@ -26,16 +12,20 @@ export function useTheme() {
     DEFAULT_THEME
   );
 
-  function toggleTheme() {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  }
+  const toggleTheme = useCallback(() => {
+    setTheme((prevTheme: string) => {
+      if (prevTheme === 'dark') return 'light';
+      if (prevTheme === 'light') return 'light-mode';
+      return 'dark';
+    });
+  }, [setTheme]);
 
-  function resetTheme() {
-    setTheme('light');
-  }
+  const resetTheme = useCallback(() => {
+    setTheme('dark');
+  }, [setTheme]);
 
   useEffect(() => {
-    updateHTML();
+    updateHTML(theme);
   }, [theme]);
 
   return { theme, toggleTheme, resetTheme };
