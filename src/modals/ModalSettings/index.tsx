@@ -45,7 +45,6 @@ export function ModalSettings({ onClose }: Props) {
     toggle24HourFormat,
     isNotificationSoundEnabled,
     toggleNotificationSound,
-    
     isGlassUIEnabled,
     toggleGlassUI,
     isAnimatedBackgroundEnabled,
@@ -64,8 +63,8 @@ export function ModalSettings({ onClose }: Props) {
     changeWaveColor,
     waveOpacity,
     changeWaveOpacity,
-    isMainContentTransparent, // New setting
-    toggleMainContentTransparency, // New toggle
+    isMainContentTransparent,
+    toggleMainContentTransparency,
     particleEffect,
     changeParticleEffect,
     font,
@@ -81,6 +80,10 @@ export function ModalSettings({ onClose }: Props) {
     resetColorsToThemeDefaults,
     isFallingElementsEnabled = false,
     toggleFallingElements,
+    waveTrailColor, // ตรวจสอบให้แน่ใจว่าได้ดึงตัวแปรนี้มาอย่างถูกต้อง
+    changeWaveTrailColor,
+    waveTrailOpacity, // ตรวจสอบให้แน่ใจว่าได้ดึงตัวแปรนี้มาอย่างถูกต้อง
+    changeWaveTrailOpacity,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -186,8 +189,6 @@ export function ModalSettings({ onClose }: Props) {
               />
             </Setting>
 
-            
-
             <Setting>
               <SettingName>
                 <FormattedMessage id='glass_ui' defaultMessage='Glass UI' />
@@ -217,8 +218,6 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
               <input type="range" min="0" max="1" step="0.01" value={animatedBackgroundOpacity} onChange={(e) => changeAnimatedBackgroundOpacity(Number(e.target.value))} />
             </Setting>
-
-            
 
             <Setting>
               <SettingName>
@@ -319,6 +318,21 @@ export function ModalSettings({ onClose }: Props) {
                 <FormattedMessage id='wave_opacity' defaultMessage='Wave Opacity' />
               </SettingName>
               <input type="range" min="0" max="1" step="0.01" value={waveOpacity} onChange={(e) => changeWaveOpacity(Number(e.target.value))} />
+            </Setting>
+
+            {/* Keep the first set of wave trail settings */}
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='wave_trail_color' defaultMessage='Wave Trail Color' />
+              </SettingName>
+              <input type="color" value={waveTrailColor} onChange={(e) => changeWaveTrailColor(e.target.value)} />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='wave_trail_opacity' defaultMessage='Wave Trail Opacity' />
+              </SettingName>
+              <input type="range" min="0" max="1" step="0.01" value={waveTrailOpacity} onChange={(e) => changeWaveTrailOpacity(Number(e.target.value))} />
             </Setting>
 
             <Setting>

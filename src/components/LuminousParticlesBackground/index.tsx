@@ -59,10 +59,14 @@ const LuminousParticlesBackground: React.FC = () => {
     animatedBackgroundColor, // New: for background color
     animatedBackgroundOpacity, // New: for background opacity
     isFallingElementsEnabled, // New: for falling leaves
+    waveTrailColor, // New: for wave trail color
+    waveTrailOpacity, // New: for wave trail opacity
   } = useSettings(); // Get settings from context
 
   const [leafImagesLoaded, setLeafImagesLoaded] = useState(false);
   const leafImageRefs = useRef<HTMLImageElement[]>([]);
+  const waveHistory = useRef<Array<{ x: number; y: number }[]>>([]);
+  const MAX_WAVE_HISTORY = 20;
 
   useEffect(() => {
     // Load leaf images
@@ -184,6 +188,7 @@ const LuminousParticlesBackground: React.FC = () => {
       }
 
       // --- Wave-like movement (XMB style) ---
+      const currentWavePoints: { x: number; y: number }[] = [];
       ctx.beginPath();
       ctx.moveTo(0, waveBaseY);
       for (let i = 0; i < canvas.width; i++) {
@@ -192,7 +197,40 @@ const LuminousParticlesBackground: React.FC = () => {
           Math.sin(i * 0.005 + Date.now() * 0.0005) * (waveAmplitude / 2) +
           Math.cos(i * 0.01 + Date.now() * 0.0003) * (waveAmplitude / 4);
         ctx.lineTo(i, waveY);
+        currentWavePoints.push({ x: i, y: waveY });
       }
+      // Add current wave points to history
+      waveHistory.current.unshift(currentWavePoints);
+      if (waveHistory.current.length > MAX_WAVE_HISTORY) {
+        waveHistory.current.pop(); // Remove oldest
+      }
+
+      // Draw wave trail
+      if (waveHistory.current.length > 1) {
+        for (let i = 0; i < waveHistory.current.length - 1; i++) {
+          const currentSegment = waveHistory.current[i];
+          const nextSegment = waveHistory.current[i + 1];
+
+          if (!currentSegment || !nextSegment) continue;
+
+          // Calculate opacity for this segment (fades out)
+          const segmentOpacity = waveTrailOpacity * (1 - (i / MAX_WAVE_HISTORY));
+          ctx.fillStyle = hexToRgba(waveTrailColor, segmentOpacity);
+
+          ctx.beginPath();
+          ctx.moveTo(currentSegment[0].x, currentSegment[0].y);
+          for (let j = 1; j < canvas.width; j++) {
+            ctx.lineTo(currentSegment[j].x, currentSegment[j].y);
+          }
+          // Connect to the next segment to form a filled ribbon
+          for (let j = canvas.width - 1; j >= 0; j--) {
+            ctx.lineTo(nextSegment[j].x, nextSegment[j].y);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
       ctx.strokeStyle = waveColor; // Use waveColor
       ctx.lineWidth = 1;
       ctx.stroke();
@@ -375,6 +413,8 @@ const LuminousParticlesBackground: React.FC = () => {
     animatedBackgroundColor,
     animatedBackgroundOpacity, // Add dependency
     leafImagesLoaded, // Add dependency
+    waveTrailColor, // New dependency
+    waveTrailOpacity, // New dependency
   ]);
 
   return <canvas ref={canvasRef} className={backgroundStyles} />;
