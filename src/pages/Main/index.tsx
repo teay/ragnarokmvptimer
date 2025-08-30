@@ -47,14 +47,7 @@ export function Main() {
     window.scrollTo(0, 0);
   }, []);
 
-  const { toggleHideActiveContent } = useSettings();
-
-  useKey('Escape', () => {
-    const isModalOpen = document.body.style.overflow === 'hidden';
-    if (!editingMvp && !isModalOpen) {
-      toggleHideActiveContent();
-    }
-  });
+  
 
   return (
     <>
