@@ -381,7 +381,7 @@ const resetColorsToThemeDefaults = useCallback((theme: string) => {
         waveColor: '#2836f0',
         waveOpacity: 0.1,
         animatedBackgroundColor: '#858585',
-        animatedBackgroundOpacity: 0.02,
+        animatedBackgroundOpacity: 1.0,
       };
     } else if (theme === 'darkest') {
       return {
@@ -391,7 +391,7 @@ const resetColorsToThemeDefaults = useCallback((theme: string) => {
         waveColor: '#3f15e0',
         waveOpacity: 0.1, // Assuming default opacity for darkest waves
         animatedBackgroundColor: '#000000',
-        animatedBackgroundOpacity: 0.02,
+        animatedBackgroundOpacity: 1.0,
       };
     } else if (theme === 'dark') {
       return {
@@ -401,7 +401,7 @@ const resetColorsToThemeDefaults = useCallback((theme: string) => {
         waveColor: '#0011ff',
         waveOpacity: 0.1,
         animatedBackgroundColor: '#333333',
-        animatedBackgroundOpacity: 0.02,
+        animatedBackgroundOpacity: 1.0,
       };
     }
   });
