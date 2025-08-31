@@ -403,11 +403,11 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           particleColor: '#01d5ab',
           particleOpacity: 0.5,
           waveColor: '#2836f0',
-          waveOpacity: 0.1,
+          waveOpacity: 1.0,
           animatedBackgroundColor: '#858585',
           animatedBackgroundOpacity: 1.0,
           waveTrailColor: '#2836f0',
-          waveTrailOpacity: 0.2,
+          waveTrailOpacity: 1.0,
         };
       } else if (theme === 'darkest') {
         return {
@@ -415,11 +415,11 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           particleColor: '#2a2e8d',
           particleOpacity: 0.5,
           waveColor: '#3f15e0',
-          waveOpacity: 0.1,
+          waveOpacity: 1.0,
           animatedBackgroundColor: '#000000',
           animatedBackgroundOpacity: 1.0,
           waveTrailColor: '#3f15e0',
-          waveTrailOpacity: 0.2,
+          waveTrailOpacity: 1.0,
         };
       } else if (theme === 'dark') {
         return {
@@ -427,11 +427,11 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           particleColor: '#fa0000',
           particleOpacity: 0.5,
           waveColor: '#0011ff',
-          waveOpacity: 0.1,
+          waveOpacity: 1.0,
           animatedBackgroundColor: '#333333',
           animatedBackgroundOpacity: 1.0,
           waveTrailColor: '#0011ff',
-          waveTrailOpacity: 0.2,
+          waveTrailOpacity: 1.0,
         };
       }
     });
