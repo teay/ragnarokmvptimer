@@ -7,10 +7,9 @@ const backgroundStyles = css`
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1;
+  z-index: -1; /* Ensure it's behind other content */
 `;
 
-// Updated Particle interface to include isAlive for object pooling
 interface Particle {
   x: number;
   y: number;
@@ -18,7 +17,6 @@ interface Particle {
   color: string;
   vx: number;
   vy: number;
-  isAlive: boolean;
 }
 
 // Leaf image paths from FallingElements
@@ -35,10 +33,9 @@ interface LeafParticle {
   image: HTMLImageElement;
   bounceCount: number; // New: track bounces
   maxBounces: number; // New: random threshold for disappearance
-  isAlive: boolean; // Added for object pooling
 }
 
-import { useSettings } from '../../contexts/SettingsContext';
+import { useSettings } from '../../contexts/SettingsContext'; // Import useSettings
 
 // Helper function to convert hex color and alpha to rgba
 const hexToRgba = (hex: string, alpha: number) => {
@@ -50,7 +47,6 @@ const hexToRgba = (hex: string, alpha: number) => {
 
 const LuminousParticlesBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const {
     backgroundEffectMode,
     particleDensity,
@@ -60,12 +56,12 @@ const LuminousParticlesBackground: React.FC = () => {
     waveColor,
     waveOpacity,
     particleEffect,
-    animatedBackgroundColor,
-    animatedBackgroundOpacity,
-    isFallingElementsEnabled,
-    waveTrailColor,
-    waveTrailOpacity,
-  } = useSettings();
+    animatedBackgroundColor, // New: for background color
+    animatedBackgroundOpacity, // New: for background opacity
+    isFallingElementsEnabled, // New: for falling leaves
+    waveTrailColor, // New: for wave trail color
+    waveTrailOpacity, // New: for wave trail opacity
+  } = useSettings(); // Get settings from context
 
   const [leafImagesLoaded, setLeafImagesLoaded] = useState(false);
   const leafImageRefs = useRef<HTMLImageElement[]>([]);
@@ -81,7 +77,7 @@ const LuminousParticlesBackground: React.FC = () => {
         img.onload = () => resolve(img);
         img.onerror = () => {
           console.error(`Failed to load leaf image: ${path}`);
-          resolve(img);
+          resolve(img); // Resolve even on error to not block loading
         };
       });
     });
@@ -101,14 +97,6 @@ const LuminousParticlesBackground: React.FC = () => {
 
     let animationFrameId: number;
 
-    // Setup offscreen canvas for background layers
-    if (!offscreenCanvasRef.current) {
-      offscreenCanvasRef.current = document.createElement('canvas');
-    }
-    const offscreenCanvas = offscreenCanvasRef.current;
-    const offscreenCtx = offscreenCanvas.getContext('2d');
-    if (!offscreenCtx) return;
-
     // Determine number of particles based on density setting
     const getNumParticles = (density: 'low' | 'medium' | 'high') => {
       switch (density) {
@@ -123,18 +111,18 @@ const LuminousParticlesBackground: React.FC = () => {
       }
     };
 
+    // Initialize particles
     const initParticles = () => {
-      const newParticles: Particle[] = [];
-      const currentNumParticles = getNumParticles(particleDensity);
+      const newParticles: Particle[] = []; // Clear existing particles
+      const currentNumParticles = getNumParticles(particleDensity); // Use setting
       for (let i = 0; i < currentNumParticles; i++) {
         newParticles.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          radius: Math.random() * 3 + 1,
-          color: particleColor,
-          vx: (Math.random() - 0.5) * 0.5,
+          radius: Math.random() * 3 + 1, // Random radius between 1 and 4
+          color: particleColor, // Use setting
+          vx: (Math.random() - 0.5) * 0.5, // Random velocity between -0.25 and 0.25
           vy: (Math.random() - 0.5) * 0.5,
-          isAlive: true,
         });
       }
       return newParticles;
@@ -142,23 +130,23 @@ const LuminousParticlesBackground: React.FC = () => {
 
     let particles = initParticles();
 
+    // Initialize leaf particles
     const initLeafParticles = () => {
       const newLeafParticles: LeafParticle[] = [];
       if (isFallingElementsEnabled && leafImageRefs.current.length > 0) {
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 30; i++) { // Fixed count for now, can be made configurable
           const randomImage = leafImageRefs.current[Math.floor(Math.random() * leafImageRefs.current.length)];
           newLeafParticles.push({
             x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height * 0.5 - canvas.height * 0.5,
-            vx: (Math.random() - 0.5) * 0.2,
-            vy: Math.random() * 0.5 + 0.5,
+            y: Math.random() * canvas.height * 0.5 - canvas.height * 0.5, // Start above viewport
+            vx: (Math.random() - 0.5) * 0.2, // Slower horizontal drift
+            vy: Math.random() * 0.5 + 0.5, // Initial vertical velocity
             rotation: Math.random() * 360,
-            vRotation: Math.random() * 1 - 0.5,
-            size: Math.random() * 30 + 20,
+            vRotation: Math.random() * 1 - 0.5, // Slower rotational velocity
+            size: Math.random() * 30 + 20, // Size between 20px and 50px
             image: randomImage,
-            bounceCount: 0,
-            maxBounces: Math.floor(Math.random() * 3) + 3,
-            isAlive: true,
+            bounceCount: 0, // Initialize bounce count
+            maxBounces: Math.floor(Math.random() * 3) + 3, // Random 3, 4, or 5 bounces
           });
         }
       }
@@ -167,29 +155,25 @@ const LuminousParticlesBackground: React.FC = () => {
 
     let leafParticles = initLeafParticles();
 
+    // Set canvas dimensions and initialize particles on resize
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      offscreenCanvas.width = window.innerWidth;
-      offscreenCanvas.height = window.innerHeight;
-      particles = initParticles();
-      leafParticles = initLeafParticles();
+      particles = initParticles(); // Re-initialize particles on resize
+      leafParticles = initLeafParticles(); // Re-initialize leaf particles on resize
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize();
+    handleResize(); // Initial setup
 
     const animate = () => {
-      // Clear main canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // --- Draw background and wave trail to offscreen canvas ---
-      offscreenCtx.fillStyle = hexToRgba(animatedBackgroundColor, animatedBackgroundOpacity);
-      offscreenCtx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+      // Clear canvas with a slight fade effect for trails
+      ctx.fillStyle = hexToRgba(animatedBackgroundColor, animatedBackgroundOpacity);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       let drawAreaStartY = 0;
       let drawAreaEndY = canvas.height;
-      let waveBaseY = canvas.height * 0.7;
+      let waveBaseY = canvas.height * 0.7; // Default for full
 
       if (backgroundEffectMode === 'top') {
         drawAreaEndY = canvas.height / 2;
@@ -205,22 +189,23 @@ const LuminousParticlesBackground: React.FC = () => {
 
       // --- Wave-like movement (XMB style) ---
       const currentWavePoints: { x: number; y: number }[] = [];
-      offscreenCtx.beginPath();
-      offscreenCtx.moveTo(0, waveBaseY);
+      ctx.beginPath();
+      ctx.moveTo(0, waveBaseY);
       for (let i = 0; i < canvas.width; i++) {
         const waveY =
           waveBaseY +
           Math.sin(i * 0.005 + Date.now() * 0.0005) * (waveAmplitude / 2) +
           Math.cos(i * 0.01 + Date.now() * 0.0003) * (waveAmplitude / 4);
-        offscreenCtx.lineTo(i, waveY);
+        ctx.lineTo(i, waveY);
         currentWavePoints.push({ x: i, y: waveY });
       }
-
+      // Add current wave points to history
       waveHistory.current.unshift(currentWavePoints);
       if (waveHistory.current.length > MAX_WAVE_HISTORY) {
-        waveHistory.current.pop();
+        waveHistory.current.pop(); // Remove oldest
       }
 
+      // Draw wave trail
       if (waveHistory.current.length > 1) {
         for (let i = 0; i < waveHistory.current.length - 1; i++) {
           const currentSegment = waveHistory.current[i];
@@ -228,33 +213,30 @@ const LuminousParticlesBackground: React.FC = () => {
 
           if (!currentSegment || !nextSegment) continue;
 
+          // Calculate opacity for this segment (fades out)
           const segmentOpacity = waveTrailOpacity * (1 - (i / MAX_WAVE_HISTORY));
-          offscreenCtx.fillStyle = hexToRgba(waveTrailColor, segmentOpacity);
+          ctx.fillStyle = hexToRgba(waveTrailColor, segmentOpacity);
 
-          offscreenCtx.beginPath();
-          offscreenCtx.moveTo(currentSegment[0].x, currentSegment[0].y);
+          ctx.beginPath();
+          ctx.moveTo(currentSegment[0].x, currentSegment[0].y);
           for (let j = 1; j < canvas.width; j++) {
-            offscreenCtx.lineTo(currentSegment[j].x, currentSegment[j].y);
+            ctx.lineTo(currentSegment[j].x, currentSegment[j].y);
           }
+          // Connect to the next segment to form a filled ribbon
           for (let j = canvas.width - 1; j >= 0; j--) {
-            offscreenCtx.lineTo(nextSegment[j].x, nextSegment[j].y);
+            ctx.lineTo(nextSegment[j].x, nextSegment[j].y);
           }
-          offscreenCtx.closePath();
-          offscreenCtx.fill();
+          ctx.closePath();
+          ctx.fill();
         }
       }
 
-      offscreenCtx.strokeStyle = waveColor;
-      offscreenCtx.lineWidth = 1;
-      offscreenCtx.stroke();
+      ctx.strokeStyle = waveColor; // Use waveColor
+      ctx.lineWidth = 1;
+      ctx.stroke();
 
-      // Draw the offscreen canvas content to the main canvas
-      ctx.drawImage(offscreenCanvas, 0, 0);
-
-      // --- Update and draw sparkling/glittering particles on the main canvas ---
-      particles.forEach((particle) => {
-        if (!particle.isAlive) return;
-
+      // --- Update and draw sparkling/glittering particles ---
+      particles.forEach((particle, index) => {
         if (particleEffect === 'gravity') {
           // Add gravity
           particle.vy += 0.05;
@@ -276,14 +258,23 @@ const LuminousParticlesBackground: React.FC = () => {
             particle.vy *= -0.6; // Bounce with damping
           }
 
-          // Check if particle is off-screen, mark as dead for pooling
-          if (particle.y > canvas.height + particle.radius * 2) {
-            particle.isAlive = false;
-          }
-
           // Wrap around edges (for x-axis)
           if (particle.x < 0) particle.x = canvas.width;
           if (particle.x > canvas.width) particle.x = 0;
+
+          // Particle-particle collision (simple removal)
+          for (let j = index + 1; j < particles.length; j++) {
+            const otherParticle = particles[j];
+            const dx = otherParticle.x - particle.x;
+            const dy = otherParticle.y - particle.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < particle.radius + otherParticle.radius) {
+              // On collision, remove both particles
+              particles.splice(j, 1);
+              particles.splice(index, 1);
+            }
+          }
         } else {
           // Update position
           particle.x += particle.vx;
@@ -300,7 +291,7 @@ const LuminousParticlesBackground: React.FC = () => {
         if (particle.y >= drawAreaStartY && particle.y <= drawAreaEndY) {
           // Draw particle
           ctx.fillStyle = particle.color;
-          ctx.shadowBlur = particle.radius * 2;
+          ctx.shadowBlur = particle.radius * 2; // Glow based on radius
           ctx.shadowColor = particle.color;
           ctx.beginPath();
           ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
@@ -310,16 +301,17 @@ const LuminousParticlesBackground: React.FC = () => {
 
       // --- Update and draw leaf particles ---
       if (isFallingElementsEnabled && leafImagesLoaded) {
-        // Use filter to remove 'dead' leaves and respawn them.
+        // Filter out leaves that have bounced too many times
         leafParticles = leafParticles.filter(leaf => leaf.bounceCount <= leaf.maxBounces);
-        leafParticles.forEach((leaf) => {
+
+        leafParticles.forEach((leaf, index) => {
           // Apply gravity
-          leaf.vy += 0.05;
+          leaf.vy += 0.05; // Adjust gravity as needed
 
           // Update position
           leaf.x += leaf.vx;
           leaf.y += leaf.vy;
-          leaf.rotation += leaf.vRotation;
+          leaf.rotation += leaf.vRotation; // Apply rotation
 
           // Wave collision (similar to gravity particles)
           const waveY =
@@ -329,25 +321,26 @@ const LuminousParticlesBackground: React.FC = () => {
             Math.cos(leaf.x * 0.01 + Date.now() * 0.0003) *
               (waveAmplitude / 4);
 
-          if (leaf.y + leaf.size / 2 > waveY) {
-            if (leaf.vy > 0) {
-              leaf.y = waveY - leaf.size / 2;
-              leaf.vy *= -0.6;
-              leaf.vx *= 0.9;
-              leaf.bounceCount++;
+          if (leaf.y + leaf.size / 2 > waveY) { // Collision with center of leaf
+            if (leaf.vy > 0) { // Only count bounce if moving downwards
+              leaf.y = waveY - leaf.size / 2; // Position above wave
+              leaf.vy *= -0.6; // Bounce with damping
+              leaf.vx *= 0.9; // Reduce horizontal velocity on bounce
+              leaf.bounceCount++; // Increment bounce count
             }
           }
 
-          // Reset if falls off screen
+          // Reset if falls off screen (and not due to bounce count)
           if (leaf.y > canvas.height + leaf.size) {
-            leaf.y = -leaf.size;
+            // Reset leaf to top, effectively respawning it
+            leaf.y = -leaf.size; 
             leaf.x = Math.random() * canvas.width;
             leaf.vy = Math.random() * 0.5 + 0.5;
             leaf.rotation = Math.random() * 360;
             leaf.vRotation = Math.random() * 1 - 0.5;
             leaf.vx = (Math.random() - 0.5) * 0.2;
-            leaf.bounceCount = 0;
-            leaf.maxBounces = Math.floor(Math.random() * 3) + 3;
+            leaf.bounceCount = 0; // Reset bounce count for new fall
+            leaf.maxBounces = Math.floor(Math.random() * 3) + 3; // New random max bounces
           }
 
           // Draw leaf
@@ -359,49 +352,43 @@ const LuminousParticlesBackground: React.FC = () => {
         });
 
         // Continuous spawning of leaves
-        const desiredLeafCount = 30;
+        const desiredLeafCount = 30; // This can be made configurable later
         if (leafParticles.length < desiredLeafCount) {
           const leavesToSpawn = desiredLeafCount - leafParticles.length;
           for (let i = 0; i < leavesToSpawn; i++) {
             const randomImage = leafImageRefs.current[Math.floor(Math.random() * leafImageRefs.current.length)];
             leafParticles.push({
-                x: Math.random() * canvas.width,
-                y: -Math.random() * canvas.height * 0.5,
-                vx: (Math.random() - 0.5) * 0.2,
-                vy: Math.random() * 0.5 + 0.5,
-                rotation: Math.random() * 360,
-                vRotation: Math.random() * 1 - 0.5,
-                size: Math.random() * 30 + 20,
-                image: randomImage,
-                bounceCount: 0,
-                maxBounces: Math.floor(Math.random() * 3) + 3,
-                isAlive: false
+              x: Math.random() * canvas.width,
+              y: -Math.random() * canvas.height * 0.5, // Start above viewport, spread out
+              vx: (Math.random() - 0.5) * 0.2,
+              vy: Math.random() * 0.5 + 0.5,
+              rotation: Math.random() * 360,
+              vRotation: Math.random() * 1 - 0.5,
+              size: Math.random() * 30 + 20,
+              image: randomImage,
+              bounceCount: 0,
+              maxBounces: Math.floor(Math.random() * 3) + 3,
             });
           }
         }
       }
 
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0; // Reset shadow after drawing all particles
 
-      // Respawn particles using object pooling
-      const currentNumParticles = getNumParticles(particleDensity);
-      if (particles.filter(p => p.isAlive).length < currentNumParticles) {
-        const deadParticle = particles.find(p => !p.isAlive);
-        if (deadParticle) {
-          deadParticle.x = Math.random() * canvas.width;
-          deadParticle.y = -deadParticle.radius;
-          deadParticle.vy = (Math.random() - 0.5) * 0.5;
-          deadParticle.isAlive = true;
-        } else {
-          particles.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * drawAreaEndY,
-            radius: Math.random() * 3 + 1,
-            color: particleColor,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5,
-            isAlive: true,
-          });
+      // Respawn particles if needed
+      if (particleEffect === 'gravity') {
+        const currentNumParticles = getNumParticles(particleDensity);
+        if (particles.length < currentNumParticles) {
+          for (let i = 0; i < currentNumParticles - particles.length; i++) {
+            particles.push({
+              x: Math.random() * canvas.width,
+              y: Math.random() * drawAreaEndY,
+              radius: Math.random() * 3 + 1,
+              color: particleColor,
+              vx: (Math.random() - 0.5) * 0.5,
+              vy: (Math.random() - 0.5) * 0.5,
+            });
+          }
         }
       }
 
@@ -422,12 +409,12 @@ const LuminousParticlesBackground: React.FC = () => {
     waveAmplitude,
     waveColor,
     particleEffect,
-    isFallingElementsEnabled,
+    isFallingElementsEnabled, // Add dependency
     animatedBackgroundColor,
-    animatedBackgroundOpacity,
-    leafImagesLoaded,
-    waveTrailColor,
-    waveTrailOpacity,
+    animatedBackgroundOpacity, // Add dependency
+    leafImagesLoaded, // Add dependency
+    waveTrailColor, // New dependency
+    waveTrailOpacity, // New dependency
   ]);
 
   return <canvas ref={canvasRef} className={backgroundStyles} />;
