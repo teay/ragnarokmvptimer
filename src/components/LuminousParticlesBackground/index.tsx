@@ -66,7 +66,7 @@ const LuminousParticlesBackground: React.FC = () => {
   const [leafImagesLoaded, setLeafImagesLoaded] = useState(false);
   const leafImageRefs = useRef<HTMLImageElement[]>([]);
   const waveHistory = useRef<Array<{ x: number; y: number }[]>>([]);
-  const MAX_WAVE_HISTORY = 20;
+  const MAX_WAVE_HISTORY = 50;
 
   useEffect(() => {
     // Load leaf images
