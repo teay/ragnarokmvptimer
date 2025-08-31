@@ -103,13 +103,15 @@ interface SettingsContextData {
   toggleAnimatedBackground: () => void;
   backgroundEffectMode: 'full' | 'top' | 'bottom' | 'center';
   changeBackgroundEffectMode: (mode: 'full' | 'top' | 'bottom' | 'center') => void;
-  particleDensity: 'low' | 'medium' | 'high' | 'Empty'; // <-- แก้ไขตรงนี้
-  changeParticleDensity: (density: 'low' | 'medium' | 'high' | 'Empty') => void; // <-- แก้ไขตรงนี้
+  particleDensity: 'low' | 'medium' | 'high' | 'Empty';
+  changeParticleDensity: (density: 'low' | 'medium' | 'high' | 'Empty') => void;
   particleColor: string;
   changeParticleColor: (color: string) => void;
   particleOpacity: number;
   changeParticleOpacity: (opacity: number) => void;
+  // เพิ่ม 2 บรรทัดนี้
   waveAmplitude: number;
+  changeWaveAmplitude: (amplitude: number) => void;
   waveLineWidth: number;
   changeWaveLineWidth: (width: number) => void;
   waveColor: string;
