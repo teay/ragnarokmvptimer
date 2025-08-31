@@ -109,9 +109,11 @@ const LuminousParticlesBackground: React.FC = () => {
     const offscreenCtx = offscreenCanvas.getContext('2d');
     if (!offscreenCtx) return;
 
-    // Determine number of particles based on density setting
-    const getNumParticles = (density: 'low' | 'medium' | 'high') => {
+        // Determine number of particles based on density setting
+    const getNumParticles = (density: 'low' | 'medium' | 'high' | 'Empty') => {
       switch (density) {
+        case 'Empty':
+          return 0;
         case 'low':
           return 50;
         case 'medium':

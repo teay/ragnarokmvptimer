@@ -51,7 +51,7 @@ const DEFAULT_SETTINGS = {
   isGlassUIEnabled: false,
   isAnimatedBackgroundEnabled: true,
   backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center',
-  particleDensity: 'medium' as 'low' | 'medium' | 'high',
+  particleDensity: 'medium' as 'low' | 'medium' | 'high' | 'Empty', // <-- แก้ไขตรงนี้
   particleColor: '#000000',
   particleOpacity: 0.5,
   waveAmplitude: 10,
@@ -103,8 +103,8 @@ interface SettingsContextData {
   toggleAnimatedBackground: () => void;
   backgroundEffectMode: 'full' | 'top' | 'bottom' | 'center';
   changeBackgroundEffectMode: (mode: 'full' | 'top' | 'bottom' | 'center') => void;
-  particleDensity: 'low' | 'medium' | 'high';
-  changeParticleDensity: (density: 'low' | 'medium' | 'high') => void;
+  particleDensity: 'low' | 'medium' | 'high' | 'Empty'; // <-- แก้ไขตรงนี้
+  changeParticleDensity: (density: 'low' | 'medium' | 'high' | 'Empty') => void; // <-- แก้ไขตรงนี้
   particleColor: string;
   changeParticleColor: (color: string) => void;
   particleOpacity: number;
@@ -236,7 +236,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   );
 
   const changeParticleDensity = useCallback(
-    (density: 'low' | 'medium' | 'high') => {
+    (density: 'low' | 'medium' | 'high' | 'Empty') => { // <-- แก้ไขตรงนี้
       setSettings((prev) => ({
         ...prev,
         particleDensity: density,

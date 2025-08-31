@@ -278,7 +278,8 @@ export function ModalSettings({ onClose }: Props) {
               <SettingName>
                 <FormattedMessage id='particle_density' defaultMessage='Particle Density' />
               </SettingName>
-              <select value={particleDensity} onChange={(e) => changeParticleDensity(e.target.value as 'low' | 'medium' | 'high')}>
+              <select value={particleDensity} onChange={(e) => changeParticleDensity(e.target.value as 'low' | 'medium' | 'high' | 'Empty')}>
+                <option value="Empty">Empty</option>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
