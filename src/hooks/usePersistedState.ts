@@ -22,6 +22,7 @@ export function usePersistedState<T>(
           return initialState;
         }
       }
+      localStorage.setItem(key, JSON.stringify(initialState));
       return initialState;
     } catch (error) {
       console.error("Error accessing localStorage:", error);
