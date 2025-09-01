@@ -11,10 +11,7 @@ const useTheme = () => {
   return { resetTheme };
 };
 
-// Local definitions to make the component self-contained
-const LOCALES = {
-  ENGLISH: 'en',
-};
+import { LOCALES } from '@/locales';
 
 const DEFAULT_THEME = 'dark';
 const RESPAWN_TIMER_SOON_THRESHOLD_MS = 1000 * 60 * 10; // 10 minutes
