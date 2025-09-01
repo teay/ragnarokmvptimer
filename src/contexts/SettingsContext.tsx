@@ -1,27 +1,6 @@
 import { createContext, useContext, ReactNode, useCallback, useState, useEffect } from 'react';
 
-// Self-contained custom hook for persisting state to localStorage
-const usePersistedState = <T,>(key: string, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
-  const [state, setState] = useState<T>(() => {
-    try {
-      const storedValue = localStorage.getItem(key);
-      return storedValue ? JSON.parse(storedValue) : defaultValue;
-    } catch (error) {
-      console.error("Failed to parse stored state:", error);
-      return defaultValue;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(key, JSON.stringify(state));
-    } catch (error) {
-      console.error("Failed to save state to localStorage:", error);
-    }
-  }, [key, state]);
-
-  return [state, setState];
-};
+import { usePersistedState } from '@/hooks/usePersistedState';
 
 // Self-contained mock theme hook for this context
 const useTheme = () => {
@@ -34,7 +13,7 @@ const useTheme = () => {
 
 // Local definitions to make the component self-contained
 const LOCALES = {
-  ENGLISH: 'en-US',
+  ENGLISH: 'en',
 };
 
 const DEFAULT_THEME = 'dark';
