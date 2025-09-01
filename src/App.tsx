@@ -24,19 +24,8 @@ import { useTheme } from './hooks';
 import { LOCALES } from './locales';
 import { messages } from './locales/messages';
 
-const APP_VERSION = '2'; // Define the current version of the application
-
 export default function App() {
-  useEffect(() => {
-    const storedVersion = localStorage.getItem('appVersion');
-    if (storedVersion !== APP_VERSION) {
-      console.log('Old app version detected, clearing storage and reloading.');
-      localStorage.clear();
-      localStorage.setItem('appVersion', APP_VERSION);
-      window.location.reload();
-    }
-  }, []);
-
+  
   const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font, isSparkleEffectEnabled, sparkleDensity, isFallingElementsEnabled, hideActiveContent, toggleHideActiveContent } = useSettings(); // Add new setting
   const { theme } = useTheme();
   const {
@@ -44,6 +33,10 @@ export default function App() {
     isNotificationPermissionDenied,
     browserSupportsNotifications,
   } = useNotification();
+
+  
+
+  
 
   useEffect(() => {
     dayjs.locale(language);
