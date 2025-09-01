@@ -406,7 +406,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           particleOpacity: 0.5,
           waveColor: '#0011ff',
           waveOpacity: 1.0,
-          animatedBackgroundColor: '#333333',
+          animatedBackgroundColor: '#000000',
           animatedBackgroundOpacity: 1.0,
           waveTrailColor: '#0011ff',
           waveTrailOpacity: 1.0,
