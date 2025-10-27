@@ -7,7 +7,7 @@ import wyw from '@wyw-in-js/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/ragnarokmvptimer/',
+  base: './',
   json: {
     stringify: true,
   },
@@ -36,7 +36,7 @@ export default defineConfig({
       },
     }),
     VitePWA({
-      base: '/ragnarokmvptimer/',
+      base: './',
       injectRegister: false,
       registerType: 'autoUpdate',
       devOptions: {

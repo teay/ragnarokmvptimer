@@ -21,8 +21,9 @@ interface Particle {
   isAlive: boolean;
 }
 
-// Leaf image paths from FallingElements
-const leafImagePaths = Array.from({ length: 16 }).map((_, i) => `/ragnarokmvptimer/assets/leaves/leaf${i + 1}.png`);
+// Use Vite's glob import to get all leaf image paths correctly for both dev and prod
+const leafImageModules = import.meta.glob('/public/assets/leaves/*.png', { eager: true, query: '?url', import: 'default' });
+const leafImagePaths = Object.values(leafImageModules);
 
 interface LeafParticle {
   x: number;
@@ -77,7 +78,7 @@ const LuminousParticlesBackground: React.FC = () => {
     const loadLeafImagePromises = leafImagePaths.map((path) => {
       return new Promise<HTMLImageElement>((resolve) => {
         const img = new Image();
-        img.src = path;
+        img.src = path as string;
         img.onload = () => resolve(img);
         img.onerror = () => {
           console.error(`Failed to load leaf image: ${path}`);
