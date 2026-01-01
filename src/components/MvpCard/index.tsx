@@ -97,7 +97,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
               <Tombstone>
                 <FormattedMessage id='when_was_mvp_killed' />
                 <br />
-                <Bold>{dayjs(mvp.deathTime).format('DD/MM/YYYY HH:mm A')}</Bold>
+                <Bold>{dayjs(mvp.deathTime).format('DD/MM/YYYY HH:mm')}</Bold>
               </Tombstone>
 
               <Controls>
