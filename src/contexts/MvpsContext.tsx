@@ -122,7 +122,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
     });
   }, [server]);
 
-  const closeEditMvpModal = useCallback(() => setEditingMvp(undefined), []);
+  const closeEditMvpModal = useCallback(() => {
+    setEditingMvp(undefined);
+    window.scrollTo(0, 0);
+  }, []);
 
   const allMvps = useMemo(() => {
     const activeMvpIds = new Set(activeMvps.map((mvp) => mvp.id));

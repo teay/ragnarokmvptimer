@@ -101,12 +101,12 @@ export function MvpCard({ mvp }: MvpCardProps) {
               </Tombstone>
 
               <Controls>
-                <Control onClick={() => resetMvpTimer(mvp)} title='Reset timer'>
+                <Control onClick={() => { resetMvpTimer(mvp); window.scrollTo(0, 0); }} title='Reset timer'>
                   <RefreshCcw />
                   <ControlText><FormattedMessage id='reset_timer' /></ControlText>
                 </Control>
                 <Control
-                  onClick={() => removeMvpByMap(mvp.id, mvp.deathMap)}
+                  onClick={() => { removeMvpByMap(mvp.id, mvp.deathMap); window.scrollTo(0, 0); }}
                   title='Remove this mvp'
                 >
                   <Trash2 />
