@@ -284,10 +284,126 @@ export const globals = css`
       color: var(--text); /* Default text color */
     }
 
-    /* Aggressive override for ModalSelectMap text */
-    .m12h3ctv span {
-      color: #E0E0E0 !important;
+    /* Styles for AppTextOnly (Text Mode UI) */
+    .app-text-only-container {
+      padding: 20px;
+      color: var(--text); /* Use theme text color */
+      background-color: var(--quaternary); /* Use a theme background color */
+      min-height: 100vh;
     }
+
+    .mvp-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
+      gap: 15px; /* Space between cards */
+      margin-top: 20px;
+    }
+
+    .mvp-card-text {
+      border: 2px solid var(--border); /* Thicker border */
+      padding: 10px;
+      border-radius: 8px;
+      background-color: var(--tertiary);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 180px; /* Increased height to accommodate more info */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      font-size: 1.2rem; /* Base font size for card content */
+    }
+    .mvp-card-text * {
+      border: 1px solid red !important; /* Re-add debugging border for all children */
+    }
+
+    .mvp-card-text-id {
+      font-size: 0.9em;
+      color: var(--mvpCard_id);
+      margin-bottom: 5px;
+    }
+
+    .mvp-card-text-name {
+      font-weight: bold;
+      color: var(--mvpCard_name);
+      margin-bottom: 5px;
+      font-size: 1.3em;
+    }
+
+    .mvp-card-text-status-line {
+      margin-bottom: 5px;
+    }
+
+    .mvp-status {
+      color: var(--timers_passed); /* Example color for "Already Respawned" */
+      font-weight: bold;
+    }
+
+    .mvp-countdown {
+      color: var(--timers_normal);
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    .mvp-card-text-map {
+      font-size: 0.9em;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+
+    .mvp-card-text-death-time {
+      font-size: 0.8em;
+      color: var(--text);
+      white-space: pre-wrap; /* To respect newlines in death time */
+      margin-bottom: 5px;
+    }
+
+    .mvp-card-text-actions {
+      display: flex;
+      justify-content: space-around; /* Distribute buttons evenly */
+      margin-top: auto; /* Push actions to the bottom */
+      padding-top: 10px;
+      border-top: 1px solid var(--border); /* Separator line */
+      gap: 5px; /* Add a small gap between buttons */
+    }
+
+    .mvp-action-button {
+      font-size: 0.8em;
+      color: var(--primary);
+      cursor: pointer;
+      padding: 5px 8px;
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+      flex-grow: 1; /* Allow buttons to grow and fill space */
+      text-align: center;
+    }
+
+    .mvp-action-button:hover {
+      background-color: var(--primary);
+      color: var(--quaternary); /* Text color on hover */
+    }
+
+    .kill-now-button {
+      background-color: #4CAF50; /* Green background for kill button */
+      color: white;
+      border-color: #4CAF50;
+    }
+
+    .kill-now-button:hover {
+      background-color: #45a049;
+      color: white;
+    }
+
+    .edit-button {
+      background-color: var(--primary); /* Use primary color for edit button */
+      color: var(--quaternary);
+    }
+
+    .edit-button:hover {
+      background-color: var(--primary);
+      color: var(--quaternary);
+    }
+
+    /* End Styles for AppTextOnly */
 
     html.non-glass-ui[data-theme='darkest'] {
       --header_backdrop_filter: none;

@@ -8,6 +8,7 @@ import {
   useMemo,
 } from 'react';
 import dayjs from 'dayjs';
+import { IMvp } from '../interfaces'; // Import IMvp
 
 import { useSettings } from './SettingsContext';
 
@@ -140,7 +141,25 @@ export function MvpProvider({ children }: MvpProviderProps) {
     async function loadActiveMvpsOnly() {
       setIsLoading(true);
       const savedActiveMvps = await loadMvpsFromLocalStorage(server);
-      setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
+      let mvpsToSet = savedActiveMvps;
+
+      if (!mvpsToSet || mvpsToSet.length === 0) {
+        // Temporarily add a dummy MVP for testing text-only mode
+        // This block is commented out as it's for testing purposes only
+        // const dummyMvp: IMvp = {
+        //   id: 3505,
+        //   name: "Giant Eggring",
+        //   spawn: [
+        //     { mapname: "lasa_dun01", respawnTime: 3600000 }
+        //   ],
+        //   stats: { level: 25, health: 142480, baseExperience: 5486, jobExperience: 6908 },
+        //   deathTime: dayjs().subtract(30, 'minutes').toDate(), // Died 30 minutes ago
+        //   deathMap: "lasa_dun01"
+        // };
+        // mvpsToSet = [dummyMvp];
+      }
+
+      setActiveMvps(sortMvpsByRespawnTime(mvpsToSet || []));
       setIsLoading(false);
     }
     loadActiveMvpsOnly();
