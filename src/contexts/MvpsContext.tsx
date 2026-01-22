@@ -128,12 +128,26 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, []);
 
   const allMvps = useMemo(() => {
-    const activeMvpIds = new Set(activeMvps.map((mvp) => mvp.id));
-    const combinedMvps = [
-      ...activeMvps,
-      ...originalAllMvps.filter((mvp) => !activeMvpIds.has(mvp.id)),
-    ];
-    return combinedMvps;
+    const activeMvpKeys = new Set(
+      activeMvps.map((mvp) => `${mvp.id}-${mvp.deathMap}`)
+    );
+
+    const inactiveMvps = originalAllMvps
+      .flatMap((mvp) =>
+        mvp.spawn.map((spawn) => ({
+          ...mvp,
+          spawn: [spawn],
+          deathMap: spawn.mapname,
+        }))
+      )
+      .filter((mvp) => !activeMvpKeys.has(`${mvp.id}-${mvp.deathMap}`))
+      .map((mvp) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { deathTime, ...rest } = mvp;
+        return rest;
+      });
+
+    return inactiveMvps;
   }, [activeMvps, originalAllMvps]);
 
   useEffect(() => {

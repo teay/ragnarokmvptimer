@@ -42,7 +42,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
-  const isActive = !!mvp.deathMap;
+  const isActive = !!mvp.deathTime;
   const isEditing = editingMvp?.id === mvp.id;
 
   const nextRespawn = useMemo(
