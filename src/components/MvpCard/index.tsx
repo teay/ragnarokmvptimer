@@ -70,30 +70,35 @@ export function MvpCard({ mvp }: MvpCardProps) {
 
         <MvpSprite id={mvp.id} name={mvp.name} animated={animatedSprites} />
 
-        {isActive ? (
-          <>
-            <MvpCardCountdown
-              nextRespawn={nextRespawn}
-              respawnAsCountdown={respawnAsCountdown}
-              onTriggerNotification={() =>
-                respawnNotification(
-                  mvp.id,
-                  `${mvp.name} ${GetTranslateText('will_respawn')}`,
-                  `${mvp.deathMap} - ${nextRespawn.format('HH:mm')}`
-                )
-              }
-            />
+        {isActive && (
+          <MvpCardCountdown
+            nextRespawn={nextRespawn}
+            respawnAsCountdown={respawnAsCountdown}
+            onTriggerNotification={() =>
+              respawnNotification(
+                mvp.id,
+                `${mvp.name} ${GetTranslateText('will_respawn')}`,
+                `${mvp.deathMap} - ${nextRespawn.format('HH:mm')}`
+              )
+            }
+          />
+        )}
 
-            <MvpMap mapName={mvp.deathMap} coordinates={mvp.deathPosition} />
+        <MvpMap
+          mapName={isActive ? mvp.deathMap : mvp.spawn[0].mapname}
+          coordinates={isActive ? mvp.deathPosition : undefined}
+        />
 
-            <BottomControls>
-              <MapName>
-                <FormattedMessage id='map' />
-                {
+        <BottomControls>
+          <MapName>
+            <FormattedMessage id='map' />
+            {
 }
-                <Bold>{mvp.deathMap}</Bold>
-              </MapName>
+            <Bold>{isActive ? mvp.deathMap : mvp.spawn[0].mapname}</Bold>
+          </MapName>
 
+          {isActive ? (
+            <>
               <Tombstone>
                 <FormattedMessage id='when_was_mvp_killed' />
                 <br />
@@ -120,18 +125,19 @@ export function MvpCard({ mvp }: MvpCardProps) {
                   <ControlText><FormattedMessage id='edit_mvp' /></ControlText>
                 </Control>
               </Controls>
-            </BottomControls>
-          </>
-        ) : (
-          <Controls>
-            <KilledNow onClick={handleKilledNow}>
-              <FormattedMessage id='killed_now' />
-            </KilledNow>
-            <EditButton onClick={() => setEditingMvp(mvp)}>
-              <FormattedMessage id='edit' />
-            </EditButton>
-          </Controls>
-        )}
+            </>
+          ) : (
+            <Controls>
+              <KilledNow onClick={handleKilledNow}>
+                <FormattedMessage id='killed_now' />
+              </KilledNow>
+              <EditButton onClick={() => setEditingMvp(mvp)}>
+                <FormattedMessage id='edit' />
+              </EditButton>
+            </Controls>
+          )}
+        </BottomControls>
+
       </Container>
 
       {isActive && isMapModalOpen && (
