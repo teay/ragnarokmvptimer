@@ -40,8 +40,7 @@ export function Main() {
     ? allMvpsFilteredAndSorted.reverse()
     : allMvpsFilteredAndSorted;
 
-  const activeMvpIds = new Set(activeMvps.map((mvp) => mvp.id));
-  const nonActiveMvps = displayAllMvps.filter((mvp) => !activeMvpIds.has(mvp.id));
+  const nonActiveMvps = displayAllMvps;
 
   useEffect(() => {
     window.scrollTo(0, 0);
