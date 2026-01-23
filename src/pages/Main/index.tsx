@@ -5,9 +5,9 @@ import { MvpCard } from '@/components/MvpCard';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { MvpsContainerFilter } from '@/components/MvpsContainerFilter';
 import { MvpCardSkeleton } from '@/components/Skeletons/MvpCardSkeleton';
-import { ModalEditMvp } from '@/modals';
+import { ModalEditMvp, ModalKillMvp } from '@/modals';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
-import { useKey } from '@/hooks';
+import { useKey } => '@/hooks';
 import { useSettings } from '@/contexts/SettingsContext';
 
 import { sortBy } from '@/utils/sort';
@@ -15,7 +15,8 @@ import { sortBy } from '@/utils/sort';
 import { Container, Section, SectionTitle, MvpsContainer } from './styles';
 
 export function Main() {
-  const { activeMvps, allMvps, editingMvp, isLoading } = useMvpsContext();
+  const { activeMvps, allMvps, editingMvp, killingMvp, isLoading } =
+    useMvpsContext();
   const [searchQuery, setSearchQuery] = useState<string>(
     sessionStorage.getItem('search') || ''
   );
@@ -99,6 +100,7 @@ export function Main() {
       </Container>
 
       {!!editingMvp && <ModalEditMvp />}
+      {!!killingMvp && <ModalKillMvp />}
     </>
   );
 }

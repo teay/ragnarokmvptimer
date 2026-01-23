@@ -36,8 +36,14 @@ interface MvpCardProps {
 }
 
 export function MvpCard({ mvp }: MvpCardProps) {
-  const { killMvp, resetMvpTimer, removeMvpByMap, setEditingMvp, editingMvp } =
-    useMvpsContext();
+  const {
+    killMvp,
+    resetMvpTimer,
+    removeMvpByMap,
+    setEditingMvp,
+    editingMvp,
+    setKillingMvp,
+  } = useMvpsContext();
   const { respawnAsCountdown, animatedSprites } = useSettings();
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -56,7 +62,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
     isActive
       ? killMvp(mvp)
       : hasMoreThanOneMap
-      ? setEditingMvp(mvp)
+      ? setKillingMvp(mvp)
       : killMvp({ ...mvp, deathMap: mvp.spawn[0].mapname });
   }
 
