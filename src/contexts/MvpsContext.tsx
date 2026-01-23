@@ -30,6 +30,12 @@ interface MvpsContextData {
   resetMvpTimer: (mvp: IMvp) => void;
   killMvp: (mvp: IMvp, time?: Date | null) => void;
   updateMvp: (mvp: IMvp, time?: Date | null) => void;
+  updateMvpDeathLocation: (
+    mvpId: number,
+    oldDeathMap: string,
+    newDeathMap: string,
+    newDeathPosition: IMapMark
+  ) => void;
   removeMvpByMap: (mvpID: number, deathMap: string) => void;
   setEditingMvp: (mvp: IMvp) => void;
   closeEditMvpModal: () => void;
@@ -126,6 +132,37 @@ export function MvpProvider({ children }: MvpProviderProps) {
     });
   }, [server]);
 
+  const updateMvpDeathLocation = useCallback(
+    (
+      mvpId: number,
+      oldDeathMap: string,
+      newDeathMap: string,
+      newDeathPosition: IMapMark
+    ) => {
+      setActiveMvps((s) => {
+        const existingMvpIndex = s.findIndex(
+          (m) => m.id === mvpId && m.deathMap === oldDeathMap
+        );
+
+        if (existingMvpIndex === -1) return s;
+
+        const updatedMvp = {
+          ...s[existingMvpIndex],
+          deathMap: newDeathMap,
+          deathPosition: newDeathPosition,
+        };
+
+        const newState = [...s];
+        newState[existingMvpIndex] = updatedMvp;
+
+        saveActiveMvpsToLocalStorage(newState, server);
+
+        return sortMvpsByRespawnTime(newState);
+      });
+    },
+    [server]
+  );
+
   const closeEditMvpModal = useCallback(() => {
     setEditingMvp(undefined);
     window.scrollTo(0, 0);
@@ -189,6 +226,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         resetMvpTimer,
         killMvp,
         updateMvp,
+        updateMvpDeathLocation,
         removeMvpByMap,
         setEditingMvp,
         closeEditMvpModal,

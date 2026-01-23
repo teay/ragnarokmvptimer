@@ -1,5 +1,9 @@
 import { styled } from '@linaria/react';
 
+export const MapWrapper = styled.div`
+  cursor: pointer;
+`;
+
 export const Container = styled.div<{ isEditing: boolean }>`
   display: flex;
   flex-direction: column;
