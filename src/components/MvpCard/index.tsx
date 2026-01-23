@@ -29,6 +29,7 @@ import {
   Tombstone,
   ControlText,
   BottomControls,
+  MapWrapper,
 } from './styles';
 
 interface MvpCardProps {
@@ -90,10 +91,12 @@ export function MvpCard({ mvp }: MvpCardProps) {
           />
         )}
 
-        <MvpMap
-          mapName={isActive ? mvp.deathMap : mvp.spawn[0].mapname}
-          coordinates={isActive ? mvp.deathPosition : undefined}
-        />
+        <MapWrapper onClick={() => isActive && setIsMapModalOpen(true)}>
+          <MvpMap
+            mapName={isActive ? mvp.deathMap : mvp.spawn[0].mapname}
+            coordinates={isActive ? mvp.deathPosition : undefined}
+          />
+        </MapWrapper>
 
         <BottomControls>
           <MapName>
@@ -148,8 +151,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
 
       {isActive && isMapModalOpen && (
         <ModalMvpMap
-          deathMap={mvp.deathMap}
-          deathPosition={mvp.deathPosition}
+          mvp={mvp}
           close={() => setIsMapModalOpen(false)}
         />
       )}

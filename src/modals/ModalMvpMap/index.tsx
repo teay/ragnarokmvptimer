@@ -1,45 +1,95 @@
+import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 
-import { useClickOutside, useKey, useScrollBlock } from '@/hooks';
+import { useKey, useScrollBlock } from '@/hooks';
+import { useMvpsContext } from '@/contexts/MvpsContext';
 
 import { ModalBase } from '../ModalBase';
 import { Map } from '../../components/Map';
-import { NaviCommand } from '../../components/NaviCommand';
-
+import { ModalSelectMap } from '../ModalSelectMap';
+import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
-import { Modal, Name, Warning } from './styles';
+
+import {
+  Modal,
+  Name,
+  Question,
+  Optional,
+  Footer,
+  ChangeMapButton,
+} from './styles';
 
 interface MvpMapModalProps {
-  deathMap: string;
-  deathPosition?: IMapMark;
+  mvp: IMvp;
   close: () => void;
 }
 
-export function ModalMvpMap({
-  deathMap,
-  deathPosition,
-  close,
-}: MvpMapModalProps) {
+export function ModalMvpMap({ mvp, close }: MvpMapModalProps) {
+  const { updateMvpDeathLocation } = useMvpsContext();
+
+  const [selectedMap, setSelectedMap] = useState<string>(mvp.deathMap);
+  const [markCoordinates, setMarkCoordinates] = useState<IMapMark>(
+    mvp.deathPosition || {
+      x: -1,
+      y: -1,
+    }
+  );
+
+  const hasMoreThanOneMap = mvp.spawn.length > 1;
+
   useScrollBlock(true);
   useKey('Escape', close);
-  const modalRef = useClickOutside(close);
+
+  function handleConfirm() {
+    updateMvpDeathLocation(
+      mvp.id,
+      mvp.deathMap,
+      selectedMap,
+      markCoordinates
+    );
+    close();
+  }
+
+  if (!selectedMap) {
+    return (
+      <ModalSelectMap
+        spawnMaps={mvp.spawn}
+        onSelect={setSelectedMap}
+        onClose={() => setSelectedMap(mvp.deathMap)} // Go back to prev map
+      />
+    );
+  }
 
   return (
     <ModalBase>
-      <Modal ref={modalRef}>
-        <Name>{deathMap}</Name>
+      <Modal>
+        <ModalCloseIconButton onClick={close} />
 
-        <Map mapName={deathMap} coordinates={deathPosition} />
+        <Name>{mvp.name}</Name>
 
-        <NaviCommand mapName={deathMap} />
+        <Question>
+          <FormattedMessage id='wheres_tombstone' />
+          <Optional>
+            (<FormattedMessage id='optional_mark' />)
+          </Optional>
+        </Question>
 
-        <Warning>
-          <FormattedMessage id='nav_command_warning' />
-        </Warning>
+        <Map
+          mapName={selectedMap}
+          onChange={setMarkCoordinates}
+          coordinates={markCoordinates}
+        />
 
-        <ModalPrimaryButton onClick={close}>
-          <FormattedMessage id='close' />
-        </ModalPrimaryButton>
+        <Footer>
+          {hasMoreThanOneMap && (
+            <ChangeMapButton size='lg' onClick={() => setSelectedMap('')}>
+              <FormattedMessage id='change_map' />
+            </ChangeMapButton>
+          )}
+          <ModalPrimaryButton size='lg' onClick={handleConfirm}>
+            <FormattedMessage id='confirm' />
+          </ModalPrimaryButton>
+        </Footer>
       </Modal>
     </ModalBase>
   );

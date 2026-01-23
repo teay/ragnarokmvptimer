@@ -7,7 +7,7 @@ import { MvpsContainerFilter } from '@/components/MvpsContainerFilter';
 import { MvpCardSkeleton } from '@/components/Skeletons/MvpCardSkeleton';
 import { ModalEditMvp, ModalKillMvp } from '@/modals';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
-import { useKey } => '@/hooks';
+import { useKey } from '@/hooks';
 import { useSettings } from '@/contexts/SettingsContext';
 
 import { sortBy } from '@/utils/sort';
