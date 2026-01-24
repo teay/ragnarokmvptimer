@@ -68,11 +68,13 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
 
   const resetMvpTimer = useCallback((mvp: IMvp) => {
-    const updatedMvp = { ...mvp, deathTime: new Date() };
-    setActiveMvps((state) =>
-      sortMvpsByRespawnTime(state.map((m) => (m.deathMap === mvp.deathMap ? updatedMvp : m)))
-    );
-  }, []);
+    const updatedMvp = { ...mvp, deathTime: new Date(), deathPosition: undefined };
+    setActiveMvps((state) => {
+      const newState = sortMvpsByRespawnTime(state.map((m) => (m.deathMap === mvp.deathMap ? updatedMvp : m)));
+      saveActiveMvpsToLocalStorage(newState, server);
+      return newState;
+    });
+  }, [server]);
 
   const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
     setActiveMvps((state) => {
