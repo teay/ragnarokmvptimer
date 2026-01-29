@@ -43,7 +43,7 @@ export function Map({
         onClick={mapMark}
         clickable={!!onChange}
         isSelected={coordinates.x !== -1 || coordinates.y !== -1}
-        loading='lazy'
+        // loading='lazy'
       />
       {(coordinates.x !== -1 || coordinates.y !== -1) && (
         <MapMark x={coordinates.x} y={coordinates.y} />
