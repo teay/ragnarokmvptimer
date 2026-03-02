@@ -55,9 +55,9 @@ export const BottomControls = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin-top: 15px;
+  margin-top: auto; /* This will push it to the bottom */
   width: 100%;
-  padding: 0; /* Removed horizontal padding */
+  padding: 0;
 `;
 
 export const Details = styled.div`
