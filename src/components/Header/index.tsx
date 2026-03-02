@@ -3,12 +3,14 @@ import { ServerButton } from '../ServerButton';
 import { SettingsButton } from '../SettingsButton';
 import { useSettings } from '@/contexts/SettingsContext';
 
+import { Eye, EyeOff } from '@styled-icons/feather'; // Import Eye and EyeOff icons
+
 import mvpImg from '@/assets/mvp.png';
 
-import { Container, Customization, Logo, LogoContainer, Title } from './styles';
+import { Container, Customization, Logo, LogoContainer, Title, MapToggleButton } from './styles'; // Add MapToggleButton to imports
 
 export function Header() {
-  const { use24HourFormat } = useSettings();
+  const { use24HourFormat, showMvpMap, toggleShowMvpMap } = useSettings(); // Destructure showMvpMap and toggleShowMvpMap
 
   return (
     <Container>
@@ -20,6 +22,9 @@ export function Header() {
       <HeaderTimer use24HourFormat={use24HourFormat} />
 
       <Customization>
+        <MapToggleButton onClick={toggleShowMvpMap} title={showMvpMap ? 'Hide MVP Maps' : 'Show MVP Maps'}>
+          {showMvpMap ? <Eye /> : <EyeOff />}
+        </MapToggleButton>
         <ServerButton />
         <SettingsButton />
       </Customization>

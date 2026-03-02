@@ -54,3 +54,19 @@ export const Customization = styled.div`
 
   gap: 1.6rem;
 `;
+
+export const MapToggleButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text_color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+
+  svg {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+`;
