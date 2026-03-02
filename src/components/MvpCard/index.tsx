@@ -45,7 +45,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
     editingMvp,
     setKillingMvp,
   } = useMvpsContext();
-  const { respawnAsCountdown, animatedSprites, showMvpMap } = useSettings();
+  const { respawnAsCountdown, animatedSprites } = useSettings();
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
@@ -91,14 +91,12 @@ export function MvpCard({ mvp }: MvpCardProps) {
           />
         )}
 
-        {showMvpMap && (
-          <MapWrapper onClick={() => isActive && setIsMapModalOpen(true)}>
-            <MvpMap
-              mapName={isActive ? mvp.deathMap : mvp.spawn[0].mapname}
-              coordinates={isActive ? mvp.deathPosition : undefined}
-            />
-          </MapWrapper>
-        )}
+        <MapWrapper onClick={() => isActive && setIsMapModalOpen(true)}>
+          <MvpMap
+            mapName={isActive ? mvp.deathMap : mvp.spawn[0].mapname}
+            coordinates={isActive ? mvp.deathPosition : undefined}
+          />
+        </MapWrapper>
 
         <BottomControls>
           <MapName>

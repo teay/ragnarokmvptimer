@@ -84,8 +84,6 @@ export function ModalSettings({ onClose }: Props) {
     changeWaveTrailColor,
     waveTrailOpacity, // ตรวจสอบให้แน่ใจว่าได้ดึงตัวแปรนี้มาอย่างถูกต้อง
     changeWaveTrailOpacity,
-    showMvpMap,
-    toggleShowMvpMap,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 

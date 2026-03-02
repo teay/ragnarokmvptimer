@@ -46,7 +46,6 @@ const DEFAULT_SETTINGS = {
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,
   font: 'Jost',
-  showMvpMap: true,
 };
 
 const LOCAL_STORAGE_THEME_KEY = 'theme';
@@ -114,8 +113,6 @@ interface SettingsContextData {
   changeSparkleDensity: (density: number) => void;
   isFallingElementsEnabled: boolean;
   toggleFallingElements: () => void;
-  showMvpMap: boolean;
-  toggleShowMvpMap: () => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -183,13 +180,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       isAnimatedBackgroundEnabled: !prev.isAnimatedBackgroundEnabled,
-    }));
-  }, [setSettings]);
-
-  const toggleShowMvpMap = useCallback(() => {
-    setSettings((prev) => ({
-      ...prev,
-      showMvpMap: !prev.showMvpMap,
     }));
   }, [setSettings]);
 
@@ -459,7 +449,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         resetColorsToThemeDefaults,
         changeWaveTrailColor,
         changeWaveTrailOpacity,
-        toggleShowMvpMap,
       }}
     >
       {children}
