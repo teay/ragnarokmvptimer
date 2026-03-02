@@ -84,6 +84,8 @@ export function ModalSettings({ onClose }: Props) {
     changeWaveTrailColor,
     waveTrailOpacity, // ตรวจสอบให้แน่ใจว่าได้ดึงตัวแปรนี้มาอย่างถูกต้อง
     changeWaveTrailOpacity,
+    showMvpMap,
+    toggleShowMvpMap,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -167,6 +169,17 @@ export function ModalSettings({ onClose }: Props) {
               <Switch
                 onChange={toggleAnimatedSprites}
                 checked={animatedSprites}
+              />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='show_mvp_map' defaultMessage='Show MVP Map' />
+              </SettingName>
+
+              <Switch
+                onChange={toggleShowMvpMap}
+                checked={showMvpMap}
               />
             </Setting>
 
