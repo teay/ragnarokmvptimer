@@ -167,12 +167,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const closeEditMvpModal = useCallback(() => {
     setEditingMvp(undefined);
-    window.scrollTo(0, 0);
   }, []);
 
   const closeKillMvpModal = useCallback(() => {
     setKillingMvp(undefined);
-    window.scrollTo(0, 0);
   }, []);
 
   const allMvps = useMemo(() => {
