@@ -108,6 +108,12 @@ export const Tombstone = styled.p`
   line-height: 1.2;
   white-space: pre-wrap;
   font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.7;
+  }
 `;
 
 const Button = styled.button`

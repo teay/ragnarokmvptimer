@@ -110,10 +110,14 @@ export function MvpCard({ mvp }: MvpCardProps) {
 
           {isActive ? (
             <>
-              <Tombstone>
+              <Tombstone
+                onClick={() => setEditingMvp(mvp)}
+                title={GetTranslateText('edit_mvp')}
+              >
                 <FormattedMessage id='when_was_mvp_killed' />
                 <br />
                 <Bold>{dayjs(mvp.deathTime).format('DD/MM/YYYY HH:mm')}</Bold>
+                <Edit2 size={18} style={{ marginLeft: 8, verticalAlign: 'middle', opacity: 0.8 }} />
               </Tombstone>
 
               <Controls>
