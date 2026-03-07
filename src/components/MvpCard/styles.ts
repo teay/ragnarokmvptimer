@@ -100,6 +100,14 @@ export const MapName = styled.span`
   margin-top: 5px;
   color: #E0E0E0 !important;
   font-size: 1.8rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  user-select: none;
+
+  &:hover {
+    opacity: 0.7;
+    text-decoration: underline;
+  }
 `;
 
 export const Tombstone = styled.p`
