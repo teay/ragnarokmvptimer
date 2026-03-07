@@ -37,8 +37,22 @@ export default function App() {
     }
   }, []);
 
-  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font, isSparkleEffectEnabled, sparkleDensity, isFallingElementsEnabled, hideActiveContent, toggleHideActiveContent } = useSettings(); // Add new setting
+  const {
+    language,
+    isGlassUIEnabled,
+    isAnimatedBackgroundEnabled,
+    isMainContentTransparent,
+    font,
+    isSparkleEffectEnabled,
+    sparkleDensity,
+    isFallingElementsEnabled,
+    hideActiveContent,
+    toggleHideActiveContent,
+    toggleShowMvpMap, // Add toggleShowMvpMap
+  } = useSettings();
   const { theme } = useTheme();
+
+  useKey('m', toggleShowMvpMap); // Add shortcut for map toggle
   const {
     hasNotificationPermission,
     isNotificationPermissionDenied,
