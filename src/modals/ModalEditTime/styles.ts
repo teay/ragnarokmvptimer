@@ -1,0 +1,98 @@
+import { styled } from "@linaria/react";
+
+export const Modal = styled.div`
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  max-height: 95vh;
+
+  overflow-y: auto;
+
+  padding: 2rem;
+  gap: 16px;
+
+  border-radius: 6px;
+
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  position: relative;
+  background-color: var(--modal_bg);
+  backdrop-filter: var(--modal_backdrop_filter);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 255, 255, 0.1),
+      transparent 50%,
+      rgba(255, 255, 255, 0.05)
+    );
+    pointer-events: none;
+    border-radius: 6px;
+  }
+  box-shadow: 0px 8px 20px 5px rgba(0, 0, 0, 0.2);
+  border: none;
+
+  @media (max-width: ${1000 / 16}em) {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+  }
+`;
+
+export const SpriteWrapper = styled.div`
+  > img {
+    width: auto;
+    height: auto;
+    max-width: 120px;
+    max-height: 120px;
+  }
+`;
+
+export const Name = styled.span`
+  color: var(--modal_name);
+  margin-top: -10px;
+
+  font-size: 2.2rem;
+  font-weight: 600;
+`;
+
+export const Question = styled.span`
+  color: #E0E0E0 !important;
+
+  font-size: 1.8rem;
+  font-weight: 700;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const DateTimePicker = styled.input`
+  text-align: center;
+  font-size: 1.8rem;
+  border-radius: 4px;
+  border: 1px solid var(--modal_datePicker_border);
+  padding: 10px;
+  width: 100%;
+  background-color: var(--filterSearch_bg);
+  color: var(--text);
+
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(var(--calendar_icon_invert, 0));
+  }
+`;
+
+export const Footer = styled.footer`
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  margin-top: 10px;
+`;

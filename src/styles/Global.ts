@@ -114,6 +114,7 @@ export const globals = css`
       --footer_box_shadow: none;
 
       --pulse_color: #404040;
+      --calendar_icon_invert: 1;
 
       color: var(--text);
     }
@@ -197,6 +198,7 @@ export const globals = css`
       --footer_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
 
       --pulse_color: #808080; /* Even Darker pulse */
+      --calendar_icon_invert: 1;
 
       color: var(--text);
     }
@@ -280,6 +282,7 @@ export const globals = css`
       --footer_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
 
       --pulse_color: #c0c0c0; /* Darker pulse */
+      --calendar_icon_invert: 0;
 
       color: var(--text); /* Default text color */
     }

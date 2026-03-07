@@ -25,6 +25,7 @@ interface MvpsContextData {
   activeMvps: IMvp[];
   allMvps: IMvp[];
   editingMvp: IMvp | undefined;
+  editingTimeMvp: IMvp | undefined;
   killingMvp: IMvp | undefined;
   isLoading: boolean;
   resetMvpTimer: (mvp: IMvp) => void;
@@ -39,6 +40,8 @@ interface MvpsContextData {
   removeMvpByMap: (mvpID: number, deathMap: string) => void;
   setEditingMvp: (mvp: IMvp) => void;
   closeEditMvpModal: () => void;
+  setEditingTimeMvp: (mvp: IMvp) => void;
+  closeEditTimeMvpModal: () => void;
   setKillingMvp: (mvp: IMvp) => void;
   closeKillMvpModal: () => void;
   //clearActiveMvps: () => void;
@@ -63,6 +66,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const [isLoading, setIsLoading] = useState(true);
   const [editingMvp, setEditingMvp] = useState<IMvp>();
+  const [editingTimeMvp, setEditingTimeMvp] = useState<IMvp>();
   const [killingMvp, setKillingMvp] = useState<IMvp>();
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
@@ -169,6 +173,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setEditingMvp(undefined);
   }, []);
 
+  const closeEditTimeMvpModal = useCallback(() => {
+    setEditingTimeMvp(undefined);
+  }, []);
+
   const closeKillMvpModal = useCallback(() => {
     setKillingMvp(undefined);
   }, []);
@@ -222,6 +230,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         activeMvps,
         allMvps,
         editingMvp,
+        editingTimeMvp,
         killingMvp,
         resetMvpTimer,
         killMvp,
@@ -230,6 +239,8 @@ export function MvpProvider({ children }: MvpProviderProps) {
         removeMvpByMap,
         setEditingMvp,
         closeEditMvpModal,
+        setEditingTimeMvp,
+        closeEditTimeMvpModal,
         setKillingMvp,
         closeKillMvpModal,
         isLoading,

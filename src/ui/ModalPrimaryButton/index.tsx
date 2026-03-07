@@ -25,6 +25,12 @@ export const ModalPrimaryButton = styled.button<ModalPrimaryButtonProps>`
     filter: brightness(0.9);
   }
 
+  &:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+    filter: brightness(1.1);
+  }
+
   &:disabled {
     background-color: #d9d9d9;
     cursor: not-allowed;

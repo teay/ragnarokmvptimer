@@ -42,6 +42,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
     resetMvpTimer,
     removeMvpByMap,
     setEditingMvp,
+    setEditingTimeMvp,
     editingMvp,
     setKillingMvp,
   } = useMvpsContext();
@@ -111,7 +112,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
           {isActive ? (
             <>
               <Tombstone
-                onClick={() => setEditingMvp(mvp)}
+                onClick={() => setEditingTimeMvp(mvp)}
                 title={GetTranslateText('edit_mvp')}
               >
                 <FormattedMessage id='when_was_mvp_killed' />
