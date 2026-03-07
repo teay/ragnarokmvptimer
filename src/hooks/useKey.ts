@@ -12,7 +12,11 @@ export function useKey(key: string, callback: () => void) {
 
       if (isInput && e.key !== 'Escape') return;
 
-      if (e.key.toLowerCase() === key.toLowerCase()) callback();
+      const isMatch =
+        e.key.toLowerCase() === key.toLowerCase() ||
+        (key.length === 1 && e.code === `Key${key.toUpperCase()}`);
+
+      if (isMatch) callback();
     };
 
     document.addEventListener('keydown', handleKeydown);
