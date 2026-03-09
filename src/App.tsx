@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import LuminousParticlesBackground from './components/LuminousParticlesBackground';
 import { SparkleEffect } from './components/SparkleEffect';
 import { IntlProvider } from 'react-intl';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 import dayjs from 'dayjs';
 import 'dayjs/locale/pt-br';
@@ -27,6 +28,20 @@ import { messages } from './locales/messages';
 const APP_VERSION = "2.1"; // Update version to trigger a clean state if needed
 
 export default function App() {
+  useEffect(() => {
+    const handleFullscreenToggle = async (e: KeyboardEvent) => {
+      if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
+        e.preventDefault();
+        const appWindow = getCurrentWindow();
+        const isFullscreen = await appWindow.isFullscreen();
+        await appWindow.setFullscreen(!isFullscreen);
+      }
+    };
+
+    window.addEventListener('keydown', handleFullscreenToggle);
+    return () => window.removeEventListener('keydown', handleFullscreenToggle);
+  }, []);
+
   useEffect(() => {
     const storedVersion = localStorage.getItem("appVersion");
     if (storedVersion !== APP_VERSION) {
