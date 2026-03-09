@@ -14,10 +14,10 @@
       {
         "title": "Ragnarok MVP Timer",
         "width": 1200,
-        "height": 600,
+        "height": 1000,
         "resizable": true,
-        "fullscreen": true,
-        "maximized": true
+        "fullscreen": false,
+        "maximized": false
       }
     ],
     "security": {
