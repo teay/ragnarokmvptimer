@@ -7,7 +7,7 @@ import wyw from '@wyw-in-js/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: process.env.TAURI_PLATFORM ? "./" : "/ragnarokmvptimer/",
+  base: "./",
   json: {
     stringify: true,
   },
@@ -24,7 +24,7 @@ export default defineConfig({
     react(),
     wyw({
       include: ["**/*.{ts,tsx}"],
-      base: process.env.TAURI_PLATFORM ? "./" : "/ragnarokmvptimer/",
+      base: "./",
     }),
     imagetools({
       exclude: ["./src/assets/mvp_icons_animated/**/*"],
@@ -37,7 +37,7 @@ export default defineConfig({
     }),
     VitePWA({
       disable: !!process.env.TAURI_PLATFORM,
-      base: process.env.TAURI_PLATFORM ? "./" : "/ragnarokmvptimer/",
+      base: "./",
       injectRegister: false,
       registerType: 'autoUpdate',
       devOptions: {
