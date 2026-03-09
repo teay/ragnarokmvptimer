@@ -24,16 +24,16 @@ import { useTheme } from './hooks';
 import { LOCALES } from './locales';
 import { messages } from './locales/messages';
 
-const APP_VERSION = '2'; // Define the current version of the application
+const APP_VERSION = "2.1"; // Update version to trigger a clean state if needed
 
 export default function App() {
   useEffect(() => {
-    const storedVersion = localStorage.getItem('appVersion');
+    const storedVersion = localStorage.getItem("appVersion");
     if (storedVersion !== APP_VERSION) {
-      console.log('Old app version detected, clearing storage and reloading.');
-      localStorage.clear();
-      localStorage.setItem('appVersion', APP_VERSION);
-      window.location.reload();
+      console.log("New app version detected, updating storage.");
+      // Instead of clearing everything, just update the version
+      // Or if you MUST clear, do it without a forced reload if possible
+      localStorage.setItem("appVersion", APP_VERSION);
     }
   }, []);
 

@@ -7,15 +7,15 @@ import wyw from '@wyw-in-js/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/ragnarokmvptimer/',
+  base: process.env.TAURI_PLATFORM ? "./" : "/ragnarokmvptimer/",
   json: {
     stringify: true,
   },
   resolve: {
     alias: [
       {
-        find: '@',
-        replacement: fileURLToPath(new URL('./src', import.meta.url)),
+        find: "@",
+        replacement: fileURLToPath(new URL("./src", import.meta.url)),
       },
     ],
   },
@@ -23,20 +23,21 @@ export default defineConfig({
     splitVendorChunkPlugin(),
     react(),
     wyw({
-      include: ['**/*.{ts,tsx}'],
-      base: '/ragnarokmvptimer/',
+      include: ["**/*.{ts,tsx}"],
+      base: process.env.TAURI_PLATFORM ? "./" : "/ragnarokmvptimer/",
     }),
     imagetools({
-      exclude: ['./src/assets/mvp_icons_animated/**/*'],
+      exclude: ["./src/assets/mvp_icons_animated/**/*"],
       defaultDirectives: (url) => {
         return new URLSearchParams({
-          format: 'webp',
-          lossless: 'false',
+          format: "webp",
+          lossless: "false",
         });
       },
     }),
     VitePWA({
-      base: '/ragnarokmvptimer/',
+      disable: !!process.env.TAURI_PLATFORM,
+      base: process.env.TAURI_PLATFORM ? "./" : "/ragnarokmvptimer/",
       injectRegister: false,
       registerType: 'autoUpdate',
       devOptions: {
