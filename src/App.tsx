@@ -119,12 +119,15 @@ export default function App() {
     }
   }, [font]);
 
+  // Safety check for translations
+  const currentMessages = messages[language] || messages[LOCALES.ENGLISH];
+
   return (
     <>
       {isAnimatedBackgroundEnabled && <LuminousParticlesBackground />}
       {isSparkleEffectEnabled && <SparkleEffect count={sparkleDensity} />}
       <IntlProvider
-        messages={messages[language]}
+        messages={currentMessages}
         locale={language}
         defaultLocale={LOCALES.ENGLISH}
       >
@@ -133,7 +136,7 @@ export default function App() {
             {!hasNotificationPermission && (
               <WarningHeader
                 text={
-                  messages[language][
+                  currentMessages[
                     !browserSupportsNotifications
                       ? 'notifications_not_supported'
                       : isNotificationPermissionDenied
@@ -151,7 +154,7 @@ export default function App() {
             </MvpProvider>
 
             <Footer />
-            <WarningHeader text={messages[language]['under_development']} />
+            <WarningHeader text={currentMessages['under_development']} />
           </>
         )}
       </IntlProvider>

@@ -1,6 +1,6 @@
 // Local definition to make the component self-contained
 const LOCALES = {
-  ENGLISH: 'en-US',
+  ENGLISH: 'en',
 };
 
 export const SERVERS = [

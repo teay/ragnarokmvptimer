@@ -10,7 +10,6 @@ const backgroundStyles = css`
   z-index: -1;
 `;
 
-// Updated Particle interface to include isAlive for object pooling
 interface Particle {
   x: number;
   y: number;
@@ -21,8 +20,8 @@ interface Particle {
   isAlive: boolean;
 }
 
-// Leaf image paths from FallingElements
-const leafImagePaths = Array.from({ length: 16 }).map((_, i) => `/ragnarokmvptimer/assets/leaves/leaf${i + 1}.png`);
+// แก้ไข Path ให้ถูกต้องสำหรับ GitHub Pages
+const leafImagePaths = Array.from({ length: 16 }).map((_, i) => `./assets/leaves/leaf${i + 1}.png`);
 
 interface LeafParticle {
   x: number;
@@ -33,14 +32,13 @@ interface LeafParticle {
   vRotation: number;
   size: number;
   image: HTMLImageElement;
-  bounceCount: number; // New: track bounces
-  maxBounces: number; // New: random threshold for disappearance
-  isAlive: boolean; // Added for object pooling
+  bounceCount: number;
+  maxBounces: number;
+  isAlive: boolean;
 }
 
 import { useSettings } from '../../contexts/SettingsContext';
 
-// Helper function to convert hex color and alpha to rgba
 const hexToRgba = (hex: string, alpha: number) => {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -55,10 +53,8 @@ const LuminousParticlesBackground: React.FC = () => {
     backgroundEffectMode,
     particleDensity,
     particleColor,
-    particleOpacity,
     waveAmplitude,
     waveColor,
-    waveOpacity,
     particleEffect,
     animatedBackgroundColor,
     animatedBackgroundOpacity,
@@ -73,16 +69,12 @@ const LuminousParticlesBackground: React.FC = () => {
   const MAX_WAVE_HISTORY = 50;
 
   useEffect(() => {
-    // Load leaf images
     const loadLeafImagePromises = leafImagePaths.map((path) => {
       return new Promise<HTMLImageElement>((resolve) => {
         const img = new Image();
         img.src = path;
         img.onload = () => resolve(img);
-        img.onerror = () => {
-          console.error(`Failed to load leaf image: ${path}`);
-          resolve(img);
-        };
+        img.onerror = () => resolve(img); // Resolve anyway to not block
       });
     });
 
@@ -101,7 +93,6 @@ const LuminousParticlesBackground: React.FC = () => {
 
     let animationFrameId: number;
 
-    // Setup offscreen canvas for background layers
     if (!offscreenCanvasRef.current) {
       offscreenCanvasRef.current = document.createElement('canvas');
     }
@@ -109,19 +100,13 @@ const LuminousParticlesBackground: React.FC = () => {
     const offscreenCtx = offscreenCanvas.getContext('2d');
     if (!offscreenCtx) return;
 
-        // Determine number of particles based on density setting
-    const getNumParticles = (density: 'low' | 'medium' | 'high' | 'Empty') => {
+    const getNumParticles = (density: string) => {
       switch (density) {
-        case 'Empty':
-          return 0;
-        case 'low':
-          return 50;
-        case 'medium':
-          return 100;
-        case 'high':
-          return 200;
-        default:
-          return 100;
+        case 'Empty': return 0;
+        case 'low': return 50;
+        case 'medium': return 100;
+        case 'high': return 200;
+        default: return 100;
       }
     };
 
@@ -182,10 +167,8 @@ const LuminousParticlesBackground: React.FC = () => {
     handleResize();
 
     const animate = () => {
-      // Clear main canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // --- Draw background and wave trail to offscreen canvas ---
       offscreenCtx.fillStyle = hexToRgba(animatedBackgroundColor, animatedBackgroundOpacity);
       offscreenCtx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
@@ -205,16 +188,12 @@ const LuminousParticlesBackground: React.FC = () => {
         waveBaseY = canvas.height / 2;
       }
 
-      // --- Wave-like movement (XMB style) ---
       const currentWavePoints: { x: number; y: number }[] = [];
-      offscreenCtx.beginPath();
-      offscreenCtx.moveTo(0, waveBaseY);
-      for (let i = 0; i < canvas.width; i++) {
+      for (let i = 0; i <= canvas.width; i += 5) {
         const waveY =
           waveBaseY +
           Math.sin(i * 0.005 + Date.now() * 0.0005) * (waveAmplitude / 2) +
           Math.cos(i * 0.01 + Date.now() * 0.0003) * (waveAmplitude / 4);
-        offscreenCtx.lineTo(i, waveY);
         currentWavePoints.push({ x: i, y: waveY });
       }
 
@@ -228,17 +207,17 @@ const LuminousParticlesBackground: React.FC = () => {
           const currentSegment = waveHistory.current[i];
           const nextSegment = waveHistory.current[i + 1];
 
-          if (!currentSegment || !nextSegment) continue;
+          if (!currentSegment || !nextSegment || currentSegment.length === 0 || nextSegment.length === 0) continue;
 
-          const segmentOpacity = waveTrailOpacity * (1 - (i / MAX_WAVE_HISTORY));
-          offscreenCtx.fillStyle = hexToRgba(waveTrailColor, segmentOpacity);
+          const segmentOpacity = (waveTrailOpacity || 0.1) * (1 - (i / MAX_WAVE_HISTORY));
+          offscreenCtx.fillStyle = hexToRgba(waveTrailColor || '#0011ff', segmentOpacity);
 
           offscreenCtx.beginPath();
           offscreenCtx.moveTo(currentSegment[0].x, currentSegment[0].y);
-          for (let j = 1; j < canvas.width; j++) {
+          for (let j = 1; j < currentSegment.length; j++) {
             offscreenCtx.lineTo(currentSegment[j].x, currentSegment[j].y);
           }
-          for (let j = canvas.width - 1; j >= 0; j--) {
+          for (let j = nextSegment.length - 1; j >= 0; j--) {
             offscreenCtx.lineTo(nextSegment[j].x, nextSegment[j].y);
           }
           offscreenCtx.closePath();
@@ -246,26 +225,25 @@ const LuminousParticlesBackground: React.FC = () => {
         }
       }
 
-      offscreenCtx.strokeStyle = waveColor;
+      offscreenCtx.strokeStyle = waveColor || '#0011ff';
       offscreenCtx.lineWidth = 1;
+      offscreenCtx.beginPath();
+      if (currentWavePoints.length > 0) {
+        offscreenCtx.moveTo(currentWavePoints[0].x, currentWavePoints[0].y);
+        currentWavePoints.forEach(p => offscreenCtx.lineTo(p.x, p.y));
+      }
       offscreenCtx.stroke();
 
-      // Draw the offscreen canvas content to the main canvas
       ctx.drawImage(offscreenCanvas, 0, 0);
 
-      // --- Update and draw sparkling/glittering particles on the main canvas ---
       particles.forEach((particle) => {
         if (!particle.isAlive) return;
 
         if (particleEffect === 'gravity') {
-          // Add gravity
           particle.vy += 0.05;
-
-          // Update position
           particle.x += particle.vx;
           particle.y += particle.vy;
 
-          // Wave collision
           const waveY =
             waveBaseY +
             Math.sin(particle.x * 0.005 + Date.now() * 0.0005) *
@@ -275,32 +253,26 @@ const LuminousParticlesBackground: React.FC = () => {
 
           if (particle.y + particle.radius > waveY) {
             particle.y = waveY - particle.radius;
-            particle.vy *= -0.6; // Bounce with damping
+            particle.vy *= -0.6;
           }
 
-          // Check if particle is off-screen, mark as dead for pooling
           if (particle.y > canvas.height + particle.radius * 2) {
             particle.isAlive = false;
           }
 
-          // Wrap around edges (for x-axis)
           if (particle.x < 0) particle.x = canvas.width;
           if (particle.x > canvas.width) particle.x = 0;
         } else {
-          // Update position
           particle.x += particle.vx;
           particle.y += particle.vy;
 
-          // Wrap around edges
           if (particle.x < 0) particle.x = canvas.width;
           if (particle.x > canvas.width) particle.x = 0;
           if (particle.y < 0) particle.y = canvas.height;
           if (particle.y > canvas.height) particle.y = 0;
         }
 
-        // Only draw particles within the selected mode's area
         if (particle.y >= drawAreaStartY && particle.y <= drawAreaEndY) {
-          // Draw particle
           ctx.fillStyle = particle.color;
           ctx.shadowBlur = particle.radius * 2;
           ctx.shadowColor = particle.color;
@@ -310,20 +282,14 @@ const LuminousParticlesBackground: React.FC = () => {
         }
       });
 
-      // --- Update and draw leaf particles ---
       if (isFallingElementsEnabled && leafImagesLoaded) {
-        // Use filter to remove 'dead' leaves and respawn them.
         leafParticles = leafParticles.filter(leaf => leaf.bounceCount <= leaf.maxBounces);
         leafParticles.forEach((leaf) => {
-          // Apply gravity
           leaf.vy += 0.05;
-
-          // Update position
           leaf.x += leaf.vx;
           leaf.y += leaf.vy;
           leaf.rotation += leaf.vRotation;
 
-          // Wave collision (similar to gravity particles)
           const waveY =
             waveBaseY +
             Math.sin(leaf.x * 0.005 + Date.now() * 0.0005) *
@@ -340,19 +306,17 @@ const LuminousParticlesBackground: React.FC = () => {
             }
           }
 
-          // Reset if falls off screen
           if (leaf.y > canvas.height + leaf.size) {
             leaf.y = -leaf.size;
             leaf.x = Math.random() * canvas.width;
             leaf.vy = Math.random() * 0.5 + 0.5;
             leaf.rotation = Math.random() * 360;
             leaf.vRotation = Math.random() * 1 - 0.5;
-            leaf.vx = (Math.random() - 0.5) * 0.2;
+            leaf.vx = (Eraser = (Math.random() - 0.5) * 0.2) as any;
             leaf.bounceCount = 0;
             leaf.maxBounces = Math.floor(Math.random() * 3) + 3;
           }
 
-          // Draw leaf
           ctx.save();
           ctx.translate(leaf.x + leaf.size / 2, leaf.y + leaf.size / 2);
           ctx.rotate(leaf.rotation * Math.PI / 180);
@@ -360,7 +324,6 @@ const LuminousParticlesBackground: React.FC = () => {
           ctx.restore();
         });
 
-        // Continuous spawning of leaves
         const desiredLeafCount = 30;
         if (leafParticles.length < desiredLeafCount) {
           const leavesToSpawn = desiredLeafCount - leafParticles.length;
@@ -377,7 +340,7 @@ const LuminousParticlesBackground: React.FC = () => {
                 image: randomImage,
                 bounceCount: 0,
                 maxBounces: Math.floor(Math.random() * 3) + 3,
-                isAlive: false
+                isAlive: true
             });
           }
         }
@@ -385,7 +348,6 @@ const LuminousParticlesBackground: React.FC = () => {
 
       ctx.shadowBlur = 0;
 
-      // Respawn particles using object pooling
       const currentNumParticles = getNumParticles(particleDensity);
       if (particles.filter(p => p.isAlive).length < currentNumParticles) {
         const deadParticle = particles.find(p => !p.isAlive);
@@ -394,16 +356,6 @@ const LuminousParticlesBackground: React.FC = () => {
           deadParticle.y = -deadParticle.radius;
           deadParticle.vy = (Math.random() - 0.5) * 0.5;
           deadParticle.isAlive = true;
-        } else {
-          particles.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * drawAreaEndY,
-            radius: Math.random() * 3 + 1,
-            color: particleColor,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5,
-            isAlive: true,
-          });
         }
       }
 
@@ -412,7 +364,6 @@ const LuminousParticlesBackground: React.FC = () => {
 
     animate();
 
-    // Cleanup
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
