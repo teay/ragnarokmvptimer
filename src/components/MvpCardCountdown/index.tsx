@@ -21,15 +21,16 @@ function getTimeString(
   missedRespawn?: boolean
 ) {
   if (respawnAsCountdown && duration) {
-    const isMoreThan24Hours = dayjs().diff(nextRespawn, 'h') >= 24;
+    const totalHours = Math.floor(duration.asHours());
+    const totalHoursAbs = Math.abs(totalHours);
 
-    if (isMoreThan24Hours) return duration.humanize(true);
+    if (totalHoursAbs >= 24) return duration.humanize(true);
 
-    return duration
-      .format('HH:mm:ss')
-      .split(':')
-      .map((time) => time.replace('-', '').padStart(2, '0'))
-      .join(':');
+    const hours = String(totalHoursAbs).padStart(2, '0');
+    const minutes = String(Math.abs(duration.minutes())).padStart(2, '0');
+    const seconds = String(Math.abs(duration.seconds())).padStart(2, '0');
+
+    return `${hours}:${minutes}:${seconds}`;
   }
 
   if (missedRespawn) return duration.humanize(true);
