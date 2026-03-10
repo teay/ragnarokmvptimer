@@ -1,6 +1,6 @@
 export interface SegmentedDateTimePickerProps {
-  value: Date;
-  onChange: (date: Date) => void;
+  value: Date | null;
+  onChange: (date: Date | null) => void;
   autoFocus?: boolean;
 }
 

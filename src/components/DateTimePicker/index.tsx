@@ -5,18 +5,21 @@ import { SegmentedDateTimePickerProps } from './types';
 
 export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateTimePickerProps>((props, ref) => {
   const { value, onChange, autoFocus = true } = props;
-  const [date, setDate] = useState(dayjs(value));
   
-  // กำหนดช่วงปีที่สมเหตุสมผล
+  // Use current date as fallback for internal state if value is null
+  const initialDate = value ? dayjs(value) : dayjs();
+  const [date, setDate] = useState(initialDate);
+  
+  const currentYear = dayjs().year();
   const MIN_YEAR = 2020;
   const MAX_YEAR = 2035;
 
   const [displayValues, setDisplayValues] = useState({
-    day: dayjs(value).format('DD'),
-    month: dayjs(value).format('MM'),
-    year: dayjs(value).format('YYYY'),
-    hour: dayjs(value).format('HH'),
-    minute: dayjs(value).format('mm'),
+    day: initialDate.format('DD'),
+    month: initialDate.format('MM'),
+    year: initialDate.format('YYYY'),
+    hour: initialDate.format('HH'),
+    minute: initialDate.format('mm'),
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,17 +33,20 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     minute: useRef<HTMLInputElement>(null),
   };
 
+  // Sync with prop value
   useEffect(() => {
-    const newDate = dayjs(value);
-    if (!newDate.isSame(date)) {
-      setDate(newDate);
-      setDisplayValues({
-        day: newDate.format('DD'),
-        month: newDate.format('MM'),
-        year: newDate.format('YYYY'),
-        hour: newDate.format('HH'),
-        minute: newDate.format('mm'),
-      });
+    if (value) {
+      const newDate = dayjs(value);
+      if (!newDate.isSame(date)) {
+        setDate(newDate);
+        setDisplayValues({
+          day: newDate.format('DD'),
+          month: newDate.format('MM'),
+          year: newDate.format('YYYY'),
+          hour: newDate.format('HH'),
+          minute: newDate.format('mm'),
+        });
+      }
     }
   }, [value]);
 
@@ -75,7 +81,6 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
         if (num > 59) num = 59;
         break;
       case 'year':
-        // ยอมให้พิมพ์เลขอะไรก็ได้ก่อนจนครบ 4 หลัก เพื่อให้เห็นสิ่งที่ตัวเองพิมพ์
         break;
     }
     
@@ -90,7 +95,6 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     const h = hour.padStart(2, '0');
     const min = minute.padStart(2, '0');
     
-    // ตรวจสอบปีเฉพาะเมื่อพิมพ์ครบ 4 หลัก
     let finalYear = year;
     if (year.length === 4) {
       const yNum = parseInt(year, 10);
@@ -98,7 +102,7 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       if (yNum > MAX_YEAR) finalYear = MAX_YEAR.toString();
     }
 
-    let newDate = dayjs(`${finalYear}-${m}-${d} ${h}:${min}`, 'YYYY-MM-DD HH:mm');
+    const newDate = dayjs(`${finalYear}-${m}-${d} ${h}:${min}`, 'YYYY-MM-DD HH:mm');
     
     if (newDate.isValid()) {
       setDate(newDate);
@@ -159,7 +163,6 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       }
       
       if (val.length === maxLength) {
-        // เมื่อพิมพ์ปีครบ 4 หลัก ให้เช็คความถูกต้องและแจ้งเตือนถ้าเกิน
         if (part === 'year') {
           const yNum = parseInt(val, 10);
           if (yNum > MAX_YEAR || yNum < MIN_YEAR) {
@@ -190,7 +193,8 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       let num = parseInt(val, 10);
       
       if (part === 'day') {
-        const maxDays = dayjs(`${displayValues.year}-${displayValues.month}-01`).daysInMonth();
+        const checkDate = dayjs(`${displayValues.year}-${displayValues.month}-01`);
+        const maxDays = checkDate.isValid() ? checkDate.daysInMonth() : 31;
         if (num > maxDays) num = maxDays;
         if (num < 1) num = 1;
       } else if (part === 'month') {
