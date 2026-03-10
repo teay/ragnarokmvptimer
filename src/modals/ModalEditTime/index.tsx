@@ -38,7 +38,7 @@ const ButtonBase = styled.button`
   &:focus-visible {
     outline: 3px solid white;
     outline-offset: 2px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
   }
 
   &:disabled {

@@ -99,7 +99,8 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, part: keyof typeof displayValues) => {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
-      const unit = part === 'day' ? 'date' : part;
+      // dayjs uses 'day' for adding/subtracting days
+      const unit = part === 'day' ? 'day' : part;
       const nextDate = e.key === 'ArrowUp' ? date.add(1, unit as any) : date.subtract(1, unit as any);
       
       const newValues = {

@@ -12,11 +12,12 @@ export const Container = styled.div`
   color: var(--text);
   font-family: inherit;
   font-size: 2rem;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.15s ease-in-out;
 
   &:focus-within {
     border-color: var(--primary);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    /* ลดความฟุ้งลงเหลือ 4px และปรับความเข้มให้จางลง */
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.15);
   }
 `;
 
@@ -34,10 +35,10 @@ export const Segment = styled.input`
   transition: all 0.1s;
 
   &:focus {
+    /* ตัดแสงฟุ้งรอบตัวเลขออก และใช้พื้นหลังที่ชัดขึ้นแทน */
     background-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff; /* ใช้สีขาวทึบเพื่อให้มองเห็นชัดเจนแน่นอน */
+    color: #ffffff;
     font-weight: bold;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
   }
 
   &.year {
