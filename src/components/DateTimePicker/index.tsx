@@ -7,7 +7,7 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   const { value, onChange, autoFocus = true } = props;
   const [date, setDate] = useState(dayjs(value));
   
-  // กำหนดช่วงปีที่สมเหตุสมผล (2020 - 2035)
+  // กำหนดช่วงปีที่สมเหตุสมผล
   const MIN_YEAR = 2020;
   const MAX_YEAR = 2035;
 
@@ -75,13 +75,7 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
         if (num > 59) num = 59;
         break;
       case 'year':
-        // ป้องกันการพิมพ์ปีที่โดดไปไกลเกิน (ถ้าพิมพ์ตัวแรกไม่ใช่ 2 ให้ปัดเป็น 2 ทันที)
-        if (val.length === 1 && num !== 2) num = 2;
-        // ถ้าพิมพ์ครบ 4 หลักแล้วเกินกำหนด ให้ปัดกลับมา
-        if (val.length === 4) {
-          if (num > MAX_YEAR) num = MAX_YEAR;
-          if (num < MIN_YEAR) num = MIN_YEAR;
-        }
+        // ยอมให้พิมพ์เลขอะไรก็ได้ก่อนจนครบ 4 หลัก เพื่อให้เห็นสิ่งที่ตัวเองพิมพ์
         break;
     }
     
@@ -96,7 +90,15 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     const h = hour.padStart(2, '0');
     const min = minute.padStart(2, '0');
     
-    let newDate = dayjs(`${year}-${m}-${d} ${h}:${min}`, 'YYYY-MM-DD HH:mm');
+    // ตรวจสอบปีเฉพาะเมื่อพิมพ์ครบ 4 หลัก
+    let finalYear = year;
+    if (year.length === 4) {
+      const yNum = parseInt(year, 10);
+      if (yNum < MIN_YEAR) finalYear = MIN_YEAR.toString();
+      if (yNum > MAX_YEAR) finalYear = MAX_YEAR.toString();
+    }
+
+    let newDate = dayjs(`${finalYear}-${m}-${d} ${h}:${min}`, 'YYYY-MM-DD HH:mm');
     
     if (newDate.isValid()) {
       setDate(newDate);
@@ -110,7 +112,6 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       const unit = part === 'day' ? 'day' : part;
       const nextDate = e.key === 'ArrowUp' ? date.add(1, unit as any) : date.subtract(1, unit as any);
       
-      // บังคับไม่ให้ลูกศรกดปีเกินช่วงที่กำหนด
       if (nextDate.year() > MAX_YEAR || nextDate.year() < MIN_YEAR) return;
 
       const newValues = {
@@ -158,6 +159,18 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       }
       
       if (val.length === maxLength) {
+        // เมื่อพิมพ์ปีครบ 4 หลัก ให้เช็คความถูกต้องและแจ้งเตือนถ้าเกิน
+        if (part === 'year') {
+          const yNum = parseInt(val, 10);
+          if (yNum > MAX_YEAR || yNum < MIN_YEAR) {
+            alert(`ปีที่ระบุต้องอยู่ระหว่าง ${MIN_YEAR} ถึง ${MAX_YEAR} เท่านั้นครับ\n(ระบบจะปรับเป็นปีที่ใกล้ที่สุดให้โดยอัตโนมัติ)`);
+            const clampedYear = yNum > MAX_YEAR ? MAX_YEAR.toString() : MIN_YEAR.toString();
+            const correctedValues = { ...newDisplayValues, year: clampedYear };
+            setDisplayValues(correctedValues);
+            updateActualDate(correctedValues);
+          }
+        }
+
         const nextParts: Record<string, keyof typeof refs> = { day: 'month', month: 'year', year: 'hour', hour: 'minute' };
         if (nextParts[part]) {
           setTimeout(() => {
@@ -184,8 +197,10 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
         if (num > 12) num = 12;
         if (num < 1) num = 1;
       } else if (part === 'year') {
-        if (num < MIN_YEAR) num = MIN_YEAR;
-        if (num > MAX_YEAR) num = MAX_YEAR;
+        if (num < MIN_YEAR || num > MAX_YEAR) {
+          alert(`ปีที่ระบุต้องอยู่ระหว่าง ${MIN_YEAR} ถึง ${MAX_YEAR} เท่านั้นครับ`);
+          num = num < MIN_YEAR ? MIN_YEAR : MAX_YEAR;
+        }
       }
 
       const finalVal = num.toString().padStart(maxLength, '0');
