@@ -1,7 +1,6 @@
-import { createContext, useContext, ReactNode, useCallback, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useCallback } from 'react';
 
 import { usePersistedState } from '@/hooks/usePersistedState';
-import { useTheme as useAppTheme } from '@/hooks/useTheme';
 
 import { 
   SERVERS, 
