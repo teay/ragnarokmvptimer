@@ -22,8 +22,6 @@ export const SERVERS = [
 ];
 
 export const DEFAULT_THEME = 'dark';
-
-export const RESPAWN_TIMER_SOON_THRESHOLD_MS = 1000 * 60 * 10; // 10 minutes
 export const DEFAULT_LANG = LOCALES.ENGLISH;
 export const DEFAULT_SERVER = 'iRO';
 
@@ -33,16 +31,21 @@ export const DEFAULT_SETTINGS = {
   animatedSprites: false,
   use24HourFormat: true,
   isNotificationSoundEnabled: true,
-
   isGlassUIEnabled: false,
-  isAnimatedBackgroundEnabled: true, // New setting
-  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center', // New: default to full screen
-  particleDensity: 'medium' as 'low' | 'medium' | 'high', // New: default particle density
-  particleColor: 'rgba(0, 0, 0, 0.5)', // Original particle color
-  waveAmplitude: 10, // New: default wave amplitude
-  waveColor: 'rgba(0, 0, 0, 0.1)', // Original wave color
-  animatedBackgroundClearColor: 'rgba(0, 0, 0, 0.05)', // New setting for animated background clear color
-  isMainContentTransparent: false, // New setting for main content transparency
+  isAnimatedBackgroundEnabled: true,
+  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center',
+  particleDensity: 'medium' as 'low' | 'medium' | 'high' | 'Empty',
+  particleColor: '#fa0000',
+  particleOpacity: 0.5,
+  waveAmplitude: 10,
+  waveLineWidth: 5,
+  waveColor: '#0011ff',
+  waveOpacity: 0.1,
+  animatedBackgroundColor: '#000000',
+  animatedBackgroundOpacity: 0.05,
+  isMainContentTransparent: false,
+  waveTrailColor: '#0011ff',
+  waveTrailOpacity: 0.1,
   isSparkleEffectEnabled: false,
   sparkleDensity: 50,
   isFallingElementsEnabled: false,
@@ -50,8 +53,10 @@ export const DEFAULT_SETTINGS = {
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,
   font: 'Jost',
+  showMvpMap: true,
 };
 
 export const LOCAL_STORAGE_THEME_KEY = 'theme';
 export const LOCAL_STORAGE_SETTINGS_KEY = 'settings';
 export const LOCAL_STORAGE_ACTIVE_MVPS_KEY = 'activeMvps';
+export const RESPAWN_TIMER_SOON_THRESHOLD_MS = 1000 * 60 * 10; // 10 minutes
