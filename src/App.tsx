@@ -27,12 +27,44 @@ import { messages } from './locales/messages';
 const APP_VERSION = '2'; // Define the current version of the application
 
 export default function App() {
-  // Handle Fullscreen Toggles for Tauri
+  const { 
+    language, 
+    isGlassUIEnabled, 
+    isAnimatedBackgroundEnabled, 
+    isMainContentTransparent, 
+    font, 
+    isSparkleEffectEnabled, 
+    sparkleDensity, 
+    hideActiveContent, 
+    toggleHideActiveContent,
+    toggleShowMvpMap // Get the toggle function
+  } = useSettings();
+  
+  const { theme } = useTheme();
+  const {
+    hasNotificationPermission,
+    isNotificationPermissionDenied,
+    browserSupportsNotifications,
+  } = useNotification();
+
+  // Handle Global Shortcuts
   useEffect(() => {
-    const handleFullscreenToggle = async (e: KeyboardEvent) => {
-      // F11 or Alt+Enter
+    const handleGlobalShortcuts = async (e: KeyboardEvent) => {
+      // 1. Toggle MVP Maps with 'M' key
+      if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        // Prevent triggering if user is typing in an input or textarea
+        const target = e.target as HTMLElement;
+        const isInput = target.tagName === 'INPUT' || 
+                        target.tagName === 'TEXTAREA' || 
+                        target.isContentEditable;
+        
+        if (!isInput) {
+          toggleShowMvpMap();
+        }
+      }
+
+      // 2. F11 or Alt+Enter for Fullscreen (Tauri Only)
       if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
-        // Only run if we are in Tauri environment
         if (window.__TAURI_INTERNALS__) {
           e.preventDefault();
           try {
@@ -47,9 +79,9 @@ export default function App() {
       }
     };
 
-    window.addEventListener('keydown', handleFullscreenToggle);
-    return () => window.removeEventListener('keydown', handleFullscreenToggle);
-  }, []);
+    window.addEventListener('keydown', handleGlobalShortcuts);
+    return () => window.removeEventListener('keydown', handleGlobalShortcuts);
+  }, [toggleShowMvpMap]);
 
   useEffect(() => {
     const storedVersion = localStorage.getItem('appVersion');
@@ -60,14 +92,6 @@ export default function App() {
       window.location.reload();
     }
   }, []);
-
-  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font, isSparkleEffectEnabled, sparkleDensity, hideActiveContent, toggleHideActiveContent } = useSettings(); // Add new setting
-  const { theme } = useTheme();
-  const {
-    hasNotificationPermission,
-    isNotificationPermissionDenied,
-    browserSupportsNotifications,
-  } = useNotification();
 
   useEffect(() => {
     dayjs.locale(language);
