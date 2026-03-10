@@ -7,7 +7,6 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   const { value, onChange, autoFocus = true } = props;
   const [date, setDate] = useState(dayjs(value));
   
-  // Local states for each segment to allow natural typing
   const [displayValues, setDisplayValues] = useState({
     day: dayjs(value).format('DD'),
     month: dayjs(value).format('MM'),
@@ -27,7 +26,6 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     minute: useRef<HTMLInputElement>(null),
   };
 
-  // Sync with prop value
   useEffect(() => {
     const newDate = dayjs(value);
     if (!newDate.isSame(date)) {
@@ -54,9 +52,43 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     }
   }, []);
 
+  const validateAndClamp = (part: string, val: string) => {
+    let num = parseInt(val, 10);
+    if (isNaN(num)) return val;
+
+    switch (part) {
+      case 'month':
+        if (num > 12) num = 12;
+        if (num < 1 && val.length === 2) num = 1;
+        break;
+      case 'day':
+        const maxDays = date.daysInMonth();
+        if (num > maxDays) num = maxDays;
+        if (num < 1 && val.length === 2) num = 1;
+        break;
+      case 'hour':
+        if (num > 23) num = 23;
+        break;
+      case 'minute':
+        if (num > 59) num = 59;
+        break;
+    }
+    
+    // If it's a 2-digit field and the first digit already makes it impossible to be valid
+    // we don't clamp immediately to allow typing, but we return the numeric string
+    return num.toString();
+  };
+
   const updateActualDate = (newDisplayValues: typeof displayValues) => {
     const { day, month, year, hour, minute } = newDisplayValues;
-    let newDate = dayjs(`${year}-${month}-${day} ${hour}:${minute}`, 'YYYY-MM-DD HH:mm');
+    
+    // Ensure we have 2 digits for day/month/hour/minute before creating date
+    const d = day.padStart(2, '0');
+    const m = month.padStart(2, '0');
+    const h = hour.padStart(2, '0');
+    const min = minute.padStart(2, '0');
+    
+    let newDate = dayjs(`${year}-${m}-${d} ${h}:${min}`, 'YYYY-MM-DD HH:mm');
     
     if (newDate.isValid()) {
       setDate(newDate);
@@ -99,10 +131,15 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, part: keyof typeof displayValues) => {
-    const val = e.target.value.replace(/\D/g, '');
+    let val = e.target.value.replace(/\D/g, '');
     const maxLength = part === 'year' ? 4 : 2;
 
     if (val.length <= maxLength) {
+      // Validate and Clamp immediately for better feedback
+      if (val.length > 0) {
+        val = validateAndClamp(part, val);
+      }
+
       const newDisplayValues = { ...displayValues, [part]: val };
       setDisplayValues(newDisplayValues);
 
@@ -124,12 +161,28 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
 
   const handleBlur = (part: keyof typeof displayValues) => {
     const maxLength = part === 'year' ? 4 : 2;
-    if (displayValues[part].length > 0 && displayValues[part].length < maxLength) {
-      const padded = displayValues[part].padStart(maxLength, '0');
-      const newValues = { ...displayValues, [part]: padded };
+    let val = displayValues[part];
+
+    if (val.length > 0) {
+      // Final clamping and padding
+      let num = parseInt(val, 10);
+      
+      // Additional safety for Day based on current month/year
+      if (part === 'day') {
+        const maxDays = dayjs(`${displayValues.year}-${displayValues.month}-01`).daysInMonth();
+        if (num > maxDays) num = maxDays;
+        if (num < 1) num = 1;
+      } else if (part === 'month') {
+        if (num > 12) num = 12;
+        if (num < 1) num = 1;
+      }
+
+      const finalVal = num.toString().padStart(maxLength, '0');
+      const newValues = { ...displayValues, [part]: finalVal };
       setDisplayValues(newValues);
       updateActualDate(newValues);
-    } else if (displayValues[part].length === 0) {
+    } else {
+      // Revert if empty
       const format = part === 'year' ? 'YYYY' : (part === 'day' ? 'DD' : part === 'month' ? 'MM' : part === 'hour' ? 'HH' : 'mm');
       const reverted = date.format(format);
       setDisplayValues({ ...displayValues, [part]: reverted });
