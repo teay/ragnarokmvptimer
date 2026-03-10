@@ -31,9 +31,7 @@ export default function App() {
     const handleFullscreenToggle = async (e: KeyboardEvent) => {
       if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
         e.preventDefault();
-        const appWindow = getCurrentWindow();
-        const isFullscreen = await appWindow.isFullscreen();
-        await appWindow.setFullscreen(!isFullscreen);
+        // Skip fullscreen toggle if not in Tauri
       }
     };
 
