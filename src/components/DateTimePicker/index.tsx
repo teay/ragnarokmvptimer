@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import dayjs from 'dayjs';
-import { styled } from '@linaria/react';
+import { Container, Segment, Separator, Spacer } from './styles';
 
 interface SegmentedDateTimePickerProps {
   value: Date;
@@ -16,12 +16,16 @@ interface DateSegment {
   name: 'day' | 'month' | 'year' | 'hour' | 'minute';
 }
 
-export const SegmentedDateTimePicker: React.FC<SegmentedDateTimePickerProps> = ({
+export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateTimePickerProps>(({
   value,
   onChange,
   autoFocus = true,
-}) => {
+}, ref) => {
   const [date, setDate] = useState(dayjs(value));
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
+
   const refs = {
     day: useRef<HTMLInputElement>(null),
     month: useRef<HTMLInputElement>(null),
@@ -36,20 +40,21 @@ export const SegmentedDateTimePicker: React.FC<SegmentedDateTimePickerProps> = (
 
   useEffect(() => {
     if (autoFocus) {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         refs.day.current?.focus();
         refs.day.current?.select();
-      }, 100);
+      }, 150);
+      return () => clearTimeout(timeout);
     }
   }, []);
 
-  const updateDatePart = (part: keyof DateSegment['name'] | any, val: number) => {
+  const updateDatePart = (part: any, val: number) => {
     let newDate = date.set(part, val);
     
     // Validate days in month
-    if (part === 'month' || part === 'year') {
+    if (part === 'month' || part === 'year' || part === 'date') {
       const daysInMonth = newDate.daysInMonth();
-      if (date.date() > daysInMonth) {
+      if (newDate.date() > daysInMonth) {
         newDate = newDate.date(daysInMonth);
       }
     }
@@ -61,12 +66,14 @@ export const SegmentedDateTimePicker: React.FC<SegmentedDateTimePickerProps> = (
   const handleKeyDown = (e: React.KeyboardEvent, part: DateSegment['name']) => {
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      const nextVal = date.get(part === 'day' ? 'date' : part) + 1;
-      updateDatePart(part === 'day' ? 'date' : part, nextVal);
+      const unit = part === 'day' ? 'date' : part;
+      const nextVal = date.get(unit) + 1;
+      updateDatePart(unit, nextVal);
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const prevVal = date.get(part === 'day' ? 'date' : part) - 1;
-      updateDatePart(part === 'day' ? 'date' : part, prevVal);
+      const unit = part === 'day' ? 'date' : part;
+      const prevVal = date.get(unit) - 1;
+      updateDatePart(unit, prevVal);
     } else if (e.key === 'ArrowLeft' && (e.target as HTMLInputElement).selectionStart === 0) {
       const prevParts: Record<string, any> = { month: 'day', year: 'month', hour: 'year', minute: 'hour' };
       if (prevParts[part]) {
@@ -83,16 +90,21 @@ export const SegmentedDateTimePicker: React.FC<SegmentedDateTimePickerProps> = (
         nextRef.current?.focus();
         nextRef.current?.select();
       }
+    } else if (e.key === 'Enter') {
+      // Allow enter to be handled by the form/modal
+    } else if (e.key !== 'Tab' && e.key !== 'Backspace' && e.key !== 'Delete' && !/^\d$/.test(e.key)) {
+       // Stop other keys but allow essential ones
+       // e.stopPropagation(); // Be careful with this
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, part: DateSegment['name']) => {
     const val = e.target.value.replace(/\D/g, '');
-    const numVal = parseInt(val, 10);
     const maxLength = part === 'year' ? 4 : 2;
 
     if (val.length <= maxLength) {
-      if (!isNaN(numVal)) {
+      if (val.length > 0) {
+        const numVal = parseInt(val, 10);
         updateDatePart(part === 'day' ? 'date' : part, numVal);
       }
       
@@ -100,15 +112,17 @@ export const SegmentedDateTimePicker: React.FC<SegmentedDateTimePickerProps> = (
       if (val.length === maxLength) {
         const nextParts: Record<string, any> = { day: 'month', month: 'year', year: 'hour', hour: 'minute' };
         if (nextParts[part]) {
-          refs[nextParts[part] as keyof typeof refs].current?.focus();
-          refs[nextParts[part] as keyof typeof refs].current?.select();
+          setTimeout(() => {
+            refs[nextParts[part] as keyof typeof refs].current?.focus();
+            refs[nextParts[part] as keyof typeof refs].current?.select();
+          }, 10);
         }
       }
     }
   };
 
   return (
-    <Container>
+    <Container ref={containerRef}>
       <Segment
         ref={refs.day}
         value={date.format('DD')}
@@ -151,51 +165,6 @@ export const SegmentedDateTimePicker: React.FC<SegmentedDateTimePickerProps> = (
       />
     </Container>
   );
-};
+});
 
-const Container = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--filterSearch_bg);
-  border: 1px solid var(--modal_datePicker_border);
-  border-radius: 4px;
-  padding: 10px;
-  width: 100%;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 1.8rem;
-
-  &:focus-within {
-    border-color: var(--filterSearch_border_focus);
-  }
-`;
-
-const Segment = styled.input`
-  background: transparent;
-  border: none;
-  color: inherit;
-  font-family: inherit;
-  font-size: inherit;
-  text-align: center;
-  width: 2.5rem;
-  padding: 0;
-  outline: none;
-
-  &.year {
-    width: 4.5rem;
-  }
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.3);
-  }
-`;
-
-const Separator = styled.span`
-  margin: 0 2px;
-  opacity: 0.6;
-`;
-
-const Spacer = styled.div`
-  width: 15px;
-`;
+SegmentedDateTimePicker.displayName = 'SegmentedDateTimePicker';
