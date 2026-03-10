@@ -55,9 +55,9 @@ export const BottomControls = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin-top: 15px;
+  margin-top: auto; /* This will push it to the bottom */
   width: 100%;
-  padding: 0; /* Removed horizontal padding */
+  padding: 0;
 `;
 
 export const Details = styled.div`
@@ -100,6 +100,14 @@ export const MapName = styled.span`
   margin-top: 5px;
   color: #E0E0E0 !important;
   font-size: 1.8rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  user-select: none;
+
+  &:hover {
+    opacity: 0.7;
+    text-decoration: underline;
+  }
 `;
 
 export const Tombstone = styled.p`
@@ -108,6 +116,12 @@ export const Tombstone = styled.p`
   line-height: 1.2;
   white-space: pre-wrap;
   font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.7;
+  }
 `;
 
 const Button = styled.button`
