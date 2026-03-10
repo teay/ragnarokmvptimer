@@ -16,7 +16,7 @@ export const Container = styled.div`
 
   &:focus-within {
     border-color: var(--primary);
-    box-shadow: 0 0 8px rgba(var(--primary-rgb, 85, 67, 207), 0.4);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -31,12 +31,13 @@ export const Segment = styled.input`
   padding: 2px;
   outline: none;
   border-radius: 4px;
-  transition: all 0.2s;
+  transition: all 0.1s;
 
   &:focus {
-    background-color: rgba(255, 255, 255, 0.15);
-    color: var(--primary);
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff; /* ใช้สีขาวทึบเพื่อให้มองเห็นชัดเจนแน่นอน */
     font-weight: bold;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
   }
 
   &.year {
