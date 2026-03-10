@@ -28,6 +28,29 @@ const APP_VERSION = "2.1"; // Update version to trigger a clean state if needed
 
 export default function App() {
   useEffect(() => {
+    // ฟังก์ชันสำหรับโชว์หน้าต่าง (เฉพาะใน Tauri)
+    const initTauriWindow = async () => {
+      // ตรวจสอบว่ารันอยู่ใน Tauri หรือไม่ (วิธีที่ปลอดภัยที่สุด)
+      const isTauri = !!(window as any).__TAURI_INTERNALS__;
+      
+      if (isTauri) {
+        try {
+          const { getCurrentWindow } = await import('@tauri-apps/api/window');
+          const appWindow = getCurrentWindow();
+          // รอให้ React render กิ่งก้านสาขาเสร็จก่อนแวบหนึ่ง
+          setTimeout(async () => {
+            await appWindow.show();
+          }, 300);
+        } catch (e) {
+          console.error("Failed to show Tauri window", e);
+        }
+      }
+    };
+
+    initTauriWindow();
+  }, []);
+
+  useEffect(() => {
     const handleFullscreenToggle = async (e: KeyboardEvent) => {
       if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
         e.preventDefault();
