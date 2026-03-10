@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import dayjs from 'dayjs';
 
@@ -32,10 +32,20 @@ export function ModalEditMvp() {
   // ใน ModalEditMvp/index.tsx
   const { killMvp, updateMvp, editingMvp: mvp, closeEditMvpModal } = useMvpsContext();
   const { animatedSprites } = useSettings();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [newTime, setNewTime] = useState<Date | null>(
     mvp.deathTime || new Date()
   );
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, []);
   const [selectedMap, setSelectedMap] = useState<string>(mvp.deathMap || '');
   const [markCoordinates, setMarkCoordinates] = useState<IMapMark>({
     x: -1,
@@ -98,6 +108,7 @@ export function ModalEditMvp() {
         </Question>
 
         <DateTimePicker
+          ref={inputRef}
           type='datetime-local'
           value={dayjs(newTime).format('YYYY-MM-DDTHH:mm')}
           min={dayjs().subtract(4, 'days').format('YYYY-MM-DDTHH:mm')}

@@ -75,11 +75,6 @@ export function ModalEditTime() {
               setNewTime(dayjs(val).toDate());
             }
           }}
-          onKeyDown={(e) => {
-            if (e.key !== 'Escape') {
-              e.stopPropagation();
-            }
-          }}
         />
 
         <Footer>

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - fix-tab-navigation
       - feat/tauri-v2-desktop
     # Also trigger when you push a version tag (e.g. v1.0.0)
     tags:
