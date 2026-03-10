@@ -42,24 +42,20 @@ export const ServerList = styled.div`
   }
 `;
 
-export const ServerItem = styled.button<{
-  active: boolean;
-}>`
+export const ServerItem = styled.button`
   font-weight: 600;
   padding: 1rem 2rem;
   border-radius: 0.5rem;
 
   border: 1px solid var(--modal_serverSelect_border);
 
-  background-color: ${({ active }) =>
-    active
-      ? 'var(--modal_serverSelect_bgActive)'
-      : 'var(--modal_serverSelect_bg)'};
+  background-color: var(--modal_serverSelect_bg);
+  color: var(--modal_serverSelect_text);
 
-  color: ${({ active }) =>
-    active
-      ? 'var(--modal_serverSelect_textActive)'
-      : 'var(--modal_serverSelect_text)'};
+  &[style*="--isActive: 1"] {
+    background-color: var(--modal_serverSelect_bgActive);
+    color: var(--modal_serverSelect_textActive);
+  }
 
   &:hover {
     opacity: 0.8;

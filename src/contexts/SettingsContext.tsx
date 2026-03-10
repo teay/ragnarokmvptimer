@@ -12,6 +12,7 @@ const useTheme = () => {
 };
 
 import { LOCALES } from '@/locales';
+import { SERVERS } from '@/constants';
 
 const DEFAULT_THEME = 'dark';
 const RESPAWN_TIMER_SOON_THRESHOLD_MS = 1000 * 60 * 10; // 10 minutes
@@ -27,7 +28,7 @@ const DEFAULT_SETTINGS = {
   isGlassUIEnabled: false,
   isAnimatedBackgroundEnabled: true,
   backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center',
-  particleDensity: 'medium' as 'low' | 'medium' | 'high' | 'Empty', // <-- แก้ไขตรงนี้
+  particleDensity: 'medium' as 'low' | 'medium' | 'high' | 'Empty',
   particleColor: '#000000',
   particleOpacity: 0.5,
   waveAmplitude: 10,
@@ -73,6 +74,7 @@ const DEFAULT_SETTINGS = {
     language: string;
     changeLanguage: (id: string) => void;
     server: string;
+    servers: string[];
     changeServer: (id: string) => void;
     font: string;
     changeFont: () => void;
@@ -86,7 +88,6 @@ const DEFAULT_SETTINGS = {
     changeParticleColor: (color: string) => void;
     particleOpacity: number;
     changeParticleOpacity: (opacity: number) => void;
-    // เพิ่ม 2 บรรทัดนี้
     waveAmplitude: number;
     changeWaveAmplitude: (amplitude: number) => void;
     waveLineWidth: number;
@@ -224,7 +225,7 @@ const DEFAULT_SETTINGS = {
     );
   
     const changeParticleDensity = useCallback(
-      (density: 'low' | 'medium' | 'high' | 'Empty') => { // <-- แก้ไขตรงนี้
+      (density: 'low' | 'medium' | 'high' | 'Empty') => {
         setSettings((prev) => ({
           ...prev,
           particleDensity: density,
@@ -429,6 +430,7 @@ const DEFAULT_SETTINGS = {
       <SettingsContext.Provider
         value={{
           ...settings,
+          servers: SERVERS,
           toggleRespawnCountdown,
           toggleHideActiveContent,
           toggleAnimatedSprites,

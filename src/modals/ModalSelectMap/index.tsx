@@ -1,34 +1,65 @@
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Clock } from '@styled-icons/feather';
-import dayjs from 'dayjs';
+import { styled } from '@linaria/react';
+
+import { useScrollBlock, useKey } from '@/hooks';
+
+import { ModalBase } from '../ModalBase';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
-import { Map } from '@/components/Map';
-import { ModalBase } from '../ModalBase';
+
 import {
   Modal,
   Title,
   MapsDisplayGrid,
   MapCard,
-  MapDetails,
   MapName,
   MapRespawnTime,
 } from './styles';
-import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
 
-type MapProps = {
-  spawnMaps: ISpawn[];
-  onSelect: (mapName: string) => void;
+const ButtonBase = styled.button`
+  min-height: 5rem;
+  font-weight: 600;
+  font-size: 1.8rem;
+  border-radius: 0.8rem;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const PrimaryButton = styled(ButtonBase)`
+  width: 25rem;
+  background-color: var(--modal_button);
+  margin-top: 10px;
+`;
+
+interface ModalSelectMapProps {
+  spawnMaps: Array<{
+    mapname: string;
+    respawnTime: number;
+  }>;
+  onSelect: (mapname: string) => void;
   onClose: () => void;
-};
+}
 
-export function ModalSelectMap({ spawnMaps, onSelect, onClose }: MapProps) {
+export function ModalSelectMap({
+  spawnMaps,
+  onSelect,
+  onClose,
+}: ModalSelectMapProps) {
+  useScrollBlock(true);
   const [selectedMap, setSelectedMap] = useState('');
 
-  if (spawnMaps.length === 0) {
-    return null;
-  }
+  useKey('Escape', onClose);
 
   return (
     <ModalBase>
@@ -36,37 +67,28 @@ export function ModalSelectMap({ spawnMaps, onSelect, onClose }: MapProps) {
         <ModalCloseIconButton onClick={onClose} />
 
         <Title>
-          <FormattedMessage id='please_select_map' />
+          <FormattedMessage id='which_map' />
         </Title>
 
-        <MapsDisplayGrid cols={spawnMaps.length}>
-          {spawnMaps.map(({ mapname, respawnTime }) => (
+        <MapsDisplayGrid style={{ '--cols': spawnMaps.length > 2 ? 3 : 2 } as React.CSSProperties}>
+          {spawnMaps.map((spawn) => (
             <MapCard
-              key={mapname}
-              isSelected={mapname === selectedMap}
-              onClick={() => setSelectedMap(mapname)}
+              key={spawn.mapname}
+              onClick={() => setSelectedMap(spawn.mapname)}
+              style={{ '--isSelected': selectedMap === spawn.mapname ? 'yellow' : 'transparent' } as React.CSSProperties}
             >
-              <Map mapName={mapname} />
-
-              <MapDetails>
-                <MapName>{mapname}</MapName>
-
-                <MapRespawnTime>
-                  <Clock size={20} strokeWidth={3} />
-                  <FormattedMessage id='every' />{' '}
-                  {dayjs.duration(respawnTime, 'ms').humanize()}
-                </MapRespawnTime>
-              </MapDetails>
+              <MapName>{spawn.mapname}</MapName>
+              <MapRespawnTime>{spawn.respawnTime} min</MapRespawnTime>
             </MapCard>
           ))}
         </MapsDisplayGrid>
 
-        <ModalPrimaryButton
+        <PrimaryButton
           onClick={() => onSelect(selectedMap)}
           disabled={!selectedMap}
         >
           <FormattedMessage id='confirm' />
-        </ModalPrimaryButton>
+        </PrimaryButton>
       </Modal>
     </ModalBase>
   );

@@ -1,5 +1,4 @@
 import { styled } from "@linaria/react";
-import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
 
 export const Modal = styled.div`
   width: 100%;
@@ -88,14 +87,4 @@ export const Footer = styled.footer`
   justify-content: center;
   margin-top: 10px;
   gap: 16px;
-`;
-
-export const ChangeMapButton = styled(ModalPrimaryButton)`
-  background: transparent;
-  border: 1px solid var(--modal_changeMap_border);
-  color: var(--modal_changeMap_text);
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
 `;

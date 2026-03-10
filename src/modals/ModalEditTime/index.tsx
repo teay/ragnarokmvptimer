@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import dayjs from 'dayjs';
+import { styled } from '@linaria/react';
 
 import { useScrollBlock, useKey } from '@/hooks';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -11,7 +12,6 @@ import { MvpSprite } from '../../components/MvpSprite';
 import { SegmentedDateTimePicker } from '../../components/DateTimePicker';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
-import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
 
 import {
   Modal,
@@ -20,6 +20,30 @@ import {
   Question,
   Footer,
 } from './styles';
+
+const ButtonBase = styled.button`
+  min-height: 5rem;
+  font-weight: 600;
+  font-size: 1.8rem;
+  border-radius: 0.8rem;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const PrimaryButton = styled(ButtonBase)`
+  width: 25rem;
+  background-color: var(--modal_button);
+`;
 
 export function ModalEditTime() {
   useScrollBlock(true);
@@ -61,13 +85,12 @@ export function ModalEditTime() {
         />
 
         <Footer>
-          <ModalPrimaryButton
-            size='lg'
+          <PrimaryButton
             onClick={handleConfirm}
             disabled={!dayjs(newTime).isValid()}
           >
             <FormattedMessage id='confirm' />
-          </ModalPrimaryButton>
+          </PrimaryButton>
         </Footer>
       </Modal>
     </ModalBase>

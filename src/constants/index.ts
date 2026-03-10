@@ -3,6 +3,24 @@ const LOCALES = {
   ENGLISH: 'en-US',
 };
 
+export const SERVERS = [
+  'aRO',
+  'bRO',
+  'cRO',
+  'fRO',
+  'GGH',
+  'idRO',
+  'iRO',
+  'iROC',
+  'jRO',
+  'kROM',
+  'kROZ',
+  'kROZS',
+  'ruRO',
+  'thROG',
+  'twRO',
+];
+
 export const DEFAULT_THEME = 'dark';
 
 export const RESPAWN_TIMER_SOON_THRESHOLD_MS = 1000 * 60 * 10; // 10 minutes

@@ -20,7 +20,7 @@ export function ServerButton() {
       </Button>
 
       {isSelectionOpen && (
-        <ModalSelectServer close={() => setIsSelectionOpen(false)} />
+        <ModalSelectServer onClose={() => setIsSelectionOpen(false)} />
       )}
     </>
   );

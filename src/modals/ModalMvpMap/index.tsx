@@ -1,33 +1,51 @@
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { styled } from '@linaria/react';
 
-import { useKey, useScrollBlock } from '@/hooks';
+import { useScrollBlock, useKey } from '@/hooks';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 
 import { ModalBase } from '../ModalBase';
-import { Map } from '../../components/Map';
-import { ModalSelectMap } from '../ModalSelectMap';
+import { Map as MvpMap } from '../../components/Map';
+
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
-import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
 
-import {
-  Modal,
-  Name,
-  Question,
-  Optional,
-  Footer,
-  ChangeMapButton,
-} from './styles';
+import { Modal, Name, Question, Footer } from './styles';
 
-interface MvpMapModalProps {
+const ButtonBase = styled.button`
+  min-height: 5rem;
+  font-weight: 600;
+  font-size: 1.8rem;
+  border-radius: 0.8rem;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const PrimaryButton = styled(ButtonBase)`
+  width: 25rem;
+  background-color: var(--modal_button);
+`;
+
+interface ModalMvpMapProps {
   mvp: IMvp;
   close: () => void;
 }
 
-export function ModalMvpMap({ mvp, close }: MvpMapModalProps) {
+export function ModalMvpMap({ mvp, close }: ModalMvpMapProps) {
+  useScrollBlock(true);
   const { updateMvpDeathLocation } = useMvpsContext();
 
-  const [selectedMap, setSelectedMap] = useState<string>(mvp.deathMap);
+  const [selectedMap, setSelectedMap] = useState(mvp.deathMap || '');
   const [markCoordinates, setMarkCoordinates] = useState<IMapMark>(
     mvp.deathPosition || {
       x: -1,
@@ -35,29 +53,16 @@ export function ModalMvpMap({ mvp, close }: MvpMapModalProps) {
     }
   );
 
-  const hasMoreThanOneMap = mvp.spawn.length > 1;
-
-  useScrollBlock(true);
   useKey('Escape', close);
 
   function handleConfirm() {
     updateMvpDeathLocation(
       mvp.id,
-      mvp.deathMap,
+      mvp.deathMap || '',
       selectedMap,
       markCoordinates
     );
     close();
-  }
-
-  if (!selectedMap) {
-    return (
-      <ModalSelectMap
-        spawnMaps={mvp.spawn}
-        onSelect={setSelectedMap}
-        onClose={() => setSelectedMap(mvp.deathMap)} // Go back to prev map
-      />
-    );
   }
 
   return (
@@ -69,26 +74,18 @@ export function ModalMvpMap({ mvp, close }: MvpMapModalProps) {
 
         <Question>
           <FormattedMessage id='wheres_tombstone' />
-          <Optional>
-            (<FormattedMessage id='optional_mark' />)
-          </Optional>
         </Question>
 
-        <Map
+        <MvpMap
           mapName={selectedMap}
           onChange={setMarkCoordinates}
           coordinates={markCoordinates}
         />
 
         <Footer>
-          {hasMoreThanOneMap && (
-            <ChangeMapButton size='lg' onClick={() => setSelectedMap('')}>
-              <FormattedMessage id='change_map' />
-            </ChangeMapButton>
-          )}
-          <ModalPrimaryButton size='lg' onClick={handleConfirm}>
+          <PrimaryButton onClick={handleConfirm}>
             <FormattedMessage id='confirm' />
-          </ModalPrimaryButton>
+          </PrimaryButton>
         </Footer>
       </Modal>
     </ModalBase>

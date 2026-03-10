@@ -50,9 +50,9 @@ export const Title = styled.span`
   font-weight: 600;
 `;
 
-export const MapsDisplayGrid = styled.div<{ cols: number }>`
+export const MapsDisplayGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(${({ cols }) => (cols > 2 ? 3 : 2)}, 1fr);
+  grid-template-columns: repeat(var(--cols, 2), 1fr);
   overflow-y: auto;
   overflow-x: hidden;
 
@@ -64,7 +64,7 @@ export const MapsDisplayGrid = styled.div<{ cols: number }>`
   }
 `;
 
-export const MapCard = styled.button<{ isSelected: boolean }>`
+export const MapCard = styled.button`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -76,8 +76,7 @@ export const MapCard = styled.button<{ isSelected: boolean }>`
   border-width: 3px;
   border-style: solid;
   border-radius: 6px;
-  border-color: ${({ isSelected }) =>
-    isSelected ? 'yellow' : 'transparent'};
+  border-color: var(--isSelected, transparent);
   background-color: none;
   box-sizing: border-box;
 `;
@@ -97,4 +96,3 @@ export const MapRespawnTime = styled.div`
   align-items: center;
   gap: 0.8rem;
 `;
-

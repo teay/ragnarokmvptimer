@@ -1,61 +1,80 @@
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-
-import { ModalBase } from '../ModalBase';
-import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
+import { styled } from '@linaria/react';
 
 import { useSettings } from '@/contexts/SettingsContext';
-import { SERVERS } from '@/utils';
-import { useClickOutside, useScrollBlock, useKey } from '@/hooks';
-import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
+import { useScrollBlock, useKey } from '@/hooks';
+
+import { ModalBase } from '../ModalBase';
+
+import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
+
 import { Modal, Title, ServerList, ServerItem } from './styles';
 
+const ButtonBase = styled.button`
+  min-height: 5rem;
+  font-weight: 600;
+  font-size: 1.8rem;
+  border-radius: 0.8rem;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const PrimaryButton = styled(ButtonBase)`
+  width: 25rem;
+  background-color: var(--modal_button);
+`;
+
 interface ModalSelectServerProps {
-  close: () => void;
+  onClose: () => void;
 }
 
-const serversNames = Object.keys(SERVERS).sort((a, b) =>
-  a.toLowerCase().localeCompare(b.toLowerCase())
-);
-
-export function ModalSelectServer({ close }: ModalSelectServerProps) {
-  const { server, changeServer } = useSettings();
-  const [selectedServer, setSelectedServer] = useState(server);
-
+export function ModalSelectServer({ onClose }: ModalSelectServerProps) {
   useScrollBlock(true);
-  useKey('Escape', close);
+  const { servers, server: currentServer, changeServer } = useSettings();
+  const [selectedServer, setSelectedServer] = useState(currentServer);
 
-  const modalRef = useClickOutside(close);
+  useKey('Escape', onClose);
 
   function confirmChange() {
     changeServer(selectedServer);
-    close();
+    onClose();
   }
 
   return (
     <ModalBase>
-      <Modal ref={modalRef}>
-        <ModalCloseIconButton onClick={close} />
+      <Modal>
+        <ModalCloseIconButton onClick={onClose} />
 
         <Title>
-          <FormattedMessage id='select_server' />
+          <FormattedMessage id='which_server' />
         </Title>
 
         <ServerList>
-          {serversNames.map((i) => (
+          {servers.map((server) => (
             <ServerItem
-              key={i}
-              onClick={() => setSelectedServer(i)}
-              active={selectedServer === i}
+              key={server}
+              onClick={() => setSelectedServer(server)}
+              style={{ '--isActive': selectedServer === server ? 1 : 0 } as React.CSSProperties}
             >
-              {i}
+              {server}
             </ServerItem>
           ))}
         </ServerList>
 
-        <ModalPrimaryButton onClick={confirmChange}>
+        <PrimaryButton onClick={confirmChange}>
           <FormattedMessage id='confirm' />
-        </ModalPrimaryButton>
+        </PrimaryButton>
       </Modal>
     </ModalBase>
   );
