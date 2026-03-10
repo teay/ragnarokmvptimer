@@ -39,7 +39,6 @@ export default function App() {
           // รอให้ CSS ใน index.html ทำงานและ React render เสร็จ
           setTimeout(async () => {
             await appWindow.show();
-            await appWindow.focus();
           }, 500);
         } catch (error) {
           console.error("Tauri API Error:", error);
