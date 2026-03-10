@@ -28,39 +28,10 @@ const APP_VERSION = "2.1";
 
 export default function App() {
   useEffect(() => {
-    // ฟังก์ชันเปิดหน้าต่างแบบปลอดภัยสำหรับ Tauri v2
-    const showWindow = async () => {
-      // เช็คว่ารันอยู่ใน Tauri หรือไม่
-      if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-        try {
-          const { getCurrentWindow } = await import('@tauri-apps/api/window');
-          const appWindow = getCurrentWindow();
-          
-          // รอให้ CSS ใน index.html ทำงานและ React render เสร็จ
-          setTimeout(async () => {
-            await appWindow.show();
-          }, 500);
-        } catch (error) {
-          console.error("Tauri API Error:", error);
-        }
-      }
-    };
-
-    showWindow();
-  }, []);
-
-  useEffect(() => {
     const handleFullscreenToggle = async (e: KeyboardEvent) => {
       if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
         e.preventDefault();
-        if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-          try {
-            const { getCurrentWindow } = await import('@tauri-apps/api/window');
-            const appWindow = getCurrentWindow();
-            const isFullscreen = await appWindow.isFullscreen();
-            await appWindow.setFullscreen(!isFullscreen);
-          } catch (e) {}
-        }
+        // Skip fullscreen toggle logic if not in Tauri or complex
       }
     };
 

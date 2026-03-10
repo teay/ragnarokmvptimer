@@ -19,7 +19,7 @@
         "fullscreen": false,
         "maximized": true,
         "theme": "Dark",
-        "visible": false
+        "visible": true
       }
     ],
     "security": {
