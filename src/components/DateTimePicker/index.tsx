@@ -7,6 +7,10 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   const { value, onChange, autoFocus = true } = props;
   const [date, setDate] = useState(dayjs(value));
   
+  const currentYear = dayjs().year();
+  const MIN_YEAR = currentYear - 100;
+  const MAX_YEAR = currentYear + 100;
+
   const [displayValues, setDisplayValues] = useState({
     day: dayjs(value).format('DD'),
     month: dayjs(value).format('MM'),
@@ -72,17 +76,27 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       case 'minute':
         if (num > 59) num = 59;
         break;
+      case 'year':
+        // Prevent typing year way outside the range immediately
+        if (val.length >= 4) {
+          if (num > MAX_YEAR) {
+            alert(`Year cannot be more than ${MAX_YEAR}`);
+            num = MAX_YEAR;
+          } else if (num < MIN_YEAR) {
+            // Only alert if they finished typing 4 digits and it's too low
+            alert(`Year cannot be less than ${MIN_YEAR}`);
+            num = MIN_YEAR;
+          }
+        }
+        break;
     }
     
-    // If it's a 2-digit field and the first digit already makes it impossible to be valid
-    // we don't clamp immediately to allow typing, but we return the numeric string
     return num.toString();
   };
 
   const updateActualDate = (newDisplayValues: typeof displayValues) => {
     const { day, month, year, hour, minute } = newDisplayValues;
     
-    // Ensure we have 2 digits for day/month/hour/minute before creating date
     const d = day.padStart(2, '0');
     const m = month.padStart(2, '0');
     const h = hour.padStart(2, '0');
@@ -99,10 +113,11 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, part: keyof typeof displayValues) => {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
-      // dayjs uses 'day' for adding/subtracting days
       const unit = part === 'day' ? 'day' : part;
       const nextDate = e.key === 'ArrowUp' ? date.add(1, unit as any) : date.subtract(1, unit as any);
       
+      if (nextDate.year() > MAX_YEAR || nextDate.year() < MIN_YEAR) return;
+
       const newValues = {
         day: nextDate.format('DD'),
         month: nextDate.format('MM'),
@@ -136,7 +151,6 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     const maxLength = part === 'year' ? 4 : 2;
 
     if (val.length <= maxLength) {
-      // Validate and Clamp immediately for better feedback
       if (val.length > 0) {
         val = validateAndClamp(part, val);
       }
@@ -165,10 +179,8 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     let val = displayValues[part];
 
     if (val.length > 0) {
-      // Final clamping and padding
       let num = parseInt(val, 10);
       
-      // Additional safety for Day based on current month/year
       if (part === 'day') {
         const maxDays = dayjs(`${displayValues.year}-${displayValues.month}-01`).daysInMonth();
         if (num > maxDays) num = maxDays;
@@ -176,6 +188,14 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       } else if (part === 'month') {
         if (num > 12) num = 12;
         if (num < 1) num = 1;
+      } else if (part === 'year') {
+        if (num < MIN_YEAR) {
+          alert(`Year cannot be less than ${MIN_YEAR}`);
+          num = MIN_YEAR;
+        } else if (num > MAX_YEAR) {
+          alert(`Year cannot be more than ${MAX_YEAR}`);
+          num = MAX_YEAR;
+        }
       }
 
       const finalVal = num.toString().padStart(maxLength, '0');
@@ -183,7 +203,6 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       setDisplayValues(newValues);
       updateActualDate(newValues);
     } else {
-      // Revert if empty
       const format = part === 'year' ? 'YYYY' : (part === 'day' ? 'DD' : part === 'month' ? 'MM' : part === 'hour' ? 'HH' : 'mm');
       const reverted = date.format(format);
       setDisplayValues({ ...displayValues, [part]: reverted });
