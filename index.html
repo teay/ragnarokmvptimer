@@ -1,49 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/ragnarokmvptimer/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="WebApp to track Ragnarok MVP respawn"
-    />
-    <link rel="apple-touch-icon" href="/ragnarokmvptimer/icons/apple-touch-icon.png" />
-    
-    <!-- Dynamic Manifest Path based on environment -->
-    <script>
-      (function() {
-        const manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        // GitHub Pages production: /ragnarokmvptimer/manifest.webmanifest
-        // Local dev: /manifest.webmanifest
-        const isProd = window.location.hostname !== 'localhost';
-        manifestLink.href = isProd ? '/ragnarokmvptimer/manifest.webmanifest' : '/manifest.webmanifest';
-        document.head.appendChild(manifestLink);
-      })();
-    </script>
-
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f89200" />
     <title>Ragnarok MVP Timer</title>
-    <style>
-      /* กำหนดสีพื้นหลังเริ่มต้นให้เป็นสีมืด เพื่อป้องกันหน้าจอขาวตอนโหลด */
-      html, body {
-        background-color: #050505;
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        width: 100%;
+    <meta name="application-name" content="Ragnarok MVP Timer" />
+    <meta name="description" content="track ragnarok mvp respawn" />
+    <meta
+      name="keywords"
+      content="ragnarok,online,mvp,boss,timer,tracker,respawn"
+    />
+    <meta name="author" content="Lucas Emanuel" />
+    <meta http-equiv="content-language" content="pt-br, en-US" />
+    <meta name="rating" content="general" />
+    <meta name="robots" content="all" />
+    <!-- Icons -->
+    <link rel="shortcut icon" href="/ragnarokmvptimer/favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/ragnarokmvptimer/icons/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/ragnarokmvptimer/icons/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/ragnarokmvptimer/icons/favicon-16x16.png"
+    />
+    <!-- Facebook Tags -->
+    <meta property="og:url" content="https://ragnarok-mvp-timer.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ragnarok MVP Timer" />
+    <meta property="og:description" content="track ragnarok mvp respawn" />
+    <meta property="og:image" content="/ragnarokmvptimer/banner.png" />
+    <!-- Twitter Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="ragnarok-mvp-timer.com" />
+    <meta property="twitter:url" content="https://ragnarok-mvp-timer.com/" />
+    <meta name="twitter:title" content="Ragnarok MVP Timer" />
+    <meta name="twitter:description" content="track ragnarok mvp respawn" />
+    <meta name="twitter:image" content="/ragnarokmvptimer/banner.png" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      async
+      href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-JZ65XX6493"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
       }
-      #root {
-        background-color: #050505;
+      gtag('js', new Date());
+      gtag('config', 'G-JZ65XX6493');
+    </script>
+    <style>
+      body {
+        margin: 0;
+        background-color: #000; /* สีพื้นหลังเริ่มต้น */
+        min-height: 100vh;
+      }
+      .initial-loading-spinner {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #f89200; /* ใช้สี primary ของคุณ */
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     </style>
-    <script type="module" crossorigin src="/ragnarokmvptimer/assets/index-BK390W2f.js"></script>
-    <link rel="modulepreload" crossorigin href="/ragnarokmvptimer/assets/vendor-C23IkE0y.js">
-    <link rel="stylesheet" crossorigin href="/ragnarokmvptimer/assets/index-DlYuO1vH.css">
+    <script type="module" crossorigin src="/ragnarokmvptimer/assets/index-mVUDQvGE.js"></script>
+    <link rel="modulepreload" crossorigin href="/ragnarokmvptimer/assets/vendor-CwDLBNDw.js">
+    <link rel="stylesheet" crossorigin href="/ragnarokmvptimer/assets/index-C0n01kzD.css">
   <link rel="manifest" href="/ragnarokmvptimer/manifest.webmanifest"></head>
   <body>
-    <div id="root"></div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root" style="display: none;"></div>
     <div id="modal-root"></div>
+    <div id="initial-loading" class="initial-loading-spinner"></div>
+
+    <script>
+      // ซ่อน initial spinner เมื่อ React โหลดเสร็จ
+      window.addEventListener('load', () => {
+        const root = document.getElementById('root');
+        const initialLoading = document.getElementById('initial-loading');
+        if (root && initialLoading) {
+          root.style.display = 'flex'; // หรือ block, ตาม display ของ root
+          initialLoading.style.display = 'none';
+        }
+      });
+    </script>
   </body>
 </html>
