@@ -18,7 +18,7 @@ import { Footer } from './components/Footer';
 
 import { useSettings } from './contexts/SettingsContext';
 import { MvpProvider } from './contexts/MvpsContext';
-import { useNotification, useKey } from './hooks';
+import { useNotification } from './hooks';
 import { useTheme } from './hooks';
 
 import { LOCALES } from './locales';
@@ -27,6 +27,30 @@ import { messages } from './locales/messages';
 const APP_VERSION = '2'; // Define the current version of the application
 
 export default function App() {
+  // Handle Fullscreen Toggles for Tauri
+  useEffect(() => {
+    const handleFullscreenToggle = async (e: KeyboardEvent) => {
+      // F11 or Alt+Enter
+      if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
+        // Only run if we are in Tauri environment
+        if (window.__TAURI_INTERNALS__) {
+          e.preventDefault();
+          try {
+            const { getCurrentWindow } = await import('@tauri-apps/api/window');
+            const appWindow = getCurrentWindow();
+            const isFullscreen = await appWindow.isFullscreen();
+            await appWindow.setFullscreen(!isFullscreen);
+          } catch (err) {
+            console.error('Failed to toggle fullscreen:', err);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleFullscreenToggle);
+    return () => window.removeEventListener('keydown', handleFullscreenToggle);
+  }, []);
+
   useEffect(() => {
     const storedVersion = localStorage.getItem('appVersion');
     if (storedVersion !== APP_VERSION) {
@@ -37,7 +61,7 @@ export default function App() {
     }
   }, []);
 
-  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font, isSparkleEffectEnabled, sparkleDensity, isFallingElementsEnabled, hideActiveContent, toggleHideActiveContent } = useSettings(); // Add new setting
+  const { language, isGlassUIEnabled, isAnimatedBackgroundEnabled, isMainContentTransparent, font, isSparkleEffectEnabled, sparkleDensity, hideActiveContent, toggleHideActiveContent } = useSettings(); // Add new setting
   const { theme } = useTheme();
   const {
     hasNotificationPermission,
