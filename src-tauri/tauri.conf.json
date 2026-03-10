@@ -19,8 +19,7 @@
         "fullscreen": false,
         "maximized": true,
         "theme": "Dark",
-        "visible": false,
-        "background_color": [5, 5, 5, 255]
+        "visible": false
       }
     ],
     "security": {

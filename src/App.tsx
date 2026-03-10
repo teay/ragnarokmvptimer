@@ -24,37 +24,44 @@ import { useTheme } from './hooks';
 import { LOCALES } from './locales';
 import { messages } from './locales/messages';
 
-const APP_VERSION = "2.1"; // Update version to trigger a clean state if needed
+const APP_VERSION = "2.1"; 
 
 export default function App() {
   useEffect(() => {
-    // ฟังก์ชันสำหรับโชว์หน้าต่าง (เฉพาะใน Tauri)
-    const initTauriWindow = async () => {
-      // ตรวจสอบว่ารันอยู่ใน Tauri หรือไม่ (วิธีที่ปลอดภัยที่สุด)
-      const isTauri = !!(window as any).__TAURI_INTERNALS__;
-      
-      if (isTauri) {
+    // ฟังก์ชันเปิดหน้าต่างแบบปลอดภัยสำหรับ Tauri v2
+    const showWindow = async () => {
+      // เช็คว่ารันอยู่ใน Tauri หรือไม่
+      if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
         try {
           const { getCurrentWindow } = await import('@tauri-apps/api/window');
           const appWindow = getCurrentWindow();
-          // รอให้ React render กิ่งก้านสาขาเสร็จก่อนแวบหนึ่ง
+          
+          // รอให้ CSS ใน index.html ทำงานและ React render เสร็จ
           setTimeout(async () => {
             await appWindow.show();
-          }, 300);
-        } catch (e) {
-          console.error("Failed to show Tauri window", e);
+            await appWindow.focus();
+          }, 500);
+        } catch (error) {
+          console.error("Tauri API Error:", error);
         }
       }
     };
 
-    initTauriWindow();
+    showWindow();
   }, []);
 
   useEffect(() => {
     const handleFullscreenToggle = async (e: KeyboardEvent) => {
       if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
         e.preventDefault();
-        // Skip fullscreen toggle if not in Tauri
+        if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
+          try {
+            const { getCurrentWindow } = await import('@tauri-apps/api/window');
+            const appWindow = getCurrentWindow();
+            const isFullscreen = await appWindow.isFullscreen();
+            await appWindow.setFullscreen(!isFullscreen);
+          } catch (e) {}
+        }
       }
     };
 
@@ -65,9 +72,6 @@ export default function App() {
   useEffect(() => {
     const storedVersion = localStorage.getItem("appVersion");
     if (storedVersion !== APP_VERSION) {
-      console.log("New app version detected, updating storage.");
-      // Instead of clearing everything, just update the version
-      // Or if you MUST clear, do it without a forced reload if possible
       localStorage.setItem("appVersion", APP_VERSION);
     }
   }, []);
@@ -80,14 +84,13 @@ export default function App() {
     font,
     isSparkleEffectEnabled,
     sparkleDensity,
-    isFallingElementsEnabled,
     hideActiveContent,
     toggleHideActiveContent,
-    toggleShowMvpMap, // Add toggleShowMvpMap
+    toggleShowMvpMap,
   } = useSettings();
   const { theme } = useTheme();
 
-  useKey('m', toggleShowMvpMap); // Add shortcut for map toggle
+  useKey('m', toggleShowMvpMap);
   const {
     hasNotificationPermission,
     isNotificationPermissionDenied,
@@ -124,14 +127,13 @@ export default function App() {
         html.classList.remove('non-glass-ui');
       }
 
-      // Add/remove class for main content transparency
       if (isMainContentTransparent) {
         html.classList.add('transparent-main-content');
       } else {
         html.classList.remove('transparent-main-content');
       }
     }
-  }, [isGlassUIEnabled, isMainContentTransparent]); // Add isMainContentTransparent to dependencies
+  }, [isGlassUIEnabled, isMainContentTransparent]);
 
   useEffect(() => {
     const html = document.querySelector('html');
@@ -149,8 +151,8 @@ export default function App() {
 
   return (
     <>
-      {isAnimatedBackgroundEnabled && <LuminousParticlesBackground />} {/* Conditionally render */}
-      {isSparkleEffectEnabled && <SparkleEffect count={sparkleDensity} />} {/* Conditionally render SparkleEffect */}
+      {isAnimatedBackgroundEnabled && <LuminousParticlesBackground />}
+      {isSparkleEffectEnabled && <SparkleEffect count={sparkleDensity} />}
       <IntlProvider
         messages={messages[language]}
         locale={language}
