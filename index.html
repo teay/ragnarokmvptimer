@@ -16,57 +16,22 @@
     <meta name="rating" content="general" />
     <meta name="robots" content="all" />
     
-    <!-- Icons with Relative Paths -->
+    <!-- Use relative paths (no leading slash) -->
     <link rel="shortcut icon" href="favicon.ico" />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="icons/apple-touch-icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="icons/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="icons/favicon-16x16.png"
-    />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      async
-      href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link async href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
-    <!-- Smart Manifest Link -->
-    <script>
-      (function() {
-        const manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        // Check if we are in Tauri or local dev vs GitHub Pages
-        const isTauri = !!window.__TAURI_INTERNALS__ || window.location.protocol === 'tauri:' || window.location.protocol === 'asset:';
-        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        
-        if (isTauri || isLocalDev) {
-          manifestLink.href = 'manifest.webmanifest';
-        } else {
-          manifestLink.href = '/ragnarokmvptimer/manifest.webmanifest';
-        }
-        document.head.appendChild(manifestLink);
-      })();
-    </script>
-
     <style>
       body {
         margin: 0;
-        background-color: #050505; /* Deep black to prevent white flash */
+        background-color: #050505; /* prevent white flash */
         min-height: 100vh;
         overflow-x: hidden;
       }
@@ -97,22 +62,18 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     
-    <!-- No display:none here to prevent permanent black screen if JS fails -->
     <div id="root"></div>
     <div id="modal-root"></div>
     <div id="initial-loading" class="initial-loading-spinner"></div>
 
-    <script type="module" src="/src/index.tsx"></script>
+    <!-- Essential: Remove leading slash for local/tauri portability -->
+    <script type="module" src="src/index.tsx"></script>
     
     <script>
-      // Hide initial spinner once everything is loaded
       window.addEventListener('load', () => {
         const initialLoading = document.getElementById('initial-loading');
-        if (initialLoading) {
-          initialLoading.style.display = 'none';
-        }
+        if (initialLoading) initialLoading.style.display = 'none';
       });
-      // Safety timeout: hide spinner after 5 seconds anyway
       setTimeout(() => {
         const initialLoading = document.getElementById('initial-loading');
         if (initialLoading) initialLoading.style.display = 'none';

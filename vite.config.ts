@@ -7,10 +7,10 @@ import wyw from '@wyw-in-js/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
+  // Use relative base path (./) for EVERYTHING in production.
+  // This is the most portable way (works for GitHub Pages and Tauri).
   const isProduction = mode === 'production';
-  const isTauri = !!process.env.TAURI_PLATFORM;
-  // GitHub Pages: /ragnarokmvptimer/, Local dev: /, Tauri Prod: ./
-  const base = isProduction ? (isTauri ? './' : '/ragnarokmvptimer/') : '/';
+  const base = isProduction ? './' : '/';
 
   return {
     base: base,
@@ -57,12 +57,6 @@ export default defineConfig(({ command, mode }) => {
           display: 'standalone',
           theme_color: '#f89200',
           background_color: '#F6F8FA',
-          related_applications: [
-            {
-              platform: 'web',
-              url: 'https://teay.github.io/ragnarokmvptimer/',
-            },
-          ],
           icons: [
             {
               src: 'icons/favicon-16x16.png',
