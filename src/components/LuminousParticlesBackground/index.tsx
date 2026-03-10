@@ -22,7 +22,10 @@ interface Particle {
 }
 
 // Leaf image paths from FallingElements
-const leafImagePaths = Array.from({ length: 16 }).map((_, i) => `/ragnarokmvptimer/assets/leaves/leaf${i + 1}.png`);
+// Determine base path for assets: handle GitHub Pages vs local dev/tauri
+const isProd = window.location.hostname !== 'localhost';
+const assetBase = isProd ? '/ragnarokmvptimer' : '';
+const leafImagePaths = Array.from({ length: 16 }).map((_, i) => `${assetBase}/assets/leaves/leaf${i + 1}.png`);
 
 interface LeafParticle {
   x: number;
