@@ -13,13 +13,14 @@
     "windows": [
       {
         "title": "Ragnarok MVP Timer",
-        "width": 1200,
+        "width": 1400,
         "height": 1000,
         "resizable": true,
         "fullscreen": false,
         "maximized": false,
         "theme": "Dark",
-        "visible": true
+        "visible": true,
+        "center": true
       }
     ],
     "security": {
