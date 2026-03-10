@@ -8,8 +8,9 @@ import wyw from '@wyw-in-js/vite';
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   const isProduction = mode === 'production';
-  // Use /ragnarokmvptimer/ for GitHub Pages production build, / for dev or tauri
-  const base = isProduction && !process.env.TAURI_PLATFORM ? '/ragnarokmvptimer/' : '/';
+  const isTauri = !!process.env.TAURI_PLATFORM;
+  // GitHub Pages: /ragnarokmvptimer/, Local dev: /, Tauri Prod: ./
+  const base = isProduction ? (isTauri ? './' : '/ragnarokmvptimer/') : '/';
 
   return {
     base: base,
