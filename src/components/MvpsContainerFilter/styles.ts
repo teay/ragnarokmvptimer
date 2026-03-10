@@ -55,7 +55,7 @@ export const SearchInput = styled.input`
   }
 `;
 
-export const ClearButton = styled(XCircle)<{ visibility: string }>`
+export const ClearButton = styled(XCircle)`
   position: absolute;
   right: 10px;
   top: 50%;
@@ -64,7 +64,7 @@ export const ClearButton = styled(XCircle)<{ visibility: string }>`
   width: 20px;
   height: 20px;
   cursor: pointer;
-  visibility: ${({ visibility }) => visibility};
+  visibility: var(--visibility, visible);
 `;
 
 export const SortContainer = styled.div`

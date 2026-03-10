@@ -1,18 +1,12 @@
 import { styled } from '@linaria/react';
 
-export type Sizes = 'sm' | 'lg';
-
-export const BtnSizes: {
-  [key in Sizes]: string;
-} = {
+export const BtnSizes = {
   sm: '15rem',
   lg: '25rem',
 };
 
-export const Button = styled.button<{
-  size?: Sizes;
-}>`
-  width: ${({ size }) => (size ? BtnSizes[size] : BtnSizes['sm'])};
+export const Button = styled.button`
+  width: var(--button-width, ${BtnSizes.sm});
   min-height: 5rem;
 
   font-weight: 600;
@@ -20,7 +14,7 @@ export const Button = styled.button<{
   border-radius: 0.8rem;
 
   color: white;
-  background-color: var(--modal_button); /* This will now use the adjusted --modal_button from Global.ts */
+  background-color: var(--modal_button);
 
   &:hover {
     opacity: 0.8;

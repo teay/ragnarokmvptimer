@@ -1,20 +1,7 @@
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import dayjs from 'dayjs';
 import { Container, Segment, Separator, Spacer } from './styles';
-
-interface SegmentedDateTimePickerProps {
-  value: Date;
-  onChange: (date: Date) => void;
-  autoFocus?: boolean;
-}
-
-interface DateSegment {
-  value: string;
-  max: number;
-  min: number;
-  length: number;
-  name: 'day' | 'month' | 'year' | 'hour' | 'minute';
-}
+import { SegmentedDateTimePickerProps, DateSegment } from './types';
 
 export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateTimePickerProps>(({
   value,
@@ -41,8 +28,10 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   useEffect(() => {
     if (autoFocus) {
       const timeout = setTimeout(() => {
-        refs.day.current?.focus();
-        refs.day.current?.select();
+        if (refs.day.current) {
+          refs.day.current.focus();
+          refs.day.current.select();
+        }
       }, 150);
       return () => clearTimeout(timeout);
     }
@@ -79,22 +68,21 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       if (prevParts[part]) {
         e.preventDefault();
         const prevRef = refs[prevParts[part] as keyof typeof refs];
-        prevRef.current?.focus();
-        prevRef.current?.select();
+        if (prevRef.current) {
+          prevRef.current.focus();
+          prevRef.current.select();
+        }
       }
     } else if (e.key === 'ArrowRight' && (e.target as HTMLInputElement).selectionEnd === (e.target as HTMLInputElement).value.length) {
       const nextParts: Record<string, any> = { day: 'month', month: 'year', year: 'hour', hour: 'minute' };
       if (nextParts[part]) {
         e.preventDefault();
         const nextRef = refs[nextParts[part] as keyof typeof refs];
-        nextRef.current?.focus();
-        nextRef.current?.select();
+        if (nextRef.current) {
+          nextRef.current.focus();
+          nextRef.current.select();
+        }
       }
-    } else if (e.key === 'Enter') {
-      // Allow enter to be handled by the form/modal
-    } else if (e.key !== 'Tab' && e.key !== 'Backspace' && e.key !== 'Delete' && !/^\d$/.test(e.key)) {
-       // Stop other keys but allow essential ones
-       // e.stopPropagation(); // Be careful with this
     }
   };
 
@@ -113,8 +101,10 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
         const nextParts: Record<string, any> = { day: 'month', month: 'year', year: 'hour', hour: 'minute' };
         if (nextParts[part]) {
           setTimeout(() => {
-            refs[nextParts[part] as keyof typeof refs].current?.focus();
-            refs[nextParts[part] as keyof typeof refs].current?.select();
+            if (refs[nextParts[part] as keyof typeof refs].current) {
+              refs[nextParts[part] as keyof typeof refs].current?.focus();
+              refs[nextParts[part] as keyof typeof refs].current?.select();
+            }
           }, 10);
         }
       }

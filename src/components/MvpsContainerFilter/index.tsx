@@ -46,7 +46,7 @@ export function MvpsContainerFilter({
         <ClearButton
           onClick={() => handleQuery('')}
           title='Clear current search'
-          visibility={searchQuery ? 'visible' : 'hidden'}
+          style={{ '--visibility': searchQuery ? 'visible' : 'hidden' } as React.CSSProperties}
         />
       </SearchContainer>
 
