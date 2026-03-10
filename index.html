@@ -2,15 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/ragnarokmvptimer/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
       content="WebApp to track Ragnarok MVP respawn"
     />
-    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
-    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/ragnarokmvptimer/icons/apple-touch-icon.png" />
+    
+    <!-- Dynamic Manifest Path based on environment -->
+    <script>
+      (function() {
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        // GitHub Pages production: /ragnarokmvptimer/manifest.webmanifest
+        // Local dev: /manifest.webmanifest
+        const isProd = window.location.hostname !== 'localhost';
+        manifestLink.href = isProd ? '/ragnarokmvptimer/manifest.webmanifest' : '/manifest.webmanifest';
+        document.head.appendChild(manifestLink);
+      })();
+    </script>
+
     <title>Ragnarok MVP Timer</title>
     <style>
       /* กำหนดสีพื้นหลังเริ่มต้นให้เป็นสีมืด เพื่อป้องกันหน้าจอขาวตอนโหลด */
@@ -25,10 +38,10 @@
         background-color: #050505;
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-BXCzI9ru.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/vendor-C23IkE0y.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-DlYuO1vH.css">
-  <link rel="manifest" href="./manifest.webmanifest"></head>
+    <script type="module" crossorigin src="/ragnarokmvptimer/assets/index-BK390W2f.js"></script>
+    <link rel="modulepreload" crossorigin href="/ragnarokmvptimer/assets/vendor-C23IkE0y.js">
+    <link rel="stylesheet" crossorigin href="/ragnarokmvptimer/assets/index-DlYuO1vH.css">
+  <link rel="manifest" href="/ragnarokmvptimer/manifest.webmanifest"></head>
   <body>
     <div id="root"></div>
     <div id="modal-root"></div>
