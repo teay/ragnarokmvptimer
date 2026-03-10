@@ -15,38 +15,27 @@
     <meta http-equiv="content-language" content="pt-br, en-US" />
     <meta name="rating" content="general" />
     <meta name="robots" content="all" />
-    <!-- Icons -->
-    <link rel="shortcut icon" href="/favicon.ico" />
+    
+    <!-- Icons with Relative Paths -->
+    <link rel="shortcut icon" href="favicon.ico" />
     <link
       rel="apple-touch-icon"
       sizes="180x180"
-      href="/icons/apple-touch-icon.png"
+      href="icons/apple-touch-icon.png"
     />
     <link
       rel="icon"
       type="image/png"
       sizes="32x32"
-      href="/icons/favicon-32x32.png"
+      href="icons/favicon-32x32.png"
     />
     <link
       rel="icon"
       type="image/png"
       sizes="16x16"
-      href="/icons/favicon-16x16.png"
+      href="icons/favicon-16x16.png"
     />
-    <!-- Facebook Tags -->
-    <meta property="og:url" content="https://ragnarok-mvp-timer.com/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Ragnarok MVP Timer" />
-    <meta property="og:description" content="track ragnarok mvp respawn" />
-    <meta property="og:image" content="/banner.png" />
-    <!-- Twitter Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta property="twitter:domain" content="ragnarok-mvp-timer.com" />
-    <meta property="twitter:url" content="https://ragnarok-mvp-timer.com/" />
-    <meta name="twitter:title" content="Ragnarok MVP Timer" />
-    <meta name="twitter:description" content="track ragnarok mvp respawn" />
-    <meta name="twitter:image" content="/banner.png" />
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -55,23 +44,35 @@
       href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-JZ65XX6493"
-    ></script>
+    
+    <!-- Smart Manifest Link -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag('js', new Date());
-      gtag('config', 'G-JZ65XX6493');
+      (function() {
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        // Check if we are in Tauri or local dev vs GitHub Pages
+        const isTauri = !!window.__TAURI_INTERNALS__ || window.location.protocol === 'tauri:' || window.location.protocol === 'asset:';
+        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        if (isTauri || isLocalDev) {
+          manifestLink.href = 'manifest.webmanifest';
+        } else {
+          manifestLink.href = '/ragnarokmvptimer/manifest.webmanifest';
+        }
+        document.head.appendChild(manifestLink);
+      })();
     </script>
+
     <style>
       body {
         margin: 0;
-        background-color: #000; /* สีพื้นหลังเริ่มต้น */
+        background-color: #050505; /* Deep black to prevent white flash */
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      #root {
+        display: flex;
+        flex-direction: column;
         min-height: 100vh;
       }
       .initial-loading-spinner {
@@ -79,12 +80,13 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        border: 8px solid #f3f3f3;
-        border-top: 8px solid #f89200; /* ใช้สี primary ของคุณ */
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top: 4px solid #f89200;
         border-radius: 50%;
-        width: 60px;
-        height: 60px;
+        width: 40px;
+        height: 40px;
         animation: spin 1s linear infinite;
+        z-index: 9999;
       }
       @keyframes spin {
         0% { transform: rotate(0deg); }
@@ -94,21 +96,27 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root" style="display: none;"></div>
+    
+    <!-- No display:none here to prevent permanent black screen if JS fails -->
+    <div id="root"></div>
     <div id="modal-root"></div>
     <div id="initial-loading" class="initial-loading-spinner"></div>
-    <script type="module" src="src/index.tsx"></script>
 
+    <script type="module" src="/src/index.tsx"></script>
+    
     <script>
-      // ซ่อน initial spinner เมื่อ React โหลดเสร็จ
+      // Hide initial spinner once everything is loaded
       window.addEventListener('load', () => {
-        const root = document.getElementById('root');
         const initialLoading = document.getElementById('initial-loading');
-        if (root && initialLoading) {
-          root.style.display = 'flex'; // หรือ block, ตาม display ของ root
+        if (initialLoading) {
           initialLoading.style.display = 'none';
         }
       });
+      // Safety timeout: hide spinner after 5 seconds anyway
+      setTimeout(() => {
+        const initialLoading = document.getElementById('initial-loading');
+        if (initialLoading) initialLoading.style.display = 'none';
+      }, 5000);
     </script>
   </body>
 </html>
