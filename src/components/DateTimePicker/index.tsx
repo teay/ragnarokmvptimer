@@ -7,9 +7,9 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   const { value, onChange, autoFocus = true } = props;
   const [date, setDate] = useState(dayjs(value));
   
-  const currentYear = dayjs().year();
-  const MIN_YEAR = currentYear - 100;
-  const MAX_YEAR = currentYear + 100;
+  // กำหนดช่วงปีที่สมเหตุสมผล (2020 - 2035)
+  const MIN_YEAR = 2020;
+  const MAX_YEAR = 2035;
 
   const [displayValues, setDisplayValues] = useState({
     day: dayjs(value).format('DD'),
@@ -63,12 +63,10 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     switch (part) {
       case 'month':
         if (num > 12) num = 12;
-        if (num < 1 && val.length === 2) num = 1;
         break;
       case 'day':
         const maxDays = date.daysInMonth();
         if (num > maxDays) num = maxDays;
-        if (num < 1 && val.length === 2) num = 1;
         break;
       case 'hour':
         if (num > 23) num = 23;
@@ -77,16 +75,12 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
         if (num > 59) num = 59;
         break;
       case 'year':
-        // Prevent typing year way outside the range immediately
-        if (val.length >= 4) {
-          if (num > MAX_YEAR) {
-            alert(`Year cannot be more than ${MAX_YEAR}`);
-            num = MAX_YEAR;
-          } else if (num < MIN_YEAR) {
-            // Only alert if they finished typing 4 digits and it's too low
-            alert(`Year cannot be less than ${MIN_YEAR}`);
-            num = MIN_YEAR;
-          }
+        // ป้องกันการพิมพ์ปีที่โดดไปไกลเกิน (ถ้าพิมพ์ตัวแรกไม่ใช่ 2 ให้ปัดเป็น 2 ทันที)
+        if (val.length === 1 && num !== 2) num = 2;
+        // ถ้าพิมพ์ครบ 4 หลักแล้วเกินกำหนด ให้ปัดกลับมา
+        if (val.length === 4) {
+          if (num > MAX_YEAR) num = MAX_YEAR;
+          if (num < MIN_YEAR) num = MIN_YEAR;
         }
         break;
     }
@@ -116,6 +110,7 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       const unit = part === 'day' ? 'day' : part;
       const nextDate = e.key === 'ArrowUp' ? date.add(1, unit as any) : date.subtract(1, unit as any);
       
+      // บังคับไม่ให้ลูกศรกดปีเกินช่วงที่กำหนด
       if (nextDate.year() > MAX_YEAR || nextDate.year() < MIN_YEAR) return;
 
       const newValues = {
@@ -189,13 +184,8 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
         if (num > 12) num = 12;
         if (num < 1) num = 1;
       } else if (part === 'year') {
-        if (num < MIN_YEAR) {
-          alert(`Year cannot be less than ${MIN_YEAR}`);
-          num = MIN_YEAR;
-        } else if (num > MAX_YEAR) {
-          alert(`Year cannot be more than ${MAX_YEAR}`);
-          num = MAX_YEAR;
-        }
+        if (num < MIN_YEAR) num = MIN_YEAR;
+        if (num > MAX_YEAR) num = MAX_YEAR;
       }
 
       const finalVal = num.toString().padStart(maxLength, '0');
