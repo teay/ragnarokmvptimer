@@ -5,16 +5,18 @@ export const Container = styled.div`
   align-items: center;
   justify-content: center;
   background-color: var(--filterSearch_bg);
-  border: 1px solid var(--modal_datePicker_border);
-  border-radius: 4px;
-  padding: 10px;
+  border: 2px solid var(--modal_datePicker_border);
+  border-radius: 6px;
+  padding: 12px;
   width: 100%;
   color: var(--text);
   font-family: inherit;
-  font-size: 1.8rem;
+  font-size: 2rem;
+  transition: all 0.2s ease-in-out;
 
   &:focus-within {
-    border-color: var(--filterSearch_border_focus);
+    border-color: var(--primary);
+    box-shadow: 0 0 8px rgba(var(--primary-rgb, 85, 67, 207), 0.4);
   }
 `;
 
@@ -25,24 +27,33 @@ export const Segment = styled.input`
   font-family: inherit;
   font-size: inherit;
   text-align: center;
-  width: 2.5rem;
-  padding: 0;
+  width: 3rem;
+  padding: 2px;
   outline: none;
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  &:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--primary);
+    font-weight: bold;
+  }
 
   &.year {
-    width: 4.5rem;
+    width: 5.5rem;
   }
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.2);
   }
 `;
 
 export const Separator = styled.span`
-  margin: 0 2px;
-  opacity: 0.6;
+  margin: 0 4px;
+  opacity: 0.5;
+  font-weight: bold;
 `;
 
 export const Spacer = styled.div`
-  width: 15px;
+  width: 20px;
 `;

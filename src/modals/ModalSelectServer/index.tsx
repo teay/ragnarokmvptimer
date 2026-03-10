@@ -18,10 +18,17 @@ const ButtonBase = styled.button`
   border-radius: 0.8rem;
   color: white;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
+  outline: none;
 
   &:hover {
     opacity: 0.8;
+  }
+
+  &:focus-visible {
+    outline: 3px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   }
 
   &:disabled {
