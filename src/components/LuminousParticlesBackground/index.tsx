@@ -312,7 +312,7 @@ const LuminousParticlesBackground: React.FC = () => {
             leaf.vy = Math.random() * 0.5 + 0.5;
             leaf.rotation = Math.random() * 360;
             leaf.vRotation = Math.random() * 1 - 0.5;
-            leaf.vx = (Eraser = (Math.random() - 0.5) * 0.2) as any;
+            leaf.vx = (Math.random() - 0.5) * 0.2;
             leaf.bounceCount = 0;
             leaf.maxBounces = Math.floor(Math.random() * 3) + 3;
           }
