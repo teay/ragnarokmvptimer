@@ -28,18 +28,6 @@ const APP_VERSION = "2.1";
 
 export default function App() {
   useEffect(() => {
-    const handleFullscreenToggle = async (e: KeyboardEvent) => {
-      if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
-        e.preventDefault();
-        // Skip fullscreen toggle logic if not in Tauri or complex
-      }
-    };
-
-    window.addEventListener('keydown', handleFullscreenToggle);
-    return () => window.removeEventListener('keydown', handleFullscreenToggle);
-  }, []);
-
-  useEffect(() => {
     const storedVersion = localStorage.getItem("appVersion");
     if (storedVersion !== APP_VERSION) {
       localStorage.setItem("appVersion", APP_VERSION);
@@ -119,8 +107,8 @@ export default function App() {
     }
   }, [font]);
 
-  // Safety check for translations
-  const currentMessages = messages[language] || messages[LOCALES.ENGLISH];
+  // ระบบป้องกันแอป Crash: ถ้าหาชุดคำแปลของภาษาที่เลือกไม่เจอ ให้ใช้ภาษาอังกฤษแทน
+  const currentMessages = messages[language as keyof typeof messages] || messages[LOCALES.ENGLISH];
 
   return (
     <>
