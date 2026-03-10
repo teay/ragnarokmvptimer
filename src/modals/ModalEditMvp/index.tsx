@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import dayjs from 'dayjs';
 
@@ -10,6 +10,7 @@ import { ModalBase } from '../ModalBase';
 import { MvpSprite } from '../../components/MvpSprite';
 import { Map } from '../../components/Map';
 import { ModalSelectMap } from '../ModalSelectMap';
+import { SegmentedDateTimePicker } from '../../components/DateTimePicker';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
@@ -23,7 +24,6 @@ import {
   Optional,
   Footer,
   ChangeMapButton,
-  DateTimePicker,
 } from './styles';
 
 export function ModalEditMvp() {
@@ -32,20 +32,11 @@ export function ModalEditMvp() {
   // ใน ModalEditMvp/index.tsx
   const { killMvp, updateMvp, editingMvp: mvp, closeEditMvpModal } = useMvpsContext();
   const { animatedSprites } = useSettings();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const [newTime, setNewTime] = useState<Date | null>(
     mvp.deathTime || new Date()
   );
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, []);
   const [selectedMap, setSelectedMap] = useState<string>(mvp.deathMap || '');
   const [markCoordinates, setMarkCoordinates] = useState<IMapMark>({
     x: -1,
@@ -107,13 +98,9 @@ export function ModalEditMvp() {
           <FormattedMessage id='when_was_killed' />
         </Question>
 
-        <DateTimePicker
-          ref={inputRef}
-          type='datetime-local'
-          value={dayjs(newTime).format('YYYY-MM-DDTHH:mm')}
-          min={dayjs().subtract(4, 'days').format('YYYY-MM-DDTHH:mm')}
-          max={dayjs().add(1, 'days').format('YYYY-MM-DDTHH:mm')}
-          onChange={(e) => setNewTime(dayjs(e.target.value).toDate())}
+        <SegmentedDateTimePicker
+          value={newTime || new Date()}
+          onChange={setNewTime}
         />
 
         {selectedMap && (

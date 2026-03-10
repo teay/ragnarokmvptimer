@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import dayjs from 'dayjs';
 
@@ -8,6 +8,7 @@ import { useMvpsContext } from '@/contexts/MvpsContext';
 
 import { ModalBase } from '../ModalBase';
 import { MvpSprite } from '../../components/MvpSprite';
+import { SegmentedDateTimePicker } from '../../components/DateTimePicker';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
@@ -18,27 +19,16 @@ import {
   Name,
   Question,
   Footer,
-  DateTimePicker,
 } from './styles';
 
 export function ModalEditTime() {
   useScrollBlock(true);
   const { updateMvp, editingTimeMvp: mvp, closeEditTimeMvpModal } = useMvpsContext();
   const { animatedSprites } = useSettings();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const [newTime, setNewTime] = useState<Date | null>(
     mvp?.deathTime || new Date()
   );
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, []);
 
   if (!mvp) return null;
 
@@ -65,16 +55,9 @@ export function ModalEditTime() {
           <FormattedMessage id='when_was_killed' />
         </Question>
 
-        <DateTimePicker
-          ref={inputRef}
-          type='datetime-local'
-          value={dayjs(newTime).format('YYYY-MM-DDTHH:mm')}
-          onChange={(e) => {
-            const val = e.target.value;
-            if (val) {
-              setNewTime(dayjs(val).toDate());
-            }
-          }}
+        <SegmentedDateTimePicker
+          value={newTime || new Date()}
+          onChange={setNewTime}
         />
 
         <Footer>

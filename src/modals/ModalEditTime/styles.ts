@@ -75,21 +75,6 @@ export const Question = styled.span`
   align-items: center;
 `;
 
-export const DateTimePicker = styled.input`
-  text-align: center;
-  font-size: 1.8rem;
-  border-radius: 4px;
-  border: 1px solid var(--modal_datePicker_border);
-  padding: 10px;
-  width: 100%;
-  background-color: var(--filterSearch_bg);
-  color: var(--text);
-
-  &::-webkit-calendar-picker-indicator {
-    filter: invert(var(--calendar_icon_invert, 0));
-  }
-`;
-
 export const Footer = styled.footer`
   display: flex;
   width: 100%;
