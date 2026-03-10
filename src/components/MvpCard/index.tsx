@@ -42,10 +42,11 @@ export function MvpCard({ mvp }: MvpCardProps) {
     resetMvpTimer,
     removeMvpByMap,
     setEditingMvp,
+    setEditingTimeMvp,
     editingMvp,
     setKillingMvp,
   } = useMvpsContext();
-  const { respawnAsCountdown, animatedSprites } = useSettings();
+  const { respawnAsCountdown, animatedSprites, showMvpMap, toggleShowMvpMap } = useSettings();
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
@@ -91,36 +92,40 @@ export function MvpCard({ mvp }: MvpCardProps) {
           />
         )}
 
-        <MapWrapper onClick={() => isActive && setIsMapModalOpen(true)}>
-          <MvpMap
-            mapName={isActive ? mvp.deathMap : mvp.spawn[0].mapname}
-            coordinates={isActive ? mvp.deathPosition : undefined}
-          />
-        </MapWrapper>
-
         <BottomControls>
-          <MapName>
-            <FormattedMessage id='map' />
-            {
-}
+          <MapName onClick={toggleShowMvpMap}>
+            <FormattedMessage id='map' />: {' '}
             <Bold>{isActive ? mvp.deathMap : mvp.spawn[0].mapname}</Bold>
           </MapName>
 
+          {showMvpMap && (
+            <MapWrapper onClick={() => isActive && setIsMapModalOpen(true)}>
+              <MvpMap
+                mapName={isActive ? mvp.deathMap : mvp.spawn[0].mapname}
+                coordinates={isActive ? mvp.deathPosition : undefined}
+              />
+            </MapWrapper>
+          )}
+
           {isActive ? (
             <>
-              <Tombstone>
+              <Tombstone
+                onClick={() => setEditingTimeMvp(mvp)}
+                title={GetTranslateText('edit_mvp')}
+              >
                 <FormattedMessage id='when_was_mvp_killed' />
                 <br />
                 <Bold>{dayjs(mvp.deathTime).format('DD/MM/YYYY HH:mm')}</Bold>
+                <Edit2 size={18} style={{ marginLeft: 8, verticalAlign: 'middle', opacity: 0.8 }} />
               </Tombstone>
 
               <Controls>
-                <Control onClick={() => { resetMvpTimer(mvp); window.scrollTo(0, 0); }} title='Reset timer'>
+                <Control onClick={() => resetMvpTimer(mvp)} title='Reset timer'>
                   <RefreshCcw />
                   <ControlText><FormattedMessage id='reset_timer' /></ControlText>
                 </Control>
                 <Control
-                  onClick={() => { removeMvpByMap(mvp.id, mvp.deathMap); window.scrollTo(0, 0); }}
+                  onClick={() => removeMvpByMap(mvp.id, mvp.deathMap)}
                   title='Remove this mvp'
                 >
                   <Trash2 />

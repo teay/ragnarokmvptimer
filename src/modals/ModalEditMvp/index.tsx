@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import dayjs from 'dayjs';
+import { styled } from '@linaria/react';
 
 import { useScrollBlock, useKey } from '@/hooks';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -10,10 +11,9 @@ import { ModalBase } from '../ModalBase';
 import { MvpSprite } from '../../components/MvpSprite';
 import { Map } from '../../components/Map';
 import { ModalSelectMap } from '../ModalSelectMap';
+import { SegmentedDateTimePicker } from '../../components/DateTimePicker';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
-import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
-
 
 import {
   Modal,
@@ -22,29 +22,66 @@ import {
   Question,
   Optional,
   Footer,
-  ChangeMapButton,
-  DateTimePicker,
 } from './styles';
+
+const ButtonBase = styled.button`
+  min-height: 5rem;
+  font-weight: 600;
+  font-size: 1.8rem;
+  border-radius: 0.8rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:focus-visible {
+    outline: 3px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const PrimaryButton = styled(ButtonBase)`
+  width: 25rem;
+  background-color: var(--modal_button);
+`;
+
+const ChangeMapButton = styled(ButtonBase)`
+  width: 25rem;
+  background: transparent;
+  border: 1px solid var(--modal_changeMap_border);
+  color: var(--modal_changeMap_text);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+`;
 
 export function ModalEditMvp() {
   useScrollBlock(true);
-  // const { killMvp, editingMvp: mvp, closeEditMvpModal } = useMvpsContext();
-  // ใน ModalEditMvp/index.tsx
   const { killMvp, updateMvp, editingMvp: mvp, closeEditMvpModal } = useMvpsContext();
   const { animatedSprites } = useSettings();
 
   const [newTime, setNewTime] = useState<Date | null>(
     mvp.deathTime || new Date()
   );
+
   const [selectedMap, setSelectedMap] = useState<string>(mvp.deathMap || '');
   const [markCoordinates, setMarkCoordinates] = useState<IMapMark>({
     x: -1,
     y: -1,
   });
 
-  const canChangeMap = !mvp.deathMap;
   const hasMoreThanOneMap = mvp.spawn.length > 1;
-
 
   function handleConfirm() {
     if (!selectedMap) return;
@@ -56,10 +93,8 @@ export function ModalEditMvp() {
     };
   
     if (mvp.deathTime) {
-      // ถ้ามี deathTime แสดงว่าเป็น MVP ที่มีอยู่แล้ว ให้อัพเดต
       updateMvp(updatedMvp, newTime);
     } else {
-      // ถ้าไม่มี deathTime แสดงว่าเป็น MVP ใหม่ ให้ใช้ killMvp
       killMvp(updatedMvp, newTime);
     }
     
@@ -97,12 +132,9 @@ export function ModalEditMvp() {
           <FormattedMessage id='when_was_killed' />
         </Question>
 
-        <DateTimePicker
-          type='datetime-local'
-          value={dayjs(newTime).format('YYYY-MM-DDTHH:mm')}
-          min={dayjs().subtract(4, 'days').format('YYYY-MM-DDTHH:mm')}
-          max={dayjs().add(1, 'days').format('YYYY-MM-DDTHH:mm')}
-          onChange={(e) => setNewTime(dayjs(e.target.value).toDate())}
+        <SegmentedDateTimePicker
+          value={newTime || new Date()}
+          onChange={setNewTime}
         />
 
         {selectedMap && (
@@ -119,17 +151,16 @@ export function ModalEditMvp() {
 
         <Footer>
           {hasMoreThanOneMap && (
-            <ChangeMapButton size='lg' onClick={() => setSelectedMap('')}>
+            <ChangeMapButton onClick={() => setSelectedMap('')}>
               <FormattedMessage id='change_map' />
             </ChangeMapButton>
           )}
-          <ModalPrimaryButton
-            size='lg'
+          <PrimaryButton
             onClick={handleConfirm}
             disabled={!selectedMap || !dayjs(newTime).isValid()}
           >
             <FormattedMessage id='confirm' />
-          </ModalPrimaryButton>
+          </PrimaryButton>
         </Footer>
       </Modal>
     </ModalBase>

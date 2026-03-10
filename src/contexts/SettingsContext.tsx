@@ -1,56 +1,12 @@
-import { createContext, useContext, ReactNode, useCallback, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useCallback } from 'react';
 
 import { usePersistedState } from '@/hooks/usePersistedState';
 
-// Self-contained mock theme hook for this context
-const useTheme = () => {
-  const resetTheme = useCallback(() => {
-    // This function can be implemented later if needed. For now, it's a placeholder.
-    console.log("Theme reset requested. (Function not implemented)");
-  }, []);
-  return { resetTheme };
-};
-
-import { LOCALES } from '@/locales';
-
-const DEFAULT_THEME = 'dark';
-const RESPAWN_TIMER_SOON_THRESHOLD_MS = 1000 * 60 * 10; // 10 minutes
-const DEFAULT_LANG = LOCALES.ENGLISH;
-const DEFAULT_SERVER = 'iRO';
-
-const DEFAULT_SETTINGS = {
-  respawnAsCountdown: true,
-  hideActiveContent: false,
-  animatedSprites: false,
-  use24HourFormat: true,
-  isNotificationSoundEnabled: true,
-  isGlassUIEnabled: false,
-  isAnimatedBackgroundEnabled: true,
-  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center',
-  particleDensity: 'medium' as 'low' | 'medium' | 'high' | 'Empty', // <-- แก้ไขตรงนี้
-  particleColor: '#000000',
-  particleOpacity: 0.5,
-  waveAmplitude: 10,
-  waveLineWidth: 5,
-  waveColor: '#000000',
-  waveOpacity: 0.1,
-  animatedBackgroundColor: '#000000',
-  animatedBackgroundOpacity: 0.05,
-  isMainContentTransparent: false,
-  waveTrailColor: '#000000',
-  waveTrailOpacity: 0.1,
-  isSparkleEffectEnabled: false,
-  sparkleDensity: 50,
-  isFallingElementsEnabled: false,
-  particleEffect: 'default' as 'default' | 'gravity',
-  language: DEFAULT_LANG,
-  server: DEFAULT_SERVER,
-  font: 'Jost',
-};
-
-const LOCAL_STORAGE_THEME_KEY = 'theme';
-const LOCAL_STORAGE_SETTINGS_KEY = 'settings';
-const LOCAL_STORAGE_ACTIVE_MVPS_KEY = 'activeMvps';
+import { 
+  SERVERS, 
+  DEFAULT_SETTINGS, 
+  LOCAL_STORAGE_SETTINGS_KEY 
+} from '@/constants';
 
 interface SettingsProviderProps {
   children: ReactNode;
@@ -72,6 +28,7 @@ interface SettingsContextData {
   language: string;
   changeLanguage: (id: string) => void;
   server: string;
+  servers: string[];
   changeServer: (id: string) => void;
   font: string;
   changeFont: () => void;
@@ -85,7 +42,6 @@ interface SettingsContextData {
   changeParticleColor: (color: string) => void;
   particleOpacity: number;
   changeParticleOpacity: (opacity: number) => void;
-  // เพิ่ม 2 บรรทัดนี้
   waveAmplitude: number;
   changeWaveAmplitude: (amplitude: number) => void;
   waveLineWidth: number;
@@ -113,24 +69,17 @@ interface SettingsContextData {
   changeSparkleDensity: (density: number) => void;
   isFallingElementsEnabled: boolean;
   toggleFallingElements: () => void;
+  showMvpMap: boolean;
+  toggleShowMvpMap: () => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
 
 export function SettingsProvider({ children }: SettingsProviderProps) {
-  const { resetTheme } = useTheme();
   const [settings, setSettings] = usePersistedState(
     LOCAL_STORAGE_SETTINGS_KEY,
     DEFAULT_SETTINGS
   );
-
-  const {
-    isSparkleEffectEnabled,
-    sparkleDensity,
-    isFallingElementsEnabled,
-    particleColor,
-    waveColor,
-  } = settings;
 
   const toggleRespawnCountdown = useCallback(
     () =>
@@ -152,6 +101,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       animatedSprites: !prev.animatedSprites,
+    }));
+  }, [setSettings]);
+
+  const toggleShowMvpMap = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      showMvpMap: !prev.showMvpMap,
     }));
   }, [setSettings]);
 
@@ -214,7 +170,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   );
 
   const changeParticleDensity = useCallback(
-    (density: 'low' | 'medium' | 'high' | 'Empty') => { // <-- แก้ไขตรงนี้
+    (density: 'low' | 'medium' | 'high' | 'Empty') => {
       setSettings((prev) => ({
         ...prev,
         particleDensity: density,
@@ -399,7 +355,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           waveTrailColor: '#3f15e0',
           waveTrailOpacity: 1.0,
         };
-      } else if (theme === 'dark') {
+      } else {
+        // dark default
         return {
           ...prev,
           particleColor: '#fa0000',
@@ -419,6 +376,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     <SettingsContext.Provider
       value={{
         ...settings,
+        servers: SERVERS,
         toggleRespawnCountdown,
         toggleHideActiveContent,
         toggleAnimatedSprites,
@@ -434,12 +392,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeParticleColor,
         changeParticleOpacity,
         changeWaveAmplitude,
-        waveLineWidth: settings.waveLineWidth,
         changeWaveLineWidth,
         changeWaveColor,
         changeWaveOpacity,
         changeAnimatedBackgroundColor,
-        animatedBackgroundOpacity: settings.animatedBackgroundOpacity,
         changeAnimatedBackgroundOpacity,
         toggleMainContentTransparency,
         changeParticleEffect,
@@ -449,6 +405,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         resetColorsToThemeDefaults,
         changeWaveTrailColor,
         changeWaveTrailOpacity,
+        toggleShowMvpMap,
       }}
     >
       {children}

@@ -71,6 +71,7 @@ export const messages = {
     edit_mvp: 'Edit MVP',
     sparkle_effect: 'Sparkle Effect',
     sparkle_density: 'Sparkle Density',
+    show_mvp_map: 'Show MVP Map',
   },
   [LOCALES.PORTUGUESE]: {
     under_development: 'Em desenvolvimento',
@@ -141,5 +142,6 @@ export const messages = {
     edit_mvp: 'Editar MVP',
     sparkle_effect: 'Efeito de Brilho',
     sparkle_density: 'Densidade do Brilho',
+    show_mvp_map: 'Mostrar Mapa do MVP',
   },
 };

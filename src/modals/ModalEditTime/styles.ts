@@ -75,16 +75,9 @@ export const Question = styled.span`
   align-items: center;
 `;
 
-export const Optional = styled.span`
-  font-size: 1.4rem;
-  font-weight: 400;
-  margin-bottom: 5px;
-`;
-
 export const Footer = styled.footer`
   display: flex;
   width: 100%;
   justify-content: center;
   margin-top: 10px;
-  gap: 16px;
 `;
