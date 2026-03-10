@@ -146,6 +146,33 @@ export const ThemeButton = styled.button`
   }
 `;
 
+export const ActionButton = styled.button`
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 4px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  > svg {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
 export const ParticleEffectButton = styled.button<{ active: boolean }>`
   padding: 5px 15px;
   border: 0;
