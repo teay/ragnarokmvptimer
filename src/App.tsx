@@ -50,8 +50,9 @@ export default function App() {
   // Handle Global Shortcuts
   useEffect(() => {
     const handleGlobalShortcuts = async (e: KeyboardEvent) => {
-      // 1. Toggle MVP Maps with 'M' key
-      if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      // 1. Toggle MVP Maps with physical 'M' key (KeyM)
+      // Works even if layout is Thai (ท)
+      if (e.code === 'KeyM' && !e.ctrlKey && !e.altKey && !e.metaKey) {
         // Prevent triggering if user is typing in an input or textarea
         const target = e.target as HTMLElement;
         const isInput = target.tagName === 'INPUT' || 
@@ -64,7 +65,7 @@ export default function App() {
       }
 
       // 2. F11 or Alt+Enter for Fullscreen (Tauri Only)
-      if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
+      if (e.code === 'F11' || (e.altKey && e.code === 'Enter')) {
         if (window.__TAURI_INTERNALS__) {
           e.preventDefault();
           try {
