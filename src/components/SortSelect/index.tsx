@@ -19,6 +19,8 @@ const OPTIONS = [
 export function SortSelect({ value = 'id', onChange }: SortSwitchProps) {
   return (
     <Select
+      id="sort-select"
+      name="sort"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       aria-label='Sort mvps by his properties'

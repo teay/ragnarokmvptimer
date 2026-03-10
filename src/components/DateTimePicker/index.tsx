@@ -33,6 +33,9 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     minute: useRef<HTMLInputElement>(null),
   };
 
+  // Unique prefix for IDs
+  const idPrefix = useRef(`dt-${Math.random().toString(36).substr(2, 5)}`);
+
   // Sync with prop value
   useEffect(() => {
     if (value) {
@@ -222,26 +225,34 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
     <Container ref={containerRef}>
       <Segment
         ref={refs.day}
+        id={`${idPrefix.current}-day`}
+        name="day"
         value={displayValues.day}
         onChange={(e) => handleInputChange(e, 'day')}
         onKeyDown={(e) => handleKeyDown(e, 'day')}
         onBlur={() => handleBlur('day')}
         onFocus={(e) => (e.target as HTMLInputElement).select()}
         placeholder="DD"
+        aria-label="Day"
       />
       <Separator>/</Separator>
       <Segment
         ref={refs.month}
+        id={`${idPrefix.current}-month`}
+        name="month"
         value={displayValues.month}
         onChange={(e) => handleInputChange(e, 'month')}
         onKeyDown={(e) => handleKeyDown(e, 'month')}
         onBlur={() => handleBlur('month')}
         onFocus={(e) => (e.target as HTMLInputElement).select()}
         placeholder="MM"
+        aria-label="Month"
       />
       <Separator>/</Separator>
       <Segment
         ref={refs.year}
+        id={`${idPrefix.current}-year`}
+        name="year"
         className="year"
         value={displayValues.year}
         onChange={(e) => handleInputChange(e, 'year')}
@@ -249,26 +260,33 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
         onBlur={() => handleBlur('year')}
         onFocus={(e) => (e.target as HTMLInputElement).select()}
         placeholder="YYYY"
+        aria-label="Year"
       />
       <Spacer />
       <Segment
         ref={refs.hour}
+        id={`${idPrefix.current}-hour`}
+        name="hour"
         value={displayValues.hour}
         onChange={(e) => handleInputChange(e, 'hour')}
         onKeyDown={(e) => handleKeyDown(e, 'hour')}
         onBlur={() => handleBlur('hour')}
         onFocus={(e) => (e.target as HTMLInputElement).select()}
         placeholder="HH"
+        aria-label="Hour"
       />
       <Separator>:</Separator>
       <Segment
         ref={refs.minute}
+        id={`${idPrefix.current}-minute`}
+        name="minute"
         value={displayValues.minute}
         onChange={(e) => handleInputChange(e, 'minute')}
         onKeyDown={(e) => handleKeyDown(e, 'minute')}
         onBlur={() => handleBlur('minute')}
         onFocus={(e) => (e.target as HTMLInputElement).select()}
         placeholder="mm"
+        aria-label="Minute"
       />
     </Container>
   );

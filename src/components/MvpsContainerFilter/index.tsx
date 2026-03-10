@@ -39,9 +39,12 @@ export function MvpsContainerFilter({
       <SearchContainer>
         <SearchIcon />
         <SearchInput
+          id="search-input"
+          name="search"
           value={searchQuery}
           onChange={(e) => handleQuery(e.target.value)}
           title='Search mvps by his name or id'
+          placeholder='Search...'
         />
         <ClearButton
           onClick={() => handleQuery('')}
