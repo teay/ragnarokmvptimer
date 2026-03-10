@@ -37,7 +37,7 @@ export const DEFAULT_SETTINGS = {
   particleDensity: 'medium' as 'low' | 'medium' | 'high' | 'Empty',
   particleColor: '#fa0000',
   particleOpacity: 0.5,
-  waveAmplitude: 10,
+  waveAmplitude: 150,
   waveLineWidth: 5,
   waveColor: '#0011ff',
   waveOpacity: 0.1,
