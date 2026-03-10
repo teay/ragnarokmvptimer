@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Trash } from '@styled-icons/feather';
+import { Trash, Copy, Download } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { Switch } from '../../components/Switch';
@@ -25,6 +25,7 @@ import {
   FontButton,
   ParticleEffectButton,
   ThemeButton,
+  ActionButton,
 } from './styles';
 
 type Props = {
@@ -84,6 +85,8 @@ export function ModalSettings({ onClose }: Props) {
     changeWaveTrailColor,
     waveTrailOpacity, // ตรวจสอบให้แน่ใจว่าได้ดึงตัวแปรนี้มาอย่างถูกต้อง
     changeWaveTrailOpacity,
+    showMvpMap,
+    toggleShowMvpMap,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -100,6 +103,29 @@ export function ModalSettings({ onClose }: Props) {
 
   const confirmationTitle = GetTranslateText('clear_data_message');
   const confirmationDescription = GetTranslateText('clear_data_description');
+
+  const handleExportData = useCallback(() => {
+    const activeMvps = localStorage.getItem('activeMvps');
+    if (activeMvps) {
+      navigator.clipboard.writeText(activeMvps);
+      alert('Data copied to clipboard!');
+    } else {
+      alert('No active MVP data found.');
+    }
+  }, []);
+
+  const handleImportData = useCallback(() => {
+    const data = prompt('Paste your MVP JSON data here:');
+    if (data) {
+      try {
+        JSON.parse(data); // Validate JSON
+        localStorage.setItem('activeMvps', data);
+        window.location.reload();
+      } catch (e) {
+        alert('Invalid JSON data!');
+      }
+    }
+  }, []);
 
   function handleClearData() {
     clearData();
@@ -167,6 +193,17 @@ export function ModalSettings({ onClose }: Props) {
               <Switch
                 onChange={toggleAnimatedSprites}
                 checked={animatedSprites}
+              />
+            </Setting>
+
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='show_mvp_map' defaultMessage='Show MVP Map' />
+              </SettingName>
+
+              <Switch
+                onChange={toggleShowMvpMap}
+                checked={showMvpMap}
               />
             </Setting>
 
@@ -361,6 +398,20 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <LanguageSelector />
+            </SettingSecondary>
+
+            <SettingSecondary>
+              <SettingName>
+                <FormattedMessage id="data_management" defaultMessage="Data Management" />
+              </SettingName>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <ActionButton onClick={handleExportData} title="Copy MVP data to clipboard">
+                  <Copy /> Export
+                </ActionButton>
+                <ActionButton onClick={handleImportData} title="Paste MVP data from clipboard">
+                  <Download /> Import
+                </ActionButton>
+              </div>
             </SettingSecondary>
 
             <SettingSecondary>
