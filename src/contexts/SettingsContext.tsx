@@ -73,6 +73,8 @@ interface SettingsContextData {
   toggleShowMvpMap: () => void;
   simpleGlassUI: boolean;
   toggleSimpleGlassUI: () => void;
+  ultraLite: boolean;
+  toggleUltraLite: () => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -82,6 +84,34 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     LOCAL_STORAGE_SETTINGS_KEY,
     DEFAULT_SETTINGS
   );
+
+  const toggleUltraLite = useCallback(() => {
+    setSettings((prev) => {
+      const newValue = !prev.ultraLite;
+      
+      if (newValue) {
+        // Force Disable EVERYTHING for Ultra Lite
+        return {
+          ...prev,
+          ultraLite: true,
+          simpleGlassUI: false, // Ultra lite is more extreme than simple glass
+          isAnimatedBackgroundEnabled: false,
+          isSparkleEffectEnabled: false,
+          isFallingElementsEnabled: false,
+          animatedSprites: false,
+          particleDensity: 'Empty',
+          isGlassUIEnabled: false, // No blur
+          isMainContentTransparent: false, // Solid background
+          showMvpMap: true, // Keep functional items as requested
+        };
+      }
+      
+      return {
+        ...prev,
+        ultraLite: false,
+      };
+    });
+  }, [setSettings]);
 
   const toggleSimpleGlassUI = useCallback(() => {
     setSettings((prev) => {
@@ -130,6 +160,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       ...prev,
       animatedSprites: !prev.animatedSprites,
       simpleGlassUI: !prev.animatedSprites ? false : prev.simpleGlassUI,
+      ultraLite: !prev.animatedSprites ? false : prev.ultraLite,
     }));
   }, [setSettings]);
 
@@ -158,7 +189,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       isGlassUIEnabled: !prev.isGlassUIEnabled,
-      simpleGlassUI: prev.isGlassUIEnabled ? false : prev.simpleGlassUI, // If turning off glass UI, it's definitely not simple glass UI anymore
+      simpleGlassUI: prev.isGlassUIEnabled ? false : prev.simpleGlassUI,
+      ultraLite: !prev.isGlassUIEnabled ? false : prev.ultraLite,
     }));
   }, [setSettings]);
 
@@ -167,6 +199,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       ...prev,
       isAnimatedBackgroundEnabled: !prev.isAnimatedBackgroundEnabled,
       simpleGlassUI: !prev.isAnimatedBackgroundEnabled ? false : prev.simpleGlassUI,
+      ultraLite: !prev.isAnimatedBackgroundEnabled ? false : prev.ultraLite,
     }));
   }, [setSettings]);
 
@@ -206,6 +239,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         ...prev,
         particleDensity: density,
         simpleGlassUI: density !== 'Empty' ? false : prev.simpleGlassUI,
+        ultraLite: density !== 'Empty' ? false : prev.ultraLite,
       }));
     },
     [setSettings]
@@ -345,6 +379,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       ...prev,
       isSparkleEffectEnabled: !prev.isSparkleEffectEnabled,
       simpleGlassUI: !prev.isSparkleEffectEnabled ? false : prev.simpleGlassUI,
+      ultraLite: !prev.isSparkleEffectEnabled ? false : prev.ultraLite,
     }));
   }, [setSettings]);
 
@@ -353,6 +388,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       ...prev,
       sparkleDensity: density,
       simpleGlassUI: density > 0 ? false : prev.simpleGlassUI,
+      ultraLite: density > 0 ? false : prev.ultraLite,
     }));
   }, [setSettings]);
 
@@ -361,6 +397,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       ...prev,
       isFallingElementsEnabled: !prev.isFallingElementsEnabled,
       simpleGlassUI: !prev.isFallingElementsEnabled ? false : prev.simpleGlassUI,
+      ultraLite: !prev.isFallingElementsEnabled ? false : prev.ultraLite,
     }));
   }, [setSettings]);
 
@@ -442,6 +479,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeWaveTrailOpacity,
         toggleShowMvpMap,
         toggleSimpleGlassUI,
+        toggleUltraLite,
       }}
     >
       {children}

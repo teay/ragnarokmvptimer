@@ -50,6 +50,7 @@ export const DEFAULT_SETTINGS = {
   sparkleDensity: 50,
   isFallingElementsEnabled: true, 
   simpleGlassUI: false,
+  ultraLite: false,
   particleEffect: 'default' as 'default' | 'gravity',
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,
