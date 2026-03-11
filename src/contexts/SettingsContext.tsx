@@ -71,6 +71,8 @@ interface SettingsContextData {
   toggleFallingElements: () => void;
   showMvpMap: boolean;
   toggleShowMvpMap: () => void;
+  simpleGlassUI: boolean;
+  toggleSimpleGlassUI: () => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -80,6 +82,32 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     LOCAL_STORAGE_SETTINGS_KEY,
     DEFAULT_SETTINGS
   );
+
+  const toggleSimpleGlassUI = useCallback(() => {
+    setSettings((prev) => {
+      const newValue = !prev.simpleGlassUI;
+      
+      if (newValue) {
+        // When enabling Simple Glass UI, disable all heavy effects
+        return {
+          ...prev,
+          simpleGlassUI: true,
+          isAnimatedBackgroundEnabled: false,
+          isSparkleEffectEnabled: false,
+          isFallingElementsEnabled: false,
+          animatedSprites: false,
+          particleDensity: 'Empty',
+          isGlassUIEnabled: true,
+          isMainContentTransparent: true,
+        };
+      }
+      
+      return {
+        ...prev,
+        simpleGlassUI: false,
+      };
+    });
+  }, [setSettings]);
 
   const toggleRespawnCountdown = useCallback(
     () =>
@@ -101,6 +129,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       animatedSprites: !prev.animatedSprites,
+      simpleGlassUI: !prev.animatedSprites ? false : prev.simpleGlassUI,
     }));
   }, [setSettings]);
 
@@ -129,6 +158,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       isGlassUIEnabled: !prev.isGlassUIEnabled,
+      simpleGlassUI: prev.isGlassUIEnabled ? false : prev.simpleGlassUI, // If turning off glass UI, it's definitely not simple glass UI anymore
     }));
   }, [setSettings]);
 
@@ -136,6 +166,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       isAnimatedBackgroundEnabled: !prev.isAnimatedBackgroundEnabled,
+      simpleGlassUI: !prev.isAnimatedBackgroundEnabled ? false : prev.simpleGlassUI,
     }));
   }, [setSettings]);
 
@@ -174,6 +205,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       setSettings((prev) => ({
         ...prev,
         particleDensity: density,
+        simpleGlassUI: density !== 'Empty' ? false : prev.simpleGlassUI,
       }));
     },
     [setSettings]
@@ -312,6 +344,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       isSparkleEffectEnabled: !prev.isSparkleEffectEnabled,
+      simpleGlassUI: !prev.isSparkleEffectEnabled ? false : prev.simpleGlassUI,
     }));
   }, [setSettings]);
 
@@ -319,6 +352,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       sparkleDensity: density,
+      simpleGlassUI: density > 0 ? false : prev.simpleGlassUI,
     }));
   }, [setSettings]);
 
@@ -326,6 +360,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       isFallingElementsEnabled: !prev.isFallingElementsEnabled,
+      simpleGlassUI: !prev.isFallingElementsEnabled ? false : prev.simpleGlassUI,
     }));
   }, [setSettings]);
 
@@ -406,6 +441,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changeWaveTrailColor,
         changeWaveTrailOpacity,
         toggleShowMvpMap,
+        toggleSimpleGlassUI,
       }}
     >
       {children}
