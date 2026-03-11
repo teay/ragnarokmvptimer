@@ -72,6 +72,7 @@ export const messages = {
     sparkle_effect: 'Sparkle Effect',
     sparkle_density: 'Sparkle Density',
     show_mvp_map: 'Show MVP Map',
+    simple_glass_ui: 'Simple Glass UI (Best Performance)',
   },
   [LOCALES.PORTUGUESE]: {
     under_development: 'Em desenvolvimento',
@@ -143,5 +144,6 @@ export const messages = {
     sparkle_effect: 'Efeito de Brilho',
     sparkle_density: 'Densidade do Brilho',
     show_mvp_map: 'Mostrar Mapa do MVP',
+    simple_glass_ui: 'Interface Simples (Melhor Performance)',
   },
 };

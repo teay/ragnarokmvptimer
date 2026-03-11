@@ -49,6 +49,7 @@ export const DEFAULT_SETTINGS = {
   isSparkleEffectEnabled: false,
   sparkleDensity: 50,
   isFallingElementsEnabled: true, 
+  simpleGlassUI: false,
   particleEffect: 'default' as 'default' | 'gravity',
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,

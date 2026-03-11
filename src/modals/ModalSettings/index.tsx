@@ -87,6 +87,8 @@ export function ModalSettings({ onClose }: Props) {
     changeWaveTrailOpacity,
     showMvpMap,
     toggleShowMvpMap,
+    simpleGlassUI,
+    toggleSimpleGlassUI,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -151,6 +153,17 @@ export function ModalSettings({ onClose }: Props) {
           </Title>
 
           <SettingsContainer>
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='simple_glass_ui' defaultMessage='Simple Glass UI (Best Performance)' />
+              </SettingName>
+
+              <Switch
+                onChange={toggleSimpleGlassUI}
+                checked={simpleGlassUI}
+              />
+            </Setting>
+
             <Setting>
               <SettingName>
                 <FormattedMessage id='hide_active_content' defaultMessage='Hide Active Content' />
