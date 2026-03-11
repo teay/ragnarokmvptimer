@@ -247,13 +247,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
         if (conflictServers.length > 0) {
           setSyncConflict({ browser: browserData, file: fileData, servers: conflictServers });
         }
-      } else if (fileData && !browserData) {
-        localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(fileData));
-        const savedActiveMvps = await loadMvpsFromLocalStorage(server);
-        setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
-      } else if (!fileData && browserData) {
-        // If file doesn't exist but we have browser data, create the file!
-        await saveMvpsToWebFolder(handle, browserData);
+      } else if (!fileData) {
+        // If file doesn't exist, create it with current browser data or empty object
+        const dataToSave = browserData || {};
+        await saveMvpsToWebFolder(handle, dataToSave);
+        console.log('New sync file created in selected folder.');
       }
     }
   };
