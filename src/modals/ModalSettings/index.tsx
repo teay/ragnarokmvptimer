@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Trash, Copy, Download } from '@styled-icons/feather';
+import { Trash, Copy, Download, Folder, FolderMinus } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { Switch } from '../../components/Switch';
@@ -9,9 +9,11 @@ import { ModalWarning } from '../ModalWarning';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 
 import { useSettings } from '@/contexts/SettingsContext';
+import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useScrollBlock, useClickOutside, useKey, useTheme } from '@/hooks';
 import { clearData } from '@/utils';
 import { GetTranslateText } from '@/utils/GetTranslateText';
+import { isTauri, canUseWebFolderSync } from '@/controllers/mvp';
 
 import {
   Modal,
@@ -88,6 +90,11 @@ export function ModalSettings({ onClose }: Props) {
     showMvpMap,
     toggleShowMvpMap,
   } = useSettings();
+  const { 
+    webDirectoryHandle, 
+    connectWebFolder, 
+    disconnectWebFolder 
+  } = useMvpsContext();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
   useEffect(() => {
@@ -404,6 +411,24 @@ export function ModalSettings({ onClose }: Props) {
               <SettingName>
                 <FormattedMessage id="data_management" defaultMessage="Data Management" />
               </SettingName>
+              
+              {!isTauri() && canUseWebFolderSync() && (
+                <div style={{ marginBottom: '1.5rem', marginTop: '1rem' }}>
+                  <p style={{ fontSize: '1.2rem', marginBottom: '0.5rem', opacity: 0.8 }}>
+                    <FormattedMessage id="connect_folder_description" />
+                  </p>
+                  {!webDirectoryHandle ? (
+                    <ActionButton onClick={connectWebFolder} style={{ backgroundColor: '#3b82f6', color: 'white' }}>
+                      <Folder /> <FormattedMessage id="connect_data_folder" />
+                    </ActionButton>
+                  ) : (
+                    <ActionButton onClick={disconnectWebFolder} style={{ backgroundColor: '#ef4444', color: 'white' }}>
+                      <FolderMinus /> <FormattedMessage id="disconnect_folder" />
+                    </ActionButton>
+                  )}
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <ActionButton onClick={handleExportData} title="Copy MVP data to clipboard">
                   <Copy /> Export

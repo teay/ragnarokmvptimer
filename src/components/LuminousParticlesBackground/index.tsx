@@ -235,12 +235,18 @@ const LuminousParticlesBackground: React.FC = () => {
           offscreenCtx.fillStyle = hexToRgba(waveTrailColor, segmentOpacity);
 
           offscreenCtx.beginPath();
-          offscreenCtx.moveTo(currentSegment[0].x, currentSegment[0].y);
-          for (let j = 1; j < canvas.width; j++) {
-            offscreenCtx.lineTo(currentSegment[j].x, currentSegment[j].y);
+          if (currentSegment[0]) {
+            offscreenCtx.moveTo(currentSegment[0].x, currentSegment[0].y);
           }
-          for (let j = canvas.width - 1; j >= 0; j--) {
-            offscreenCtx.lineTo(nextSegment[j].x, nextSegment[j].y);
+          for (let j = 1; j < currentSegment.length; j++) {
+            if (currentSegment[j]) {
+              offscreenCtx.lineTo(currentSegment[j].x, currentSegment[j].y);
+            }
+          }
+          for (let j = nextSegment.length - 1; j >= 0; j--) {
+            if (nextSegment[j]) {
+              offscreenCtx.lineTo(nextSegment[j].x, nextSegment[j].y);
+            }
           }
           offscreenCtx.closePath();
           offscreenCtx.fill();

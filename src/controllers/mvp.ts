@@ -9,6 +9,8 @@ const DATA_FILENAME = 'mvps_data.json';
 
 export const isTauri = () => !!(window as any).__TAURI_INTERNALS__;
 
+// --- Tauri Specific Functions ---
+
 async function getFilePath() {
   const appDataDirPath = await appDataDir();
   return await join(appDataDirPath, DATA_FILENAME);
@@ -32,7 +34,7 @@ export async function loadMvpsFromFileSystem(): Promise<Record<string, any> | nu
 export async function saveMvpsToFileSystem(data: any) {
   if (!isTauri()) return;
   try {
-    const appDataDirPath = await appLocalDataDir();
+    const appDataDirPath = await appDataDir();
     const fileExists = await exists(appDataDirPath);
     if (!fileExists) {
       await mkdir('', { baseDir: BaseDirectory.AppLocalData, recursive: true });
@@ -44,6 +46,49 @@ export async function saveMvpsToFileSystem(data: any) {
     console.error('Failed to save mvps to file system', error);
   }
 }
+
+// --- Web Specific Functions (File System Access API) ---
+
+export const canUseWebFolderSync = () => 'showDirectoryPicker' in window;
+
+export async function pickWebDataFolder() {
+  try {
+    const directoryHandle = await (window as any).showDirectoryPicker({
+      mode: 'readwrite'
+    });
+    return directoryHandle;
+  } catch (error) {
+    console.error('Failed to pick directory', error);
+    return null;
+  }
+}
+
+export async function loadMvpsFromWebFolder(directoryHandle: any): Promise<Record<string, any> | null> {
+  if (!directoryHandle) return null;
+  try {
+    const fileHandle = await directoryHandle.getFileHandle(DATA_FILENAME, { create: false });
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    return JSON.parse(text);
+  } catch (error) {
+    // If file doesn't exist, it's fine
+    return null;
+  }
+}
+
+export async function saveMvpsToWebFolder(directoryHandle: any, data: any) {
+  if (!directoryHandle) return;
+  try {
+    const fileHandle = await directoryHandle.getFileHandle(DATA_FILENAME, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(data, null, 2));
+    await writable.close();
+  } catch (error) {
+    console.error('Failed to save to web folder', error);
+  }
+}
+
+// --- General Local Storage Functions ---
 
 export async function loadMvpsFromLocalStorage(
   server: string
@@ -78,7 +123,8 @@ export async function loadMvpsFromLocalStorage(
 
 export function saveActiveMvpsToLocalStorage(
   activeMvps: IMvp[],
-  server: string
+  server: string,
+  directoryHandle?: any // Optional handle for web sync
 ) {
   const data = activeMvps?.map((mvp) => ({
     id: mvp.id,
@@ -103,8 +149,13 @@ export function saveActiveMvpsToLocalStorage(
   const dataString = JSON.stringify(updatedActiveData);
   localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, dataString);
   
-  // If in Tauri, also save to file system automatically
+  // Save to Tauri File System if available
   if (isTauri()) {
     saveMvpsToFileSystem(updatedActiveData);
+  }
+  
+  // Save to Web Folder if handle is provided
+  if (directoryHandle) {
+    saveMvpsToWebFolder(directoryHandle, updatedActiveData);
   }
 }

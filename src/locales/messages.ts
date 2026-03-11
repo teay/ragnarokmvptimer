@@ -79,6 +79,10 @@ export const messages = {
     sync_confirm_btn: 'Apply Selection',
     last_updated: 'Last updated:',
     conflict_in_servers: 'Conflict detected in servers:',
+    connect_data_folder: 'Connect Data Folder',
+    connect_folder_description: 'Sync with your Desktop app by selecting its data folder.',
+    folder_connected: 'Folder Connected',
+    disconnect_folder: 'Disconnect Folder',
   },
   [LOCALES.PORTUGUESE]: {
     under_development: 'Em desenvolvimento',

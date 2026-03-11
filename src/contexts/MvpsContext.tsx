@@ -18,6 +18,9 @@ import {
   loadMvpsFromFileSystem,
   saveMvpsToFileSystem,
   isTauri,
+  loadMvpsFromWebFolder,
+  saveMvpsToWebFolder,
+  pickWebDataFolder,
 } from '@/controllers/mvp';
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
 
@@ -39,6 +42,7 @@ interface MvpsContextData {
   killingMvp: IMvp | undefined;
   syncConflict: SyncConflict | undefined;
   isLoading: boolean;
+  webDirectoryHandle: any | undefined;
   resetMvpTimer: (mvp: IMvp) => void;
   killMvp: (mvp: IMvp, time?: Date | null) => void;
   updateMvp: (mvp: IMvp, time?: Date | null) => void;
@@ -56,6 +60,8 @@ interface MvpsContextData {
   setKillingMvp: (mvp: IMvp) => void;
   closeKillMvpModal: () => void;
   handleSyncChoice: (choices: Record<string, 'browser' | 'file'>) => void;
+  connectWebFolder: () => Promise<void>;
+  disconnectWebFolder: () => void;
 }
 
 export const MvpsContext = createContext({} as MvpsContextData);
@@ -82,23 +88,24 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const [syncConflict, setSyncConflict] = useState<SyncConflict>();
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
+  const [webDirectoryHandle, setWebDirectoryHandle] = useState<any>();
 
   const resetMvpTimer = useCallback((mvp: IMvp) => {
     const updatedMvp = { ...mvp, deathTime: new Date(), deathPosition: undefined };
     setActiveMvps((state) => {
       const newState = sortMvpsByRespawnTime(state.map((m) => (m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m)));
-      saveActiveMvpsToLocalStorage(newState, server);
+      saveActiveMvpsToLocalStorage(newState, server, webDirectoryHandle);
       return newState;
     });
-  }, [server]);
+  }, [server, webDirectoryHandle]);
 
   const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
     setActiveMvps((state) => {
       const newState = state.filter((m) => mvpID !== m.id || m.deathMap !== deathMap);
-      saveActiveMvpsToLocalStorage(newState, server);
+      saveActiveMvpsToLocalStorage(newState, server, webDirectoryHandle);
       return sortMvpsByRespawnTime(newState);
     });
-  }, [server]);
+  }, [server, webDirectoryHandle]);
 
   const killMvp = useCallback((mvp: IMvp, deathTime = new Date()) => {
     setActiveMvps((s) => {
@@ -119,11 +126,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
         newState = [...s, killedMvp];
       }
 
-      saveActiveMvpsToLocalStorage(newState, server);
+      saveActiveMvpsToLocalStorage(newState, server, webDirectoryHandle);
 
       return sortMvpsByRespawnTime(newState);
     });
-  }, [server]);
+  }, [server, webDirectoryHandle]);
 
   const updateMvp = useCallback((mvp: IMvp, deathTime = mvp.deathTime) => {
     setActiveMvps((s) => {
@@ -144,11 +151,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
         newState = [...s, updatedMvp];
       }
 
-      saveActiveMvpsToLocalStorage(newState, server);
+      saveActiveMvpsToLocalStorage(newState, server, webDirectoryHandle);
 
       return sortMvpsByRespawnTime(newState);
     });
-  }, [server]);
+  }, [server, webDirectoryHandle]);
 
   const updateMvpDeathLocation = useCallback(
     (
@@ -173,12 +180,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
         const newState = [...s];
         newState[existingMvpIndex] = updatedMvp;
 
-        saveActiveMvpsToLocalStorage(newState, server);
+        saveActiveMvpsToLocalStorage(newState, server, webDirectoryHandle);
 
         return sortMvpsByRespawnTime(newState);
       });
     },
-    [server]
+    [server, webDirectoryHandle]
   );
 
   const closeEditMvpModal = useCallback(() => {
@@ -209,6 +216,8 @@ export function MvpProvider({ children }: MvpProviderProps) {
     localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(mergedData));
     if (isTauri()) {
       await saveMvpsToFileSystem(mergedData);
+    } else if (webDirectoryHandle) {
+      await saveMvpsToWebFolder(webDirectoryHandle, mergedData);
     }
 
     // Refresh active Mvps for current server
@@ -216,7 +225,42 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
     
     setSyncConflict(undefined);
-  }, [syncConflict, server]);
+  }, [syncConflict, server, webDirectoryHandle]);
+
+  const connectWebFolder = async () => {
+    const handle = await pickWebDataFolder();
+    if (handle) {
+      setWebDirectoryHandle(handle);
+      // Trigger a sync check immediately
+      const fileData = await loadMvpsFromWebFolder(handle);
+      const browserDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+      const browserData = browserDataRaw ? JSON.parse(browserDataRaw) : null;
+      
+      if (fileData && browserData) {
+        const conflictServers: string[] = [];
+        const allServers = new Set([...Object.keys(fileData), ...Object.keys(browserData)]);
+        allServers.forEach(s => {
+          if (JSON.stringify(fileData[s]) !== JSON.stringify(browserData[s])) {
+            conflictServers.push(s);
+          }
+        });
+        if (conflictServers.length > 0) {
+          setSyncConflict({ browser: browserData, file: fileData, servers: conflictServers });
+        }
+      } else if (fileData && !browserData) {
+        localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(fileData));
+        const savedActiveMvps = await loadMvpsFromLocalStorage(server);
+        setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
+      } else if (!fileData && browserData) {
+        // If file doesn't exist but we have browser data, create the file!
+        await saveMvpsToWebFolder(handle, browserData);
+      }
+    }
+  };
+
+  const disconnectWebFolder = () => {
+    setWebDirectoryHandle(undefined);
+  };
 
   const allMvps = useMemo(() => {
     const activeMvpKeys = new Set(
@@ -296,6 +340,8 @@ export function MvpProvider({ children }: MvpProviderProps) {
         editingTimeMvp,
         killingMvp,
         syncConflict,
+        isLoading,
+        webDirectoryHandle,
         resetMvpTimer,
         killMvp,
         updateMvp,
@@ -307,8 +353,9 @@ export function MvpProvider({ children }: MvpProviderProps) {
         closeEditTimeMvpModal,
         setKillingMvp,
         closeKillMvpModal,
-        isLoading,
         handleSyncChoice,
+        connectWebFolder,
+        disconnectWebFolder,
       }}
     >
       {children}

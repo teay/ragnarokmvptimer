@@ -172,13 +172,13 @@ export default function App() {
               />
             )}
 
-            <Header />
-
             <MvpProvider>
-              <Main />
-            </MvpProvider>
+              <Header />
 
-            <Footer />
+              <Main />
+
+              <Footer />
+            </MvpProvider>
             <WarningHeader text={messages[language]['under_development']} />
           </>
         )}
