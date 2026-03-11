@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { readTextFile, writeTextFile, exists, BaseDirectory, mkdir } from '@tauri-apps/plugin-fs';
-import { appDataDir, join } from '@tauri-apps/api/path';
+import { join } from '@tauri-apps/api/path';
 
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
 import { getServerData } from '@/utils';
@@ -12,7 +12,8 @@ export const isTauri = () => !!(window as any).__TAURI_INTERNALS__;
 // --- Tauri Specific Functions ---
 
 async function getFilePath() {
-  const appDataDirPath = await appDataDir();
+  // Get the path injected by Rust in lib.rs
+  const appDataDirPath = (window as any).__APP_DATA_DIR__ || '';
   return await join(appDataDirPath, DATA_FILENAME);
 }
 
@@ -34,9 +35,10 @@ export async function loadMvpsFromFileSystem(): Promise<Record<string, any> | nu
 export async function saveMvpsToFileSystem(data: any) {
   if (!isTauri()) return;
   try {
-    const appDataDirPath = await appDataDir();
+    const appDataDirPath = (window as any).__APP_DATA_DIR__ || '';
     const fileExists = await exists(appDataDirPath);
     if (!fileExists) {
+      // In Tauri v2, if mkdir fails because of permissions, check capabilities
       await mkdir('', { baseDir: BaseDirectory.AppLocalData, recursive: true });
     }
     
