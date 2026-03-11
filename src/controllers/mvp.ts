@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
-import { readTextFile, writeTextFile, exists, BaseDirectory, mkdir } from '@tauri-apps/plugin-fs';
-import { join } from '@tauri-apps/api/path';
+import { readTextFile, writeTextFile, exists, BaseDirectory } from '@tauri-apps/plugin-fs';
 
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
 import { getServerData } from '@/utils';
@@ -11,20 +10,13 @@ export const isTauri = () => !!(window as any).__TAURI_INTERNALS__;
 
 // --- Tauri Specific Functions ---
 
-async function getFilePath() {
-  // Get the path injected by Rust in lib.rs
-  const appDataDirPath = (window as any).__APP_DATA_DIR__ || '';
-  return await join(appDataDirPath, DATA_FILENAME);
-}
-
 export async function loadMvpsFromFileSystem(): Promise<Record<string, any> | null> {
   if (!isTauri()) return null;
   try {
-    const filePath = await getFilePath();
-    const fileExists = await exists(filePath);
+    const fileExists = await exists(DATA_FILENAME, { baseDir: BaseDirectory.AppLocalData });
     if (!fileExists) return null;
 
-    const data = await readTextFile(filePath);
+    const data = await readTextFile(DATA_FILENAME, { baseDir: BaseDirectory.AppLocalData });
     return JSON.parse(data);
   } catch (error) {
     console.error('Failed to load mvps from file system', error);
@@ -35,15 +27,9 @@ export async function loadMvpsFromFileSystem(): Promise<Record<string, any> | nu
 export async function saveMvpsToFileSystem(data: any) {
   if (!isTauri()) return;
   try {
-    const appDataDirPath = (window as any).__APP_DATA_DIR__ || '';
-    const fileExists = await exists(appDataDirPath);
-    if (!fileExists) {
-      // In Tauri v2, if mkdir fails because of permissions, check capabilities
-      await mkdir('', { baseDir: BaseDirectory.AppLocalData, recursive: true });
-    }
-    
-    const filePath = await getFilePath();
-    await writeTextFile(filePath, JSON.stringify(data, null, 2));
+    await writeTextFile(DATA_FILENAME, JSON.stringify(data, null, 2), { 
+      baseDir: BaseDirectory.AppLocalData 
+    });
   } catch (error) {
     console.error('Failed to save mvps to file system', error);
   }
@@ -73,7 +59,6 @@ export async function loadMvpsFromWebFolder(directoryHandle: any): Promise<Recor
     const text = await file.text();
     return JSON.parse(text);
   } catch (error) {
-    // If file doesn't exist, it's fine
     return null;
   }
 }
@@ -151,12 +136,10 @@ export function saveActiveMvpsToLocalStorage(
   const dataString = JSON.stringify(updatedActiveData);
   localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, dataString);
   
-  // Save to Tauri File System if available
   if (isTauri()) {
     saveMvpsToFileSystem(updatedActiveData);
   }
   
-  // Save to Web Folder if handle is provided
   if (directoryHandle) {
     saveMvpsToWebFolder(directoryHandle, updatedActiveData);
   }
