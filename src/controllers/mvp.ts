@@ -27,6 +27,7 @@ export async function loadMvpsFromFileSystem(): Promise<Record<string, any> | nu
 export async function saveMvpsToFileSystem(data: any) {
   if (!isTauri()) return;
   try {
+    // Note: writeTextFile in Tauri v2 handles directory creation if scoped correctly
     await writeTextFile(DATA_FILENAME, JSON.stringify(data, null, 2), { 
       baseDir: BaseDirectory.AppLocalData 
     });
@@ -37,7 +38,7 @@ export async function saveMvpsToFileSystem(data: any) {
 
 // --- Web Specific Functions (File System Access API) ---
 
-export const canUseWebFolderSync = () => 'showDirectoryPicker' in window;
+export const canUseWebFolderSync = () => typeof window !== 'undefined' && 'showDirectoryPicker' in window;
 
 export async function pickWebDataFolder() {
   try {
@@ -89,8 +90,7 @@ export async function loadMvpsFromLocalStorage(
 
     const savedServerData = dataParse[server];
 
-    const hasSavedServerData = !!savedServerData;
-    if (!hasSavedServerData) return [];
+    if (!savedServerData) return [];
 
     const originalServerData = await getServerData(server);
 
@@ -111,7 +111,7 @@ export async function loadMvpsFromLocalStorage(
 export function saveActiveMvpsToLocalStorage(
   activeMvps: IMvp[],
   server: string,
-  directoryHandle?: any // Optional handle for web sync
+  directoryHandle?: any
 ) {
   const data = activeMvps?.map((mvp) => ({
     id: mvp.id,
@@ -121,7 +121,6 @@ export function saveActiveMvpsToLocalStorage(
   }));
 
   const currentLocalMvps = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-
   const currentData = currentLocalMvps ? JSON.parse(currentLocalMvps) : {};
 
   const updatedActiveData = {

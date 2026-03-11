@@ -201,60 +201,59 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, []);
 
   const handleSyncChoice = useCallback(async (choices: Record<string, 'browser' | 'file'>) => {
-    if (!syncConflict) return;
+    try {
+      if (!syncConflict) return;
 
-    const mergedData = { ...syncConflict.browser };
-    
-    // Update only the conflicting servers based on choice
-    Object.entries(choices).forEach(([serverName, choice]) => {
-      if (choice === 'file') {
-        mergedData[serverName] = syncConflict.file[serverName];
+      const mergedData = { ...syncConflict.browser };
+      
+      Object.entries(choices).forEach(([serverName, choice]) => {
+        if (choice === 'file') {
+          mergedData[serverName] = syncConflict.file[serverName];
+        }
+      });
+
+      localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(mergedData));
+      if (isTauri()) {
+        await saveMvpsToFileSystem(mergedData);
+      } else if (webDirectoryHandle) {
+        await saveMvpsToWebFolder(webDirectoryHandle, mergedData);
       }
-    });
 
-    // Update both to sync everything
-    localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(mergedData));
-    if (isTauri()) {
-      await saveMvpsToFileSystem(mergedData);
-    } else if (webDirectoryHandle) {
-      await saveMvpsToWebFolder(webDirectoryHandle, mergedData);
+      const savedActiveMvps = await loadMvpsFromLocalStorage(server);
+      setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
+      setSyncConflict(undefined);
+    } catch (err) {
+      console.error('Error handling sync choice', err);
+      setSyncConflict(undefined);
     }
-
-    // Refresh active Mvps for current server
-    const savedActiveMvps = await loadMvpsFromLocalStorage(server);
-    setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
-    
-    setSyncConflict(undefined);
   }, [syncConflict, server, webDirectoryHandle]);
 
   const connectWebFolder = async () => {
-    const handle = await pickWebDataFolder();
-    if (handle) {
-      setWebDirectoryHandle(handle);
-      // Trigger a sync check immediately
-      const fileData = await loadMvpsFromWebFolder(handle);
-      const browserDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-      const browserData = browserDataRaw ? JSON.parse(browserDataRaw) : null;
-      
-      if (fileData && browserData) {
-        const conflictServers: string[] = [];
-        const allServers = new Set([...Object.keys(fileData), ...Object.keys(browserData)]);
-        allServers.forEach(s => {
-          if (JSON.stringify(fileData[s]) !== JSON.stringify(browserData[s])) {
-            conflictServers.push(s);
+    try {
+      const handle = await pickWebDataFolder();
+      if (handle) {
+        setWebDirectoryHandle(handle);
+        const fileData = await loadMvpsFromWebFolder(handle);
+        const browserDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+        const browserData = browserDataRaw ? JSON.parse(browserDataRaw) : null;
+        
+        if (fileData && browserData) {
+          const conflictServers: string[] = [];
+          const allServers = new Set([...Object.keys(fileData), ...Object.keys(browserData)]);
+          allServers.forEach(s => {
+            if (JSON.stringify(fileData[s]) !== JSON.stringify(browserData[s])) {
+              conflictServers.push(s);
+            }
+          });
+          if (conflictServers.length > 0) {
+            setSyncConflict({ browser: browserData, file: fileData, servers: conflictServers });
           }
-        });
-        if (conflictServers.length > 0) {
-          setSyncConflict({ browser: browserData, file: fileData, servers: conflictServers });
+        } else if (!fileData) {
+          await saveMvpsToWebFolder(handle, browserData || {});
         }
-      } else if (fileData && !browserData) {
-        localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(fileData));
-        const savedActiveMvps = await loadMvpsFromLocalStorage(server);
-        setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
-      } else if (!fileData && browserData) {
-        // If file doesn't exist but we have browser data, create it
-        await saveMvpsToWebFolder(handle, browserData);
       }
+    } catch (err) {
+      console.error('Error connecting web folder', err);
     }
   };
 
@@ -288,34 +287,40 @@ export function MvpProvider({ children }: MvpProviderProps) {
   useEffect(() => {
     async function initData() {
       setIsLoading(true);
+      try {
+        if (isTauri()) {
+          const fileData = await loadMvpsFromFileSystem();
+          const browserDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+          const browserData = browserDataRaw ? JSON.parse(browserDataRaw) : null;
 
-      if (isTauri()) {
-        const fileData = await loadMvpsFromFileSystem();
-        const browserDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-        const browserData = browserDataRaw ? JSON.parse(browserDataRaw) : null;
+          if (fileData && browserData) {
+            const conflictServers: string[] = [];
+            const allServers = new Set([...Object.keys(fileData), ...Object.keys(browserData)]);
+            allServers.forEach(s => {
+              if (JSON.stringify(fileData[s]) !== JSON.stringify(browserData[s])) {
+                conflictServers.push(s);
+              }
+            });
 
-        if (fileData && browserData) {
-          const conflictServers: string[] = [];
-          const allServers = new Set([...Object.keys(fileData), ...Object.keys(browserData)]);
-          
-          allServers.forEach(s => {
-            if (JSON.stringify(fileData[s]) !== JSON.stringify(browserData[s])) {
-              conflictServers.push(s);
+            if (conflictServers.length > 0) {
+              setSyncConflict({ browser: browserData, file: fileData, servers: conflictServers });
             }
-          });
-
-          if (conflictServers.length > 0) {
-            setSyncConflict({ browser: browserData, file: fileData, servers: conflictServers });
+          } else if (fileData && !browserData) {
+            localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(fileData));
+          } else if (!fileData && browserData) {
+            await saveMvpsToFileSystem(browserData);
           }
-        } else if (fileData && !browserData) {
-          localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(fileData));
-        } else if (!fileData && browserData) {
-          await saveMvpsToFileSystem(browserData);
         }
+      } catch (err) {
+        console.error('Initial sync failed, but app will continue loading', err);
       }
 
-      const savedActiveMvps = await loadMvpsFromLocalStorage(server);
-      setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
+      try {
+        const savedActiveMvps = await loadMvpsFromLocalStorage(server);
+        setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
+      } catch (err) {
+        console.error('Failed to load local storage data', err);
+      }
       setIsLoading(false);
     }
     initData();
@@ -325,8 +330,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
     if (isLoading) return;
 
     async function loadOriginalAllMvps() {
-      const data = await getServerData(server);
-      setOriginalAllMvps(data);
+      try {
+        const data = await getServerData(server);
+        setOriginalAllMvps(data);
+      } catch (err) {
+        console.error('Failed to fetch server data', err);
+      }
     }
     loadOriginalAllMvps();
   }, [server, isLoading]);
