@@ -90,19 +90,19 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       const newValue = !prev.ultraLite;
       
       if (newValue) {
-        // Force Disable EVERYTHING for Ultra Lite
+        // Force Disable heavy effects for Ultra Lite, but allow sprites to stay animated
         return {
           ...prev,
           ultraLite: true,
-          simpleGlassUI: false, // Ultra lite is more extreme than simple glass
+          simpleGlassUI: false,
           isAnimatedBackgroundEnabled: false,
           isSparkleEffectEnabled: false,
           isFallingElementsEnabled: false,
-          animatedSprites: false,
+          // animatedSprites: false, // REMOVED: allow sprites to stay animated if they were
           particleDensity: 'Empty',
-          isGlassUIEnabled: false, // No blur
-          isMainContentTransparent: false, // Solid background
-          showMvpMap: true, // Keep functional items as requested
+          isGlassUIEnabled: false,
+          isMainContentTransparent: false,
+          showMvpMap: true,
         };
       }
       
@@ -160,7 +160,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       ...prev,
       animatedSprites: !prev.animatedSprites,
       simpleGlassUI: !prev.animatedSprites ? false : prev.simpleGlassUI,
-      ultraLite: !prev.animatedSprites ? false : prev.ultraLite,
+      // Removed ultraLite check to allow animated sprites in ultra lite mode
     }));
   }, [setSettings]);
 
