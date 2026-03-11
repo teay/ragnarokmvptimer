@@ -10,6 +10,7 @@
     "core:window:allow-set-fullscreen",
     "core:window:allow-is-fullscreen",
     "fs:default",
+    "path:default",
     "log:default"
   ]
 }

@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
 import { readTextFile, writeTextFile, exists, BaseDirectory, mkdir } from '@tauri-apps/plugin-fs';
-import { join } from '@tauri-apps/api/path';
-import { invoke } from '@tauri-apps/api/core';
+import { appDataDir, join } from '@tauri-apps/api/path';
 
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
 import { getServerData } from '@/utils';
@@ -13,7 +12,7 @@ export const isTauri = () => !!(window as any).__TAURI_INTERNALS__;
 // --- Tauri Specific Functions ---
 
 async function getFilePath() {
-  const appDataDirPath = await invoke<string>('get_app_data_dir');
+  const appDataDirPath = await appDataDir();
   return await join(appDataDirPath, DATA_FILENAME);
 }
 
@@ -35,7 +34,7 @@ export async function loadMvpsFromFileSystem(): Promise<Record<string, any> | nu
 export async function saveMvpsToFileSystem(data: any) {
   if (!isTauri()) return;
   try {
-    const appDataDirPath = await invoke<string>('get_app_data_dir');
+    const appDataDirPath = await appDataDir();
     const fileExists = await exists(appDataDirPath);
     if (!fileExists) {
       await mkdir('', { baseDir: BaseDirectory.AppLocalData, recursive: true });
