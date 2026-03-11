@@ -1,7 +1,49 @@
 import dayjs from 'dayjs';
+import { readTextFile, writeTextFile, exists, BaseDirectory, mkdir } from '@tauri-apps/plugin-fs';
+import { appDataDir, join } from '@tauri-apps/api/path';
 
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
 import { getServerData } from '@/utils';
+
+const DATA_FILENAME = 'mvps_data.json';
+
+export const isTauri = () => !!(window as any).__TAURI_INTERNALS__;
+
+async function getFilePath() {
+  const appDataDirPath = await appDataDir();
+  return await join(appDataDirPath, DATA_FILENAME);
+}
+
+export async function loadMvpsFromFileSystem(): Promise<Record<string, any> | null> {
+  if (!isTauri()) return null;
+  try {
+    const filePath = await getFilePath();
+    const fileExists = await exists(filePath);
+    if (!fileExists) return null;
+
+    const data = await readTextFile(filePath);
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Failed to load mvps from file system', error);
+    return null;
+  }
+}
+
+export async function saveMvpsToFileSystem(data: any) {
+  if (!isTauri()) return;
+  try {
+    const appDataDirPath = await appLocalDataDir();
+    const fileExists = await exists(appDataDirPath);
+    if (!fileExists) {
+      await mkdir('', { baseDir: BaseDirectory.AppLocalData, recursive: true });
+    }
+    
+    const filePath = await getFilePath();
+    await writeTextFile(filePath, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Failed to save mvps to file system', error);
+  }
+}
 
 export async function loadMvpsFromLocalStorage(
   server: string
@@ -58,8 +100,11 @@ export function saveActiveMvpsToLocalStorage(
     (key) => !isNaN(Number(key)) && delete updatedActiveData[key]
   );
 
-  localStorage.setItem(
-    LOCAL_STORAGE_ACTIVE_MVPS_KEY,
-    JSON.stringify(updatedActiveData)
-  );
+  const dataString = JSON.stringify(updatedActiveData);
+  localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, dataString);
+  
+  // If in Tauri, also save to file system automatically
+  if (isTauri()) {
+    saveMvpsToFileSystem(updatedActiveData);
+  }
 }

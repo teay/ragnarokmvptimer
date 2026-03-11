@@ -6,3 +6,4 @@ export { ModalMvpMap } from './ModalMvpMap';
 export { ModalSelectServer } from './ModalSelectServer';
 export { ModalSettings } from './ModalSettings';
 export { ModalWarning } from './ModalWarning';
+export { ModalSyncData } from './ModalSyncData';

@@ -72,6 +72,13 @@ export const messages = {
     sparkle_effect: 'Sparkle Effect',
     sparkle_density: 'Sparkle Density',
     show_mvp_map: 'Show MVP Map',
+    sync_conflict_title: 'Data Conflict Detected',
+    sync_conflict_description: 'We found different MVP data in your local files and browser storage. Which one would you like to keep?',
+    sync_browser_option: 'Use Browser Storage',
+    sync_file_option: 'Use Local File System',
+    sync_confirm_btn: 'Apply Selection',
+    last_updated: 'Last updated:',
+    conflict_in_servers: 'Conflict detected in servers:',
   },
   [LOCALES.PORTUGUESE]: {
     under_development: 'Em desenvolvimento',

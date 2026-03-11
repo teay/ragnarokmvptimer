@@ -15,10 +15,20 @@ import { getMvpRespawnTime, getServerData } from '../utils';
 import {
   loadMvpsFromLocalStorage,
   saveActiveMvpsToLocalStorage,
+  loadMvpsFromFileSystem,
+  saveMvpsToFileSystem,
+  isTauri,
 } from '@/controllers/mvp';
+import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
 
 interface MvpProviderProps {
   children: ReactNode;
+}
+
+interface SyncConflict {
+  browser: any;
+  file: any;
+  servers: string[];
 }
 
 interface MvpsContextData {
@@ -27,6 +37,7 @@ interface MvpsContextData {
   editingMvp: IMvp | undefined;
   editingTimeMvp: IMvp | undefined;
   killingMvp: IMvp | undefined;
+  syncConflict: SyncConflict | undefined;
   isLoading: boolean;
   resetMvpTimer: (mvp: IMvp) => void;
   killMvp: (mvp: IMvp, time?: Date | null) => void;
@@ -44,7 +55,7 @@ interface MvpsContextData {
   closeEditTimeMvpModal: () => void;
   setKillingMvp: (mvp: IMvp) => void;
   closeKillMvpModal: () => void;
-  //clearActiveMvps: () => void;
+  handleSyncChoice: (choices: Record<string, 'browser' | 'file'>) => void;
 }
 
 export const MvpsContext = createContext({} as MvpsContextData);
@@ -68,6 +79,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const [editingMvp, setEditingMvp] = useState<IMvp>();
   const [editingTimeMvp, setEditingTimeMvp] = useState<IMvp>();
   const [killingMvp, setKillingMvp] = useState<IMvp>();
+  const [syncConflict, setSyncConflict] = useState<SyncConflict>();
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
 
@@ -181,6 +193,31 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setKillingMvp(undefined);
   }, []);
 
+  const handleSyncChoice = useCallback(async (choices: Record<string, 'browser' | 'file'>) => {
+    if (!syncConflict) return;
+
+    const mergedData = { ...syncConflict.browser };
+    
+    // Update only the conflicting servers based on choice
+    Object.entries(choices).forEach(([serverName, choice]) => {
+      if (choice === 'file') {
+        mergedData[serverName] = syncConflict.file[serverName];
+      }
+    });
+
+    // Update both to sync everything
+    localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(mergedData));
+    if (isTauri()) {
+      await saveMvpsToFileSystem(mergedData);
+    }
+
+    // Refresh active Mvps for current server
+    const savedActiveMvps = await loadMvpsFromLocalStorage(server);
+    setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
+    
+    setSyncConflict(undefined);
+  }, [syncConflict, server]);
+
   const allMvps = useMemo(() => {
     const activeMvpKeys = new Set(
       activeMvps.map((mvp) => `${mvp.id}-${mvp.deathMap}`)
@@ -205,13 +242,39 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, [activeMvps, originalAllMvps]);
 
   useEffect(() => {
-    async function loadActiveMvpsOnly() {
+    async function initData() {
       setIsLoading(true);
+
+      if (isTauri()) {
+        const fileData = await loadMvpsFromFileSystem();
+        const browserDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+        const browserData = browserDataRaw ? JSON.parse(browserDataRaw) : null;
+
+        if (fileData && browserData) {
+          const conflictServers: string[] = [];
+          const allServers = new Set([...Object.keys(fileData), ...Object.keys(browserData)]);
+          
+          allServers.forEach(s => {
+            if (JSON.stringify(fileData[s]) !== JSON.stringify(browserData[s])) {
+              conflictServers.push(s);
+            }
+          });
+
+          if (conflictServers.length > 0) {
+            setSyncConflict({ browser: browserData, file: fileData, servers: conflictServers });
+          }
+        } else if (fileData && !browserData) {
+          localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(fileData));
+        } else if (!fileData && browserData) {
+          await saveMvpsToFileSystem(browserData);
+        }
+      }
+
       const savedActiveMvps = await loadMvpsFromLocalStorage(server);
       setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
       setIsLoading(false);
     }
-    loadActiveMvpsOnly();
+    initData();
   }, [server]);
 
   useEffect(() => {
@@ -232,6 +295,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         editingMvp,
         editingTimeMvp,
         killingMvp,
+        syncConflict,
         resetMvpTimer,
         killMvp,
         updateMvp,
@@ -244,6 +308,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         setKillingMvp,
         closeKillMvpModal,
         isLoading,
+        handleSyncChoice,
       }}
     >
       {children}

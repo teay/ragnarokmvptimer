@@ -5,7 +5,7 @@ import { MvpCard } from '@/components/MvpCard';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { MvpsContainerFilter } from '@/components/MvpsContainerFilter';
 import { MvpCardSkeleton } from '@/components/Skeletons/MvpCardSkeleton';
-import { ModalEditMvp, ModalEditTime, ModalKillMvp } from '@/modals';
+import { ModalEditMvp, ModalEditTime, ModalKillMvp, ModalSyncData } from '@/modals';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { useKey } from '@/hooks';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -15,7 +15,7 @@ import { sortBy } from '@/utils/sort';
 import { Container, Section, SectionTitle, MvpsContainer } from './styles';
 
 export function Main() {
-  const { activeMvps, allMvps, editingMvp, editingTimeMvp, killingMvp, isLoading } =
+  const { activeMvps, allMvps, editingMvp, editingTimeMvp, killingMvp, syncConflict, handleSyncChoice, isLoading } =
     useMvpsContext();
   const [searchQuery, setSearchQuery] = useState<string>(
     sessionStorage.getItem('search') || ''
@@ -102,6 +102,14 @@ export function Main() {
       {!!editingMvp && <ModalEditMvp />}
       {!!editingTimeMvp && <ModalEditTime />}
       {!!killingMvp && <ModalKillMvp />}
+      {!!syncConflict && (
+        <ModalSyncData 
+          browserData={syncConflict.browser} 
+          fileData={syncConflict.file} 
+          servers={syncConflict.servers}
+          onConfirm={handleSyncChoice} 
+        />
+      )}
     </>
   );
 }
