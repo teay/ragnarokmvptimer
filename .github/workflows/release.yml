@@ -6,6 +6,7 @@ on:
       - main
       - feat/tauri-v2-desktop
       - feature/simple-glass-ui
+      - feature/performance-modes
     # Also trigger when you push a version tag (e.g. v1.0.0)
     tags:
       - 'v*'
