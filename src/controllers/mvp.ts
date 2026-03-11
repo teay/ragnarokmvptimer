@@ -35,7 +35,7 @@ export async function loadMvpsFromFileSystem(): Promise<Record<string, any> | nu
 export async function saveMvpsToFileSystem(data: any) {
   if (!isTauri()) return;
   try {
-    const appDataDirPath = await appDataDir();
+    const appDataDirPath = await invoke<string>('get_app_data_dir');
     const fileExists = await exists(appDataDirPath);
     if (!fileExists) {
       await mkdir('', { baseDir: BaseDirectory.AppLocalData, recursive: true });
