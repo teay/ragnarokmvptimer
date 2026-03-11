@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import { readTextFile, writeTextFile, exists, BaseDirectory, mkdir } from '@tauri-apps/plugin-fs';
-import { appDataDir, join } from '@tauri-apps/api/path';
+import { join } from '@tauri-apps/api/path';
+import { invoke } from '@tauri-apps/api/core';
 
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
 import { getServerData } from '@/utils';
@@ -12,7 +13,7 @@ export const isTauri = () => !!(window as any).__TAURI_INTERNALS__;
 // --- Tauri Specific Functions ---
 
 async function getFilePath() {
-  const appDataDirPath = await appDataDir();
+  const appDataDirPath = await invoke<string>('get_app_data_dir');
   return await join(appDataDirPath, DATA_FILENAME);
 }
 

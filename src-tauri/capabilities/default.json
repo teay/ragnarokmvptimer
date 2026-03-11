@@ -9,7 +9,6 @@
     "core:default",
     "core:window:allow-set-fullscreen",
     "core:window:allow-is-fullscreen",
-    "path:default",
     "fs:allow-app-local-data-recursive",
     "fs:allow-write-text-file",
     "fs:allow-read-text-file",
