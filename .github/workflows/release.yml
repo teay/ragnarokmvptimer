@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feat/tauri-v2-desktop
+      - feature/simple-glass-ui
     # Also trigger when you push a version tag (e.g. v1.0.0)
     tags:
       - 'v*'
@@ -19,12 +20,6 @@ jobs:
       matrix:
         include:
           - platform: "windows-latest" # for Windows (.exe / .msi)
-            args: ""
-          - platform: "macos-latest" # for Apple Silicon
-            args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel Macs
-            args: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-22.04" # for Linux
             args: ""
 
     runs-on: ${{ matrix.platform }}
