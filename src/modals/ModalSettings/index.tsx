@@ -89,6 +89,8 @@ export function ModalSettings({ onClose }: Props) {
     toggleShowMvpMap,
     simpleGlassUI,
     toggleSimpleGlassUI,
+    ultraLite,
+    toggleUltraLite,
   } = useSettings();
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -153,6 +155,17 @@ export function ModalSettings({ onClose }: Props) {
           </Title>
 
           <SettingsContainer>
+            <Setting>
+              <SettingName>
+                <FormattedMessage id='ultra_lite' defaultMessage='Ultra Lite Mode (Extreme Performance)' />
+              </SettingName>
+
+              <Switch
+                onChange={toggleUltraLite}
+                checked={ultraLite}
+              />
+            </Setting>
+
             <Setting>
               <SettingName>
                 <FormattedMessage id='simple_glass_ui' defaultMessage='Simple Glass UI (Best Performance)' />

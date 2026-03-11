@@ -336,6 +336,40 @@ export const globals = css`
       --mvpCard_bg: rgba(216, 220, 224, 0.9); /* Semi-transparent based on new tertiary */
     }
 
+    /* Ultra Lite Overrides */
+    html.ultra-lite {
+      --header_backdrop_filter: none !important;
+      --modal_backdrop_filter: none !important;
+      --footer_backdrop_filter: none !important;
+      --filterSearch_backdrop_filter: none !important;
+      --languagePicker_backdrop_filter: none !important;
+      
+      --header_box_shadow: none !important;
+      --footer_box_shadow: none !important;
+
+      /* Reset gradient animation */
+      background: var(--secondary) !important;
+    }
+
+    html.ultra-lite body {
+      animation: none !important;
+      background: var(--secondary) !important;
+    }
+
+    html.ultra-lite *,
+    html.ultra-lite *::before,
+    html.ultra-lite *::after {
+      animation-duration: 0.001s !important; /* Almost instant but keeps logic if any */
+      transition-duration: 0s !important;
+    }
+
+    /* Keep MVP Sprites animated as requested */
+    html.ultra-lite img[alt], 
+    html.ultra-lite [class*="Sprite"] {
+      animation-duration: unset !important;
+      transition-duration: unset !important;
+    }
+
     html {
       font-size: 62.5%;
     }

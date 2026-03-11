@@ -37,7 +37,8 @@ export default function App() {
     sparkleDensity, 
     hideActiveContent, 
     toggleHideActiveContent,
-    toggleShowMvpMap // Get the toggle function
+    toggleShowMvpMap, // Get the toggle function
+    ultraLite,
   } = useSettings();
   
   const { theme } = useTheme();
@@ -97,6 +98,17 @@ export default function App() {
   useEffect(() => {
     dayjs.locale(language);
   }, [language]);
+
+  useEffect(() => {
+    const html = document.querySelector('html');
+    if (html) {
+      if (ultraLite) {
+        html.classList.add('ultra-lite');
+      } else {
+        html.classList.remove('ultra-lite');
+      }
+    }
+  }, [ultraLite]);
 
   useEffect(() => {
     if (hideActiveContent) {
