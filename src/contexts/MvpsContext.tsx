@@ -76,7 +76,14 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const saveMvps = useCallback((mvps: IMvp[]) => {
     if (partyRoom) {
       const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
-      set(mvpsRef, mvps);
+      // For Firebase, we only save the minimal necessary data to avoid bloating and race conditions
+      const minimalMvps = mvps.map(m => ({
+        id: m.id,
+        deathTime: m.deathTime,
+        deathMap: m.deathMap,
+        deathPosition: m.deathPosition
+      }));
+      set(mvpsRef, minimalMvps);
     } else {
       saveActiveMvpsToLocalStorage(mvps, server);
       setActiveMvps(sortMvpsByRespawnTime(mvps));
@@ -98,8 +105,14 @@ export function MvpProvider({ children }: MvpProviderProps) {
         const mergedMvps = (remoteMvps as IMvp[]).map(remoteMvp => {
           const original = originalAllMvps.find(o => o.id === remoteMvp.id);
           if (original) {
-            // Keep the remote death info but restore static data
-            return { ...original, ...remoteMvp };
+            // Find the correct spawn entry that matches the death map
+            const specificSpawn = original.spawn.filter(s => s.mapname === remoteMvp.deathMap);
+            return { 
+              ...original, 
+              ...remoteMvp, 
+              // Keep only the specific spawn to ensure UI (like MvpCard) correctly shows map info
+              spawn: specificSpawn.length > 0 ? specificSpawn : original.spawn 
+            };
           }
           return remoteMvp;
         });
@@ -113,6 +126,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
     return () => unsubscribe();
   }, [partyRoom, server, originalAllMvps]);
+
 
   const resetMvpTimer = useCallback((mvp: IMvp) => {
     const updatedMvp = { ...mvp, deathTime: new Date(), deathPosition: undefined };
@@ -288,14 +302,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, [server, partyRoom]);
 
   useEffect(() => {
-    if (isLoading) return;
-
     async function loadOriginalAllMvps() {
       const data = await getServerData(server);
       setOriginalAllMvps(data);
     }
     loadOriginalAllMvps();
-  }, [server, isLoading]);
+  }, [server]);
 
   return (
     <MvpsContext.Provider
