@@ -11,6 +11,7 @@ import dayjs from 'dayjs';
 
 import { useSettings } from './SettingsContext';
 
+import { database, ref, set, onValue, off } from '@/services/firebase';
 import { getMvpRespawnTime, getServerData } from '../utils';
 import {
   loadMvpsFromLocalStorage,
@@ -63,7 +64,7 @@ function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
 }
 
 export function MvpProvider({ children }: MvpProviderProps) {
-  const { server } = useSettings();
+  const { server, partyRoom } = useSettings();
 
   const [isLoading, setIsLoading] = useState(true);
   const [editingMvp, setEditingMvp] = useState<IMvp>();
@@ -72,22 +73,52 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
 
+  const saveMvps = useCallback((mvps: IMvp[]) => {
+    if (partyRoom) {
+      const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
+      set(mvpsRef, mvps);
+    } else {
+      saveActiveMvpsToLocalStorage(mvps, server);
+      setActiveMvps(sortMvpsByRespawnTime(mvps));
+    }
+  }, [partyRoom, server]);
+
+  // Firebase Real-time Listener
+  useEffect(() => {
+    if (!partyRoom) return;
+
+    const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
+    
+    const unsubscribe = onValue(mvpsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const remoteMvps = Array.isArray(data) ? data : Object.values(data);
+        setActiveMvps(sortMvpsByRespawnTime(remoteMvps as IMvp[]));
+      } else {
+        setActiveMvps([]);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [partyRoom, server]);
+
   const resetMvpTimer = useCallback((mvp: IMvp) => {
     const updatedMvp = { ...mvp, deathTime: new Date(), deathPosition: undefined };
     setActiveMvps((state) => {
-      const newState = sortMvpsByRespawnTime(state.map((m) => (m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m)));
-      saveActiveMvpsToLocalStorage(newState, server);
-      return newState;
+      const newState = state.map((m) => (m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m));
+      saveMvps(newState);
+      return partyRoom ? state : sortMvpsByRespawnTime(newState);
     });
-  }, [server]);
+  }, [saveMvps, partyRoom]);
 
   const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
     setActiveMvps((state) => {
       const newState = state.filter((m) => mvpID !== m.id || m.deathMap !== deathMap);
-      saveActiveMvpsToLocalStorage(newState, server);
-      return sortMvpsByRespawnTime(newState);
+      saveMvps(newState);
+      return partyRoom ? state : sortMvpsByRespawnTime(newState);
     });
-  }, [server]);
+  }, [saveMvps, partyRoom]);
 
   const killMvp = useCallback((mvp: IMvp, deathTime = new Date()) => {
     setActiveMvps((s) => {
@@ -108,11 +139,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
         newState = [...s, killedMvp];
       }
 
-      saveActiveMvpsToLocalStorage(newState, server);
+      saveMvps(newState);
 
-      return sortMvpsByRespawnTime(newState);
+      return partyRoom ? s : sortMvpsByRespawnTime(newState);
     });
-  }, [server]);
+  }, [saveMvps, partyRoom]);
 
   const updateMvp = useCallback((mvp: IMvp, deathTime = mvp.deathTime) => {
     setActiveMvps((s) => {
@@ -133,11 +164,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
         newState = [...s, updatedMvp];
       }
 
-      saveActiveMvpsToLocalStorage(newState, server);
+      saveMvps(newState);
 
-      return sortMvpsByRespawnTime(newState);
+      return partyRoom ? s : sortMvpsByRespawnTime(newState);
     });
-  }, [server]);
+  }, [saveMvps, partyRoom]);
 
   const updateMvpDeathLocation = useCallback(
     (
@@ -162,12 +193,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
         const newState = [...s];
         newState[existingMvpIndex] = updatedMvp;
 
-        saveActiveMvpsToLocalStorage(newState, server);
+        saveMvps(newState);
 
-        return sortMvpsByRespawnTime(newState);
+        return partyRoom ? s : sortMvpsByRespawnTime(newState);
       });
     },
-    [server]
+    [saveMvps, partyRoom]
   );
 
   const closeEditMvpModal = useCallback(() => {
@@ -229,6 +260,13 @@ export function MvpProvider({ children }: MvpProviderProps) {
         }
       }
 
+      if (partyRoom) {
+        // If in a party room, the Firebase listener will handle loading.
+        // We just need to stop the loading state once the listener is ready.
+        // (The listener sets isLoading(false) on the first value)
+        return;
+      }
+
       // Load final state from localStorage (which may have been updated by the party param)
       const savedActiveMvps = await loadMvpsFromLocalStorage(server);
       setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
@@ -236,7 +274,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
     }
 
     init();
-  }, [server]);
+  }, [server, partyRoom]);
 
   useEffect(() => {
     if (isLoading) return;

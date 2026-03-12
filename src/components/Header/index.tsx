@@ -6,16 +6,17 @@ import { useSettings } from '@/contexts/SettingsContext';
 
 import mvpImg from '@/assets/mvp.png';
 
-import { Container, Customization, Logo, LogoContainer, Title } from './styles';
+import { Container, Customization, Logo, LogoContainer, Title, LiveBadge } from './styles';
 
 export function Header() {
-  const { use24HourFormat } = useSettings();
+  const { use24HourFormat, partyRoom } = useSettings();
 
   return (
     <Container>
       <LogoContainer>
         <Logo src={mvpImg} alt='mvp' />
         <Title>Ragnarok MVP Timer</Title>
+        {partyRoom && <LiveBadge>Live: {partyRoom}</LiveBadge>}
       </LogoContainer>
 
       <HeaderTimer use24HourFormat={use24HourFormat} />

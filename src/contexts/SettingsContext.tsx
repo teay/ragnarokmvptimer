@@ -75,6 +75,8 @@ interface SettingsContextData {
   toggleSimpleGlassUI: () => void;
   ultraLite: boolean;
   toggleUltraLite: () => void;
+  partyRoom: string | null;
+  changePartyRoom: (room: string | null) => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -444,6 +446,16 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     });
   }, [setSettings]);
 
+  const changePartyRoom = useCallback(
+    (room: string | null) => {
+      setSettings((prev) => ({
+        ...prev,
+        partyRoom: room,
+      }));
+    },
+    [setSettings]
+  );
+
   return (
     <SettingsContext.Provider
       value={{
@@ -480,6 +492,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleShowMvpMap,
         toggleSimpleGlassUI,
         toggleUltraLite,
+        changePartyRoom,
       }}
     >
       {children}

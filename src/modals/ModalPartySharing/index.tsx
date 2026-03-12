@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Copy, Download, Share } from '@styled-icons/feather';
+import { Copy, Download, Share, Zap, ZapOff } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
@@ -16,6 +16,8 @@ import {
   SettingName,
   SettingSecondary,
   ActionButton,
+  Input,
+  LiveStatus,
 } from './styles';
 
 type Props = {
@@ -25,6 +27,9 @@ type Props = {
 export function ModalPartySharing({ onClose }: Props) {
   useScrollBlock(true);
   useKey('Escape', onClose);
+
+  const { partyRoom, changePartyRoom } = useSettings();
+  const [roomInput, setRoomInput] = useState(partyRoom || '');
 
   const modalRef = useClickOutside(onClose);
 
@@ -68,6 +73,19 @@ export function ModalPartySharing({ onClose }: Props) {
     }
   }, []);
 
+  const handleJoinRoom = useCallback(() => {
+    if (roomInput.trim()) {
+      changePartyRoom(roomInput.trim());
+      alert(`Joined Live Room: ${roomInput.trim()}`);
+    }
+  }, [roomInput, changePartyRoom]);
+
+  const handleLeaveRoom = useCallback(() => {
+    changePartyRoom(null);
+    setRoomInput('');
+    alert('Left Live Room. Back to local mode.');
+  }, [changePartyRoom]);
+
   return (
     <ModalBase>
       <Modal ref={modalRef}>
@@ -78,8 +96,41 @@ export function ModalPartySharing({ onClose }: Props) {
         </Title>
 
         <SettingsContainer>
+          <div style={{ width: '100%' }}>
+            <SettingName style={{ marginBottom: '1rem', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Zap size={24} color="#fbc02d" /> Live Sync (Experimental)
+              </div>
+            </SettingName>
+            <SettingName style={{ fontSize: '1.4rem', opacity: 0.8, marginBottom: '2rem', alignItems: 'flex-start', textAlign: 'left' }}>
+              Connect to a live room to sync timers automatically in real-time.
+            </SettingName>
+
+            {partyRoom ? (
+              <>
+                <LiveStatus active>Connected to: {partyRoom}</LiveStatus>
+                <ActionButton onClick={handleLeaveRoom} style={{ background: '#d32f2f', width: '100%', justifyContent: 'center' }}>
+                  <ZapOff /> Disconnect from Room
+                </ActionButton>
+              </>
+            ) : (
+              <>
+                <Input 
+                  placeholder="Enter Room Name (e.g. MyParty123)" 
+                  value={roomInput}
+                  onChange={(e) => setRoomInput(e.target.value)}
+                />
+                <ActionButton onClick={handleJoinRoom} style={{ width: '100%', justifyContent: 'center' }}>
+                  <Zap /> Join Live Room
+                </ActionButton>
+              </>
+            )}
+          </div>
+
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+
           <SettingName style={{ marginBottom: '1rem' }}>
-            <FormattedMessage id='party_sharing_description' />
+            Manual Sharing
           </SettingName>
 
           <SettingSecondary>
