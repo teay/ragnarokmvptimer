@@ -76,7 +76,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const saveMvps = useCallback((mvps: IMvp[]) => {
     if (partyRoom) {
       const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
-      // Firebase does not allow 'undefined'. We must convert to null or remove the property.
       const minimalMvps = mvps.map(m => {
         const cleaned: any = {
           id: m.id,
@@ -90,6 +89,8 @@ export function MvpProvider({ children }: MvpProviderProps) {
         
         return cleaned;
       });
+      // We still update local state immediately for responsiveness
+      setActiveMvps(sortMvpsByRespawnTime([...mvps]));
       set(mvpsRef, minimalMvps);
     } else {
       saveActiveMvpsToLocalStorage(mvps, server);
