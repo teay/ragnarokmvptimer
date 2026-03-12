@@ -93,7 +93,18 @@ export function MvpProvider({ children }: MvpProviderProps) {
       const data = snapshot.val();
       if (data) {
         const remoteMvps = Array.isArray(data) ? data : Object.values(data);
-        setActiveMvps(sortMvpsByRespawnTime(remoteMvps as IMvp[]));
+        
+        // Merge with originalAllMvps to restore missing fields (sprites, respawn times, etc.)
+        const mergedMvps = (remoteMvps as IMvp[]).map(remoteMvp => {
+          const original = originalAllMvps.find(o => o.id === remoteMvp.id);
+          if (original) {
+            // Keep the remote death info but restore static data
+            return { ...original, ...remoteMvp };
+          }
+          return remoteMvp;
+        });
+
+        setActiveMvps(sortMvpsByRespawnTime(mergedMvps));
       } else {
         setActiveMvps([]);
       }
@@ -101,7 +112,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
     });
 
     return () => unsubscribe();
-  }, [partyRoom, server]);
+  }, [partyRoom, server, originalAllMvps]);
 
   const resetMvpTimer = useCallback((mvp: IMvp) => {
     const updatedMvp = { ...mvp, deathTime: new Date(), deathPosition: undefined };
