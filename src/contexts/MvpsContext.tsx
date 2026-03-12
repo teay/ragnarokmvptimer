@@ -98,11 +98,16 @@ export function MvpProvider({ children }: MvpProviderProps) {
     
     const unsubscribe = onValue(mvpsRef, (snapshot) => {
       const data = snapshot.val();
-      if (data && originalAllMvps.length > 0) {
+      if (data) {
         const remoteMvps = Array.isArray(data) ? data : Object.values(data);
         
+        // If static data is not yet loaded, show minimal but set isLoading(true) to wait
+        if (originalAllMvps.length === 0) {
+          setActiveMvps(remoteMvps as IMvp[]);
+          return;
+        }
+
         const mergedMvps = (remoteMvps as IMvp[]).map(remoteMvp => {
-          // Robust ID comparison (handle string vs number)
           const original = originalAllMvps.find(o => Number(o.id) === Number(remoteMvp.id));
           if (original) {
             const specificSpawn = original.spawn.filter(s => s.mapname === remoteMvp.deathMap);
@@ -117,7 +122,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
         setActiveMvps(sortMvpsByRespawnTime(mergedMvps));
         setIsLoading(false);
-      } else if (!data) {
+      } else {
         setActiveMvps([]);
         setIsLoading(false);
       }
@@ -286,8 +291,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
       if (partyRoom) {
         // If in a party room, the Firebase listener will handle loading.
-        // We just need to stop the loading state once the listener is ready.
-        // (The listener sets isLoading(false) on the first value)
+        // We stay in isLoading(true) until the first value with static data is processed.
         return;
       }
 
