@@ -56,6 +56,7 @@ export const DEFAULT_SETTINGS = {
   server: DEFAULT_SERVER,
   font: 'Jost',
   showMvpMap: true,
+  partyRoom: null as string | null,
 };
 
 export const LOCAL_STORAGE_THEME_KEY = 'theme';

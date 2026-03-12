@@ -100,3 +100,38 @@ export const ActionButton = styled.button`
     height: 18px;
   }
 `;
+
+export const Input = styled.input`
+  width: 100%;
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  outline: none;
+
+  &:focus {
+    border-color: var(--primary);
+  }
+`;
+
+export const LiveStatus = styled.div<{ active?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: ${(props) => (props.active ? '#4caf50' : '#f44336')};
+  margin-bottom: 1rem;
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: ${(props) => (props.active ? '#4caf50' : '#f44336')};
+    box-shadow: 0 0 5px ${(props) => (props.active ? '#4caf50' : '#f44336')};
+  }
+`;

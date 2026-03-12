@@ -54,3 +54,31 @@ export const Customization = styled.div`
 
   gap: 1.6rem;
 `;
+
+export const LiveBadge = styled.div`
+  background: #d32f2f;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  margin-left: 8px;
+  animation: pulse 2s infinite;
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(211, 47, 47, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(211, 47, 47, 0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
