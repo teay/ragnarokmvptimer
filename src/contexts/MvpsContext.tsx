@@ -76,13 +76,20 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const saveMvps = useCallback((mvps: IMvp[]) => {
     if (partyRoom) {
       const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
-      // For Firebase, we only save the minimal necessary data to avoid bloating and race conditions
-      const minimalMvps = mvps.map(m => ({
-        id: m.id,
-        deathTime: m.deathTime,
-        deathMap: m.deathMap,
-        deathPosition: m.deathPosition
-      }));
+      // Firebase does not allow 'undefined'. We must convert to null or remove the property.
+      const minimalMvps = mvps.map(m => {
+        const cleaned: any = {
+          id: m.id,
+          deathTime: m.deathTime ? (m.deathTime instanceof Date ? m.deathTime.toISOString() : m.deathTime) : null,
+          deathMap: m.deathMap || null,
+        };
+        
+        if (m.deathPosition) {
+          cleaned.deathPosition = m.deathPosition;
+        }
+        
+        return cleaned;
+      });
       set(mvpsRef, minimalMvps);
     } else {
       saveActiveMvpsToLocalStorage(mvps, server);
@@ -110,10 +117,16 @@ export function MvpProvider({ children }: MvpProviderProps) {
         const mergedMvps = (remoteMvps as IMvp[]).map(remoteMvp => {
           const original = originalAllMvps.find(o => Number(o.id) === Number(remoteMvp.id));
           if (original) {
+            // Ensure deathTime is a Date object if it's a string from Firebase
+            const formattedRemoteMvp = {
+              ...remoteMvp,
+              deathTime: remoteMvp.deathTime ? new Date(remoteMvp.deathTime) : undefined
+            };
+
             const specificSpawn = original.spawn.filter(s => s.mapname === remoteMvp.deathMap);
             return { 
               ...original, 
-              ...remoteMvp, 
+              ...formattedRemoteMvp, 
               spawn: specificSpawn.length > 0 ? specificSpawn : original.spawn 
             };
           }
