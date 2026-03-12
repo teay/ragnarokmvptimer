@@ -29,25 +29,29 @@ export function ModalPartySharing({ onClose }: Props) {
   useScrollBlock(true);
   useKey('Escape', onClose);
 
-  const { partyRoom, changePartyRoom } = useSettings();
+  const { server, partyRoom, changePartyRoom } = useSettings();
   const { activeMvps, saveMvps } = useMvpsContext();
   const [roomInput, setRoomInput] = useState(partyRoom || '');
 
   const modalRef = useClickOutside(onClose);
 
   const handleExportData = useCallback(() => {
-    if (activeMvps && activeMvps.length > 0) {
-      navigator.clipboard.writeText(JSON.stringify(activeMvps));
+    // Export EVERYTHING from localStorage for all servers, or just current server if in party?
+    // Let's stick to the original behavior of exporting all local data to keep it compatible with old exports.
+    const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+    if (allLocalData) {
+      navigator.clipboard.writeText(allLocalData);
       alert('MVP data copied to clipboard!');
     } else {
-      alert('No MVP data to export.');
+      alert('No MVP data found.');
     }
-  }, [activeMvps]);
+  }, []);
 
   const handleShareLink = useCallback(() => {
-    if (activeMvps && activeMvps.length > 0) {
+    const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+    if (allLocalData) {
       try {
-        const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(activeMvps))));
+        const base64Data = btoa(unescape(encodeURIComponent(allLocalData)));
         const url = new URL(window.location.href);
         url.searchParams.set('party', base64Data);
         navigator.clipboard.writeText(url.toString());
@@ -56,23 +60,43 @@ export function ModalPartySharing({ onClose }: Props) {
         alert('Failed to generate share link.');
       }
     } else {
-      alert('No MVP data to share.');
+      alert('No MVP data found in local storage.');
     }
-  }, [activeMvps]);
+  }, []);
 
   const handleImportData = useCallback(() => {
     const data = prompt('Paste MVP JSON data here:');
     if (data) {
       try {
         const parsed = JSON.parse(data); // Validate JSON
-        saveMvps(parsed);
-        alert(partyRoom ? 'Data pushed to Live Room successfully!' : 'Data imported to local successfully!');
-        if (!partyRoom) window.location.reload();
+        
+        // Check if the data is a single list of MVPs or a multi-server object
+        if (Array.isArray(parsed)) {
+          // Single list - save to current server
+          saveMvps(parsed);
+          alert(partyRoom ? `Pushed list to Live Room (${server})` : `Imported list to local (${server})`);
+        } else {
+          // Multi-server object
+          if (partyRoom) {
+            // If in a room, we only push the data for the CURRENT server from the object
+            if (parsed[server]) {
+              saveMvps(parsed[server]);
+              alert(`Pushed ${server} data to Live Room!`);
+            } else {
+              alert(`No data for server ${server} found in the JSON.`);
+            }
+          } else {
+            // If local, we can save the whole thing to localStorage
+            localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, data);
+            alert('Imported all servers data successfully!');
+            window.location.reload();
+          }
+        }
       } catch (e) {
         alert('Invalid JSON data!');
       }
     }
-  }, [saveMvps, partyRoom]);
+  }, [saveMvps, partyRoom, server]);
 
   const handleJoinRoom = useCallback(() => {
     if (roomInput.trim()) {
