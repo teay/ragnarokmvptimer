@@ -98,19 +98,17 @@ export function MvpProvider({ children }: MvpProviderProps) {
     
     const unsubscribe = onValue(mvpsRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
+      if (data && originalAllMvps.length > 0) {
         const remoteMvps = Array.isArray(data) ? data : Object.values(data);
         
-        // Merge with originalAllMvps to restore missing fields (sprites, respawn times, etc.)
         const mergedMvps = (remoteMvps as IMvp[]).map(remoteMvp => {
-          const original = originalAllMvps.find(o => o.id === remoteMvp.id);
+          // Robust ID comparison (handle string vs number)
+          const original = originalAllMvps.find(o => Number(o.id) === Number(remoteMvp.id));
           if (original) {
-            // Find the correct spawn entry that matches the death map
             const specificSpawn = original.spawn.filter(s => s.mapname === remoteMvp.deathMap);
             return { 
               ...original, 
               ...remoteMvp, 
-              // Keep only the specific spawn to ensure UI (like MvpCard) correctly shows map info
               spawn: specificSpawn.length > 0 ? specificSpawn : original.spawn 
             };
           }
@@ -118,10 +116,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
         });
 
         setActiveMvps(sortMvpsByRespawnTime(mergedMvps));
-      } else {
+        setIsLoading(false);
+      } else if (!data) {
         setActiveMvps([]);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => unsubscribe();
