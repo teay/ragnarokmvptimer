@@ -6,6 +6,7 @@ import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 
 import { useSettings } from '@/contexts/SettingsContext';
+import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useScrollBlock, useClickOutside, useKey } from '@/hooks';
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
 
@@ -29,25 +30,24 @@ export function ModalPartySharing({ onClose }: Props) {
   useKey('Escape', onClose);
 
   const { partyRoom, changePartyRoom } = useSettings();
+  const { activeMvps, saveMvps } = useMvpsContext();
   const [roomInput, setRoomInput] = useState(partyRoom || '');
 
   const modalRef = useClickOutside(onClose);
 
   const handleExportData = useCallback(() => {
-    const activeMvps = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-    if (activeMvps) {
-      navigator.clipboard.writeText(activeMvps);
-      alert('Party data copied to clipboard!');
+    if (activeMvps && activeMvps.length > 0) {
+      navigator.clipboard.writeText(JSON.stringify(activeMvps));
+      alert('MVP data copied to clipboard!');
     } else {
-      alert('No MVP data found.');
+      alert('No MVP data to export.');
     }
-  }, []);
+  }, [activeMvps]);
 
   const handleShareLink = useCallback(() => {
-    const activeMvps = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-    if (activeMvps) {
+    if (activeMvps && activeMvps.length > 0) {
       try {
-        const base64Data = btoa(unescape(encodeURIComponent(activeMvps)));
+        const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(activeMvps))));
         const url = new URL(window.location.href);
         url.searchParams.set('party', base64Data);
         navigator.clipboard.writeText(url.toString());
@@ -56,22 +56,23 @@ export function ModalPartySharing({ onClose }: Props) {
         alert('Failed to generate share link.');
       }
     } else {
-      alert('No MVP data found.');
+      alert('No MVP data to share.');
     }
-  }, []);
+  }, [activeMvps]);
 
   const handleImportData = useCallback(() => {
-    const data = prompt('Paste Party JSON data here:');
+    const data = prompt('Paste MVP JSON data here:');
     if (data) {
       try {
-        JSON.parse(data); // Validate JSON
-        localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, data);
-        window.location.reload();
+        const parsed = JSON.parse(data); // Validate JSON
+        saveMvps(parsed);
+        alert(partyRoom ? 'Data pushed to Live Room successfully!' : 'Data imported to local successfully!');
+        if (!partyRoom) window.location.reload();
       } catch (e) {
         alert('Invalid JSON data!');
       }
     }
-  }, []);
+  }, [saveMvps, partyRoom]);
 
   const handleJoinRoom = useCallback(() => {
     if (roomInput.trim()) {
@@ -130,19 +131,29 @@ export function ModalPartySharing({ onClose }: Props) {
           <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)' }} />
 
           <SettingName style={{ marginBottom: '1rem' }}>
-            Manual Sharing
+            Data Portability
           </SettingName>
 
           <SettingSecondary>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
               <ActionButton onClick={handleShareLink} title="Generate and copy share link">
-                <Share /> <FormattedMessage id='share_link' defaultMessage="Share Link" />
+                <Share /> <FormattedMessage id='share_link' />
               </ActionButton>
-              <ActionButton onClick={handleExportData} title="Copy all servers MVP data to clipboard">
-                <Copy /> <FormattedMessage id='copy_party_data' />
+              <ActionButton onClick={handleExportData} title="Copy current MVP data to clipboard">
+                <Copy /> 
+                {partyRoom ? (
+                  <>Export from Live Sync {partyRoom}</>
+                ) : (
+                  <FormattedMessage id='copy_party_data' />
+                )}
               </ActionButton>
               <ActionButton onClick={handleImportData} title="Paste MVP data from clipboard">
-                <Download /> <FormattedMessage id='import_party_data' />
+                <Download /> 
+                {partyRoom ? (
+                  <>Import to Live Sync {partyRoom}</>
+                ) : (
+                  <FormattedMessage id='import_party_data' />
+                )}
               </ActionButton>
             </div>
           </SettingSecondary>

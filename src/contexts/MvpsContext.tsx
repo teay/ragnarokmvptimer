@@ -46,7 +46,7 @@ interface MvpsContextData {
   closeEditTimeMvpModal: () => void;
   setKillingMvp: (mvp: IMvp) => void;
   closeKillMvpModal: () => void;
-  //clearActiveMvps: () => void;
+  saveMvps: (mvps: IMvp[]) => void;
 }
 
 export const MvpsContext = createContext({} as MvpsContextData);
@@ -343,6 +343,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         setKillingMvp,
         closeKillMvpModal,
         isLoading,
+        saveMvps,
       }}
     >
       {children}
