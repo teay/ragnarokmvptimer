@@ -89,12 +89,9 @@ export function MvpProvider({ children }: MvpProviderProps) {
         
         return cleaned;
       });
-      // We still update local state immediately for responsiveness
-      setActiveMvps(sortMvpsByRespawnTime([...mvps]));
       set(mvpsRef, minimalMvps);
     } else {
       saveActiveMvpsToLocalStorage(mvps, server);
-      setActiveMvps(sortMvpsByRespawnTime(mvps));
     }
   }, [partyRoom, server]);
 
@@ -151,17 +148,17 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setActiveMvps((state) => {
       const newState = state.map((m) => (m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m));
       saveMvps(newState);
-      return partyRoom ? state : sortMvpsByRespawnTime(newState);
+      return sortMvpsByRespawnTime(newState);
     });
-  }, [saveMvps, partyRoom]);
+  }, [saveMvps]);
 
   const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
     setActiveMvps((state) => {
       const newState = state.filter((m) => mvpID !== m.id || m.deathMap !== deathMap);
       saveMvps(newState);
-      return partyRoom ? state : sortMvpsByRespawnTime(newState);
+      return sortMvpsByRespawnTime(newState);
     });
-  }, [saveMvps, partyRoom]);
+  }, [saveMvps]);
 
   const killMvp = useCallback((mvp: IMvp, deathTime = new Date()) => {
     setActiveMvps((s) => {
@@ -184,9 +181,9 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
       saveMvps(newState);
 
-      return partyRoom ? s : sortMvpsByRespawnTime(newState);
+      return sortMvpsByRespawnTime(newState);
     });
-  }, [saveMvps, partyRoom]);
+  }, [saveMvps]);
 
   const updateMvp = useCallback((mvp: IMvp, deathTime = mvp.deathTime) => {
     setActiveMvps((s) => {
@@ -209,9 +206,9 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
       saveMvps(newState);
 
-      return partyRoom ? s : sortMvpsByRespawnTime(newState);
+      return sortMvpsByRespawnTime(newState);
     });
-  }, [saveMvps, partyRoom]);
+  }, [saveMvps]);
 
   const updateMvpDeathLocation = useCallback(
     (
@@ -238,10 +235,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
         saveMvps(newState);
 
-        return partyRoom ? s : sortMvpsByRespawnTime(newState);
+        return sortMvpsByRespawnTime(newState);
       });
     },
-    [saveMvps, partyRoom]
+    [saveMvps]
   );
 
   const closeEditMvpModal = useCallback(() => {
