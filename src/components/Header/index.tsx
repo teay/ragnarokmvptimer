@@ -1,6 +1,7 @@
 import { HeaderTimer } from '../HeaderTimer';
 import { ServerButton } from '../ServerButton';
 import { SettingsButton } from '../SettingsButton';
+import { PartyButton } from '../PartyButton';
 import { useSettings } from '@/contexts/SettingsContext';
 
 import mvpImg from '@/assets/mvp.png';
@@ -20,6 +21,7 @@ export function Header() {
       <HeaderTimer use24HourFormat={use24HourFormat} />
 
       <Customization>
+        <PartyButton />
         <ServerButton />
         <SettingsButton />
       </Customization>

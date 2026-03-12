@@ -16,6 +16,7 @@ import {
   loadMvpsFromLocalStorage,
   saveActiveMvpsToLocalStorage,
 } from '@/controllers/mvp';
+import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
 
 interface MvpProviderProps {
   children: ReactNode;
@@ -205,13 +206,36 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, [activeMvps, originalAllMvps]);
 
   useEffect(() => {
-    async function loadActiveMvpsOnly() {
+    async function init() {
       setIsLoading(true);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const partyData = urlParams.get('party');
+
+      if (partyData) {
+        try {
+          const decodedData = decodeURIComponent(escape(atob(partyData)));
+          JSON.parse(decodedData); // Validate JSON
+          localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, decodedData);
+
+          // Clear the parameter from the URL without reloading
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('party');
+          window.history.replaceState({}, '', newUrl.toString());
+
+          alert('Party data imported successfully!');
+        } catch (e) {
+          console.error('Failed to import party data', e);
+        }
+      }
+
+      // Load final state from localStorage (which may have been updated by the party param)
       const savedActiveMvps = await loadMvpsFromLocalStorage(server);
       setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
       setIsLoading(false);
     }
-    loadActiveMvpsOnly();
+
+    init();
   }, [server]);
 
   useEffect(() => {
