@@ -80,7 +80,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
 
         {isActive && (
           <MvpCardCountdown
-            nextRespawn={nextRespawn}
+            mvp={mvp}
             respawnAsCountdown={respawnAsCountdown}
             onTriggerNotification={() =>
               respawnNotification(
