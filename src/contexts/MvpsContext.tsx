@@ -281,9 +281,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setActiveMvps((state) => {
       const newState = state.map((m) => (m && m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m));
       saveMvps(newState);
+      if (autoSnapshotEnabled) {
+        setTimeout(() => createBackup('CHANGE', 'Boss Reset', `Reset: ${mvp.name}`), 100);
+      }
       return sortMvpsByRespawnTime(newState);
     });
-  }, [saveMvps]);
+  }, [saveMvps, autoSnapshotEnabled, createBackup]);
 
   const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
     setActiveMvps((state) => {
@@ -308,9 +311,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
       
       saveMvps(newState);
       if (autoSnapshotEnabled) {
-        const actionLabel = isNew ? 'Boss Added' : 'Boss Updated';
-        const detailLabel = isNew ? `Added: ${mvp.name}` : `Updated: ${mvp.name}`;
-        setTimeout(() => createBackup('CHANGE', actionLabel, detailLabel), 100);
+        setTimeout(() => createBackup('CHANGE', 'Boss Added', `Added: ${mvp.name}`), 100);
       }
       return sortMvpsByRespawnTime(newState);
     });
@@ -324,7 +325,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
       if (existingMvpIndex !== -1) newState[existingMvpIndex] = updatedMvp;
       saveMvps(newState);
       if (autoSnapshotEnabled) {
-        setTimeout(() => createBackup('CHANGE', 'Boss Updated', `Edited: ${mvp.name}`), 100);
+        setTimeout(() => createBackup('CHANGE', 'Boss Time & Map Updated', `Edited: ${mvp.name}`), 100);
       }
       return sortMvpsByRespawnTime(newState);
     });
