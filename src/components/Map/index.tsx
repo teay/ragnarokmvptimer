@@ -38,7 +38,7 @@ export function Map({
   return (
     <div>
       <MapImg
-        src={getMapImg(mapName)}
+        src={getMapImage(mapName)}
         alt={mapName}
         onClick={mapMark}
         clickable={!!onChange}
