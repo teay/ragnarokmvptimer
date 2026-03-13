@@ -1,15 +1,15 @@
 import { useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Copy, Share, Zap, ZapOff } from '@styled-icons/feather';
+import { Copy, Share, Zap, ZapOff, Database, Cloud, Activity } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
+import { Switch } from '@/components/Switch';
 
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useScrollBlock, useClickOutside, useKey } from '@/hooks';
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
-import { database, ref, set } from '@/services/firebase';
 
 import {
   Modal,
@@ -20,6 +20,8 @@ import {
   ActionButton,
   Input,
   LiveStatus,
+  ControlRow,
+  StatusBadge,
 } from './styles';
 
 type Props = {
@@ -30,15 +32,22 @@ export function ModalPartySharing({ onClose }: Props) {
   useScrollBlock(true);
   useKey('Escape', onClose);
 
-  const { server, partyRoom, changePartyRoom } = useSettings();
-  const { activeMvps, saveMvps, leaveParty } = useMvpsContext();
+  const { 
+    server, 
+    partyRoom, 
+    changePartyRoom, 
+    localSaveEnabled, 
+    toggleLocalSave, 
+    cloudSyncEnabled, 
+    toggleCloudSync 
+  } = useSettings();
+  
+  const { leaveParty } = useMvpsContext();
   const [roomInput, setRoomInput] = useState(partyRoom || '');
 
   const modalRef = useClickOutside(onClose);
 
   const handleExportData = useCallback(() => {
-    // Export EVERYTHING from localStorage for all servers, or just current server if in party?
-    // Let's stick to the original behavior of exporting all local data to keep it compatible with old exports.
     const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
     if (allLocalData) {
       navigator.clipboard.writeText(allLocalData);
@@ -68,87 +77,19 @@ export function ModalPartySharing({ onClose }: Props) {
   const handleJoinRoom = useCallback(() => {
     if (roomInput.trim()) {
       changePartyRoom(roomInput.trim());
-      // alert(`Joined Hunting Party: ${roomInput.trim()}`); // Removed for seamless experience
-      onClose(); // Go back to main page automatically
+      onClose(); 
     }
   }, [roomInput, changePartyRoom, onClose]);
 
-  const handleJoinAndImport = useCallback(() => {
-    const roomName = roomInput.trim();
-    if (!roomName) return;
-
-    // 1. Join the room in settings
-    changePartyRoom(roomName);
-
-    // 2. Get local data and push for CURRENT server directly to Firebase
-    const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-    if (allLocalData) {
-      try {
-        const parsed = JSON.parse(allLocalData);
-        if (parsed[server]) {
-          // Push directly to Firebase to be sure it goes to the RIGHT room name immediately
-          const serverRef = ref(database, `parties/${roomName}/${server}`);
-          const minimalMvps = parsed[server].map((m: any) => {
-            const cleaned: any = {
-              id: m.id,
-              deathTime: m.deathTime || null,
-              deathMap: m.deathMap || null,
-            };
-            if (m.deathPosition) {
-              cleaned.deathPosition = m.deathPosition;
-            }
-            return cleaned;
-          });
-          
-          set(serverRef, { mvps: minimalMvps })
-            .then(() => {
-              // alert(`Joined "${roomName}" and synced ${server} boss timers!`); // Removed for seamless experience
-              onClose(); // Go back to main page automatically
-            })
-            .catch((err) => {
-              console.error('Firebase sync failed', err);
-              alert(`Joined "${roomName}" but failed to sync data.`);
-              onClose();
-            });
-        } else {
-          // alert(`Joined "${roomName}", but no local data found for ${server}.`); // Removed for seamless experience
-          onClose();
-        }
-      } catch (e) {
-        alert(`Joined "${roomName}", but failed to parse local data.`);
-        onClose();
-      }
-    } else {
-      // alert(`Joined "${roomName}".`); // Removed for seamless experience
-      onClose();
-    }
-  }, [roomInput, changePartyRoom, server, onClose]);
-
   const handleLeaveRoom = useCallback(() => {
-    console.log('Action: Leave Party (Discard Changes)');
-    try {
-      leaveParty(false);
-      onClose();
-    } catch (e) {
-      console.error('Failed to leave party', e);
-      // Fallback if context is somehow broken
-      changePartyRoom(null);
-      onClose();
-    }
-  }, [leaveParty, onClose, changePartyRoom]);
+    leaveParty(false);
+    onClose();
+  }, [leaveParty, onClose]);
 
   const handleLeaveAndSaveLocal = useCallback(() => {
-    console.log('Action: Leave Party (Save to Local)');
-    try {
-      leaveParty(true);
-      onClose();
-    } catch (e) {
-      console.error('Failed to leave and save party', e);
-      // Fallback
-      changePartyRoom(null);
-      onClose();
-    }
-  }, [leaveParty, onClose, changePartyRoom]);
+    leaveParty(true);
+    onClose();
+  }, [leaveParty, onClose]);
 
   return (
     <ModalBase>
@@ -161,13 +102,55 @@ export function ModalPartySharing({ onClose }: Props) {
 
         <SettingsContainer>
           <div style={{ width: '100%' }}>
-            <SettingName style={{ marginBottom: '1rem', alignItems: 'flex-start' }}>
+            <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Zap size={24} color="#fbc02d" /> Live Sync (Experimental)
+                <Activity size={24} color="#fbc02d" /> Data Flow Control
               </div>
             </SettingName>
-            <SettingName style={{ fontSize: '1.4rem', opacity: 0.8, marginBottom: '2rem', alignItems: 'flex-start', textAlign: 'left' }}>
-              Connect to a live room to sync timers automatically in real-time.
+            
+            <ControlRow>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Database size={16} /> 
+                  <span style={{ fontSize: '1.6rem', fontWeight: 600 }}>Local Browser</span>
+                  <StatusBadge active={localSaveEnabled}>{localSaveEnabled ? 'Saving' : 'Paused'}</StatusBadge>
+                </div>
+                <span style={{ fontSize: '1.2rem', opacity: 0.7 }}>Backup timers to this device</span>
+              </div>
+              <Switch 
+                id="localSave"
+                name="localSave"
+                checked={localSaveEnabled}
+                onChange={toggleLocalSave}
+              />
+            </ControlRow>
+
+            <ControlRow>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Cloud size={16} /> 
+                  <span style={{ fontSize: '1.6rem', fontWeight: 600 }}>Cloud Sync</span>
+                  <StatusBadge active={cloudSyncEnabled && !!partyRoom}>
+                    {partyRoom ? (cloudSyncEnabled ? 'Syncing' : 'Ghost Mode') : 'Offline'}
+                  </StatusBadge>
+                </div>
+                <span style={{ fontSize: '1.2rem', opacity: 0.7 }}>Broadcast your kills to party</span>
+              </div>
+              <Switch 
+                id="cloudSync"
+                name="cloudSync"
+                checked={cloudSyncEnabled}
+                onChange={toggleCloudSync}
+                disabled={!partyRoom}
+              />
+            </ControlRow>
+
+            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2rem 0' }} />
+
+            <SettingName style={{ marginBottom: '1rem', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Zap size={24} color="#fbc02d" /> Live Room
+              </div>
             </SettingName>
 
             {partyRoom ? (
@@ -191,14 +174,9 @@ export function ModalPartySharing({ onClose }: Props) {
                   value={roomInput}
                   onChange={(e) => setRoomInput(e.target.value)}
                 />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <ActionButton onClick={handleJoinRoom} style={{ width: '100%', justifyContent: 'center' }}>
-                    <Zap /> <FormattedMessage id='join_live_room' />
-                  </ActionButton>
-                  <ActionButton onClick={handleJoinAndImport} style={{ width: '100%', justifyContent: 'center', background: '#388e3c' }}>
-                    <Zap /> <FormattedMessage id='join_live_room_with_local' />
-                  </ActionButton>
-                </div>
+                <ActionButton onClick={handleJoinRoom} style={{ width: '100%', justifyContent: 'center' }}>
+                  <Zap /> <FormattedMessage id='join_live_room' />
+                </ActionButton>
               </>
             )}
           </div>

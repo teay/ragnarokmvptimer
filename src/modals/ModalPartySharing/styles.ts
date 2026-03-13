@@ -95,6 +95,11 @@ export const ActionButton = styled.button`
     transform: scale(0.98);
   }
 
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   > svg {
     width: 18px;
     height: 18px;
@@ -134,4 +139,26 @@ export const LiveStatus = styled.div<{ active?: boolean }>`
     background-color: ${(props) => (props.active ? '#4caf50' : '#f44336')};
     box-shadow: 0 0 5px ${(props) => (props.active ? '#4caf50' : '#f44336')};
   }
+`;
+
+export const ControlRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  margin-bottom: 8px;
+`;
+
+export const StatusBadge = styled.div<{ active: boolean }>`
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background: ${props => props.active ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)'};
+  color: ${props => props.active ? '#4caf50' : '#f44336'};
+  border: 1px solid ${props => props.active ? '#4caf50' : '#f44336'};
 `;

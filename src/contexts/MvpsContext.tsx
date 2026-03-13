@@ -71,7 +71,7 @@ function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
 }
 
 export function MvpProvider({ children }: MvpProviderProps) {
-  const { server, partyRoom, changePartyRoom } = useSettings();
+  const { server, partyRoom, changePartyRoom, localSaveEnabled, cloudSyncEnabled } = useSettings();
 
   const [isLoading, setIsLoading] = useState(true);
   const [editingMvp, setEditingMvp] = useState<IMvp>();
@@ -100,16 +100,21 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, [originalAllMvps]);
 
   const saveMvps = useCallback((mvps: IMvp[]) => {
-    // 1. Update Local State immediately for responsiveness
-    // Ensure data is rehydrated if it was minimal (e.g. from Import)
+    // 1. Update Local State immediately for responsiveness (Always in Memory)
     const rehydrated = rehydrateMvps(mvps);
     setActiveMvps(sortMvpsByRespawnTime(rehydrated));
 
-    // 2. Save to LocalStorage (Always keep a local copy)
-    saveActiveMvpsToLocalStorage(rehydrated, server);
+    // 2. Save to LocalStorage ONLY if enabled
+    if (localSaveEnabled) {
+      console.log('💾 Saving to LocalStorage...');
+      saveActiveMvpsToLocalStorage(rehydrated, server);
+    } else {
+      console.log('🚫 Local Save is PAUSED. Not writing to disk.');
+    }
 
-    // 3. Save to Firebase if in a room
-    if (partyRoom) {
+    // 3. Save to Firebase ONLY if in a room and cloud sync is enabled
+    if (partyRoom && cloudSyncEnabled) {
+      console.log(`☁️ Syncing to Cloud (Room: ${partyRoom})...`);
       const serverRef = ref(database, `parties/${partyRoom}/${server}`);
       const minimalMvps = rehydrated.map(m => {
         const cleaned: any = {
@@ -123,8 +128,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
         return cleaned;
       });
       set(serverRef, { mvps: minimalMvps });
+    } else if (partyRoom && !cloudSyncEnabled) {
+      console.log('👻 GHOST MODE: Not broadcasting kills to cloud.');
     }
-  }, [partyRoom, server, rehydrateMvps]);
+  }, [partyRoom, server, rehydrateMvps, localSaveEnabled, cloudSyncEnabled]);
 
   // Firebase Real-time Listener
   useEffect(() => {
