@@ -215,7 +215,7 @@ export function ModalPartySharing({ onClose }: Props) {
 
             <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2rem 0' }} />
 
-            <SettingName style={{ marginBottom: '1rem', alignItems: 'flex-start' }}>
+            <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Zap size={24} color="#fbc02d" /> Live Room
               </div>
@@ -242,16 +242,35 @@ export function ModalPartySharing({ onClose }: Props) {
                   value={roomInput}
                   onChange={(e) => setRoomInput(e.target.value)}
                 />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <ActionButton onClick={handleCreateWithData} style={{ width: '100%', justifyContent: 'flex-start', background: '#388e3c' }}>
-                    <PlusSquare size={18} /> <FormattedMessage id='join_live_room_with_local' />
-                  </ActionButton>
-                  <ActionButton onClick={handleCreateFresh} style={{ width: '100%', justifyContent: 'flex-start', background: '#1976d2' }}>
-                    <RefreshCw size={18} /> <FormattedMessage id='create_fresh_party' />
-                  </ActionButton>
-                  <ActionButton onClick={handleJoinExisting} style={{ width: '100%', justifyContent: 'flex-start', background: '#666' }}>
-                    <Users size={18} /> <FormattedMessage id='join_live_room' />
-                  </ActionButton>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  
+                  <div>
+                    <ActionButton onClick={handleCreateWithData} style={{ width: '100%', justifyContent: 'flex-start', background: '#388e3c' }}>
+                      <PlusSquare size={18} /> <FormattedMessage id='join_live_room_with_local' />
+                    </ActionButton>
+                    <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', paddingLeft: '0.5rem', textAlign: 'left' }}>
+                      Host a new room using your current local timers as the starting data.
+                    </p>
+                  </div>
+
+                  <div>
+                    <ActionButton onClick={handleCreateFresh} style={{ width: '100%', justifyContent: 'flex-start', background: '#1976d2' }}>
+                      <RefreshCw size={18} /> <FormattedMessage id='create_fresh_party' />
+                    </ActionButton>
+                    <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', paddingLeft: '0.5rem', textAlign: 'left' }}>
+                      Host a new room with zero timers. Existing online data in this room name will be wiped.
+                    </p>
+                  </div>
+
+                  <div>
+                    <ActionButton onClick={handleJoinExisting} style={{ width: '100%', justifyContent: 'flex-start', background: '#666' }}>
+                      <Users size={18} /> <FormattedMessage id='join_live_room' />
+                    </ActionButton>
+                    <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', paddingLeft: '0.5rem', textAlign: 'left' }}>
+                      Join an existing room. Your local data will be updated with party data (non-matching local data is kept).
+                    </p>
+                  </div>
+
                 </div>
               </>
             )}
