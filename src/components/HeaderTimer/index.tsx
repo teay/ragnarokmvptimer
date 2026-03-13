@@ -1,4 +1,4 @@
-import { useTimer } from '@/hooks';
+import { useTimer } from '@/contexts/TimerContext';
 import { Hour } from './styles';
 
 type Props = {
@@ -6,9 +6,9 @@ type Props = {
 };
 
 export function HeaderTimer({ use24HourFormat }: Props) {
-  const [time] = useTimer();
+  const { now } = useTimer();
 
   return (
-    <Hour>{time.format(use24HourFormat ? 'HH:mm:ss' : 'hh:mm:ss A')}</Hour>
+    <Hour>{now.format(use24HourFormat ? 'HH:mm:ss' : 'hh:mm:ss A')}</Hour>
   );
 }

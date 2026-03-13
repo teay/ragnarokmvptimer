@@ -1,29 +1,20 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import dayjs, { type Dayjs } from 'dayjs';
 import type { Duration } from 'dayjs/plugin/duration';
+import { useTimer } from '@/contexts/TimerContext';
 
-function timeToDuration(startTime: Dayjs) {
-  const diff = startTime.diff(dayjs());
+function timeToDuration(startTime: Dayjs, now: Dayjs) {
+  const diff = startTime.diff(now);
   return dayjs.duration(diff);
 }
 
-export function useCountdown(startTime = dayjs(), delay = 1000) {
-  const [duration, setDuration] = useState<Duration>(timeToDuration(startTime));
-  const [isRunning, setIsRunning] = useState(true);
+export function useCountdown(startTime = dayjs()) {
+  const { now } = useTimer();
 
-  const pause = useCallback(() => setIsRunning(false), []);
-  const resume = useCallback(() => setIsRunning(true), []);
+  const duration = useMemo(
+    () => timeToDuration(startTime, now),
+    [startTime, now]
+  );
 
-  useEffect(() => {
-    const interval = setInterval(
-      () => {
-        setDuration(timeToDuration(startTime));
-      },
-      isRunning ? delay : 99999999999999
-    );
-
-    return () => clearInterval(interval);
-  }, [startTime, delay, isRunning]);
-
-  return { duration, isRunning, pause, resume };
+  return { duration };
 }

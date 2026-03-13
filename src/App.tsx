@@ -184,13 +184,11 @@ export default function App() {
               />
             )}
 
-            <Header />
-
             <MvpProvider>
+              <Header />
               <Main />
+              <Footer />
             </MvpProvider>
-
-            <Footer />
             <WarningHeader text={messages[language]['under_development']} />
           </>
         )}

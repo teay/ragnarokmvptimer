@@ -82,3 +82,30 @@ export const LiveBadge = styled.div`
     display: none;
   }
 `;
+
+export const DataBadge = styled.div<{ location: 'local' | 'online' }>`
+  background: ${props => props.location === 'online' ? '#388e3c' : '#1976d2'};
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    display: block;
+  }
+
+  @media (max-width: 1024px) {
+    display: none;
+  }
+`;

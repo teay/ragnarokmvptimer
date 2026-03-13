@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Copy, Download, Share, Zap, ZapOff } from '@styled-icons/feather';
+import { Copy, Share, Zap, ZapOff } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
@@ -9,6 +9,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useScrollBlock, useClickOutside, useKey } from '@/hooks';
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
+import { database, ref, set } from '@/services/firebase';
 
 import {
   Modal,
@@ -30,7 +31,7 @@ export function ModalPartySharing({ onClose }: Props) {
   useKey('Escape', onClose);
 
   const { server, partyRoom, changePartyRoom } = useSettings();
-  const { activeMvps, saveMvps } = useMvpsContext();
+  const { activeMvps, saveMvps, leaveParty } = useMvpsContext();
   const [roomInput, setRoomInput] = useState(partyRoom || '');
 
   const modalRef = useClickOutside(onClose);
@@ -64,52 +65,90 @@ export function ModalPartySharing({ onClose }: Props) {
     }
   }, []);
 
-  const handleImportData = useCallback(() => {
-    const data = prompt('Paste MVP JSON data here:');
-    if (data) {
-      try {
-        const parsed = JSON.parse(data); // Validate JSON
-        
-        // Check if the data is a single list of MVPs or a multi-server object
-        if (Array.isArray(parsed)) {
-          // Single list - save to current server
-          saveMvps(parsed);
-          alert(partyRoom ? `Pushed list to Live Room (${server})` : `Imported list to local (${server})`);
-        } else {
-          // Multi-server object
-          if (partyRoom) {
-            // If in a room, we only push the data for the CURRENT server from the object
-            if (parsed[server]) {
-              saveMvps(parsed[server]);
-              alert(`Pushed ${server} data to Live Room!`);
-            } else {
-              alert(`No data for server ${server} found in the JSON.`);
-            }
-          } else {
-            // If local, we can save the whole thing to localStorage
-            localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, data);
-            alert('Imported all servers data successfully!');
-            window.location.reload();
-          }
-        }
-      } catch (e) {
-        alert('Invalid JSON data!');
-      }
-    }
-  }, [saveMvps, partyRoom, server]);
-
   const handleJoinRoom = useCallback(() => {
     if (roomInput.trim()) {
       changePartyRoom(roomInput.trim());
-      alert(`Joined Live Room: ${roomInput.trim()}`);
+      // alert(`Joined Hunting Party: ${roomInput.trim()}`); // Removed for seamless experience
+      onClose(); // Go back to main page automatically
     }
-  }, [roomInput, changePartyRoom]);
+  }, [roomInput, changePartyRoom, onClose]);
+
+  const handleJoinAndImport = useCallback(() => {
+    const roomName = roomInput.trim();
+    if (!roomName) return;
+
+    // 1. Join the room in settings
+    changePartyRoom(roomName);
+
+    // 2. Get local data and push for CURRENT server directly to Firebase
+    const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+    if (allLocalData) {
+      try {
+        const parsed = JSON.parse(allLocalData);
+        if (parsed[server]) {
+          // Push directly to Firebase to be sure it goes to the RIGHT room name immediately
+          const serverRef = ref(database, `parties/${roomName}/${server}`);
+          const minimalMvps = parsed[server].map((m: any) => {
+            const cleaned: any = {
+              id: m.id,
+              deathTime: m.deathTime || null,
+              deathMap: m.deathMap || null,
+            };
+            if (m.deathPosition) {
+              cleaned.deathPosition = m.deathPosition;
+            }
+            return cleaned;
+          });
+          
+          set(serverRef, { mvps: minimalMvps })
+            .then(() => {
+              // alert(`Joined "${roomName}" and synced ${server} boss timers!`); // Removed for seamless experience
+              onClose(); // Go back to main page automatically
+            })
+            .catch((err) => {
+              console.error('Firebase sync failed', err);
+              alert(`Joined "${roomName}" but failed to sync data.`);
+              onClose();
+            });
+        } else {
+          // alert(`Joined "${roomName}", but no local data found for ${server}.`); // Removed for seamless experience
+          onClose();
+        }
+      } catch (e) {
+        alert(`Joined "${roomName}", but failed to parse local data.`);
+        onClose();
+      }
+    } else {
+      // alert(`Joined "${roomName}".`); // Removed for seamless experience
+      onClose();
+    }
+  }, [roomInput, changePartyRoom, server, onClose]);
 
   const handleLeaveRoom = useCallback(() => {
-    changePartyRoom(null);
-    setRoomInput('');
-    alert('Left Live Room. Back to local mode.');
-  }, [changePartyRoom]);
+    console.log('Action: Leave Party (Discard Changes)');
+    try {
+      leaveParty(false);
+      onClose();
+    } catch (e) {
+      console.error('Failed to leave party', e);
+      // Fallback if context is somehow broken
+      changePartyRoom(null);
+      onClose();
+    }
+  }, [leaveParty, onClose, changePartyRoom]);
+
+  const handleLeaveAndSaveLocal = useCallback(() => {
+    console.log('Action: Leave Party (Save to Local)');
+    try {
+      leaveParty(true);
+      onClose();
+    } catch (e) {
+      console.error('Failed to leave and save party', e);
+      // Fallback
+      changePartyRoom(null);
+      onClose();
+    }
+  }, [leaveParty, onClose, changePartyRoom]);
 
   return (
     <ModalBase>
@@ -134,20 +173,32 @@ export function ModalPartySharing({ onClose }: Props) {
             {partyRoom ? (
               <>
                 <LiveStatus active>Connected to: {partyRoom}</LiveStatus>
-                <ActionButton onClick={handleLeaveRoom} style={{ background: '#d32f2f', width: '100%', justifyContent: 'center' }}>
-                  <ZapOff /> Disconnect from Room
-                </ActionButton>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ActionButton onClick={handleLeaveAndSaveLocal} style={{ background: '#388e3c', width: '100%', justifyContent: 'center' }}>
+                    <ZapOff /> <FormattedMessage id='leave_and_keep_data' />
+                  </ActionButton>
+                  <ActionButton onClick={handleLeaveRoom} style={{ background: '#d32f2f', width: '100%', justifyContent: 'center' }}>
+                    <ZapOff /> <FormattedMessage id='leave_and_discard_data' />
+                  </ActionButton>
+                </div>
               </>
             ) : (
               <>
                 <Input 
+                  id="partyRoomName"
+                  name="partyRoomName"
                   placeholder="Enter Room Name (e.g. MyParty123)" 
                   value={roomInput}
                   onChange={(e) => setRoomInput(e.target.value)}
                 />
-                <ActionButton onClick={handleJoinRoom} style={{ width: '100%', justifyContent: 'center' }}>
-                  <Zap /> Join Live Room
-                </ActionButton>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ActionButton onClick={handleJoinRoom} style={{ width: '100%', justifyContent: 'center' }}>
+                    <Zap /> <FormattedMessage id='join_live_room' />
+                  </ActionButton>
+                  <ActionButton onClick={handleJoinAndImport} style={{ width: '100%', justifyContent: 'center', background: '#388e3c' }}>
+                    <Zap /> <FormattedMessage id='join_live_room_with_local' />
+                  </ActionButton>
+                </div>
               </>
             )}
           </div>
@@ -165,19 +216,7 @@ export function ModalPartySharing({ onClose }: Props) {
               </ActionButton>
               <ActionButton onClick={handleExportData} title="Copy current MVP data to clipboard">
                 <Copy /> 
-                {partyRoom ? (
-                  <>Export from Live Sync {partyRoom}</>
-                ) : (
-                  <FormattedMessage id='copy_party_data' />
-                )}
-              </ActionButton>
-              <ActionButton onClick={handleImportData} title="Paste MVP data from clipboard">
-                <Download /> 
-                {partyRoom ? (
-                  <>Import to Live Sync {partyRoom}</>
-                ) : (
-                  <FormattedMessage id='import_party_data' />
-                )}
+                <FormattedMessage id='copy_local_data' />
               </ActionButton>
             </div>
           </SettingSecondary>
