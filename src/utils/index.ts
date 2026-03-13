@@ -2,24 +2,21 @@ import type { Dayjs } from 'dayjs';
 
 import Question from '../assets/question.gif';
 
-function remapGlobImport(data) {
-  return Object.entries(data).reduce((acc, [key, value]) => {
-    const newKey = key.split('/').slice(-1)[0].split('.')[0];
-    return { ...acc, [newKey]: value };
-  }, {});
+// Map images
+const mapImages = import.meta.glob('../assets/mvp_maps/*.webp', { eager: true, import: 'default' });
+// MVP Icons
+const mvpIcons = import.meta.glob('../assets/mvp_icons/*.webp', { eager: true, import: 'default' });
+// Animated MVP Icons
+const animatedMvpIcons = import.meta.glob('../assets/mvp_icons_animated/*.webp', { eager: true, import: 'default' });
+
+function getAssetPath(glob: Record<string, any>, key: string | number): string {
+  const entries = Object.entries(glob);
+  const found = entries.find(([path]) => {
+    const filename = path.split('/').pop()?.split('.')[0];
+    return filename === String(key);
+  });
+  return found ? (found[1] as string) : Question;
 }
-
-const mapImages = remapGlobImport(
-  import.meta.glob('../assets/mvp_maps/*.webp', { eager: true, import: 'default' })
-);
-
-const mvpIcons = remapGlobImport(
-  import.meta.glob('../assets/mvp_icons/*.webp', { eager: true, import: 'default' })
-);
-
-const animatedMvpIcons = remapGlobImport(
-  import.meta.glob('../assets/mvp_icons_animated/*.webp', { eager: true, import: 'default' })
-);
 
 /**
  * Returns the map image.
@@ -27,7 +24,7 @@ const animatedMvpIcons = remapGlobImport(
  * @returns map image
  */
 export function getMapImage(mapName: string): string {
-  return mapImages[mapName] || Question;
+  return getAssetPath(mapImages, mapName);
 }
 
 /**
@@ -38,9 +35,9 @@ export function getMapImage(mapName: string): string {
  */
 export function getMvpIcon(mvpId: number, animated?: boolean): string {
   if (animated) {
-    return animatedMvpIcons[mvpId] || Question;
+    return getAssetPath(animatedMvpIcons, mvpId);
   }
-  return mvpIcons[mvpId] || Question;
+  return getAssetPath(mvpIcons, mvpId);
 }
 
 /**
