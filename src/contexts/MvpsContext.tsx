@@ -59,36 +59,19 @@ export const MvpsContext = createContext({} as MvpsContextData);
 
 /**
  * Safety-guarded Sort Function
- * Ensures we don't crash if spawn data is missing.
  */
 function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
   if (!mvps) return [];
-  
   return [...mvps].sort((a: IMvp, b: IMvp) => {
-    // 1. Basic existence checks
     if (!a || !b) return 0;
-    
-    // 2. Check for deathTime (the basis of sorting)
     const bothHaveDeathTime = a.deathTime && b.deathTime;
     if (!bothHaveDeathTime) return 0;
-    
-    // 3. CRITICAL: Check for spawn data existence before calling utility
-    if (!a.spawn || !Array.isArray(a.spawn) || !b.spawn || !Array.isArray(b.spawn)) {
-      return 0;
-    }
-
+    if (!a.spawn || !Array.isArray(a.spawn) || !b.spawn || !Array.isArray(b.spawn)) return 0;
     try {
       const respawnA = getMvpRespawnTime(a) || 0;
       const respawnB = getMvpRespawnTime(b) || 0;
-      
-      const timeA = dayjs(a.deathTime).add(respawnA, 'ms');
-      const timeB = dayjs(b.deathTime).add(respawnB, 'ms');
-      
-      return timeA.diff(timeB);
-    } catch (e) {
-      console.warn('Sorting error for MVPs:', { a, b, error: e });
-      return 0;
-    }
+      return dayjs(a.deathTime).add(respawnA, 'ms').diff(dayjs(b.deathTime).add(respawnB, 'ms'));
+    } catch (e) { return 0; }
   });
 }
 
@@ -111,19 +94,14 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const rehydrateMvps = useCallback((mvps: any[]) => {
     if (!mvps) return [];
-    
     return mvps.map(mvp => {
       if (!mvp) return mvp;
-      
       const original = originalAllMvps.find(o => o && Number(o.id) === Number(mvp.id));
       if (original) {
         const deathTime = mvp.deathTime ? new Date(mvp.deathTime) : undefined;
-        // Try to find the specific spawn for the map it died on
         const specificSpawn = original.spawn ? original.spawn.filter(s => s && s.mapname === mvp.deathMap) : [];
         return { 
-          ...original, 
-          ...mvp, 
-          deathTime,
+          ...original, ...mvp, deathTime,
           spawn: specificSpawn.length > 0 ? specificSpawn : original.spawn 
         };
       }
@@ -136,9 +114,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
     if (saved) {
       try {
         setBackups(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse backups', e);
-      }
+      } catch (e) { console.error('Failed to parse backups', e); }
     }
   }, []);
 
@@ -150,21 +126,25 @@ export function MvpProvider({ children }: MvpProviderProps) {
       const allLocalData = JSON.parse(allLocalDataRaw);
       const serverData = allLocalData[server] || [];
 
-      const newBackup: IMvpBackup = {
-        id: dayjs().valueOf().toString(),
-        timestamp: dayjs().toISOString(),
-        type, description, data: allLocalData, bossCount: serverData.length, server,
-        changeDetail,
-      };
-
       setBackups(prev => {
-        const updated = [newBackup, ...prev].slice(0, MAX_BACKUPS);
+        // Calculate next sequence number based on the highest sequence found
+        const lastSequence = prev.length > 0 ? Math.max(...prev.map(b => b.sequence || 0)) : 0;
+        
+        const newBackup: IMvpBackup = {
+          id: dayjs().valueOf().toString(),
+          timestamp: dayjs().toISOString(),
+          type, description, data: allLocalData, bossCount: serverData.length, server,
+          changeDetail,
+          sequence: lastSequence + 1,
+        };
+
+        // NEW LOGIC: Store in CHRONOLOGICAL order (Oldest First) 
+        // and only keep the LATEST 10 entries.
+        const updated = [...prev, newBackup].slice(-MAX_BACKUPS);
         localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
         return updated;
       });
-    } catch (e) {
-      console.error('Backup creation failed', e);
-    }
+    } catch (e) { console.error('Backup creation failed', e); }
   }, [server]);
 
   const restoreBackup = useCallback((backupId: string) => {
@@ -193,7 +173,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setActiveMvps(sortMvpsByRespawnTime(rehydrated));
     if (localSaveEnabled) saveActiveMvpsToLocalStorage(rehydrated, server);
     if (partyRoom && cloudSyncEnabled) {
-      console.log(`☁️ Syncing to Cloud...`);
       const serverRef = ref(database, `parties/${partyRoom}/${server}`);
       const minimalMvps = rehydrated.map(m => ({
         id: m.id,
@@ -205,53 +184,34 @@ export function MvpProvider({ children }: MvpProviderProps) {
     }
   }, [partyRoom, server, rehydrateMvps, localSaveEnabled, cloudSyncEnabled]);
 
-  useEffect(() => {
-    loadBackups();
-  }, [loadBackups]);
+  useEffect(() => { loadBackups(); }, [loadBackups]);
 
   // Firebase Real-time Listener
   useEffect(() => {
     if (!partyRoom) return;
     const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
-    
     const unsubscribe = onValue(mvpsRef, async (snapshot) => {
       const data = snapshot.val();
       const remoteMvpsRaw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-      
-      // Safety: Only proceed with complex merge if originalAllMvps is ready
       if (originalAllMvps.length === 0) {
         setActiveMvps(remoteMvpsRaw as IMvp[]);
         return;
       }
-
       const rehydratedRemote = rehydrateMvps(remoteMvpsRaw);
-
       let allLocal: any = {};
       try {
         const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
         allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
-      } catch (e) {
-        console.error('Failed to parse local storage', e);
-      }
-      
+      } catch (e) {}
       const localForServer = allLocal[server] || [];
-
-      // Smart Merge Listener Logic
       const remoteKeys = new Set(rehydratedRemote.map(m => m ? `${m.id}-${m.deathMap}` : ''));
       const uniqueLocal = localForServer.filter((m: any) => m && !remoteKeys.has(`${m.id}-${m.deathMap}`));
-
       const mergedResult = [...rehydratedRemote, ...uniqueLocal];
       const sortedMerged = sortMvpsByRespawnTime(mergedResult);
-
       setActiveMvps(sortedMerged);
-
-      if (localSaveEnabled) {
-        saveActiveMvpsToLocalStorage(sortedMerged, server);
-      }
-      
+      if (localSaveEnabled) saveActiveMvpsToLocalStorage(sortedMerged, server);
       setIsLoading(false);
     });
-    
     return () => unsubscribe();
   }, [partyRoom, server, originalAllMvps, rehydrateMvps, localSaveEnabled]);
 
@@ -331,7 +291,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
       const newState = state.filter((m) => m && (mvpID !== m.id || m.deathMap !== deathMap));
       saveMvps(newState);
       if (autoSnapshotEnabled && bossToRemove) {
-        // Delay slightly to ensure saveMvps finished writing to localStorage
         setTimeout(() => createBackup('CHANGE', 'Boss Removed', `Removed: ${bossToRemove.name}`), 100);
       }
       return sortMvpsByRespawnTime(newState);

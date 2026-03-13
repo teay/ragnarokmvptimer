@@ -31,5 +31,6 @@ interface IMvpBackup {
   data: Record<string, any[]>; // Standard activeMvps format { server: mvps[] }
   bossCount: number;
   server: string;
-  changeDetail?: string; // e.g., "Added: Baphomet" or "Removed: Osiris"
+  changeDetail?: string; // e.g., "Added Baphomet" or "Removed Osiris"
+  sequence?: number; // Sequential number for display
 }
