@@ -11,7 +11,6 @@ import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useScrollBlock, useClickOutside, useKey, useTheme } from '@/hooks';
 import { clearData } from '@/utils';
-import { GetTranslateText } from '@/utils/GetTranslateText';
 
 import {
   Modal,
@@ -83,7 +82,7 @@ export function ModalSettings({ onClose }: Props) {
     toggleFallingElements,
     waveTrailColor, // ตรวจสอบให้แน่ใจว่าได้ดึงตัวแปรนี้มาอย่างถูกต้อง
     changeWaveTrailColor,
-    waveTrailOpacity, // ตรวจสอบให้แน่ใจว่าได้ดึงตัวแปรนี้มาอย่างถูกต้อง
+    waveTrailOpacity, // ตรวจสอบให้แนใจว่าได้ดึงตัวแปรนี้มาอย่างถูกต้อง
     changeWaveTrailOpacity,
     showMvpMap,
     toggleShowMvpMap,
@@ -105,8 +104,8 @@ export function ModalSettings({ onClose }: Props) {
     !isConfirmationModalOpen ? onClose : () => null
   );
 
-  const confirmationTitle = GetTranslateText('clear_data_message');
-  const confirmationDescription = GetTranslateText('clear_data_description');
+  const confirmationTitle = intl.formatMessage({ id: 'clear_data_message' });
+  const confirmationDescription = intl.formatMessage({ id: 'clear_data_description' });
 
   const handleExportData = useCallback(() => {
     const activeMvps = localStorage.getItem('activeMvps');
@@ -161,6 +160,8 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch
+                id="ultraLite"
+                name="ultraLite"
                 onChange={toggleUltraLite}
                 checked={ultraLite}
               />
@@ -172,6 +173,8 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch
+                id="simpleGlassUI"
+                name="simpleGlassUI"
                 onChange={toggleSimpleGlassUI}
                 checked={simpleGlassUI}
               />
@@ -183,6 +186,8 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch
+                id="hideActiveContent"
+                name="hideActiveContent"
                 onChange={toggleHideActiveContent}
                 checked={hideActiveContent}
               />
@@ -206,6 +211,8 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch
+                id="respawnAsCountdown"
+                name="respawnAsCountdown"
                 onChange={toggleRespawnCountdown}
                 checked={respawnAsCountdown}
               />
@@ -217,6 +224,8 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch
+                id="animateSprites"
+                name="animateSprites"
                 onChange={toggleAnimatedSprites}
                 checked={animatedSprites}
               />
@@ -228,6 +237,8 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch
+                id="showMvpMap"
+                name="showMvpMap"
                 onChange={toggleShowMvpMap}
                 checked={showMvpMap}
               />
@@ -247,6 +258,8 @@ export function ModalSettings({ onClose }: Props) {
               </SettingName>
 
               <Switch
+                id="notificationSound"
+                name="notificationSound"
                 onChange={toggleNotificationSound}
                 checked={isNotificationSoundEnabled}
               />
@@ -257,7 +270,12 @@ export function ModalSettings({ onClose }: Props) {
                 <FormattedMessage id='glass_ui' defaultMessage='Glass UI' />
               </SettingName>
 
-              <Switch onChange={toggleGlassUI} checked={isGlassUIEnabled} />
+              <Switch
+                id="glassUI"
+                name="glassUI"
+                onChange={toggleGlassUI}
+                checked={isGlassUIEnabled}
+              />
             </Setting>
 
             <Setting>
@@ -265,21 +283,41 @@ export function ModalSettings({ onClose }: Props) {
                 <FormattedMessage id='animated_background' defaultMessage='Animated Background' />
               </SettingName>
 
-              <Switch onChange={toggleAnimatedBackground} checked={isAnimatedBackgroundEnabled} />
+              <Switch
+                id="animatedBackground"
+                name="animatedBackground"
+                onChange={toggleAnimatedBackground}
+                checked={isAnimatedBackgroundEnabled}
+              />
             </Setting>
 
             <Setting>
               <SettingName>
                 <FormattedMessage id='animated_background_color' defaultMessage='Animated Background Color' />
               </SettingName>
-              <input type="color" value={animatedBackgroundColor} onChange={(e) => changeAnimatedBackgroundColor(e.target.value)} />
+              <input
+                id="animatedBackgroundColor"
+                name="animatedBackgroundColor"
+                type="color"
+                value={animatedBackgroundColor}
+                onChange={(e) => changeAnimatedBackgroundColor(e.target.value)}
+              />
             </Setting>
 
             <Setting>
               <SettingName>
                 <FormattedMessage id='animated_background_opacity' defaultMessage='Animated Background Color Opacity' />
               </SettingName>
-              <input type="range" min="0" max="1" step="0.01" value={animatedBackgroundOpacity} onChange={(e) => changeAnimatedBackgroundOpacity(Number(e.target.value))} />
+              <input
+                id="animatedBackgroundOpacity"
+                name="animatedBackgroundOpacity"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={animatedBackgroundOpacity}
+                onChange={(e) => changeAnimatedBackgroundOpacity(Number(e.target.value))}
+              />
             </Setting>
 
             <Setting>
@@ -287,7 +325,12 @@ export function ModalSettings({ onClose }: Props) {
                 <FormattedMessage id='sparkle_effect' defaultMessage='Sparkle Effect' />
               </SettingName>
 
-              <Switch onChange={toggleSparkleEffect} checked={isSparkleEffectEnabled} />
+              <Switch
+                id="sparkleEffect"
+                name="sparkleEffect"
+                onChange={toggleSparkleEffect}
+                checked={isSparkleEffectEnabled}
+              />
             </Setting>
 
             {isSparkleEffectEnabled && (
@@ -296,6 +339,8 @@ export function ModalSettings({ onClose }: Props) {
                   <FormattedMessage id='sparkle_density' defaultMessage='Sparkle Density' />
                 </SettingName>
                 <select
+                  id="sparkleDensity"
+                  name="sparkleDensity"
                   value={String(sparkleDensity)}
                   onChange={(e) => changeSparkleDensity(Number(e.target.value))}
                 >
@@ -321,7 +366,12 @@ export function ModalSettings({ onClose }: Props) {
                 <FormattedMessage id='falling_elements' defaultMessage='Falling Elements' />
               </SettingName>
 
-              <Switch onChange={toggleFallingElements} checked={isFallingElementsEnabled} />
+              <Switch
+                id="fallingElements"
+                name="fallingElements"
+                onChange={toggleFallingElements}
+                checked={isFallingElementsEnabled}
+              />
             </Setting>
 
             {/* New Background Effect Settings */}
@@ -329,7 +379,12 @@ export function ModalSettings({ onClose }: Props) {
               <SettingName>
                 <FormattedMessage id='background_effect_mode' defaultMessage='Effect Mode' />
               </SettingName>
-              <select value={backgroundEffectMode} onChange={(e) => changeBackgroundEffectMode(e.target.value as 'full' | 'top' | 'bottom' | 'center')}>
+              <select
+                id="backgroundEffectMode"
+                name="backgroundEffectMode"
+                value={backgroundEffectMode}
+                onChange={(e) => changeBackgroundEffectMode(e.target.value as 'full' | 'top' | 'bottom' | 'center')}
+              >
                 <option value="full">Full Screen</option>
                 <option value="top">Top Half</option>
                 <option value="bottom">Bottom Half</option>
@@ -341,7 +396,12 @@ export function ModalSettings({ onClose }: Props) {
               <SettingName>
                 <FormattedMessage id='particle_density' defaultMessage='Particle Density' />
               </SettingName>
-              <select value={particleDensity} onChange={(e) => changeParticleDensity(e.target.value as 'low' | 'medium' | 'high' | 'Empty')}>
+              <select
+                id="particleDensity"
+                name="particleDensity"
+                value={particleDensity}
+                onChange={(e) => changeParticleDensity(e.target.value as 'low' | 'medium' | 'high' | 'Empty')}
+              >
                 <option value="Empty">Empty</option>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -353,35 +413,73 @@ export function ModalSettings({ onClose }: Props) {
               <SettingName>
                 <FormattedMessage id='particle_color' defaultMessage='Particle Color' />
               </SettingName>
-              <input type="color" value={particleColor} onChange={(e) => changeParticleColor(e.target.value)} />
+              <input
+                id="particleColor"
+                name="particleColor"
+                type="color"
+                value={particleColor}
+                onChange={(e) => changeParticleColor(e.target.value)}
+              />
             </Setting>
 
             <Setting>
               <SettingName>
                 <FormattedMessage id='particle_opacity' defaultMessage='Particle Opacity' />
               </SettingName>
-              <input type="range" min="0" max="1" step="0.01" value={particleOpacity} onChange={(e) => changeParticleOpacity(Number(e.target.value))} />
+              <input
+                id="particleOpacity"
+                name="particleOpacity"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={particleOpacity}
+                onChange={(e) => changeParticleOpacity(Number(e.target.value))}
+              />
             </Setting>
 
             <Setting>
               <SettingName>
                 <FormattedMessage id='wave_amplitude' defaultMessage='Wave Amplitude' />
               </SettingName>
-              <input type="number" value={waveAmplitude} onChange={(e) => changeWaveAmplitude(Number(e.target.value))} min="0" max="100" />
+              <input
+                id="waveAmplitude"
+                name="waveAmplitude"
+                type="number"
+                value={waveAmplitude}
+                onChange={(e) => changeWaveAmplitude(Number(e.target.value))}
+                min="0"
+                max="100"
+              />
             </Setting>
 
             <Setting>
               <SettingName>
                 <FormattedMessage id='wave_color' defaultMessage='Wave Color' />
               </SettingName>
-              <input type="color" value={waveColor} onChange={(e) => changeWaveColor(e.target.value)} />
+              <input
+                id="waveColor"
+                name="waveColor"
+                type="color"
+                value={waveColor}
+                onChange={(e) => changeWaveColor(e.target.value)}
+              />
             </Setting>
 
             <Setting>
               <SettingName>
                 <FormattedMessage id='wave_opacity' defaultMessage='Wave Opacity' />
               </SettingName>
-              <input type="range" min="0" max="1" step="0.01" value={waveOpacity} onChange={(e) => changeWaveOpacity(Number(e.target.value))} />
+              <input
+                id="waveOpacity"
+                name="waveOpacity"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={waveOpacity}
+                onChange={(e) => changeWaveOpacity(Number(e.target.value))}
+              />
             </Setting>
 
             {/* Keep the first set of wave trail settings */}
@@ -389,21 +487,41 @@ export function ModalSettings({ onClose }: Props) {
               <SettingName>
                 <FormattedMessage id='wave_trail_color' defaultMessage='Wave Trail Color' />
               </SettingName>
-              <input type="color" value={waveTrailColor} onChange={(e) => changeWaveTrailColor(e.target.value)} />
+              <input
+                id="waveTrailColor"
+                name="waveTrailColor"
+                type="color"
+                value={waveTrailColor}
+                onChange={(e) => changeWaveTrailColor(e.target.value)}
+              />
             </Setting>
 
             <Setting>
               <SettingName>
                 <FormattedMessage id='wave_trail_opacity' defaultMessage='Wave Trail Opacity' />
               </SettingName>
-              <input type="range" min="0" max="1" step="0.01" value={waveTrailOpacity} onChange={(e) => changeWaveTrailOpacity(Number(e.target.value))} />
+              <input
+                id="waveTrailOpacity"
+                name="waveTrailOpacity"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={waveTrailOpacity}
+                onChange={(e) => changeWaveTrailOpacity(Number(e.target.value))}
+              />
             </Setting>
 
             <Setting>
               <SettingName>
                 <FormattedMessage id='main_content_transparency' defaultMessage='Main Content Transparency' />
               </SettingName>
-              <Switch onChange={toggleMainContentTransparency} checked={isMainContentTransparent} />
+              <Switch
+                id="mainContentTransparency"
+                name="mainContentTransparency"
+                onChange={toggleMainContentTransparency}
+                checked={isMainContentTransparent}
+              />
             </Setting>
 
             <Setting>

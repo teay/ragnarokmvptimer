@@ -7,6 +7,7 @@ import App from './App';
 import './styles/Global';
 
 import { SettingsProvider } from './contexts/SettingsContext';
+import { TimerProvider } from './contexts/TimerContext';
 
 // dayjs.locale('en-gb'); // Set the global locale
 
@@ -17,9 +18,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <SettingsProvider>
-      <App />
+      <TimerProvider>
+        <App />
+      </TimerProvider>
     </SettingsProvider>
-    
-    
   </React.StrictMode>
 );

@@ -30,6 +30,7 @@ interface MvpsContextData {
   editingTimeMvp: IMvp | undefined;
   killingMvp: IMvp | undefined;
   isLoading: boolean;
+  dataLocation: 'local' | 'online' | 'mixed';
   resetMvpTimer: (mvp: IMvp) => void;
   killMvp: (mvp: IMvp, time?: Date | null) => void;
   updateMvp: (mvp: IMvp, time?: Date | null) => void;
@@ -47,6 +48,7 @@ interface MvpsContextData {
   setKillingMvp: (mvp: IMvp) => void;
   closeKillMvpModal: () => void;
   saveMvps: (mvps: IMvp[]) => void;
+  leaveParty: (saveToLocal: boolean) => void;
 }
 
 export const MvpsContext = createContext({} as MvpsContextData);
@@ -57,14 +59,19 @@ function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
     if (!bothHaveDeathTime) {
       return 0;
     }
+    
+    // Safety check for spawn data
+    const respawnA = getMvpRespawnTime(a) || 0;
+    const respawnB = getMvpRespawnTime(b) || 0;
+    
     return dayjs(a.deathTime)
-      .add(getMvpRespawnTime(a), 'ms')
-      .diff(dayjs(b.deathTime).add(getMvpRespawnTime(b), 'ms'));
+      .add(respawnA, 'ms')
+      .diff(dayjs(b.deathTime).add(respawnB, 'ms'));
   });
 }
 
 export function MvpProvider({ children }: MvpProviderProps) {
-  const { server, partyRoom } = useSettings();
+  const { server, partyRoom, changePartyRoom } = useSettings();
 
   const [isLoading, setIsLoading] = useState(true);
   const [editingMvp, setEditingMvp] = useState<IMvp>();
@@ -73,64 +80,73 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
 
+  const dataLocation: 'local' | 'online' | 'mixed' = partyRoom ? 'online' : 'local';
+
+  const rehydrateMvps = useCallback((mvps: any[]) => {
+    return mvps.map(mvp => {
+      const original = originalAllMvps.find(o => Number(o.id) === Number(mvp.id));
+      if (original) {
+        const deathTime = mvp.deathTime ? new Date(mvp.deathTime) : undefined;
+        const specificSpawn = original.spawn.filter(s => s.mapname === mvp.deathMap);
+        return { 
+          ...original, 
+          ...mvp, 
+          deathTime,
+          spawn: specificSpawn.length > 0 ? specificSpawn : original.spawn 
+        };
+      }
+      return mvp;
+    });
+  }, [originalAllMvps]);
+
   const saveMvps = useCallback((mvps: IMvp[]) => {
+    // 1. Update Local State immediately for responsiveness
+    // Ensure data is rehydrated if it was minimal (e.g. from Import)
+    const rehydrated = rehydrateMvps(mvps);
+    setActiveMvps(sortMvpsByRespawnTime(rehydrated));
+
+    // 2. Save to LocalStorage (Always keep a local copy)
+    saveActiveMvpsToLocalStorage(rehydrated, server);
+
+    // 3. Save to Firebase if in a room
     if (partyRoom) {
-      const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
-      const minimalMvps = mvps.map(m => {
+      const serverRef = ref(database, `parties/${partyRoom}/${server}`);
+      const minimalMvps = rehydrated.map(m => {
         const cleaned: any = {
           id: m.id,
           deathTime: m.deathTime ? (m.deathTime instanceof Date ? m.deathTime.toISOString() : m.deathTime) : null,
           deathMap: m.deathMap || null,
         };
-        
         if (m.deathPosition) {
           cleaned.deathPosition = m.deathPosition;
         }
-        
         return cleaned;
       });
-      set(mvpsRef, minimalMvps);
-    } else {
-      saveActiveMvpsToLocalStorage(mvps, server);
+      set(serverRef, { mvps: minimalMvps });
     }
-  }, [partyRoom, server]);
+  }, [partyRoom, server, rehydrateMvps]);
 
   // Firebase Real-time Listener
   useEffect(() => {
     if (!partyRoom) return;
 
     const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
-    
+
     const unsubscribe = onValue(mvpsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const remoteMvps = Array.isArray(data) ? data : Object.values(data);
-        
-        // If static data is not yet loaded, show minimal but set isLoading(true) to wait
+
+        // If static data is not yet loaded, show minimal and keep loading true
+        // BUT we must ensure that once static data loads, we re-run this.
         if (originalAllMvps.length === 0) {
           setActiveMvps(remoteMvps as IMvp[]);
+          // Safety timeout to show even if static data hangs
+          setTimeout(() => setIsLoading(false), 3000);
           return;
         }
 
-        const mergedMvps = (remoteMvps as IMvp[]).map(remoteMvp => {
-          const original = originalAllMvps.find(o => Number(o.id) === Number(remoteMvp.id));
-          if (original) {
-            // Ensure deathTime is a Date object if it's a string from Firebase
-            const formattedRemoteMvp = {
-              ...remoteMvp,
-              deathTime: remoteMvp.deathTime ? new Date(remoteMvp.deathTime) : undefined
-            };
-
-            const specificSpawn = original.spawn.filter(s => s.mapname === remoteMvp.deathMap);
-            return { 
-              ...original, 
-              ...formattedRemoteMvp, 
-              spawn: specificSpawn.length > 0 ? specificSpawn : original.spawn 
-            };
-          }
-          return remoteMvp;
-        });
-
+        const mergedMvps = rehydrateMvps(remoteMvps);
         setActiveMvps(sortMvpsByRespawnTime(mergedMvps));
         setIsLoading(false);
       } else {
@@ -140,7 +156,21 @@ export function MvpProvider({ children }: MvpProviderProps) {
     });
 
     return () => unsubscribe();
-  }, [partyRoom, server, originalAllMvps]);
+  }, [partyRoom, server, originalAllMvps, rehydrateMvps]);
+
+  // Effect to handle case where originalAllMvps loads AFTER Firebase data
+  useEffect(() => {
+    if (partyRoom && originalAllMvps.length > 0 && activeMvps.length > 0 && isLoading) {
+      // Re-hydrate activeMvps now that we have original data
+      const mergedMvps = rehydrateMvps(activeMvps);
+      setActiveMvps(sortMvpsByRespawnTime(mergedMvps));
+      setIsLoading(false);
+    } else if (partyRoom && originalAllMvps.length > 0 && activeMvps.length === 0 && isLoading) {
+      // Data was empty but static is ready
+      setIsLoading(false);
+    }
+  }, [originalAllMvps, partyRoom, rehydrateMvps, activeMvps, isLoading]);
+
 
 
   const resetMvpTimer = useCallback((mvp: IMvp) => {
@@ -253,6 +283,30 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setKillingMvp(undefined);
   }, []);
 
+  const leaveParty = useCallback((saveToLocal: boolean) => {
+    console.log('Leaving party room...', { saveToLocal, currentRoom: partyRoom });
+    
+    if (saveToLocal) {
+      // Ensure we have rehydrated data before saving to local
+      const rehydrated = rehydrateMvps(activeMvps);
+      saveActiveMvpsToLocalStorage(rehydrated, server);
+      // Update local state too so the transition is instant
+      setActiveMvps(sortMvpsByRespawnTime(rehydrated));
+    } else {
+      // If discarding online changes, we should immediately reload from local storage
+      // to avoid seeing the online data after partyRoom becomes null
+      loadMvpsFromLocalStorage(server).then(saved => {
+        setActiveMvps(sortMvpsByRespawnTime(saved || []));
+      });
+    }
+    
+    // Clear party room (this will trigger the init effect)
+    changePartyRoom(null);
+    
+    // Ensure loading is false after a short delay to allow re-rendering
+    setTimeout(() => setIsLoading(false), 100);
+  }, [activeMvps, server, changePartyRoom, rehydrateMvps, partyRoom]);
+
   const allMvps = useMemo(() => {
     const activeMvpKeys = new Set(
       activeMvps.map((mvp) => `${mvp.id}-${mvp.deathMap}`)
@@ -343,7 +397,9 @@ export function MvpProvider({ children }: MvpProviderProps) {
         setKillingMvp,
         closeKillMvpModal,
         isLoading,
+        dataLocation,
         saveMvps,
+        leaveParty,
       }}
     >
       {children}

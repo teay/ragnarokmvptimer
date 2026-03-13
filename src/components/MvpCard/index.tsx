@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { RefreshCcw, Trash2, Edit2 } from '@styled-icons/feather';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import dayjs from 'dayjs';
 
 import { MvpSprite } from '../MvpSprite';
@@ -13,7 +13,6 @@ import { useNotification } from '@/hooks';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { getMvpRespawnTime } from '@/utils';
-import { GetTranslateText } from '@/utils/GetTranslateText';
 
 import {
   Container,
@@ -49,6 +48,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
   const { respawnAsCountdown, animatedSprites, showMvpMap, toggleShowMvpMap } = useSettings();
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const intl = useIntl();
 
   const isActive = !!mvp.deathTime;
   const isEditing = editingMvp?.id === mvp.id;
@@ -85,7 +85,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
             onTriggerNotification={() =>
               respawnNotification(
                 mvp.id,
-                `${mvp.name} ${GetTranslateText('will_respawn')}`,
+                `${mvp.name} ${intl.formatMessage({ id: 'will_respawn' })}`,
                 `${mvp.deathMap} - ${nextRespawn.format('HH:mm')}`
               )
             }
@@ -111,7 +111,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
             <>
               <Tombstone
                 onClick={() => setEditingTimeMvp(mvp)}
-                title={GetTranslateText('edit_mvp')}
+                title={intl.formatMessage({ id: 'edit_mvp' })}
               >
                 <FormattedMessage id='when_was_mvp_killed' />
                 <br />
