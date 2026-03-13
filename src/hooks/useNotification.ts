@@ -26,7 +26,7 @@ export function useNotification() {
       if (hasNotificationPermission) {
         new Notification(title, {
           body,
-          icon: getMvpSprite(mvpID),
+          icon: getMvpIcon(mvpID),
         });
       }
     },

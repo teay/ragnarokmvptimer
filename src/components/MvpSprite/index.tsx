@@ -10,7 +10,7 @@ type MvpSpriteProps = {
 export function MvpSprite({ id, name, animated }: MvpSpriteProps) {
   return (
     <Sprite
-      src={animated ? getAnimatedMvpSprite(id) : getMvpSprite(id)}
+      src={getMvpIcon(id, animated)}
       alt={name}
       isAnimated={animated}
       loading='lazy'
