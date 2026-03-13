@@ -22,3 +22,13 @@ interface IMvp {
   deathMap?: string;
   deathPosition?: IMapMark;
 }
+
+interface IMvpBackup {
+  id: string;
+  timestamp: string;
+  type: 'AUTO' | 'MANUAL';
+  description: string;
+  data: Record<string, any[]>; // Standard activeMvps format { server: mvps[] }
+  bossCount: number;
+  server: string;
+}

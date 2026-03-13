@@ -11,13 +11,13 @@ import dayjs from 'dayjs';
 
 import { useSettings } from './SettingsContext';
 
-import { database, ref, set, onValue, off } from '@/services/firebase';
+import { database, ref, set, get, onValue, off } from '@/services/firebase';
 import { getMvpRespawnTime, getServerData } from '../utils';
 import {
   loadMvpsFromLocalStorage,
   saveActiveMvpsToLocalStorage,
 } from '@/controllers/mvp';
-import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
+import { LOCAL_STORAGE_ACTIVE_MVPS_KEY, LOCAL_STORAGE_BACKUPS_KEY, MAX_BACKUPS } from '@/constants';
 
 interface MvpProviderProps {
   children: ReactNode;
@@ -49,6 +49,10 @@ interface MvpsContextData {
   closeKillMvpModal: () => void;
   saveMvps: (mvps: IMvp[]) => void;
   leaveParty: (saveToLocal: boolean) => void;
+  backups: IMvpBackup[];
+  createBackup: (type: 'AUTO' | 'MANUAL', description: string) => void;
+  restoreBackup: (backupId: string) => void;
+  deleteBackup: (backupId: string) => void;
 }
 
 export const MvpsContext = createContext({} as MvpsContextData);
@@ -56,28 +60,16 @@ export const MvpsContext = createContext({} as MvpsContextData);
 function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
   return mvps.sort((a: IMvp, b: IMvp) => {
     const bothHaveDeathTime = a.deathTime && b.deathTime;
-    if (!bothHaveDeathTime) {
-      return 0;
-    }
-    
-    // Safety check for spawn data
+    if (!bothHaveDeathTime) return 0;
     const respawnA = getMvpRespawnTime(a) || 0;
     const respawnB = getMvpRespawnTime(b) || 0;
-    
-    return dayjs(a.deathTime)
-      .add(respawnA, 'ms')
-      .diff(dayjs(b.deathTime).add(respawnB, 'ms'));
+    return dayjs(a.deathTime).add(respawnA, 'ms').diff(dayjs(b.deathTime).add(respawnB, 'ms'));
   });
 }
 
 export function MvpProvider({ children }: MvpProviderProps) {
   const { 
-    server, 
-    partyRoom, 
-    changePartyRoom, 
-    localSaveEnabled, 
-    toggleLocalSave,
-    cloudSyncEnabled 
+    server, partyRoom, changePartyRoom, localSaveEnabled, toggleLocalSave, cloudSyncEnabled 
   } = useSettings();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -86,6 +78,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const [killingMvp, setKillingMvp] = useState<IMvp>();
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
+  const [backups, setBackups] = useState<IMvpBackup[]>([]);
 
   const dataLocation: 'local' | 'online' | 'ghost' | 'warning' = !localSaveEnabled 
     ? 'warning' 
@@ -98,9 +91,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         const deathTime = mvp.deathTime ? new Date(mvp.deathTime) : undefined;
         const specificSpawn = original.spawn.filter(s => s.mapname === mvp.deathMap);
         return { 
-          ...original, 
-          ...mvp, 
-          deathTime,
+          ...original, ...mvp, deathTime,
           spawn: specificSpawn.length > 0 ? specificSpawn : original.spawn 
         };
       }
@@ -108,40 +99,53 @@ export function MvpProvider({ children }: MvpProviderProps) {
     });
   }, [originalAllMvps]);
 
-  /**
-   * Smart Merge Logic:
-   * Merges a set of MVPs with the existing data in LocalStorage.
-   * Remote/New data overwrites only matching entries.
-   */
-  const performSmartMerge = useCallback(async (newMvps: IMvp[]) => {
-    const existingLocal = await loadMvpsFromLocalStorage(server);
-    const merged = [...existingLocal];
+  const loadBackups = useCallback(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_BACKUPS_KEY);
+    if (saved) setBackups(JSON.parse(saved));
+  }, []);
 
-    newMvps.forEach(newMvp => {
-      const index = merged.findIndex(m => m.id === newMvp.id && m.deathMap === newMvp.deathMap);
-      if (index !== -1) {
-        // Update existing with new data from party
-        merged[index] = { ...merged[index], ...newMvp };
-      } else {
-        // Add new entry from party that didn't exist locally
-        merged.push(newMvp);
-      }
+  const createBackup = useCallback((type: 'AUTO' | 'MANUAL', description: string) => {
+    const allLocalDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+    if (!allLocalDataRaw) return;
+    const allLocalData = JSON.parse(allLocalDataRaw);
+    const serverData = allLocalData[server] || [];
+    const newBackup: IMvpBackup = {
+      id: dayjs().valueOf().toString(),
+      timestamp: dayjs().toISOString(),
+      type, description, data: allLocalData, bossCount: serverData.length, server,
+    };
+    setBackups(prev => {
+      const updated = [newBackup, ...prev].slice(0, MAX_BACKUPS);
+      localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
+      return updated;
     });
-
-    return merged;
   }, [server]);
+
+  const restoreBackup = useCallback((backupId: string) => {
+    const backup = backups.find(b => b.id === backupId);
+    if (!backup) return;
+    if (window.confirm(`Restore backup from ${dayjs(backup.timestamp).format('DD/MM HH:mm')}? This overwrites CURRENT local data.`)) {
+      localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(backup.data));
+      const serverMvps = backup.data[server] || [];
+      const rehydrated = rehydrateMvps(serverMvps);
+      setActiveMvps(sortMvpsByRespawnTime(rehydrated));
+      alert('Data restored successfully!');
+    }
+  }, [backups, server, rehydrateMvps]);
+
+  const deleteBackup = useCallback((backupId: string) => {
+    setBackups(prev => {
+      const updated = prev.filter(b => b.id !== backupId);
+      localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
   const saveMvps = useCallback(async (mvps: IMvp[]) => {
     const rehydrated = rehydrateMvps(mvps);
     setActiveMvps(sortMvpsByRespawnTime(rehydrated));
-
-    if (localSaveEnabled) {
-      console.log('💾 Saving to LocalStorage...');
-      saveActiveMvpsToLocalStorage(rehydrated, server);
-    }
-
+    if (localSaveEnabled) saveActiveMvpsToLocalStorage(rehydrated, server);
     if (partyRoom && cloudSyncEnabled) {
-      console.log(`☁️ Syncing to Cloud...`);
       const serverRef = ref(database, `parties/${partyRoom}/${server}`);
       const minimalMvps = rehydrated.map(m => ({
         id: m.id,
@@ -153,12 +157,14 @@ export function MvpProvider({ children }: MvpProviderProps) {
     }
   }, [partyRoom, server, rehydrateMvps, localSaveEnabled, cloudSyncEnabled]);
 
+  useEffect(() => {
+    loadBackups();
+  }, [loadBackups]);
+
   // Firebase Real-time Listener
   useEffect(() => {
     if (!partyRoom) return;
-
     const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
-
     const unsubscribe = onValue(mvpsRef, async (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -168,38 +174,22 @@ export function MvpProvider({ children }: MvpProviderProps) {
           setTimeout(() => setIsLoading(false), 3000);
           return;
         }
-
         const rehydratedRemote = rehydrateMvps(remoteMvps);
-        
-        // If Local Save is ON, we might want to merge.
-        // However, for the LIVE UI, we show what's in the room.
-        // The merging happens during the "Join (Smart Merge)" action.
         setActiveMvps(sortMvpsByRespawnTime(rehydratedRemote));
-        
-        // Important: If localSaveEnabled is ON, we write the party data to local.
-        // This is the "Join (Overwrite)" behavior.
-        if (localSaveEnabled) {
-          saveActiveMvpsToLocalStorage(rehydratedRemote, server);
-        }
-        
+        if (localSaveEnabled) saveActiveMvpsToLocalStorage(rehydratedRemote, server);
         setIsLoading(false);
       } else {
         setActiveMvps([]);
         setIsLoading(false);
       }
     });
-
     return () => unsubscribe();
   }, [partyRoom, server, originalAllMvps, rehydrateMvps, localSaveEnabled]);
 
-  // Effect to handle Auto-sync when Cloud Sync is toggled ON
   useEffect(() => {
-    if (partyRoom && cloudSyncEnabled && activeMvps.length > 0) {
-      saveMvps(activeMvps);
-    }
+    if (partyRoom && cloudSyncEnabled && activeMvps.length > 0) saveMvps(activeMvps);
   }, [cloudSyncEnabled]);
 
-  // Exit Warning
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!localSaveEnabled) {
@@ -242,7 +232,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
       });
     }
     changePartyRoom(null);
-    if (!localSaveEnabled) toggleLocalSave(); // Re-enable saving when leaving
+    if (!localSaveEnabled) toggleLocalSave();
     setTimeout(() => setIsLoading(false), 100);
   }, [activeMvps, server, changePartyRoom, rehydrateMvps, localSaveEnabled, toggleLocalSave]);
 
@@ -310,7 +300,8 @@ export function MvpProvider({ children }: MvpProviderProps) {
       activeMvps, allMvps, editingMvp, editingTimeMvp, killingMvp, resetMvpTimer, killMvp, updateMvp,
       updateMvpDeathLocation, removeMvpByMap, setEditingMvp, closeEditMvpModal: () => setEditingMvp(undefined),
       setEditingTimeMvp, closeEditTimeMvpModal: () => setEditingTimeMvp(undefined), setKillingMvp,
-      closeKillMvpModal: () => setKillingMvp(undefined), isLoading, dataLocation, saveMvps, leaveParty
+      closeKillMvpModal: () => setKillingMvp(undefined), isLoading, dataLocation, saveMvps, leaveParty,
+      backups, createBackup, restoreBackup, deleteBackup
     }}>
       {children}
     </MvpsContext.Provider>
