@@ -83,8 +83,13 @@ export const LiveBadge = styled.div`
   }
 `;
 
-export const DataBadge = styled.div<{ location: 'local' | 'online' }>`
-  background: ${props => props.location === 'online' ? '#388e3c' : '#1976d2'};
+export const DataBadge = styled.div<{ location: 'local' | 'online' | 'ghost' | 'warning' }>`
+  background: ${props => {
+    if (props.location === 'online') return '#388e3c'; // Green
+    if (props.location === 'ghost') return '#fb8c00';  // Orange
+    if (props.location === 'warning') return '#d32f2f'; // Red
+    return '#1976d2'; // Local (Blue)
+  }};
   color: #fff;
   font-size: 1rem;
   font-weight: bold;

@@ -10,16 +10,30 @@ import mvpImg from '@/assets/mvp.png';
 import { Container, Customization, Logo, LogoContainer, Title, LiveBadge, DataBadge } from './styles';
 
 export function Header() {
-  const { use24HourFormat, partyRoom } = useSettings();
+  const { use24HourFormat, partyRoom, cloudSyncEnabled, localSaveEnabled } = useSettings();
   const { dataLocation } = useMvpsContext();
+
+  const getBadgeStatus = (): 'local' | 'online' | 'ghost' | 'warning' => {
+    if (!localSaveEnabled) return 'warning';
+    if (partyRoom && !cloudSyncEnabled) return 'ghost';
+    if (partyRoom) return 'online';
+    return 'local';
+  };
+
+  const getBadgeText = () => {
+    if (!localSaveEnabled) return 'Save Paused';
+    if (partyRoom && !cloudSyncEnabled) return 'Ghost Mode';
+    if (partyRoom) return 'Party Sync';
+    return 'Local Data';
+  };
 
   return (
     <Container>
       <LogoContainer>
         <Logo src={mvpImg} alt='mvp' />
         <Title>Ragnarok MVP Timer</Title>
-        <DataBadge location={dataLocation === 'online' ? 'online' : 'local'}>
-          {dataLocation === 'online' ? 'Party Sync' : 'Local Data'}
+        <DataBadge location={getBadgeStatus()}>
+          {getBadgeText()}
         </DataBadge>
         {partyRoom && <LiveBadge>Live: {partyRoom}</LiveBadge>}
       </LogoContainer>
