@@ -41,7 +41,9 @@ export function ModalPartySharing({ onClose }: Props) {
   useKey('Escape', onClose);
 
   const { 
-    server, servers, changeServer, partyRoom, changePartyRoom, localSaveEnabled, toggleLocalSave, cloudSyncEnabled, toggleCloudSync 
+    server, servers, changeServer, partyRoom, changePartyRoom, 
+    localSaveEnabled, toggleLocalSave, cloudSyncEnabled, toggleCloudSync,
+    autoSnapshotEnabled, toggleAutoSnapshot 
   } = useSettings();
   
   const { leaveParty, backups, createBackup, restoreBackup, deleteBackup } = useMvpsContext();
@@ -301,16 +303,31 @@ export function ModalPartySharing({ onClose }: Props) {
                 <Clock size={24} color="#64b5f6" /> Data Time Machine
               </div>
             </SettingName>
+            
+            <ControlRow>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.6rem', fontWeight: 600 }}>Auto-Snapshot on Change</span>
+                  <StatusBadge active={autoSnapshotEnabled}>{autoSnapshotEnabled ? 'Enabled' : 'Disabled'}</StatusBadge>
+                </div>
+                <span style={{ fontSize: '1.2rem', opacity: 0.7 }}>Save state whenever boss is added or removed</span>
+              </div>
+              <Switch id="autoSnapshot" name="autoSnapshot" checked={autoSnapshotEnabled} onChange={toggleAutoSnapshot} disabled={isProcessing} />
+            </ControlRow>
+
             <BackupSection>
               <ActionButton onClick={() => createBackup('MANUAL', 'Manual Checkpoint')} disabled={isProcessing} style={{ background: 'var(--primary)', width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
                 <Save size={18} /> Create Manual Checkpoint
               </ActionButton>
               {backups.length === 0 ? (<p style={{ fontSize: '1.2rem', opacity: 0.5 }}>No backups found.</p>) : (
-                backups.map(backup => (
+                backups.map((backup, index) => (
                   <BackupItem key={backup.id}>
                     <BackupInfo>
-                      <span className="date">{dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
-                      <span className="desc">[{backup.type}] {backup.description}</span>
+                      <span className="date">#{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
+                      <span className="desc">
+                        [{backup.type}] {backup.description}
+                        {backup.changeDetail && <span style={{ color: '#ffeb3b', marginLeft: '8px' }}>• {backup.changeDetail}</span>}
+                      </span>
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
                     <BackupActions>

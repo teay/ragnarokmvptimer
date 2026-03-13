@@ -59,6 +59,7 @@ export const DEFAULT_SETTINGS = {
   partyRoom: null as string | null,
   localSaveEnabled: true,
   cloudSyncEnabled: true,
+  autoSnapshotEnabled: false,
 };
 
 export const LOCAL_STORAGE_THEME_KEY = 'theme';
