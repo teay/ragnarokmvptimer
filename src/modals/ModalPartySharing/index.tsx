@@ -10,7 +10,7 @@ import { Switch } from '@/components/Switch';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useScrollBlock, useClickOutside, useKey } from '@/hooks';
-import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
+import { LOCAL_STORAGE_ACTIVE_MVPS_KEY, MAX_BACKUPS } from '@/constants';
 import { database, ref, set, get, remove } from '@/services/firebase';
 import { saveActiveMvpsToLocalStorage } from '@/controllers/mvp';
 
@@ -43,14 +43,21 @@ export function ModalPartySharing({ onClose }: Props) {
   const { 
     server, servers, changeServer, partyRoom, changePartyRoom, 
     localSaveEnabled, toggleLocalSave, cloudSyncEnabled, toggleCloudSync,
-    autoSnapshotEnabled, toggleAutoSnapshot 
+    autoSnapshotEnabled, toggleAutoSnapshot, nickname, changeNickname 
   } = useSettings();
   
   const { leaveParty, backups, createBackup, restoreBackup, deleteBackup } = useMvpsContext();
   const [roomInput, setRoomInput] = useState(partyRoom || '');
+  const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const modalRef = useClickOutside(onClose);
+
+  const handleNicknameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNicknameInput(value);
+    changeNickname(value);
+  }, [changeNickname]);
 
   const handleExportData = useCallback(() => {
     const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
@@ -251,6 +258,18 @@ export function ModalPartySharing({ onClose }: Props) {
           <div style={{ width: '100%' }}>
             <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Activity size={24} color="#fbc02d" /> Your Nickname
+              </div>
+            </SettingName>
+            <Input id="userNickname" name="userNickname" placeholder="Enter Your Nickname (e.g. คุณเอ)" value={nicknameInput} onChange={handleNicknameChange} disabled={isProcessing} />
+            <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>Your name will be shown in Time Machine logs.</p>
+          </div>
+
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1rem 0' }} />
+
+          <div style={{ width: '100%' }}>
+            <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Zap size={24} color="#fbc02d" /> Live Room
               </div>
             </SettingName>
@@ -299,8 +318,11 @@ export function ModalPartySharing({ onClose }: Props) {
 
           <div style={{ width: '100%' }}>
             <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={24} color="#64b5f6" /> Data Time Machine
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={24} color="#64b5f6" /> Data Time Machine
+                </div>
+                <span style={{ fontSize: '1.4rem', opacity: 0.6, fontWeight: 400 }}>{backups.length} / {MAX_BACKUPS}</span>
               </div>
             </SettingName>
             
@@ -328,7 +350,10 @@ export function ModalPartySharing({ onClose }: Props) {
                         [{backup.type}] {backup.description}
                         {backup.changeDetail && <span style={{ color: '#ffeb3b', marginLeft: '8px' }}>• {backup.changeDetail}</span>}
                       </span>
-                      <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
+                      <span className="stats">
+                        {backup.bossCount} Bosses • {backup.server}
+                        {backup.user && <span style={{ color: '#fff', marginLeft: '8px', opacity: 0.8 }}>(โดย: {backup.user})</span>}
+                      </span>
                     </BackupInfo>
                     <BackupActions>
                       <MiniButton onClick={() => handleRestore(backup.id)} disabled={isProcessing} title="Restore this data"><RotateCcw size={14} /> Restore</MiniButton>
