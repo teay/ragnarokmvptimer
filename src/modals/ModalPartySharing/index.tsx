@@ -54,10 +54,26 @@ export function ModalPartySharing({ onClose }: Props) {
   const modalRef = useClickOutside(onClose);
 
   const handleNicknameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNicknameInput(value);
-    changeNickname(value);
-  }, [changeNickname]);
+    // 🛡️ Security & Format Filter: Only English letters (A-Z), max 8
+    const rawValue = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+    const limitedValue = rawValue.slice(0, 8);
+    
+    setNicknameInput(limitedValue);
+    
+    // 🛡️ Check uniqueness in local backups history
+    const isAlreadyUsed = backups.some(b => b.user === limitedValue && b.user !== nickname);
+    
+    // 🎯 Only persist if length 4-8 and NOT taken
+    if (limitedValue.length >= 4 && limitedValue.length <= 8 && !isAlreadyUsed) {
+      changeNickname(limitedValue);
+    } else if (limitedValue.length === 0) {
+      changeNickname(''); 
+    }
+  }, [changeNickname, backups, nickname]);
+
+  // 🛡️ Room Name Validation: 8 English Chars + 1-24 Digits
+  const isRoomValid = roomInput.length > 0 && /^[A-Z]{8}[0-9]{1,24}$/.test(roomInput.toUpperCase());
+  const isNicknameValid = nicknameInput.length >= 4 && nicknameInput.length <= 8 && !backups.some(b => b.user === nicknameInput && b.user !== nickname);
 
   const handleExportData = useCallback(() => {
     const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
@@ -261,8 +277,24 @@ export function ModalPartySharing({ onClose }: Props) {
                 <Activity size={24} color="#fbc02d" /> Your Nickname
               </div>
             </SettingName>
-            <Input id="userNickname" name="userNickname" placeholder="Enter Your Nickname (e.g. คุณเอ)" value={nicknameInput} onChange={handleNicknameChange} disabled={isProcessing} />
-            <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>Your name will be shown in Time Machine logs.</p>
+            <Input 
+              id="userNickname" 
+              name="userNickname" 
+              placeholder="Nickname (4-8 UPPERCASE)" 
+              value={nicknameInput} 
+              onChange={handleNicknameChange} 
+              disabled={isProcessing} 
+              maxLength={8}
+              style={!isNicknameValid && nicknameInput.length > 0 ? { borderColor: '#d32f2f', background: 'rgba(211, 47, 47, 0.05)' } : {}}
+            />
+            {!isNicknameValid && nicknameInput.length > 0 && (
+              <p style={{ fontSize: '1.1rem', color: '#f44336', marginTop: '-0.5rem', marginBottom: '0.5rem' }}>
+                {nicknameInput.length < 4 ? 'At least 4 chars' : backups.some(b => b.user === nicknameInput && b.user !== nickname) ? 'Nickname taken in history' : ''}
+              </p>
+            )}
+            <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>
+              4-8 uppercase English letters. Must be unique from existing history.
+            </p>
           </div>
 
           <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1rem 0' }} />
@@ -289,22 +321,47 @@ export function ModalPartySharing({ onClose }: Props) {
               </>
             ) : (
               <>
-                <Input id="partyRoomName" name="partyRoomName" placeholder="Enter Room Name" value={roomInput} onChange={(e) => setRoomInput(e.target.value)} disabled={isProcessing} />
+                <Input 
+                  id="partyRoomName" 
+                  name="partyRoomName" 
+                  placeholder="8 English + 1-24 Digits (e.g. ROOMNAME123)" 
+                  value={roomInput} 
+                  onChange={(e) => setRoomInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} 
+                  disabled={isProcessing} 
+                  style={!isRoomValid && roomInput.length > 0 ? { borderColor: '#d32f2f', background: 'rgba(211, 47, 47, 0.05)' } : {}}
+                />
+                {!isRoomValid && roomInput.length > 0 && (
+                  <p style={{ fontSize: '1.1rem', color: '#f44336', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+                    Must be 8 letters followed by 1-24 numbers.
+                  </p>
+                )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   <div>
-                    <ActionButton onClick={handleCreateWithData} disabled={isProcessing} style={{ width: '100%', justifyContent: 'flex-start', background: '#388e3c' }}>
+                    <ActionButton 
+                      onClick={handleCreateWithData} 
+                      disabled={isProcessing || !isRoomValid} 
+                      style={{ width: '100%', justifyContent: 'flex-start', background: isRoomValid ? '#388e3c' : '#444' }}
+                    >
                       <PlusSquare size={18} /> <FormattedMessage id='join_live_room_with_local' />
                     </ActionButton>
                     <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>Host new room with current local timers.</p>
                   </div>
                   <div>
-                    <ActionButton onClick={handleCreateFresh} disabled={isProcessing} style={{ width: '100%', justifyContent: 'flex-start', background: '#1976d2' }}>
+                    <ActionButton 
+                      onClick={handleCreateFresh} 
+                      disabled={isProcessing || !isRoomValid} 
+                      style={{ width: '100%', justifyContent: 'flex-start', background: isRoomValid ? '#1976d2' : '#444' }}
+                    >
                       <RefreshCw size={18} /> <FormattedMessage id='create_fresh_party' />
                     </ActionButton>
                     <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>Host new room with zero timers.</p>
                   </div>
                   <div>
-                    <ActionButton onClick={handleJoinExisting} disabled={isProcessing} style={{ width: '100%', justifyContent: 'flex-start', background: '#666' }}>
+                    <ActionButton 
+                      onClick={handleJoinExisting} 
+                      disabled={isProcessing || !isRoomValid} 
+                      style={{ width: '100%', justifyContent: 'flex-start', background: isRoomValid ? '#666' : '#444' }}
+                    >
                       <Users size={18} /> <FormattedMessage id='join_live_room' />
                     </ActionButton>
                     <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>Join an existing room. Server syncs automatically.</p>
