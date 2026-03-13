@@ -456,8 +456,9 @@ export function ModalPartySharing({ onClose }: Props) {
                     <BackupInfo>
                       <span className="date">#{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
                       <span className="desc">
-                        [{backup.type}] {backup.description}
-                        {backup.changeDetail && <span style={{ color: '#ffeb3b', marginLeft: '8px' }}>• {backup.changeDetail}</span>}
+                        <span style={{ color: '#fff' }}>[{backup.type}]</span> {backup.description}
+                        {backup.changeDetail && <span style={{ color: '#ffeb3b' }}>: {backup.changeDetail.split(': ')[1] || backup.changeDetail}</span>}
+                        {backup.user && <span style={{ color: '#aaa', marginLeft: '8px', fontSize: '1rem' }}>(โดย: {backup.user})</span>}
                       </span>
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
@@ -486,8 +487,9 @@ export function ModalPartySharing({ onClose }: Props) {
                     <BackupInfo>
                       <span className="date">Cloud #{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
                       <span className="desc">
-                        [{backup.type}] {backup.description}
-                        {backup.changeDetail && <span style={{ color: '#ffeb3b', marginLeft: '8px' }}>• {backup.changeDetail}</span>}
+                        <span style={{ color: '#fbc02d' }}>[{backup.type}]</span> {backup.description}
+                        {backup.changeDetail && <span style={{ color: '#ffeb3b' }}>: {backup.changeDetail.split(': ')[1] || backup.changeDetail}</span>}
+                        {backup.user && <span style={{ color: '#aaa', marginLeft: '8px', fontSize: '1rem' }}>(โดย: {backup.user})</span>}
                       </span>
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
@@ -516,9 +518,9 @@ export function ModalPartySharing({ onClose }: Props) {
                     <BackupInfo>
                       <span className="date">Room #{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
                       <span className="desc">
-                        {backup.description}
-                        {backup.changeDetail && <span style={{ color: '#ffeb3b', marginLeft: '8px' }}>• {backup.changeDetail}</span>}
-                        <span style={{ color: '#64b5f6', marginLeft: '8px' }}>by {backup.user}</span>
+                        <span style={{ color: '#64b5f6' }}>[{backup.description}]</span> 
+                        {backup.changeDetail && <span style={{ color: '#ffeb3b' }}> {backup.changeDetail.split(': ')[1] || backup.changeDetail}</span>}
+                        <span style={{ color: '#aaa', marginLeft: '8px', fontSize: '1rem' }}>(โดย: {backup.user})</span>
                       </span>
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
