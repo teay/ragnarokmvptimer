@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Copy, Share, Zap, ZapOff, Database, Cloud, Activity } from '@styled-icons/feather';
+import { Copy, Share, Zap, ZapOff, Database, Cloud, Activity, PlusSquare, Users, RefreshCw } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
@@ -10,6 +10,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useScrollBlock, useClickOutside, useKey } from '@/hooks';
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
+import { database, ref, set } from '@/services/firebase';
 
 import {
   Modal,
@@ -74,12 +75,68 @@ export function ModalPartySharing({ onClose }: Props) {
     }
   }, []);
 
+  // 🤝 1. Join Existing Party (Just listen, don't overwrite remote)
   const handleJoinRoom = useCallback(() => {
-    if (roomInput.trim()) {
-      changePartyRoom(roomInput.trim());
+    const roomName = roomInput.trim();
+    if (roomName) {
+      changePartyRoom(roomName);
       onClose(); 
     }
   }, [roomInput, changePartyRoom, onClose]);
+
+  // 🆕 2. Create Fresh Party (Overwrite remote with EMPTY)
+  const handleCreateFresh = useCallback(() => {
+    const roomName = roomInput.trim();
+    if (!roomName) return;
+
+    if (window.confirm(`Are you sure you want to create a FRESH party room "${roomName}"? This will clear any existing online data in this room.`)) {
+      changePartyRoom(roomName);
+      const serverRef = ref(database, `parties/${roomName}/${server}`);
+      set(serverRef, { mvps: [] })
+        .then(() => onClose())
+        .catch((err) => {
+          console.error('Firebase reset failed', err);
+          onClose();
+        });
+    }
+  }, [roomInput, changePartyRoom, server, onClose]);
+
+  // ⚔️ 3. Create Party & Sync My Data (Overwrite remote with LOCAL)
+  const handleCreateAndSyncLocal = useCallback(() => {
+    const roomName = roomInput.trim();
+    if (!roomName) return;
+
+    changePartyRoom(roomName);
+
+    const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+    if (allLocalData) {
+      try {
+        const parsed = JSON.parse(allLocalData);
+        if (parsed[server]) {
+          const serverRef = ref(database, `parties/${roomName}/${server}`);
+          const minimalMvps = parsed[server].map((m: any) => ({
+            id: m.id,
+            deathTime: m.deathTime || null,
+            deathMap: m.deathMap || null,
+            deathPosition: m.deathPosition || null,
+          }));
+          
+          set(serverRef, { mvps: minimalMvps })
+            .then(() => onClose())
+            .catch((err) => {
+              console.error('Firebase sync failed', err);
+              onClose();
+            });
+        } else {
+          onClose();
+        }
+      } catch (e) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  }, [roomInput, changePartyRoom, server, onClose]);
 
   const handleLeaveRoom = useCallback(() => {
     leaveParty(false);
@@ -174,9 +231,17 @@ export function ModalPartySharing({ onClose }: Props) {
                   value={roomInput}
                   onChange={(e) => setRoomInput(e.target.value)}
                 />
-                <ActionButton onClick={handleJoinRoom} style={{ width: '100%', justifyContent: 'center' }}>
-                  <Zap /> <FormattedMessage id='join_live_room' />
-                </ActionButton>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ActionButton onClick={handleCreateAndSyncLocal} style={{ width: '100%', justifyContent: 'flex-start', background: '#388e3c' }}>
+                    <PlusSquare size={18} /> <FormattedMessage id='join_live_room_with_local' />
+                  </ActionButton>
+                  <ActionButton onClick={handleCreateFresh} style={{ width: '100%', justifyContent: 'flex-start', background: '#1976d2' }}>
+                    <RefreshCw size={18} /> <FormattedMessage id='create_fresh_party' />
+                  </ActionButton>
+                  <ActionButton onClick={handleJoinRoom} style={{ width: '100%', justifyContent: 'flex-start' }}>
+                    <Users size={18} /> <FormattedMessage id='join_live_room' />
+                  </ActionButton>
+                </div>
               </>
             )}
           </div>
