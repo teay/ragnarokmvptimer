@@ -455,7 +455,10 @@ export function ModalPartySharing({ onClose }: Props) {
                   <BackupItem key={backup.id} style={{ marginBottom: '0.5rem' }}>
                     <BackupInfo>
                       <span className="date">#{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
-                      <span className="desc">[{backup.type}] {backup.description}</span>
+                      <span className="desc">
+                        [{backup.type}] {backup.description}
+                        {backup.changeDetail && <span style={{ color: '#ffeb3b', marginLeft: '8px' }}>• {backup.changeDetail}</span>}
+                      </span>
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
                     <BackupActions>
@@ -482,7 +485,10 @@ export function ModalPartySharing({ onClose }: Props) {
                   <BackupItem key={backup.id} style={{ marginBottom: '0.5rem', borderLeftColor: '#fbc02d' }}>
                     <BackupInfo>
                       <span className="date">Cloud #{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
-                      <span className="desc">[{backup.type}] {backup.description}</span>
+                      <span className="desc">
+                        [{backup.type}] {backup.description}
+                        {backup.changeDetail && <span style={{ color: '#ffeb3b', marginLeft: '8px' }}>• {backup.changeDetail}</span>}
+                      </span>
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
                     <BackupActions>
@@ -510,7 +516,8 @@ export function ModalPartySharing({ onClose }: Props) {
                     <BackupInfo>
                       <span className="date">Room #{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
                       <span className="desc">
-                        {backup.changeDetail || backup.description}
+                        {backup.description}
+                        {backup.changeDetail && <span style={{ color: '#ffeb3b', marginLeft: '8px' }}>• {backup.changeDetail}</span>}
                         <span style={{ color: '#64b5f6', marginLeft: '8px' }}>by {backup.user}</span>
                       </span>
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
