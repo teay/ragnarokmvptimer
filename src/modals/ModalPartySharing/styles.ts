@@ -201,20 +201,6 @@ export const BackupSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 8px;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  &::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--primary);
-    border-radius: 4px;
-  }
 `;
 
 export const BackupItem = styled.div`
