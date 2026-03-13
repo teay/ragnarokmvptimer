@@ -77,6 +77,10 @@ interface SettingsContextData {
   toggleUltraLite: () => void;
   partyRoom: string | null;
   changePartyRoom: (room: string | null) => void;
+  localSaveEnabled: boolean;
+  toggleLocalSave: () => void;
+  cloudSyncEnabled: boolean;
+  toggleCloudSync: () => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -456,6 +460,20 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     [setSettings]
   );
 
+  const toggleLocalSave = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      localSaveEnabled: !prev.localSaveEnabled,
+    }));
+  }, [setSettings]);
+
+  const toggleCloudSync = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      cloudSyncEnabled: !prev.cloudSyncEnabled,
+    }));
+  }, [setSettings]);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -493,6 +511,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleSimpleGlassUI,
         toggleUltraLite,
         changePartyRoom,
+        toggleLocalSave,
+        toggleCloudSync,
       }}
     >
       {children}

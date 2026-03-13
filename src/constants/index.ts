@@ -57,6 +57,8 @@ export const DEFAULT_SETTINGS = {
   font: 'Jost',
   showMvpMap: true,
   partyRoom: null as string | null,
+  localSaveEnabled: true,
+  cloudSyncEnabled: true,
 };
 
 export const LOCAL_STORAGE_THEME_KEY = 'theme';
