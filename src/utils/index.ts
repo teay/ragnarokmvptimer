@@ -2,20 +2,24 @@ import type { Dayjs } from 'dayjs';
 
 import Question from '../assets/question.gif';
 
-// Map images
+// Explicitly import and map assets to ensure they work in production
 const mapImages = import.meta.glob('../assets/mvp_maps/*.webp', { eager: true, import: 'default' });
-// MVP Icons
 const mvpIcons = import.meta.glob('../assets/mvp_icons/*.webp', { eager: true, import: 'default' });
-// Animated MVP Icons
 const animatedMvpIcons = import.meta.glob('../assets/mvp_icons_animated/*.webp', { eager: true, import: 'default' });
 
-function getAssetPath(glob: Record<string, any>, key: string | number): string {
-  const entries = Object.entries(glob);
-  const found = entries.find(([path]) => {
-    const filename = path.split('/').pop()?.split('.')[0];
-    return filename === String(key);
+/**
+ * Robust asset path resolver that works in both dev and production
+ */
+function resolveAsset(glob: Record<string, any>, key: string | number): string {
+  const target = String(key);
+  // Look through the glob keys for a filename match
+  const path = Object.keys(glob).find(p => {
+    const parts = p.split('/');
+    const filename = parts[parts.length - 1].split('.')[0];
+    return filename === target;
   });
-  return found ? (found[1] as string) : Question;
+  
+  return path ? (glob[path] as string) : Question;
 }
 
 /**
@@ -24,7 +28,7 @@ function getAssetPath(glob: Record<string, any>, key: string | number): string {
  * @returns map image
  */
 export function getMapImage(mapName: string): string {
-  return getAssetPath(mapImages, mapName);
+  return resolveAsset(mapImages, mapName);
 }
 
 /**
@@ -35,9 +39,9 @@ export function getMapImage(mapName: string): string {
  */
 export function getMvpIcon(mvpId: number, animated?: boolean): string {
   if (animated) {
-    return getAssetPath(animatedMvpIcons, mvpId);
+    return resolveAsset(animatedMvpIcons, mvpId);
   }
-  return getAssetPath(mvpIcons, mvpId);
+  return resolveAsset(mvpIcons, mvpId);
 }
 
 /**
