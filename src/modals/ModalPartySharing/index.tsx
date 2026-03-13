@@ -41,7 +41,7 @@ export function ModalPartySharing({ onClose }: Props) {
   useKey('Escape', onClose);
 
   const { 
-    server, partyRoom, changePartyRoom, localSaveEnabled, toggleLocalSave, cloudSyncEnabled, toggleCloudSync 
+    server, servers, changeServer, partyRoom, changePartyRoom, localSaveEnabled, toggleLocalSave, cloudSyncEnabled, toggleCloudSync 
   } = useSettings();
   
   const { leaveParty, backups, createBackup, restoreBackup, deleteBackup } = useMvpsContext();
@@ -76,36 +76,59 @@ export function ModalPartySharing({ onClose }: Props) {
     }
   }, []);
 
+  // 🤝 Join Existing Party - Now with Auto Server Sync
   const handleJoinExisting = useCallback(async () => {
     const roomName = roomInput.trim();
     if (!roomName) return;
-    createBackup('AUTO', `Pre-Join: ${roomName}`);
+    
     try {
-      const serverRef = ref(database, `parties/${roomName}/${server}/mvps`);
+      // 1. Peek at room metadata to see which server it's using
+      const metadataRef = ref(database, `parties/${roomName}/metadata`);
+      const metaSnapshot = await get(metadataRef);
+      const roomMetadata = metaSnapshot.val();
+      
+      let targetServer = server;
+      if (roomMetadata && roomMetadata.server) {
+        targetServer = roomMetadata.server;
+        if (targetServer !== server) {
+          console.log(`Syncing server to room default: ${targetServer}`);
+          changeServer(targetServer);
+        }
+      }
+
+      createBackup('AUTO', `Pre-Join: ${roomName} (${targetServer})`);
+
+      // 2. Fetch online data for the CORRECT server
+      const serverRef = ref(database, `parties/${roomName}/${targetServer}/mvps`);
       const snapshot = await get(serverRef);
       const onlineMvps = snapshot.val() || [];
       const remoteMvps = Array.isArray(onlineMvps) ? onlineMvps : Object.values(onlineMvps);
+
       if (remoteMvps.length > 0) {
         const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
         const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
-        const localForServer = allLocal[server] || [];
+        const localForServer = allLocal[targetServer] || [];
+
         const merged = [...localForServer];
         remoteMvps.forEach((rm: any) => {
           const idx = merged.findIndex((lm: any) => lm.id === rm.id && lm.deathMap === rm.deathMap);
           if (idx !== -1) merged[idx] = { ...merged[idx], ...rm };
           else merged.push(rm);
         });
-        saveActiveMvpsToLocalStorage(merged, server);
+        saveActiveMvpsToLocalStorage(merged, targetServer);
       }
+
       if (!localSaveEnabled) toggleLocalSave();
       changePartyRoom(roomName);
       onClose();
     } catch (e) {
+      console.error('Join failed', e);
       changePartyRoom(roomName);
       onClose();
     }
-  }, [roomInput, server, localSaveEnabled, toggleLocalSave, changePartyRoom, onClose, createBackup]);
+  }, [roomInput, server, changeServer, localSaveEnabled, toggleLocalSave, changePartyRoom, onClose, createBackup]);
 
+  // 🆕 Create Fresh Party - Save Metadata
   const handleCreateFresh = useCallback(() => {
     const roomName = roomInput.trim();
     if (!roomName) return;
@@ -113,27 +136,41 @@ export function ModalPartySharing({ onClose }: Props) {
       createBackup('AUTO', `Pre-Create Fresh: ${roomName}`);
       if (!localSaveEnabled) toggleLocalSave();
       changePartyRoom(roomName);
+      
+      // Save metadata and clear mvps
+      const metadataRef = ref(database, `parties/${roomName}/metadata`);
       const serverRef = ref(database, `parties/${roomName}/${server}`);
-      set(serverRef, { mvps: [] }).finally(() => onClose());
+      
+      Promise.all([
+        set(metadataRef, { server, createdAt: dayjs().toISOString() }),
+        set(serverRef, { mvps: [] })
+      ]).finally(() => onClose());
     }
   }, [roomInput, localSaveEnabled, toggleLocalSave, changePartyRoom, server, onClose, createBackup]);
 
+  // ⚔️ Create Party & Sync My Data - Save Metadata
   const handleCreateWithData = useCallback(() => {
     const roomName = roomInput.trim();
     if (!roomName) return;
     createBackup('AUTO', `Pre-Host with Data: ${roomName}`);
     if (!localSaveEnabled) toggleLocalSave();
     changePartyRoom(roomName);
+
     const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
     if (allLocalData) {
       try {
         const parsed = JSON.parse(allLocalData);
         if (parsed[server]) {
+          const metadataRef = ref(database, `parties/${roomName}/metadata`);
           const serverRef = ref(database, `parties/${roomName}/${server}`);
           const minimalMvps = parsed[server].map((m: any) => ({
             id: m.id, deathTime: m.deathTime || null, deathMap: m.deathMap || null, deathPosition: m.deathPosition || null,
           }));
-          set(serverRef, { mvps: minimalMvps }).finally(() => onClose());
+          
+          Promise.all([
+            set(metadataRef, { server, createdAt: dayjs().toISOString() }),
+            set(serverRef, { mvps: minimalMvps })
+          ]).finally(() => onClose());
         } else onClose();
       } catch (e) { onClose(); }
     } else onClose();
@@ -145,7 +182,6 @@ export function ModalPartySharing({ onClose }: Props) {
   }, [restoreBackup, onClose]);
 
   const handleLeaveRoom = useCallback(() => {
-    // We always keep timers now as discussed (it's the most practical way)
     leaveParty(true);
     onClose();
   }, [leaveParty, onClose]);
@@ -194,7 +230,7 @@ export function ModalPartySharing({ onClose }: Props) {
                     <ActionButton onClick={handleJoinExisting} style={{ width: '100%', justifyContent: 'flex-start', background: '#666' }}>
                       <Users size={18} /> <FormattedMessage id='join_live_room' />
                     </ActionButton>
-                    <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>Join existing room and merge data.</p>
+                    <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>Join an existing room. Server will automatically switch to match the room.</p>
                   </div>
                 </div>
               </>
