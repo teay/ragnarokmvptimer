@@ -57,12 +57,20 @@ interface MvpsContextData {
 
 export const MvpsContext = createContext({} as MvpsContextData);
 
+/**
+ * Safety-guarded Sort Function
+ */
 function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
-  return mvps.sort((a: IMvp, b: IMvp) => {
+  return [...mvps].sort((a: IMvp, b: IMvp) => {
     const bothHaveDeathTime = a.deathTime && b.deathTime;
     if (!bothHaveDeathTime) return 0;
+    
+    // Safety check: ensure .spawn exists before calling getMvpRespawnTime
+    if (!a.spawn || !b.spawn) return 0;
+
     const respawnA = getMvpRespawnTime(a) || 0;
     const respawnB = getMvpRespawnTime(b) || 0;
+    
     return dayjs(a.deathTime).add(respawnA, 'ms').diff(dayjs(b.deathTime).add(respawnB, 'ms'));
   });
 }
@@ -89,9 +97,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
       const original = originalAllMvps.find(o => Number(o.id) === Number(mvp.id));
       if (original) {
         const deathTime = mvp.deathTime ? new Date(mvp.deathTime) : undefined;
+        // Try to find the specific spawn for the map it died on
         const specificSpawn = original.spawn.filter(s => s.mapname === mvp.deathMap);
         return { 
-          ...original, ...mvp, deathTime,
+          ...original, 
+          ...mvp, 
+          deathTime,
           spawn: specificSpawn.length > 0 ? specificSpawn : original.spawn 
         };
       }
@@ -146,7 +157,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setActiveMvps(sortMvpsByRespawnTime(rehydrated));
     if (localSaveEnabled) saveActiveMvpsToLocalStorage(rehydrated, server);
     if (partyRoom && cloudSyncEnabled) {
-      console.log(`☁️ Syncing to Cloud...`);
       const serverRef = ref(database, `parties/${partyRoom}/${server}`);
       const minimalMvps = rehydrated.map(m => ({
         id: m.id,
@@ -162,7 +172,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
     loadBackups();
   }, [loadBackups]);
 
-  // Firebase Real-time Listener - UPDATED FOR SMART MERGE
+  // Firebase Real-time Listener
   useEffect(() => {
     if (!partyRoom) return;
     const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
@@ -170,27 +180,28 @@ export function MvpProvider({ children }: MvpProviderProps) {
     const unsubscribe = onValue(mvpsRef, async (snapshot) => {
       const data = snapshot.val();
       const remoteMvpsRaw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+      
+      // CRITICAL: Only proceed with merge and sort if originalAllMvps is loaded
+      if (originalAllMvps.length === 0) {
+        // Just store them raw for now, the 'Effect to handle late static data' will fix it
+        setActiveMvps(remoteMvpsRaw as IMvp[]);
+        return;
+      }
+
       const rehydratedRemote = rehydrateMvps(remoteMvpsRaw);
 
-      // --- SMART MERGE LOGIC WITHIN LISTENER ---
-      // We need to fetch what's currently in LocalStorage to merge with Remote updates
       const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
       const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
       const localForServer = allLocal[server] || [];
 
-      // Create a map of Remote Bosses for quick lookup (ID + Map)
       const remoteKeys = new Set(rehydratedRemote.map(m => `${m.id}-${m.deathMap}`));
-
-      // 1. Keep all Local Bosses that are NOT in the Remote list (Unique Local)
       const uniqueLocal = localForServer.filter((m: any) => !remoteKeys.has(`${m.id}-${m.deathMap}`));
 
-      // 2. Combine Remote Bosses with Unique Local Bosses
       const mergedResult = [...rehydratedRemote, ...uniqueLocal];
       const sortedMerged = sortMvpsByRespawnTime(mergedResult);
 
       setActiveMvps(sortedMerged);
 
-      // 3. Keep Local Storage in sync if enabled
       if (localSaveEnabled) {
         saveActiveMvpsToLocalStorage(sortedMerged, server);
       }
@@ -200,6 +211,18 @@ export function MvpProvider({ children }: MvpProviderProps) {
     
     return () => unsubscribe();
   }, [partyRoom, server, originalAllMvps, rehydrateMvps, localSaveEnabled]);
+
+  // Effect to handle case where originalAllMvps loads AFTER Firebase data
+  useEffect(() => {
+    if (partyRoom && originalAllMvps.length > 0 && activeMvps.length > 0 && isLoading) {
+      // Re-hydrate activeMvps now that we have original data
+      const mergedMvps = rehydrateMvps(activeMvps);
+      setActiveMvps(sortMvpsByRespawnTime(mergedMvps));
+      setIsLoading(false);
+    } else if (partyRoom && originalAllMvps.length > 0 && activeMvps.length === 0 && isLoading) {
+      setIsLoading(false);
+    }
+  }, [originalAllMvps, partyRoom, rehydrateMvps, activeMvps, isLoading]);
 
   useEffect(() => {
     if (partyRoom && cloudSyncEnabled && activeMvps.length > 0) saveMvps(activeMvps);
