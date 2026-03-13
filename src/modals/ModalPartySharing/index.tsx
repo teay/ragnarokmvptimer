@@ -141,7 +141,7 @@ export function ModalPartySharing({ onClose }: Props) {
 
   const handleRestore = useCallback((backupId: string) => {
     restoreBackup(backupId);
-    onClose(); // Auto-close after restore confirmed
+    onClose(); 
   }, [restoreBackup, onClose]);
 
   const handleLeaveRoom = useCallback(() => {
@@ -160,75 +160,9 @@ export function ModalPartySharing({ onClose }: Props) {
         <ModalCloseIconButton onClick={onClose} />
         <Title><FormattedMessage id='party_sharing' /></Title>
         <SettingsContainer>
+          
+          {/* SECTION 1: LIVE ROOM (MOVED TO TOP) */}
           <div style={{ width: '100%' }}>
-            <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Activity size={24} color="#fbc02d" /> Data Flow Control
-              </div>
-            </SettingName>
-            <ControlRow>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Database size={16} /> 
-                  <span style={{ fontSize: '1.6rem', fontWeight: 600 }}>Local Browser</span>
-                  <StatusBadge active={localSaveEnabled}>{localSaveEnabled ? 'Saving' : 'Paused'}</StatusBadge>
-                </div>
-                <span style={{ fontSize: '1.2rem', opacity: 0.7 }}>Backup timers to this device</span>
-              </div>
-              <Switch id="localSave" name="localSave" checked={localSaveEnabled} onChange={toggleLocalSave} />
-            </ControlRow>
-            <ControlRow>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Cloud size={16} /> 
-                  <span style={{ fontSize: '1.6rem', fontWeight: 600 }}>Cloud Sync</span>
-                  <StatusBadge active={cloudSyncEnabled && !!partyRoom}>
-                    {partyRoom ? (cloudSyncEnabled ? 'Syncing' : 'Ghost Mode') : 'Offline'}
-                  </StatusBadge>
-                </div>
-                <span style={{ fontSize: '1.2rem', opacity: 0.7 }}>Broadcast your kills to party</span>
-              </div>
-              <Switch id="cloudSync" name="cloudSync" checked={cloudSyncEnabled} onChange={toggleCloudSync} disabled={!partyRoom} />
-            </ControlRow>
-
-            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2rem 0' }} />
-
-            <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={24} color="#64b5f6" /> Data Time Machine
-              </div>
-            </SettingName>
-            
-            <BackupSection>
-              <ActionButton onClick={() => createBackup('MANUAL', 'Manual Checkpoint')} style={{ background: 'var(--primary)', width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
-                <Save size={18} /> Create Manual Checkpoint
-              </ActionButton>
-              
-              {backups.length === 0 ? (
-                <p style={{ fontSize: '1.2rem', opacity: 0.5 }}>No backups found.</p>
-              ) : (
-                backups.map(backup => (
-                  <BackupItem key={backup.id}>
-                    <BackupInfo>
-                      <span className="date">{dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
-                      <span className="desc">[{backup.type}] {backup.description}</span>
-                      <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
-                    </BackupInfo>
-                    <BackupActions>
-                      <MiniButton onClick={() => handleRestore(backup.id)} title="Restore this data">
-                        <RotateCcw size={14} /> Restore
-                      </MiniButton>
-                      <MiniButton onClick={() => deleteBackup(backup.id)} variant="danger" title="Delete backup">
-                        <Trash2 size={14} />
-                      </MiniButton>
-                    </BackupActions>
-                  </BackupItem>
-                ))
-              )}
-            </BackupSection>
-
-            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2rem 0' }} />
-
             <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Zap size={24} color="#fbc02d" /> Live Room
@@ -273,14 +207,98 @@ export function ModalPartySharing({ onClose }: Props) {
               </>
             )}
           </div>
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-          <SettingName style={{ marginBottom: '1rem' }}>Data Portability</SettingName>
-          <SettingSecondary>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
-              <ActionButton onClick={handleShareLink}><Share /> <FormattedMessage id='share_link' /></ActionButton>
-              <ActionButton onClick={handleExportData}><Copy /> <FormattedMessage id='copy_local_data' /></ActionButton>
-            </div>
-          </SettingSecondary>
+
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1rem 0' }} />
+
+          {/* SECTION 2: DATA TIME MACHINE */}
+          <div style={{ width: '100%' }}>
+            <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={24} color="#64b5f6" /> Data Time Machine
+              </div>
+            </SettingName>
+            
+            <BackupSection>
+              <ActionButton onClick={() => createBackup('MANUAL', 'Manual Checkpoint')} style={{ background: 'var(--primary)', width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
+                <Save size={18} /> Create Manual Checkpoint
+              </ActionButton>
+              
+              {backups.length === 0 ? (
+                <p style={{ fontSize: '1.2rem', opacity: 0.5 }}>No backups found.</p>
+              ) : (
+                backups.map(backup => (
+                  <BackupItem key={backup.id}>
+                    <BackupInfo>
+                      <span className="date">{dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
+                      <span className="desc">[{backup.type}] {backup.description}</span>
+                      <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
+                    </BackupInfo>
+                    <BackupActions>
+                      <MiniButton onClick={() => handleRestore(backup.id)} title="Restore this data">
+                        <RotateCcw size={14} /> Restore
+                      </MiniButton>
+                      <MiniButton onClick={() => deleteBackup(backup.id)} variant="danger" title="Delete backup">
+                        <Trash2 size={14} />
+                      </MiniButton>
+                    </BackupActions>
+                  </BackupItem>
+                ))
+              )}
+            </BackupSection>
+          </div>
+
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1rem 0' }} />
+
+          {/* SECTION 3: DATA FLOW CONTROL */}
+          <div style={{ width: '100%' }}>
+            <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Activity size={24} color="#fbc02d" /> Data Flow Control
+              </div>
+            </SettingName>
+            
+            <ControlRow>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Database size={16} /> 
+                  <span style={{ fontSize: '1.6rem', fontWeight: 600 }}>Local Browser</span>
+                  <StatusBadge active={localSaveEnabled}>{localSaveEnabled ? 'Saving' : 'Paused'}</StatusBadge>
+                </div>
+                <span style={{ fontSize: '1.2rem', opacity: 0.7 }}>Backup timers to this device</span>
+              </div>
+              <Switch id="localSave" name="localSave" checked={localSaveEnabled} onChange={toggleLocalSave} />
+            </ControlRow>
+            
+            <ControlRow>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Cloud size={16} /> 
+                  <span style={{ fontSize: '1.6rem', fontWeight: 600 }}>Cloud Sync</span>
+                  <StatusBadge active={cloudSyncEnabled && !!partyRoom}>
+                    {partyRoom ? (cloudSyncEnabled ? 'Syncing' : 'Ghost Mode') : 'Offline'}
+                  </StatusBadge>
+                </div>
+                <span style={{ fontSize: '1.2rem', opacity: 0.7 }}>Broadcast your kills to party</span>
+              </div>
+              <Switch id="cloudSync" name="cloudSync" checked={cloudSyncEnabled} onChange={toggleCloudSync} disabled={!partyRoom} />
+            </ControlRow>
+          </div>
+
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1rem 0' }} />
+
+          {/* SECTION 4: DATA PORTABILITY */}
+          <div style={{ width: '100%' }}>
+            <SettingName style={{ marginBottom: '1rem', alignItems: 'flex-start' }}>
+              Data Portability
+            </SettingName>
+            <SettingSecondary>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+                <ActionButton onClick={handleShareLink}><Share /> <FormattedMessage id='share_link' /></ActionButton>
+                <ActionButton onClick={handleExportData}><Copy /> <FormattedMessage id='copy_local_data' /></ActionButton>
+              </div>
+            </SettingSecondary>
+          </div>
+
         </SettingsContainer>
       </Modal>
     </ModalBase>
