@@ -1,4 +1,4 @@
-import { getMvpSprite, getAnimatedMvpSprite } from '@/utils';
+import { getMvpIcon } from '@/utils';
 import { Sprite } from './styles';
 
 type MvpSpriteProps = {
