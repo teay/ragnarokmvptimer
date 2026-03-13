@@ -145,11 +145,7 @@ export function ModalPartySharing({ onClose }: Props) {
   }, [restoreBackup, onClose]);
 
   const handleLeaveRoom = useCallback(() => {
-    leaveParty(false);
-    onClose();
-  }, [leaveParty, onClose]);
-
-  const handleLeaveAndSaveLocal = useCallback(() => {
+    // We always keep timers now as discussed (it's the most practical way)
     leaveParty(true);
     onClose();
   }, [leaveParty, onClose]);
@@ -161,7 +157,7 @@ export function ModalPartySharing({ onClose }: Props) {
         <Title><FormattedMessage id='party_sharing' /></Title>
         <SettingsContainer>
           
-          {/* SECTION 1: LIVE ROOM (MOVED TO TOP) */}
+          {/* SECTION 1: LIVE ROOM */}
           <div style={{ width: '100%' }}>
             <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -173,11 +169,8 @@ export function ModalPartySharing({ onClose }: Props) {
               <>
                 <LiveStatus active>Connected to: {partyRoom}</LiveStatus>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <ActionButton onClick={handleLeaveAndSaveLocal} style={{ background: '#388e3c', width: '100%', justifyContent: 'center' }}>
-                    <ZapOff /> <FormattedMessage id='leave_and_keep_data' />
-                  </ActionButton>
                   <ActionButton onClick={handleLeaveRoom} style={{ background: '#d32f2f', width: '100%', justifyContent: 'center' }}>
-                    <ZapOff /> <FormattedMessage id='leave_and_discard_data' />
+                    <ZapOff /> <FormattedMessage id='leave_and_keep_data' />
                   </ActionButton>
                 </div>
               </>
@@ -208,7 +201,7 @@ export function ModalPartySharing({ onClose }: Props) {
             )}
           </div>
 
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1rem 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2rem 0' }} />
 
           {/* SECTION 2: DATA TIME MACHINE */}
           <div style={{ width: '100%' }}>
@@ -247,7 +240,7 @@ export function ModalPartySharing({ onClose }: Props) {
             </BackupSection>
           </div>
 
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1rem 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2rem 0' }} />
 
           {/* SECTION 3: DATA FLOW CONTROL */}
           <div style={{ width: '100%' }}>
@@ -284,7 +277,7 @@ export function ModalPartySharing({ onClose }: Props) {
             </ControlRow>
           </div>
 
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1rem 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2rem 0' }} />
 
           {/* SECTION 4: DATA PORTABILITY */}
           <div style={{ width: '100%' }}>
