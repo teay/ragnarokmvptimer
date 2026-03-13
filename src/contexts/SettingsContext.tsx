@@ -81,6 +81,8 @@ interface SettingsContextData {
   toggleLocalSave: () => void;
   cloudSyncEnabled: boolean;
   toggleCloudSync: () => void;
+  autoSnapshotEnabled: boolean;
+  toggleAutoSnapshot: () => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -485,6 +487,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
+  const toggleAutoSnapshot = useCallback(() => {
+    setSettings((prev) => ({
+      ...prev,
+      autoSnapshotEnabled: !prev.autoSnapshotEnabled,
+    }));
+  }, [setSettings]);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -524,6 +533,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changePartyRoom,
         toggleLocalSave,
         toggleCloudSync,
+        toggleAutoSnapshot,
       }}
     >
       {children}

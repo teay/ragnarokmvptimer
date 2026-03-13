@@ -26,9 +26,10 @@ interface IMvp {
 interface IMvpBackup {
   id: string;
   timestamp: string;
-  type: 'AUTO' | 'MANUAL';
+  type: 'AUTO' | 'MANUAL' | 'CHANGE';
   description: string;
   data: Record<string, any[]>; // Standard activeMvps format { server: mvps[] }
   bossCount: number;
   server: string;
+  changeDetail?: string; // e.g., "Added: Baphomet" or "Removed: Osiris"
 }

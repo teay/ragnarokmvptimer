@@ -50,7 +50,7 @@ interface MvpsContextData {
   saveMvps: (mvps: IMvp[]) => void;
   leaveParty: (saveToLocal: boolean) => void;
   backups: IMvpBackup[];
-  createBackup: (type: 'AUTO' | 'MANUAL', description: string) => void;
+  createBackup: (type: 'AUTO' | 'MANUAL' | 'CHANGE', description: string, changeDetail?: string) => void;
   restoreBackup: (backupId: string) => void;
   deleteBackup: (backupId: string) => void;
 }
@@ -94,7 +94,7 @@ function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
 
 export function MvpProvider({ children }: MvpProviderProps) {
   const { 
-    server, partyRoom, changePartyRoom, localSaveEnabled, toggleLocalSave, cloudSyncEnabled 
+    server, partyRoom, changePartyRoom, localSaveEnabled, toggleLocalSave, cloudSyncEnabled, autoSnapshotEnabled 
   } = useSettings();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -142,7 +142,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
     }
   }, []);
 
-  const createBackup = useCallback((type: 'AUTO' | 'MANUAL', description: string) => {
+  const createBackup = useCallback((type: 'AUTO' | 'MANUAL' | 'CHANGE', description: string, changeDetail?: string) => {
     const allLocalDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
     if (!allLocalDataRaw) return;
 
@@ -154,6 +154,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         id: dayjs().valueOf().toString(),
         timestamp: dayjs().toISOString(),
         type, description, data: allLocalData, bossCount: serverData.length, server,
+        changeDetail,
       };
 
       setBackups(prev => {
@@ -326,11 +327,16 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
     setActiveMvps((state) => {
+      const bossToRemove = state.find(m => m && m.id === mvpID && m.deathMap === deathMap);
       const newState = state.filter((m) => m && (mvpID !== m.id || m.deathMap !== deathMap));
       saveMvps(newState);
+      if (autoSnapshotEnabled && bossToRemove) {
+        // Delay slightly to ensure saveMvps finished writing to localStorage
+        setTimeout(() => createBackup('CHANGE', 'Boss Removed', `Removed: ${bossToRemove.name}`), 100);
+      }
       return sortMvpsByRespawnTime(newState);
     });
-  }, [saveMvps]);
+  }, [saveMvps, autoSnapshotEnabled, createBackup]);
 
   const killMvp = useCallback((mvp: IMvp, deathTime = new Date()) => {
     setActiveMvps((s) => {
@@ -339,9 +345,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
       let newState = existingMvpIndex !== -1 ? [...s] : [...s, killedMvp];
       if (existingMvpIndex !== -1) newState[existingMvpIndex] = killedMvp;
       saveMvps(newState);
+      if (autoSnapshotEnabled) {
+        setTimeout(() => createBackup('CHANGE', 'Boss Added/Updated', `Saved: ${mvp.name}`), 100);
+      }
       return sortMvpsByRespawnTime(newState);
     });
-  }, [saveMvps]);
+  }, [saveMvps, autoSnapshotEnabled, createBackup]);
 
   const updateMvp = useCallback((mvp: IMvp, deathTime = mvp.deathTime) => {
     setActiveMvps((s) => {
@@ -350,9 +359,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
       let newState = existingMvpIndex !== -1 ? [...s] : [...s, updatedMvp];
       if (existingMvpIndex !== -1) newState[existingMvpIndex] = updatedMvp;
       saveMvps(newState);
+      if (autoSnapshotEnabled) {
+        setTimeout(() => createBackup('CHANGE', 'Boss Updated', `Edited: ${mvp.name}`), 100);
+      }
       return sortMvpsByRespawnTime(newState);
     });
-  }, [saveMvps]);
+  }, [saveMvps, autoSnapshotEnabled, createBackup]);
 
   const updateMvpDeathLocation = useCallback((mvpId: number, oldDeathMap: string, newDeathMap: string, newDeathPosition: IMapMark) => {
     setActiveMvps((s) => {
@@ -362,9 +374,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
       const newState = [...s];
       newState[existingMvpIndex] = updatedMvp;
       saveMvps(newState);
+      if (autoSnapshotEnabled) {
+        setTimeout(() => createBackup('CHANGE', 'Location Updated', `Moved: ${updatedMvp.name}`), 100);
+      }
       return sortMvpsByRespawnTime(newState);
     });
-  }, [saveMvps]);
+  }, [saveMvps, autoSnapshotEnabled, createBackup]);
 
   const allMvps = useMemo(() => {
     const activeMvpKeys = new Set(activeMvps.map((mvp) => mvp ? `${mvp.id}-${mvp.deathMap}` : ''));
