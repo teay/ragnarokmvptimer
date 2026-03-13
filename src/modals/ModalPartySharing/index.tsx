@@ -48,7 +48,7 @@ export function ModalPartySharing({ onClose }: Props) {
     autoSnapshotEnabled, toggleAutoSnapshot, nickname, changeNickname 
   } = useSettings();
   
-  const { leaveParty, backups, createBackup, restoreBackup, deleteBackup } = useMvpsContext();
+  const { leaveParty, backups, personalBackups, roomBackups, createBackup, restoreBackup, deleteBackup } = useMvpsContext();
   const [roomInput, setRoomInput] = useState(partyRoom || '');
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -275,8 +275,8 @@ export function ModalPartySharing({ onClose }: Props) {
     }
   }, [roomInput, localSaveEnabled, toggleLocalSave, changePartyRoom, server, onClose, createBackup, isProcessing]);
 
-  const handleRestore = useCallback((backupId: string) => {
-    restoreBackup(backupId);
+  const handleRestore = useCallback((backupId: string, source: 'local' | 'personal' | 'room' = 'local') => {
+    restoreBackup(backupId, source);
     onClose(); 
   }, [restoreBackup, onClose]);
 
@@ -424,11 +424,8 @@ export function ModalPartySharing({ onClose }: Props) {
 
           <div style={{ width: '100%' }}>
             <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Clock size={24} color="#64b5f6" /> Data Time Machine
-                </div>
-                <span style={{ fontSize: '1.4rem', opacity: 0.6, fontWeight: 400 }}>{backups.length} / {MAX_BACKUPS}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={24} color="#64b5f6" /> Data Time Machine
               </div>
             </SettingName>
             
@@ -444,26 +441,84 @@ export function ModalPartySharing({ onClose }: Props) {
             </ControlRow>
 
             <BackupSection>
-              <ActionButton onClick={() => createBackup('MANUAL', 'Manual Checkpoint')} disabled={isProcessing} style={{ background: 'var(--primary)', width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
+              <ActionButton onClick={() => createBackup('MANUAL', 'Manual Checkpoint')} disabled={isProcessing} style={{ background: 'var(--primary)', width: '100%', justifyContent: 'center', marginBottom: '1.5rem' }}>
                 <Save size={18} /> Create Manual Checkpoint
               </ActionButton>
-              {backups.length === 0 ? (<p style={{ fontSize: '1.2rem', opacity: 0.5 }}>No backups found.</p>) : (
-                backups.map((backup, index) => (
-                  <BackupItem key={backup.id}>
+
+              {/* 🏠 LOCAL LAYER */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontSize: '1.4rem', fontWeight: 600, color: '#fff' }}>🏠 Local Backups</span>
+                <span style={{ fontSize: '1.2rem', opacity: 0.6 }}>{backups.length} / {MAX_BACKUPS}</span>
+              </div>
+              {backups.length === 0 ? (<p style={{ fontSize: '1.1rem', opacity: 0.4, marginBottom: '1rem' }}>No local backups.</p>) : (
+                [...backups].reverse().map((backup, index) => (
+                  <BackupItem key={backup.id} style={{ marginBottom: '0.5rem' }}>
                     <BackupInfo>
-                      <span className="date">#{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
-                      <span className="desc">
-                        [{backup.type}] {backup.description}
-                        {backup.changeDetail && <span style={{ color: '#ffeb3b', marginLeft: '8px' }}>• {backup.changeDetail}</span>}
-                      </span>
-                      <span className="stats">
-                        {backup.bossCount} Bosses • {backup.server}
-                        {backup.user && <span style={{ color: '#fff', marginLeft: '8px', opacity: 0.8 }}>(โดย: {backup.user})</span>}
-                      </span>
+                      <span className="date">#{backups.length - index} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
+                      <span className="desc">[{backup.type}] {backup.description}</span>
+                      <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
                     <BackupActions>
-                      <MiniButton onClick={() => handleRestore(backup.id)} disabled={isProcessing} title="Restore this data"><RotateCcw size={14} /> Restore</MiniButton>
-                      <MiniButton onClick={() => deleteBackup(backup.id)} disabled={isProcessing} variant="danger" title="Delete backup"><Trash2 size={14} /></MiniButton>
+                      <MiniButton onClick={() => handleRestore(backup.id, 'local')} disabled={isProcessing}><RotateCcw size={12} /> Restore</MiniButton>
+                      <MiniButton onClick={() => deleteBackup(backup.id, 'local')} disabled={isProcessing} variant="danger"><Trash2 size={12} /></MiniButton>
+                    </BackupActions>
+                  </BackupItem>
+                ))
+              )}
+
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '1rem 0' }} />
+
+              {/* 👤 PERSONAL CLOUD LAYER */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontSize: '1.4rem', fontWeight: 600, color: '#fbc02d' }}>👤 Personal Vault (Cloud)</span>
+                <span style={{ fontSize: '1.2rem', opacity: 0.6 }}>{personalBackups.length} / {MAX_BACKUPS}</span>
+              </div>
+              {!nickname || nickname.length < 4 ? (
+                <p style={{ fontSize: '1.1rem', opacity: 0.4, marginBottom: '1rem' }}>Set nickname to enable Personal Vault.</p>
+              ) : personalBackups.length === 0 ? (
+                <p style={{ fontSize: '1.1rem', opacity: 0.4, marginBottom: '1rem' }}>No personal cloud backups.</p>
+              ) : (
+                [...personalBackups].reverse().map((backup, index) => (
+                  <BackupItem key={backup.id} style={{ marginBottom: '0.5rem', borderLeftColor: '#fbc02d' }}>
+                    <BackupInfo>
+                      <span className="date">Cloud #{personalBackups.length - index} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
+                      <span className="desc">[{backup.type}] {backup.description}</span>
+                      <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
+                    </BackupInfo>
+                    <BackupActions>
+                      <MiniButton onClick={() => handleRestore(backup.id, 'personal')} disabled={isProcessing}><RotateCcw size={12} /> Restore</MiniButton>
+                      <MiniButton onClick={() => deleteBackup(backup.id, 'personal')} disabled={isProcessing} variant="danger"><Trash2 size={12} /></MiniButton>
+                    </BackupActions>
+                  </BackupItem>
+                ))
+              )}
+
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '1rem 0' }} />
+
+              {/* 👥 ROOM HISTORY LAYER */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontSize: '1.4rem', fontWeight: 600, color: '#64b5f6' }}>👥 Room Live History</span>
+                <span style={{ fontSize: '1.2rem', opacity: 0.6 }}>{roomBackups.length} / {MAX_BACKUPS}</span>
+              </div>
+              {!partyRoom ? (
+                <p style={{ fontSize: '1.1rem', opacity: 0.4 }}>Join a room to see shared history.</p>
+              ) : roomBackups.length === 0 ? (
+                <p style={{ fontSize: '1.1rem', opacity: 0.4 }}>No history in this room.</p>
+              ) : (
+                [...roomBackups].reverse().map((backup, index) => (
+                  <BackupItem key={backup.id} style={{ marginBottom: '0.5rem', borderLeftColor: '#64b5f6' }}>
+                    <BackupInfo>
+                      <span className="date">Room #{roomBackups.length - index} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
+                      <span className="desc">
+                        {backup.changeDetail || backup.description}
+                        <span style={{ color: '#64b5f6', marginLeft: '8px' }}>by {backup.user}</span>
+                      </span>
+                      <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
+                    </BackupInfo>
+                    <BackupActions>
+                      <MiniButton onClick={() => handleRestore(backup.id, 'room')} disabled={isProcessing}><RotateCcw size={12} /> Restore</MiniButton>
+                      {/* Only show delete if user matches or is manual? For now allow all for safety recovery */}
+                      <MiniButton onClick={() => deleteBackup(backup.id, 'room')} disabled={isProcessing} variant="danger"><Trash2 size={12} /></MiniButton>
                     </BackupActions>
                   </BackupItem>
                 ))

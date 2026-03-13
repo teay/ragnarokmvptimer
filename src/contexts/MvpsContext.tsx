@@ -11,7 +11,7 @@ import dayjs from 'dayjs';
 
 import { useSettings } from './SettingsContext';
 
-import { database, ref, set, get, onValue } from '@/services/firebase';
+import { database, ref, set, get, onValue, push, query, limitToLast, remove } from '@/services/firebase';
 import { getMvpRespawnTime, getServerData } from '../utils';
 import {
   loadMvpsFromLocalStorage,
@@ -50,9 +50,11 @@ interface MvpsContextData {
   saveMvps: (mvps: IMvp[]) => void;
   leaveParty: (saveToLocal: boolean) => void;
   backups: IMvpBackup[];
+  personalBackups: IMvpBackup[];
+  roomBackups: IMvpBackup[];
   createBackup: (type: 'AUTO' | 'MANUAL' | 'CHANGE', description: string, changeDetail?: string) => void;
-  restoreBackup: (backupId: string) => void;
-  deleteBackup: (backupId: string) => void;
+  restoreBackup: (backupId: string, source?: 'local' | 'personal' | 'room') => void;
+  deleteBackup: (backupId: string, source?: 'local' | 'personal' | 'room') => void;
 }
 
 export const MvpsContext = createContext({} as MvpsContextData);
@@ -87,6 +89,8 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
   const [backups, setBackups] = useState<IMvpBackup[]>([]);
+  const [personalBackups, setPersonalBackups] = useState<IMvpBackup[]>([]);
+  const [roomBackups, setRoomBackups] = useState<IMvpBackup[]>([]);
 
   const dataLocation: 'local' | 'online' | 'ghost' | 'warning' = !localSaveEnabled 
     ? 'warning' 
@@ -118,6 +122,54 @@ export function MvpProvider({ children }: MvpProviderProps) {
     }
   }, []);
 
+  // Sync Personal Cloud Backups
+  useEffect(() => {
+    if (!nickname || nickname.length < 4) {
+      setPersonalBackups([]);
+      return;
+    }
+    const personalRef = ref(database, `users/${nickname}/backups`);
+    const q = query(personalRef, limitToLast(MAX_BACKUPS));
+    
+    return onValue(q, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const list = Object.entries(data).map(([key, val]: [string, any]) => ({
+          ...val,
+          id: key,
+          source: 'personal'
+        } as IMvpBackup)).sort((a, b) => dayjs(a.timestamp).diff(dayjs(b.timestamp)));
+        setPersonalBackups(list);
+      } else {
+        setPersonalBackups([]);
+      }
+    });
+  }, [nickname]);
+
+  // Sync Room History
+  useEffect(() => {
+    if (!partyRoom || !cloudSyncEnabled) {
+      setRoomBackups([]);
+      return;
+    }
+    const roomRef = ref(database, `parties/${partyRoom}/history`);
+    const q = query(roomRef, limitToLast(MAX_BACKUPS));
+    
+    return onValue(q, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const list = Object.entries(data).map(([key, val]: [string, any]) => ({
+          ...val,
+          id: key,
+          source: 'room'
+        } as IMvpBackup)).sort((a, b) => dayjs(a.timestamp).diff(dayjs(b.timestamp)));
+        setRoomBackups(list);
+      } else {
+        setRoomBackups([]);
+      }
+    });
+  }, [partyRoom, cloudSyncEnabled]);
+
   const createBackup = useCallback((type: 'AUTO' | 'MANUAL' | 'CHANGE', description: string, changeDetail?: string) => {
     const allLocalDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
     if (!allLocalDataRaw) return;
@@ -126,10 +178,9 @@ export function MvpProvider({ children }: MvpProviderProps) {
       const allLocalData = JSON.parse(allLocalDataRaw);
       const serverData = allLocalData[server] || [];
 
+      // 1. Local Backup
       setBackups(prev => {
-        // Calculate next sequence number based on the highest sequence found
         const lastSequence = prev.length > 0 ? Math.max(...prev.map(b => b.sequence || 0)) : 0;
-        
         const newBackup: IMvpBackup = {
           id: dayjs().valueOf().toString(),
           timestamp: dayjs().toISOString(),
@@ -138,18 +189,63 @@ export function MvpProvider({ children }: MvpProviderProps) {
           sequence: lastSequence + 1,
           user: nickname || undefined,
         };
-
-        // NEW LOGIC: Store in CHRONOLOGICAL order (Oldest First) 
-        // and only keep the LATEST 10 entries.
         const updated = [...prev, newBackup].slice(-MAX_BACKUPS);
         localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
         return updated;
       });
-    } catch (e) { console.error('Backup creation failed', e); }
-  }, [server, nickname]);
 
-  const restoreBackup = useCallback((backupId: string) => {
-    const backup = backups.find(b => b.id === backupId);
+      // 2. Personal Cloud Backup
+      if (nickname && nickname.length >= 4) {
+        const personalRef = ref(database, `users/${nickname}/backups`);
+        const newCloudBackup = {
+          timestamp: dayjs().toISOString(),
+          type, description, data: allLocalData, bossCount: serverData.length, server,
+          changeDetail,
+          user: nickname,
+        };
+        
+        // Push and then prune oldest if needed
+        push(personalRef, newCloudBackup).then(() => {
+          get(query(personalRef, limitToLast(MAX_BACKUPS + 1))).then(snap => {
+            const data = snap.val();
+            if (data && Object.keys(data).length > MAX_BACKUPS) {
+              const oldestKey = Object.keys(data).sort((a, b) => (data[a].timestamp > data[b].timestamp ? 1 : -1))[0];
+              remove(ref(database, `users/${nickname}/backups/${oldestKey}`));
+            }
+          });
+        });
+      }
+
+      // 3. Room History Backup
+      if (partyRoom && cloudSyncEnabled) {
+        const roomHistoryRef = ref(database, `parties/${partyRoom}/history`);
+        const newRoomBackup = {
+          timestamp: dayjs().toISOString(),
+          type, description, data: allLocalData, bossCount: serverData.length, server,
+          changeDetail,
+          user: nickname || 'ANON',
+        };
+        
+        push(roomHistoryRef, newRoomBackup).then(() => {
+          get(query(roomHistoryRef, limitToLast(MAX_BACKUPS + 1))).then(snap => {
+            const data = snap.val();
+            if (data && Object.keys(data).length > MAX_BACKUPS) {
+              const oldestKey = Object.keys(data).sort((a, b) => (data[a].timestamp > data[b].timestamp ? 1 : -1))[0];
+              remove(ref(database, `parties/${partyRoom}/history/${oldestKey}`));
+            }
+          });
+        });
+      }
+
+    } catch (e) { console.error('Backup creation failed', e); }
+  }, [server, nickname, partyRoom, cloudSyncEnabled]);
+
+  const restoreBackup = useCallback((backupId: string, source: 'local' | 'personal' | 'room' = 'local') => {
+    let backup;
+    if (source === 'local') backup = backups.find(b => b.id === backupId);
+    else if (source === 'personal') backup = personalBackups.find(b => b.id === backupId);
+    else if (source === 'room') backup = roomBackups.find(b => b.id === backupId);
+
     if (!backup) return;
     if (window.confirm(`Restore backup from ${dayjs(backup.timestamp).format('DD/MM HH:mm')}? This overwrites CURRENT local data.`)) {
       localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(backup.data));
@@ -158,15 +254,21 @@ export function MvpProvider({ children }: MvpProviderProps) {
       setActiveMvps(sortMvpsByRespawnTime(rehydrated));
       alert('Data restored successfully!');
     }
-  }, [backups, server, rehydrateMvps]);
+  }, [backups, personalBackups, roomBackups, server, rehydrateMvps]);
 
-  const deleteBackup = useCallback((backupId: string) => {
-    setBackups(prev => {
-      const updated = prev.filter(b => b.id !== backupId);
-      localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
+  const deleteBackup = useCallback((backupId: string, source: 'local' | 'personal' | 'room' = 'local') => {
+    if (source === 'local') {
+      setBackups(prev => {
+        const updated = prev.filter(b => b.id !== backupId);
+        localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
+        return updated;
+      });
+    } else if (source === 'personal' && nickname) {
+      remove(ref(database, `users/${nickname}/backups/${backupId}`));
+    } else if (source === 'room' && partyRoom) {
+      remove(ref(database, `parties/${partyRoom}/history/${backupId}`));
+    }
+  }, [nickname, partyRoom]);
 
   const saveMvps = useCallback(async (mvps: IMvp[]) => {
     if (!mvps) return;
@@ -361,7 +463,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
       updateMvpDeathLocation, removeMvpByMap, setEditingMvp, closeEditMvpModal: () => setEditingMvp(undefined),
       setEditingTimeMvp, closeEditTimeMvpModal: () => setEditingTimeMvp(undefined), setKillingMvp,
       closeKillMvpModal: () => setKillingMvp(undefined), isLoading, dataLocation, saveMvps, leaveParty,
-      backups, createBackup, restoreBackup, deleteBackup
+      backups, personalBackups, roomBackups, createBackup, restoreBackup, deleteBackup
     }}>
       {children}
     </MvpsContext.Provider>

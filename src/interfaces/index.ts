@@ -34,4 +34,5 @@ interface IMvpBackup {
   changeDetail?: string; // e.g., "Added Baphomet" or "Removed Osiris"
   sequence?: number; // Sequential number for display
   user?: string; // The nickname of the person who made the change
+  source?: 'local' | 'personal' | 'room'; // The source of the backup
 }
