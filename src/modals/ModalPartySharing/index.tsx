@@ -267,7 +267,7 @@ export function ModalPartySharing({ onClose }: Props) {
                       <Users size={18} /> <FormattedMessage id='join_live_room' />
                     </ActionButton>
                     <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', paddingLeft: '0.5rem', textAlign: 'left' }}>
-                      Join an existing room. Your local data will be updated with party data (non-matching local data is kept).
+                      Join an existing room. Matching timers will be updated from the party, while your unique local timers are kept.
                     </p>
                   </div>
 
