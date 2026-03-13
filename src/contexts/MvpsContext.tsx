@@ -77,7 +77,7 @@ function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
 
 export function MvpProvider({ children }: MvpProviderProps) {
   const { 
-    server, partyRoom, changePartyRoom, localSaveEnabled, toggleLocalSave, cloudSyncEnabled, autoSnapshotEnabled 
+    server, partyRoom, changePartyRoom, localSaveEnabled, toggleLocalSave, cloudSyncEnabled, autoSnapshotEnabled, nickname 
   } = useSettings();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -136,6 +136,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
           type, description, data: allLocalData, bossCount: serverData.length, server,
           changeDetail,
           sequence: lastSequence + 1,
+          user: nickname || undefined,
         };
 
         // NEW LOGIC: Store in CHRONOLOGICAL order (Oldest First) 
@@ -145,7 +146,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         return updated;
       });
     } catch (e) { console.error('Backup creation failed', e); }
-  }, [server]);
+  }, [server, nickname]);
 
   const restoreBackup = useCallback((backupId: string) => {
     const backup = backups.find(b => b.id === backupId);

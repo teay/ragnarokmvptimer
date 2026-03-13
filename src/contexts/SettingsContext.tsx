@@ -83,6 +83,8 @@ interface SettingsContextData {
   toggleCloudSync: () => void;
   autoSnapshotEnabled: boolean;
   toggleAutoSnapshot: () => void;
+  nickname: string;
+  changeNickname: (nickname: string) => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -494,6 +496,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
+  const changeNickname = useCallback((nickname: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      nickname,
+    }));
+  }, [setSettings]);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -534,6 +543,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleLocalSave,
         toggleCloudSync,
         toggleAutoSnapshot,
+        changeNickname,
       }}
     >
       {children}
