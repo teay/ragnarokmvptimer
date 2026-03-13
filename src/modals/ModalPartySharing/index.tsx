@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Copy, Share, Zap, ZapOff, Database, Cloud, Activity, PlusSquare, Users, RefreshCw, Clock, Trash2, Save, RotateCcw } from '@styled-icons/feather';
+import { Copy, Share, Zap, ZapOff, Database, Cloud, Activity, PlusSquare, Users, RefreshCw, Clock, Trash2, Save, RotateCcw, XOctagon } from '@styled-icons/feather';
 import dayjs from 'dayjs';
 
 import { ModalBase } from '../ModalBase';
@@ -11,7 +11,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useScrollBlock, useClickOutside, useKey } from '@/hooks';
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
-import { database, ref, set, get } from '@/services/firebase';
+import { database, ref, set, get, remove } from '@/services/firebase';
 import { saveActiveMvpsToLocalStorage } from '@/controllers/mvp';
 
 import {
@@ -76,13 +76,12 @@ export function ModalPartySharing({ onClose }: Props) {
     }
   }, []);
 
-  // 🤝 Join Existing Party - Now with Auto Server Sync
+  // 🤝 Join Existing Party
   const handleJoinExisting = useCallback(async () => {
     const roomName = roomInput.trim();
     if (!roomName) return;
     
     try {
-      // 1. Peek at room metadata to see which server it's using
       const metadataRef = ref(database, `parties/${roomName}/metadata`);
       const metaSnapshot = await get(metadataRef);
       const roomMetadata = metaSnapshot.val();
@@ -91,14 +90,12 @@ export function ModalPartySharing({ onClose }: Props) {
       if (roomMetadata && roomMetadata.server) {
         targetServer = roomMetadata.server;
         if (targetServer !== server) {
-          console.log(`Syncing server to room default: ${targetServer}`);
           changeServer(targetServer);
         }
       }
 
       createBackup('AUTO', `Pre-Join: ${roomName} (${targetServer})`);
 
-      // 2. Fetch online data for the CORRECT server
       const serverRef = ref(database, `parties/${roomName}/${targetServer}/mvps`);
       const snapshot = await get(serverRef);
       const onlineMvps = snapshot.val() || [];
@@ -122,13 +119,12 @@ export function ModalPartySharing({ onClose }: Props) {
       changePartyRoom(roomName);
       onClose();
     } catch (e) {
-      console.error('Join failed', e);
       changePartyRoom(roomName);
       onClose();
     }
   }, [roomInput, server, changeServer, localSaveEnabled, toggleLocalSave, changePartyRoom, onClose, createBackup]);
 
-  // 🆕 Create Fresh Party - Save Metadata
+  // 🆕 Create Fresh Party
   const handleCreateFresh = useCallback(() => {
     const roomName = roomInput.trim();
     if (!roomName) return;
@@ -136,11 +132,8 @@ export function ModalPartySharing({ onClose }: Props) {
       createBackup('AUTO', `Pre-Create Fresh: ${roomName}`);
       if (!localSaveEnabled) toggleLocalSave();
       changePartyRoom(roomName);
-      
-      // Save metadata and clear mvps
       const metadataRef = ref(database, `parties/${roomName}/metadata`);
       const serverRef = ref(database, `parties/${roomName}/${server}`);
-      
       Promise.all([
         set(metadataRef, { server, createdAt: dayjs().toISOString() }),
         set(serverRef, { mvps: [] })
@@ -148,7 +141,7 @@ export function ModalPartySharing({ onClose }: Props) {
     }
   }, [roomInput, localSaveEnabled, toggleLocalSave, changePartyRoom, server, onClose, createBackup]);
 
-  // ⚔️ Create Party & Sync My Data - Save Metadata
+  // ⚔️ Create Party & Begin with My Boss Timers
   const handleCreateWithData = useCallback(() => {
     const roomName = roomInput.trim();
     if (!roomName) return;
@@ -166,7 +159,6 @@ export function ModalPartySharing({ onClose }: Props) {
           const minimalMvps = parsed[server].map((m: any) => ({
             id: m.id, deathTime: m.deathTime || null, deathMap: m.deathMap || null, deathPosition: m.deathPosition || null,
           }));
-          
           Promise.all([
             set(metadataRef, { server, createdAt: dayjs().toISOString() }),
             set(serverRef, { mvps: minimalMvps })
@@ -185,6 +177,22 @@ export function ModalPartySharing({ onClose }: Props) {
     leaveParty(true);
     onClose();
   }, [leaveParty, onClose]);
+
+  // 🧨 DESTROY ROOM DATA (Firebase Only)
+  const handleDestroyRoomData = useCallback(async () => {
+    if (!partyRoom) return;
+    if (window.confirm(`🧨 DANGER: This will permanently DELETE all boss timers in room "${partyRoom}" from the CLOUD. Your local data will NOT be affected. Are you sure?`)) {
+      try {
+        const roomRef = ref(database, `parties/${partyRoom}`);
+        await remove(roomRef);
+        alert(`Room "${partyRoom}" data has been wiped from cloud.`);
+        leaveParty(true); // Exit room after destroying it
+        onClose();
+      } catch (e) {
+        alert('Failed to destroy room data.');
+      }
+    }
+  }, [partyRoom, leaveParty, onClose]);
 
   return (
     <ModalBase>
@@ -205,8 +213,12 @@ export function ModalPartySharing({ onClose }: Props) {
               <>
                 <LiveStatus active>Connected to: {partyRoom}</LiveStatus>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <ActionButton onClick={handleLeaveRoom} style={{ background: '#d32f2f', width: '100%', justifyContent: 'center' }}>
+                  <ActionButton onClick={handleLeaveRoom} style={{ background: '#388e3c', width: '100%', justifyContent: 'center' }}>
                     <ZapOff /> <FormattedMessage id='leave_and_keep_data' />
+                  </ActionButton>
+                  
+                  <ActionButton onClick={handleDestroyRoomData} style={{ background: 'transparent', border: '1px solid #d32f2f', color: '#d32f2f', width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
+                    <XOctagon size={18} /> Destroy Cloud Room Data
                   </ActionButton>
                 </div>
               </>
@@ -230,7 +242,7 @@ export function ModalPartySharing({ onClose }: Props) {
                     <ActionButton onClick={handleJoinExisting} style={{ width: '100%', justifyContent: 'flex-start', background: '#666' }}>
                       <Users size={18} /> <FormattedMessage id='join_live_room' />
                     </ActionButton>
-                    <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>Join an existing room. Server will automatically switch to match the room.</p>
+                    <p style={{ fontSize: '1.2rem', opacity: 0.7, marginTop: '0.5rem', textAlign: 'left' }}>Join an existing room. Server syncs automatically.</p>
                   </div>
                 </div>
               </>
@@ -246,15 +258,11 @@ export function ModalPartySharing({ onClose }: Props) {
                 <Clock size={24} color="#64b5f6" /> Data Time Machine
               </div>
             </SettingName>
-            
             <BackupSection>
               <ActionButton onClick={() => createBackup('MANUAL', 'Manual Checkpoint')} style={{ background: 'var(--primary)', width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
                 <Save size={18} /> Create Manual Checkpoint
               </ActionButton>
-              
-              {backups.length === 0 ? (
-                <p style={{ fontSize: '1.2rem', opacity: 0.5 }}>No backups found.</p>
-              ) : (
+              {backups.length === 0 ? (<p style={{ fontSize: '1.2rem', opacity: 0.5 }}>No backups found.</p>) : (
                 backups.map(backup => (
                   <BackupItem key={backup.id}>
                     <BackupInfo>
@@ -263,12 +271,8 @@ export function ModalPartySharing({ onClose }: Props) {
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
                     <BackupActions>
-                      <MiniButton onClick={() => handleRestore(backup.id)} title="Restore this data">
-                        <RotateCcw size={14} /> Restore
-                      </MiniButton>
-                      <MiniButton onClick={() => deleteBackup(backup.id)} variant="danger" title="Delete backup">
-                        <Trash2 size={14} />
-                      </MiniButton>
+                      <MiniButton onClick={() => handleRestore(backup.id)} title="Restore this data"><RotateCcw size={14} /> Restore</MiniButton>
+                      <MiniButton onClick={() => deleteBackup(backup.id)} variant="danger" title="Delete backup"><Trash2 size={14} /></MiniButton>
                     </BackupActions>
                   </BackupItem>
                 ))
@@ -285,7 +289,6 @@ export function ModalPartySharing({ onClose }: Props) {
                 <Activity size={24} color="#fbc02d" /> Data Flow Control
               </div>
             </SettingName>
-            
             <ControlRow>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -297,7 +300,6 @@ export function ModalPartySharing({ onClose }: Props) {
               </div>
               <Switch id="localSave" name="localSave" checked={localSaveEnabled} onChange={toggleLocalSave} />
             </ControlRow>
-            
             <ControlRow>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -317,9 +319,7 @@ export function ModalPartySharing({ onClose }: Props) {
 
           {/* SECTION 4: DATA PORTABILITY */}
           <div style={{ width: '100%' }}>
-            <SettingName style={{ marginBottom: '1rem', alignItems: 'flex-start' }}>
-              Data Portability
-            </SettingName>
+            <SettingName style={{ marginBottom: '1rem', alignItems: 'flex-start' }}>Data Portability</SettingName>
             <SettingSecondary>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
                 <ActionButton onClick={handleShareLink}><Share /> <FormattedMessage id='share_link' /></ActionButton>
@@ -327,7 +327,6 @@ export function ModalPartySharing({ onClose }: Props) {
               </div>
             </SettingSecondary>
           </div>
-
         </SettingsContainer>
       </Modal>
     </ModalBase>
