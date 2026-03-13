@@ -5,96 +5,74 @@ import Question from '../assets/question.gif';
 function remapGlobImport(data) {
   return Object.entries(data).reduce((acc, [key, value]) => {
     const newKey = key.split('/').slice(-1)[0].split('.')[0];
-    acc[newKey] = value;
-    return acc;
+    return { ...acc, [newKey]: value };
   }, {});
 }
 
-const MVP_SPRITES = import.meta.glob('../assets/mvp_icons/*', {
-  import: 'default',
-  eager: true,
-});
-
-const ANIMATED_MVP_SPRITES = import.meta.glob(
-  '../assets/mvp_icons_animated/*',
-  {
-    import: 'default',
-    eager: true,
-  }
+const mapImages = remapGlobImport(
+  import.meta.glob('../assets/mvp_maps/*.webp', { eager: true, import: 'default' })
 );
 
-const MAP_IMAGES = import.meta.glob('../assets/mvp_maps/*', {
-  import: 'default',
-  eager: true,
-});
-
-const mvpSprites = remapGlobImport(MVP_SPRITES);
-const animatedMvpSprites = remapGlobImport(ANIMATED_MVP_SPRITES);
-const mapImages = remapGlobImport(MAP_IMAGES);
-
-const SERVERS_DATA = import.meta.glob('../data/*.json', {
-  import: 'default',
-});
-
-type IServers = {
-  [key: string]: () => Promise<IMvp[]>;
-};
-
-export const SERVERS: IServers = Object.entries(SERVERS_DATA).reduce(
-  (acc, [key, value]) => {
-    const newKey = key.split('/')[2].split('.')[0];
-    acc[newKey] = value;
-    return acc;
-  },
-  {}
+const mvpIcons = remapGlobImport(
+  import.meta.glob('../assets/mvp_icons/*.webp', { eager: true, import: 'default' })
 );
 
-export async function getServerData(server: string) {
-  try {
-    const mvpsData = await SERVERS[server || 'iRO']();
-    return mvpsData;
-  } catch (error) {
-    return await SERVERS['iRO']();
-  }
+const animatedMvpIcons = remapGlobImport(
+  import.meta.glob('../assets/mvp_icons_animated/*.webp', { eager: true, import: 'default' })
+);
+
+/**
+ * Returns the map image.
+ * @param mapName map name
+ * @returns map image
+ */
+export function getMapImage(mapName: string): string {
+  return mapImages[mapName] || Question;
 }
 
 /**
- * Convert Dayjs object to string with 'HH:mm:ss' format
- * @param time Dayjs object
- * @returns string with this format 'HH:mm:ss' ex: '16:10:20'
+ * Returns the mvp icon.
+ * @param mvpId mvp id
+ * @param animated whether to return the animated icon
+ * @returns mvp icon
  */
-export const respawnIn = (time: Dayjs) => time.format('HH:mm:ss');
+export function getMvpIcon(mvpId: number, animated?: boolean): string {
+  if (animated) {
+    return animatedMvpIcons[mvpId] || Question;
+  }
+  return mvpIcons[mvpId] || Question;
+}
 
 /**
- * Convert Dayjs object to string with the interval that MVP can respawn
- * @param time Dayjs object
- * @returns string with this format 'HH:mm ~ HH:mm' ex: '16:00 ~ 16:10'
+ * Loads the server data from the json files.
+ * @param server server name
+ * @returns server data
  */
-export const respawnAt = (time: Dayjs) =>
-  `${time.format('HH:mm')} ~ ${time.add(10, 'minutes').format('HH:mm')}`;
+export async function getServerData(server: string): Promise<IMvp[]> {
+  const data = await import(`../data/${server}.json`);
+  return data.default;
+}
 
 /**
- * Returns the MVP sprite or question emoticon if not found
- * @param id mvp id
- * @returns image url
+ * Format the time to hh:mm:ss
+ * @param duration duration in milliseconds
+ * @returns formatted time
  */
-export const getMvpSprite = (id: number): string => mvpSprites[id] || Question;
+export function formatTime(duration: number): string {
+  const seconds = Math.floor((duration / 1000) % 60);
+  const minutes = Math.floor((duration / (1000 * 60)) % 60);
+  const hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
 
-/**
- * Returns the animated MVP sprite or default sprite or question emoticon
- * @param id mvp id
- * @returns image url
- */
-export const getAnimatedMvpSprite = (id: number): string =>
-  animatedMvpSprites[id] || getMvpSprite(id);
+  const hoursStr = hours < 10 ? `0${hours}` : hours;
+  const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
+  const secondsStr = seconds < 10 ? `0${seconds}` : seconds;
 
-/**
- * Returns the map image or question emoticon
- * @param mapname name of the map
- * @returns image url
- */
-export const getMapImg = (mapname: string): string =>
-  mapImages[mapname] || Question;
+  if (hours > 0) {
+    return `${hoursStr}:${minutesStr}:${secondsStr}`;
+  }
+
+  return `${minutesStr}:${secondsStr}`;
+}
 
 /**
  * Returns the death map respawn time in milliseconds.
@@ -102,7 +80,8 @@ export const getMapImg = (mapname: string): string =>
  * @returns respawn time in milliseconds
  */
 export function getMvpRespawnTime(mvp: IMvp): number | undefined {
-  const deathMap = mvp.spawn.find((spawn) => spawn.mapname === mvp.deathMap);
+  if (!mvp || !mvp.spawn || !Array.isArray(mvp.spawn)) return 0;
+  const deathMap = mvp.spawn.find((spawn) => spawn && spawn.mapname === mvp.deathMap);
   const respawnTime = deathMap?.respawnTime;
   return respawnTime;
 }

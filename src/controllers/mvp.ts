@@ -7,50 +7,42 @@ export async function loadMvpsFromLocalStorage(
   server: string
 ): Promise<IMvp[]> {
   try {
-    const data = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-    if (!data) return [];
+    const dataString = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
 
-    const dataParse = JSON.parse(data);
-    if (!dataParse) return [];
+    if (!dataString) return [];
 
-    const savedServerData = dataParse[server];
+    const activeMvps = JSON.parse(dataString);
+    const savedServerData = activeMvps[server];
 
-    const hasSavedServerData = !!savedServerData;
+    const hasSavedServerData = !!savedServerData && savedServerData.length > 0;
+
     if (!hasSavedServerData) return [];
 
     const originalServerData = await getServerData(server);
 
-    const finalData = savedServerData.map((mvp: IMvp) => ({
-      ...originalServerData.find((m) => m.id === mvp.id),
-      deathMap: mvp.deathMap,
-      deathPosition: mvp.deathPosition,
-      deathTime: dayjs(mvp.deathTime).toDate(),
-    }));
+    const finalData = savedServerData.map((mvp: IMvp) => {
+      const original = originalServerData.find((m) => m && m.id === mvp.id);
+      return {
+        ...original,
+        ...mvp,
+        deathTime: dayjs(mvp.deathTime).toDate(),
+      };
+    });
 
     return finalData;
   } catch (error) {
-    console.error('Failed to load mvps from local storage', error);
+    console.error('Error loading MVPs from localStorage:', error);
     return [];
   }
 }
 
-export function saveActiveMvpsToLocalStorage(
-  activeMvps: IMvp[],
-  server: string
-) {
-  const data = activeMvps?.map((mvp) => ({
-    id: mvp.id,
-    deathMap: mvp.deathMap,
-    deathTime: mvp.deathTime,
-    deathPosition: mvp.deathPosition,
-  }));
+export function saveActiveMvpsToLocalStorage(data: IMvp[], server: string) {
+  const dataString = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
 
-  const currentLocalMvps = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-
-  const currentData = currentLocalMvps ? JSON.parse(currentLocalMvps) : {};
+  const activeMvps = dataString ? JSON.parse(dataString) : {};
 
   const updatedActiveData = {
-    ...currentData,
+    ...activeMvps,
     [server]: data,
   };
 
