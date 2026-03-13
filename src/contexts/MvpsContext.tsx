@@ -30,7 +30,7 @@ interface MvpsContextData {
   editingTimeMvp: IMvp | undefined;
   killingMvp: IMvp | undefined;
   isLoading: boolean;
-  dataLocation: 'local' | 'online' | 'mixed';
+  dataLocation: 'local' | 'online' | 'ghost' | 'warning';
   resetMvpTimer: (mvp: IMvp) => void;
   killMvp: (mvp: IMvp, time?: Date | null) => void;
   updateMvp: (mvp: IMvp, time?: Date | null) => void;
