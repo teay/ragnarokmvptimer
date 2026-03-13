@@ -139,6 +139,21 @@ export function ModalPartySharing({ onClose }: Props) {
     } else onClose();
   }, [roomInput, localSaveEnabled, toggleLocalSave, changePartyRoom, server, onClose, createBackup]);
 
+  const handleRestore = useCallback((backupId: string) => {
+    restoreBackup(backupId);
+    onClose(); // Auto-close after restore confirmed
+  }, [restoreBackup, onClose]);
+
+  const handleLeaveRoom = useCallback(() => {
+    leaveParty(false);
+    onClose();
+  }, [leaveParty, onClose]);
+
+  const handleLeaveAndSaveLocal = useCallback(() => {
+    leaveParty(true);
+    onClose();
+  }, [leaveParty, onClose]);
+
   return (
     <ModalBase>
       <Modal ref={modalRef}>
@@ -200,7 +215,7 @@ export function ModalPartySharing({ onClose }: Props) {
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
                     <BackupActions>
-                      <MiniButton onClick={() => restoreBackup(backup.id)} title="Restore this data">
+                      <MiniButton onClick={() => handleRestore(backup.id)} title="Restore this data">
                         <RotateCcw size={14} /> Restore
                       </MiniButton>
                       <MiniButton onClick={() => deleteBackup(backup.id)} variant="danger" title="Delete backup">
@@ -224,10 +239,10 @@ export function ModalPartySharing({ onClose }: Props) {
               <>
                 <LiveStatus active>Connected to: {partyRoom}</LiveStatus>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <ActionButton onClick={() => leaveParty(true)} style={{ background: '#388e3c', width: '100%', justifyContent: 'center' }}>
+                  <ActionButton onClick={handleLeaveAndSaveLocal} style={{ background: '#388e3c', width: '100%', justifyContent: 'center' }}>
                     <ZapOff /> <FormattedMessage id='leave_and_keep_data' />
                   </ActionButton>
-                  <ActionButton onClick={() => leaveParty(false)} style={{ background: '#d32f2f', width: '100%', justifyContent: 'center' }}>
+                  <ActionButton onClick={handleLeaveRoom} style={{ background: '#d32f2f', width: '100%', justifyContent: 'center' }}>
                     <ZapOff /> <FormattedMessage id='leave_and_discard_data' />
                   </ActionButton>
                 </div>
