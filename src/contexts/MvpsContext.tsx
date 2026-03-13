@@ -59,19 +59,36 @@ export const MvpsContext = createContext({} as MvpsContextData);
 
 /**
  * Safety-guarded Sort Function
+ * Ensures we don't crash if spawn data is missing.
  */
 function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
+  if (!mvps) return [];
+  
   return [...mvps].sort((a: IMvp, b: IMvp) => {
+    // 1. Basic existence checks
+    if (!a || !b) return 0;
+    
+    // 2. Check for deathTime (the basis of sorting)
     const bothHaveDeathTime = a.deathTime && b.deathTime;
     if (!bothHaveDeathTime) return 0;
     
-    // Safety check: ensure .spawn exists before calling getMvpRespawnTime
-    if (!a.spawn || !b.spawn) return 0;
+    // 3. CRITICAL: Check for spawn data existence before calling utility
+    if (!a.spawn || !Array.isArray(a.spawn) || !b.spawn || !Array.isArray(b.spawn)) {
+      return 0;
+    }
 
-    const respawnA = getMvpRespawnTime(a) || 0;
-    const respawnB = getMvpRespawnTime(b) || 0;
-    
-    return dayjs(a.deathTime).add(respawnA, 'ms').diff(dayjs(b.deathTime).add(respawnB, 'ms'));
+    try {
+      const respawnA = getMvpRespawnTime(a) || 0;
+      const respawnB = getMvpRespawnTime(b) || 0;
+      
+      const timeA = dayjs(a.deathTime).add(respawnA, 'ms');
+      const timeB = dayjs(b.deathTime).add(respawnB, 'ms');
+      
+      return timeA.diff(timeB);
+    } catch (e) {
+      console.warn('Sorting error for MVPs:', { a, b, error: e });
+      return 0;
+    }
   });
 }
 
@@ -93,12 +110,16 @@ export function MvpProvider({ children }: MvpProviderProps) {
     : (partyRoom ? (cloudSyncEnabled ? 'online' : 'ghost') : 'local');
 
   const rehydrateMvps = useCallback((mvps: any[]) => {
+    if (!mvps) return [];
+    
     return mvps.map(mvp => {
-      const original = originalAllMvps.find(o => Number(o.id) === Number(mvp.id));
+      if (!mvp) return mvp;
+      
+      const original = originalAllMvps.find(o => o && Number(o.id) === Number(mvp.id));
       if (original) {
         const deathTime = mvp.deathTime ? new Date(mvp.deathTime) : undefined;
         // Try to find the specific spawn for the map it died on
-        const specificSpawn = original.spawn.filter(s => s.mapname === mvp.deathMap);
+        const specificSpawn = original.spawn ? original.spawn.filter(s => s && s.mapname === mvp.deathMap) : [];
         return { 
           ...original, 
           ...mvp, 
@@ -112,24 +133,37 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const loadBackups = useCallback(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_BACKUPS_KEY);
-    if (saved) setBackups(JSON.parse(saved));
+    if (saved) {
+      try {
+        setBackups(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse backups', e);
+      }
+    }
   }, []);
 
   const createBackup = useCallback((type: 'AUTO' | 'MANUAL', description: string) => {
     const allLocalDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
     if (!allLocalDataRaw) return;
-    const allLocalData = JSON.parse(allLocalDataRaw);
-    const serverData = allLocalData[server] || [];
-    const newBackup: IMvpBackup = {
-      id: dayjs().valueOf().toString(),
-      timestamp: dayjs().toISOString(),
-      type, description, data: allLocalData, bossCount: serverData.length, server,
-    };
-    setBackups(prev => {
-      const updated = [newBackup, ...prev].slice(0, MAX_BACKUPS);
-      localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
-      return updated;
-    });
+
+    try {
+      const allLocalData = JSON.parse(allLocalDataRaw);
+      const serverData = allLocalData[server] || [];
+
+      const newBackup: IMvpBackup = {
+        id: dayjs().valueOf().toString(),
+        timestamp: dayjs().toISOString(),
+        type, description, data: allLocalData, bossCount: serverData.length, server,
+      };
+
+      setBackups(prev => {
+        const updated = [newBackup, ...prev].slice(0, MAX_BACKUPS);
+        localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
+        return updated;
+      });
+    } catch (e) {
+      console.error('Backup creation failed', e);
+    }
   }, [server]);
 
   const restoreBackup = useCallback((backupId: string) => {
@@ -153,10 +187,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, []);
 
   const saveMvps = useCallback(async (mvps: IMvp[]) => {
+    if (!mvps) return;
     const rehydrated = rehydrateMvps(mvps);
     setActiveMvps(sortMvpsByRespawnTime(rehydrated));
     if (localSaveEnabled) saveActiveMvpsToLocalStorage(rehydrated, server);
     if (partyRoom && cloudSyncEnabled) {
+      console.log(`☁️ Syncing to Cloud...`);
       const serverRef = ref(database, `parties/${partyRoom}/${server}`);
       const minimalMvps = rehydrated.map(m => ({
         id: m.id,
@@ -181,21 +217,27 @@ export function MvpProvider({ children }: MvpProviderProps) {
       const data = snapshot.val();
       const remoteMvpsRaw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
       
-      // CRITICAL: Only proceed with merge and sort if originalAllMvps is loaded
+      // Safety: Only proceed with complex merge if originalAllMvps is ready
       if (originalAllMvps.length === 0) {
-        // Just store them raw for now, the 'Effect to handle late static data' will fix it
         setActiveMvps(remoteMvpsRaw as IMvp[]);
         return;
       }
 
       const rehydratedRemote = rehydrateMvps(remoteMvpsRaw);
 
-      const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-      const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
+      let allLocal: any = {};
+      try {
+        const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+        allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
+      } catch (e) {
+        console.error('Failed to parse local storage', e);
+      }
+      
       const localForServer = allLocal[server] || [];
 
-      const remoteKeys = new Set(rehydratedRemote.map(m => `${m.id}-${m.deathMap}`));
-      const uniqueLocal = localForServer.filter((m: any) => !remoteKeys.has(`${m.id}-${m.deathMap}`));
+      // Smart Merge Listener Logic
+      const remoteKeys = new Set(rehydratedRemote.map(m => m ? `${m.id}-${m.deathMap}` : ''));
+      const uniqueLocal = localForServer.filter((m: any) => m && !remoteKeys.has(`${m.id}-${m.deathMap}`));
 
       const mergedResult = [...rehydratedRemote, ...uniqueLocal];
       const sortedMerged = sortMvpsByRespawnTime(mergedResult);
@@ -215,7 +257,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
   // Effect to handle case where originalAllMvps loads AFTER Firebase data
   useEffect(() => {
     if (partyRoom && originalAllMvps.length > 0 && activeMvps.length > 0 && isLoading) {
-      // Re-hydrate activeMvps now that we have original data
       const mergedMvps = rehydrateMvps(activeMvps);
       setActiveMvps(sortMvpsByRespawnTime(mergedMvps));
       setIsLoading(false);
@@ -277,7 +318,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const resetMvpTimer = useCallback((mvp: IMvp) => {
     const updatedMvp = { ...mvp, deathTime: new Date(), deathPosition: undefined };
     setActiveMvps((state) => {
-      const newState = state.map((m) => (m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m));
+      const newState = state.map((m) => (m && m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m));
       saveMvps(newState);
       return sortMvpsByRespawnTime(newState);
     });
@@ -285,7 +326,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
     setActiveMvps((state) => {
-      const newState = state.filter((m) => mvpID !== m.id || m.deathMap !== deathMap);
+      const newState = state.filter((m) => m && (mvpID !== m.id || m.deathMap !== deathMap));
       saveMvps(newState);
       return sortMvpsByRespawnTime(newState);
     });
@@ -294,7 +335,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const killMvp = useCallback((mvp: IMvp, deathTime = new Date()) => {
     setActiveMvps((s) => {
       const killedMvp = { ...mvp, deathTime };
-      const existingMvpIndex = s.findIndex((m) => m.id === mvp.id && m.deathMap === mvp.deathMap);
+      const existingMvpIndex = s.findIndex((m) => m && m.id === mvp.id && m.deathMap === mvp.deathMap);
       let newState = existingMvpIndex !== -1 ? [...s] : [...s, killedMvp];
       if (existingMvpIndex !== -1) newState[existingMvpIndex] = killedMvp;
       saveMvps(newState);
@@ -305,7 +346,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const updateMvp = useCallback((mvp: IMvp, deathTime = mvp.deathTime) => {
     setActiveMvps((s) => {
       const updatedMvp = { ...mvp, deathTime };
-      const existingMvpIndex = s.findIndex((m) => m.id === mvp.id && m.deathMap === mvp.deathMap);
+      const existingMvpIndex = s.findIndex((m) => m && m.id === mvp.id && m.deathMap === mvp.deathMap);
       let newState = existingMvpIndex !== -1 ? [...s] : [...s, updatedMvp];
       if (existingMvpIndex !== -1) newState[existingMvpIndex] = updatedMvp;
       saveMvps(newState);
@@ -315,7 +356,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const updateMvpDeathLocation = useCallback((mvpId: number, oldDeathMap: string, newDeathMap: string, newDeathPosition: IMapMark) => {
     setActiveMvps((s) => {
-      const existingMvpIndex = s.findIndex((m) => m.id === mvpId && m.deathMap === oldDeathMap);
+      const existingMvpIndex = s.findIndex((m) => m && m.id === mvpId && m.deathMap === oldDeathMap);
       if (existingMvpIndex === -1) return s;
       const updatedMvp = { ...s[existingMvpIndex], deathMap: newDeathMap, deathPosition: newDeathPosition };
       const newState = [...s];
@@ -326,10 +367,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, [saveMvps]);
 
   const allMvps = useMemo(() => {
-    const activeMvpKeys = new Set(activeMvps.map((mvp) => `${mvp.id}-${mvp.deathMap}`));
+    const activeMvpKeys = new Set(activeMvps.map((mvp) => mvp ? `${mvp.id}-${mvp.deathMap}` : ''));
     return originalAllMvps
-      .flatMap((mvp) => mvp.spawn.map((spawn) => ({ ...mvp, spawn: [spawn], deathMap: spawn.mapname })))
-      .filter((mvp) => !activeMvpKeys.has(`${mvp.id}-${mvp.deathMap}`))
+      .flatMap((mvp) => (mvp && mvp.spawn) ? mvp.spawn.map((spawn) => ({ ...mvp, spawn: [spawn], deathMap: spawn.mapname })) : [])
+      .filter((mvp) => mvp && !activeMvpKeys.has(`${mvp.id}-${mvp.deathMap}`))
       .map(({ deathTime, ...rest }) => rest);
   }, [activeMvps, originalAllMvps]);
 
