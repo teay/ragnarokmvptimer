@@ -334,7 +334,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
       newState[existingMvpIndex] = updatedMvp;
       saveMvps(newState);
       if (autoSnapshotEnabled) {
-        setTimeout(() => createBackup('CHANGE', 'Location Updated', `Moved: ${updatedMvp.name}`), 100);
+        setTimeout(() => createBackup('CHANGE', 'Tomb Location Updated', `Tomb: ${updatedMvp.name}`), 100);
       }
       return sortMvpsByRespawnTime(newState);
     });
