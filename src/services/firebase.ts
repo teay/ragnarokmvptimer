@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, get, onValue, off, DatabaseReference } from 'firebase/database';
+import { getDatabase, ref, set, get, remove, onValue, off, DatabaseReference } from 'firebase/database';
 
 // Firebase configuration using your provided credentials
 const firebaseConfig = {
@@ -17,5 +17,5 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-export { database, ref, set, get, onValue, off };
+export { database, ref, set, get, remove, onValue, off };
 export type { DatabaseReference };
