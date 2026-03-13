@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 
-import { getMapImg } from '@/utils';
+import { getMapImage } from '@/utils';
 import { MapMark } from '../MapMark';
 
 import { MapImg } from './styles';

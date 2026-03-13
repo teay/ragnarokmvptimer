@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSettings } from '@/contexts/SettingsContext';
-import { getMvpSprite } from '@/utils';
+import { getMvpIcon } from '@/utils';
 
 export function useNotification() {
   const { isNotificationSoundEnabled } = useSettings();

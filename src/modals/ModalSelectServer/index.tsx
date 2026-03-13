@@ -5,7 +5,7 @@ import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 
 import { useSettings } from '@/contexts/SettingsContext';
-import { SERVERS } from '@/utils';
+import { SERVERS } from '@/constants';
 import { useClickOutside, useScrollBlock, useKey } from '@/hooks';
 import { ModalPrimaryButton } from '@/ui/ModalPrimaryButton';
 import { Modal, Title, ServerList, ServerItem } from './styles';

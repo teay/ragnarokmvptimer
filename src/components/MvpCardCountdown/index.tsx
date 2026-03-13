@@ -4,7 +4,6 @@ import type { Duration } from 'dayjs/plugin/duration';
 
 import { useCountdown } from '@/hooks';
 import { RESPAWN_TIMER_SOON_THRESHOLD_MS } from '@/constants';
-import { respawnAt } from '@/utils';
 
 import { Container, RespawnTimeText } from './styles';
 
@@ -34,7 +33,7 @@ function getTimeString(
 
   if (missedRespawn) return duration.humanize(true);
 
-  return respawnAt(nextRespawn);
+  return nextRespawn.format('HH:mm:ss');
 }
 
 export function MvpCardCountdown({
@@ -44,24 +43,20 @@ export function MvpCardCountdown({
 }: MvpCardCountdownProps) {
   const { duration } = useCountdown(nextRespawn);
 
-  const durationWithRespawnDelay = duration.add(
-    RESPAWN_TIMER_SOON_THRESHOLD_MS,
-    'ms'
-  );
-  const durationAsMs = durationWithRespawnDelay.asMilliseconds();
+  const durationAsMs = duration.asMilliseconds();
   const respawningSoon =
     durationAsMs >= 0 && durationAsMs <= RESPAWN_TIMER_SOON_THRESHOLD_MS;
   const missedRespawn = durationAsMs < 0;
 
   const formattedTimeString = getTimeString(
     nextRespawn,
-    respawningSoon || missedRespawn ? durationWithRespawnDelay : duration,
+    duration,
     respawnAsCountdown,
     missedRespawn
   );
 
   const shouldTriggerNotification =
-    Math.trunc(durationWithRespawnDelay.asSeconds()) ===
+    Math.trunc(duration.asSeconds()) ===
     RESPAWN_TIMER_SOON_THRESHOLD_MS / 1000;
 
   if (onTriggerNotification && shouldTriggerNotification) {
