@@ -37,21 +37,20 @@ export async function getServerData(server: string): Promise<IMvp[]> {
   return data.default;
 }
 
+/**
+ * Format the time to ALWAYS be HH:mm:ss (e.g. 00:09:02)
+ */
 export function formatTime(duration: number): string {
   const absDuration = Math.abs(duration);
   const seconds = Math.floor((absDuration / 1000) % 60);
   const minutes = Math.floor((absDuration / (1000 * 60)) % 60);
-  const hours = Math.floor((absDuration / (1000 * 60 * 60)) % 24);
+  const hours = Math.floor((absDuration / (1000 * 60 * 60))); // Total hours
 
   const hoursStr = String(hours).padStart(2, '0');
   const minutesStr = String(minutes).padStart(2, '0');
   const secondsStr = String(seconds).padStart(2, '0');
 
-  if (hours > 0) {
-    return `${hoursStr}:${minutesStr}:${secondsStr}`;
-  }
-
-  return `${minutesStr}:${secondsStr}`;
+  return `${hoursStr}:${minutesStr}:${secondsStr}`;
 }
 
 /**
@@ -70,8 +69,6 @@ export function getMvpRespawnTime(mvp: IMvp): number {
 export function getMvpRespawnWindow(mvp: IMvp): number {
   if (!mvp || !mvp.spawn || !Array.isArray(mvp.spawn)) return 0;
   const deathMap = mvp.spawn.find((spawn) => spawn && spawn.mapname === mvp.deathMap);
-  
-  // Try to get explicit window from data, otherwise default to 10 minutes
   const window = (deathMap as any)?.window;
   return window !== undefined ? window : (10 * 60 * 1000); 
 }
