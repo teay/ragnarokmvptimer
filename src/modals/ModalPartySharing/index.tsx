@@ -451,10 +451,10 @@ export function ModalPartySharing({ onClose }: Props) {
                 <span style={{ fontSize: '1.2rem', opacity: 0.6 }}>{backups.length} / {MAX_BACKUPS}</span>
               </div>
               {backups.length === 0 ? (<p style={{ fontSize: '1.1rem', opacity: 0.4, marginBottom: '1rem' }}>No local backups.</p>) : (
-                [...backups].reverse().map((backup, index) => (
+                backups.map((backup, index) => (
                   <BackupItem key={backup.id} style={{ marginBottom: '0.5rem' }}>
                     <BackupInfo>
-                      <span className="date">#{backups.length - index} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
+                      <span className="date">#{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
                       <span className="desc">[{backup.type}] {backup.description}</span>
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
@@ -478,10 +478,10 @@ export function ModalPartySharing({ onClose }: Props) {
               ) : personalBackups.length === 0 ? (
                 <p style={{ fontSize: '1.1rem', opacity: 0.4, marginBottom: '1rem' }}>No personal cloud backups.</p>
               ) : (
-                [...personalBackups].reverse().map((backup, index) => (
+                personalBackups.map((backup, index) => (
                   <BackupItem key={backup.id} style={{ marginBottom: '0.5rem', borderLeftColor: '#fbc02d' }}>
                     <BackupInfo>
-                      <span className="date">Cloud #{personalBackups.length - index} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
+                      <span className="date">Cloud #{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
                       <span className="desc">[{backup.type}] {backup.description}</span>
                       <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
                     </BackupInfo>
@@ -505,10 +505,10 @@ export function ModalPartySharing({ onClose }: Props) {
               ) : roomBackups.length === 0 ? (
                 <p style={{ fontSize: '1.1rem', opacity: 0.4 }}>No history in this room.</p>
               ) : (
-                [...roomBackups].reverse().map((backup, index) => (
+                roomBackups.map((backup, index) => (
                   <BackupItem key={backup.id} style={{ marginBottom: '0.5rem', borderLeftColor: '#64b5f6' }}>
                     <BackupInfo>
-                      <span className="date">Room #{roomBackups.length - index} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
+                      <span className="date">Room #{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
                       <span className="desc">
                         {backup.changeDetail || backup.description}
                         <span style={{ color: '#64b5f6', marginLeft: '8px' }}>by {backup.user}</span>
@@ -517,7 +517,6 @@ export function ModalPartySharing({ onClose }: Props) {
                     </BackupInfo>
                     <BackupActions>
                       <MiniButton onClick={() => handleRestore(backup.id, 'room')} disabled={isProcessing}><RotateCcw size={12} /> Restore</MiniButton>
-                      {/* Only show delete if user matches or is manual? For now allow all for safety recovery */}
                       <MiniButton onClick={() => deleteBackup(backup.id, 'room')} disabled={isProcessing} variant="danger"><Trash2 size={12} /></MiniButton>
                     </BackupActions>
                   </BackupItem>
