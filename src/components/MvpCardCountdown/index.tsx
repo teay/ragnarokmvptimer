@@ -19,16 +19,19 @@ function getTimeString(
   respawnAsCountdown?: boolean,
   missedRespawn?: boolean
 ) {
-  if (respawnAsCountdown && duration) {
-    const isMoreThan24Hours = dayjs().diff(nextRespawn, 'h') >= 24;
+  if (respawnAsCountdown) {
+    // If it's missed, show humanized "ago" or just zeros
+    if (missedRespawn) return duration.humanize(true);
 
-    if (isMoreThan24Hours) return duration.humanize(true);
+    const hours = Math.floor(duration.asHours());
+    const minutes = duration.minutes();
+    const seconds = duration.seconds();
 
-    return duration
-      .format('HH:mm:ss')
-      .split(':')
-      .map((time) => time.replace('-', '').padStart(2, '0'))
-      .join(':');
+    const hStr = String(Math.abs(hours)).padStart(2, '0');
+    const mStr = String(Math.abs(minutes)).padStart(2, '0');
+    const sStr = String(Math.abs(seconds)).padStart(2, '0');
+
+    return `${hStr}:${mStr}:${sStr}`;
   }
 
   if (missedRespawn) return duration.humanize(true);
