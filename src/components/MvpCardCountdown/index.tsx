@@ -1,69 +1,66 @@
+import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import dayjs, { type Dayjs } from 'dayjs';
-import type { Duration } from 'dayjs/plugin/duration';
 
 import { useCountdown } from '@/hooks';
 import { formatTime } from '@/utils';
+import { useMvpsContext } from '@/contexts/MvpsContext';
+import { getMvpRespawnWindow } from '@/utils';
 
 import { Container, RespawnTimeText } from './styles';
 
 interface MvpCardCountdownProps {
-  nextRespawn: Dayjs;
+  mvp: IMvp; // Passing full MVP object now to access spawn data
   respawnAsCountdown?: boolean;
   onTriggerNotification?: () => void;
 }
 
-function getTimeString(
-  nextRespawn: Dayjs,
-  duration: Duration,
-  respawnAsCountdown?: boolean,
-  missedRespawn?: boolean
-) {
-  if (respawnAsCountdown) {
-    if (missedRespawn) return duration.humanize(true);
-    return formatTime(duration.asMilliseconds());
-  }
-
-  return nextRespawn.format('HH:mm:ss');
-}
-
 export function MvpCardCountdown({
-  nextRespawn,
+  mvp,
   respawnAsCountdown,
   onTriggerNotification,
 }: MvpCardCountdownProps) {
-  const { duration } = useCountdown(nextRespawn);
+  const nextRespawnMin = useMemo(
+    () => dayjs(mvp.deathTime).add(mvp.spawn.find(s => s.mapname === mvp.deathMap)?.respawnTime || 0, 'ms'),
+    [mvp]
+  );
+  
+  const windowMs = useMemo(() => getMvpRespawnWindow(mvp), [mvp]);
+  const nextRespawnMax = useMemo(() => nextRespawnMin.add(windowMs, 'ms'), [nextRespawnMin, windowMs]);
 
+  const { duration } = useCountdown(nextRespawnMin);
   const durationAsMs = duration.asMilliseconds();
   
-  // LOGIC FIX: 
-  // In RO, "Respawning" (กำลังเกิด) should only show when the MINIMUM time has passed.
-  // Original logic was showing it 10 mins BEFORE. 
-  // Now: If duration is negative (time has passed) and not too long ago, it's "Respawning".
-  // Note: Since our data doesn't have explicit 'window' yet, we assume it's spawning now if time is up.
   const isTimeUp = durationAsMs <= 0;
-  const respawningNow = isTimeUp && Math.abs(durationAsMs) < (1000 * 60 * 10); // Spawning within 10 min window after time up
-  const missedRespawn = isTimeUp && !respawningNow;
+  const isWithinWindow = isTimeUp && dayjs().isBefore(nextRespawnMax);
+  const missedRespawn = isTimeUp && !isWithinWindow;
 
-  const formattedTimeString = getTimeString(
-    nextRespawn,
-    duration,
-    respawnAsCountdown,
-    missedRespawn
-  );
-
-  // Notification trigger (1 minute before)
+  // Notification trigger (1 minute before min)
   const shouldTriggerNotification = Math.floor(duration.asSeconds()) === 60;
-
   if (onTriggerNotification && shouldTriggerNotification) {
     onTriggerNotification();
   }
+
+  const renderContent = () => {
+    if (respawnAsCountdown) {
+      if (missedRespawn) return duration.humanize(true);
+      if (isWithinWindow) {
+        // While respawning, show countdown to MAX time
+        const maxDuration = dayjs.duration(nextRespawnMax.diff(dayjs()));
+        return formatTime(maxDuration.asMilliseconds());
+      }
+      return formatTime(durationAsMs);
+    }
+
+    // Standard mode: Show Range
+    return `${nextRespawnMin.format('HH:mm')} ~ ${nextRespawnMax.format('HH:mm')}`;
+  };
 
   return (
     <Container>
       <FormattedMessage
         id={
-          respawningNow
+          isWithinWindow
             ? 'respawning'
             : missedRespawn
             ? 'already_respawned'
@@ -74,10 +71,10 @@ export function MvpCardCountdown({
       />
 
       <RespawnTimeText
-        respawningSoon={respawningNow}
+        respawningSoon={isWithinWindow}
         missedRespawn={missedRespawn}
       >
-        {formattedTimeString || '-- : -- : --'}
+        {renderContent() || '-- : -- : --'}
       </RespawnTimeText>
     </Container>
   );

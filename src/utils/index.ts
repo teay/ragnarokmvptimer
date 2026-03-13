@@ -38,13 +38,14 @@ export async function getServerData(server: string): Promise<IMvp[]> {
 }
 
 export function formatTime(duration: number): string {
-  const seconds = Math.floor((duration / 1000) % 60);
-  const minutes = Math.floor((duration / (1000 * 60)) % 60);
-  const hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+  const absDuration = Math.abs(duration);
+  const seconds = Math.floor((absDuration / 1000) % 60);
+  const minutes = Math.floor((absDuration / (1000 * 60)) % 60);
+  const hours = Math.floor((absDuration / (1000 * 60 * 60)) % 24);
 
-  const hoursStr = String(Math.abs(hours)).padStart(2, '0');
-  const minutesStr = String(Math.abs(minutes)).padStart(2, '0');
-  const secondsStr = String(Math.abs(seconds)).padStart(2, '0');
+  const hoursStr = String(hours).padStart(2, '0');
+  const minutesStr = String(minutes).padStart(2, '0');
+  const secondsStr = String(seconds).padStart(2, '0');
 
   if (hours > 0) {
     return `${hoursStr}:${minutesStr}:${secondsStr}`;
@@ -64,15 +65,15 @@ export function getMvpRespawnTime(mvp: IMvp): number {
 
 /**
  * Returns the death map MAXIMUM respawn window in milliseconds (spread).
- * Most bosses have a spread, e.g. 10 minutes.
+ * Default to 10 minutes if not specified in data.
  */
 export function getMvpRespawnWindow(mvp: IMvp): number {
   if (!mvp || !mvp.spawn || !Array.isArray(mvp.spawn)) return 0;
   const deathMap = mvp.spawn.find((spawn) => spawn && spawn.mapname === mvp.deathMap);
-  // In many RO databases, there's a window (random time). 
-  // If the JSON structure has 'window' or 'maxRespawnTime', use it.
-  // For now, checking if 'window' exists in ISpawn interface (need to verify)
-  return (deathMap as any)?.window || 0; 
+  
+  // Try to get explicit window from data, otherwise default to 10 minutes
+  const window = (deathMap as any)?.window;
+  return window !== undefined ? window : (10 * 60 * 1000); 
 }
 
 export function clearData() {
