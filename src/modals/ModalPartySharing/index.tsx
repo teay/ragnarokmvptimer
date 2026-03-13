@@ -77,24 +77,70 @@ export function ModalPartySharing({ onClose }: Props) {
     }
   }, []);
 
-  // 🤝 Join Existing Party - Now with Room Existence Check
+  // Shared creation logic to be reused by the redirect
+  const performCreateWithData = useCallback(async (roomName: string) => {
+    createBackup('AUTO', `Pre-Host with Data: ${roomName}`);
+    if (!localSaveEnabled) toggleLocalSave();
+    changePartyRoom(roomName);
+
+    const allLocalDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+    if (allLocalDataRaw) {
+      try {
+        const parsed = JSON.parse(allLocalDataRaw);
+        if (parsed[server]) {
+          const metadataRef = ref(database, `parties/${roomName}/metadata`);
+          const serverRef = ref(database, `parties/${roomName}/${server}`);
+          const minimalMvps = parsed[server].map((m: any) => ({
+            id: m.id, deathTime: m.deathTime || null, deathMap: m.deathMap || null, deathPosition: m.deathPosition || null,
+          }));
+          await Promise.all([
+            set(metadataRef, { server, createdAt: dayjs().toISOString() }),
+            set(serverRef, { mvps: minimalMvps })
+          ]);
+          return true;
+        }
+      } catch (e) { console.error(e); }
+    }
+    return true; // Still return true to join empty room if parsing fails
+  }, [server, localSaveEnabled, toggleLocalSave, changePartyRoom, createBackup]);
+
+  // ⚔️ Create Party & Begin with My Boss Timers (Main Button)
+  const handleCreateWithData = useCallback(async () => {
+    const roomName = roomInput.trim();
+    if (!roomName || isProcessing) return;
+
+    setIsProcessing(true);
+    await performCreateWithData(roomName);
+    setIsProcessing(false);
+    onClose();
+  }, [roomInput, isProcessing, performCreateWithData, onClose]);
+
+  // 🤝 Join Existing Party - With Smooth Redirect
   const handleJoinExisting = useCallback(async () => {
     const roomName = roomInput.trim();
     if (!roomName || isProcessing) return;
     
     setIsProcessing(true);
     try {
-      // 1. Verify if room exists at all
+      // 1. Verify if room exists
       const roomRef = ref(database, `parties/${roomName}`);
       const roomSnapshot = await get(roomRef);
       
       if (!roomSnapshot.exists()) {
-        alert(`❌ Room "${roomName}" does not exist!\n\nIf you want to start a new hunting session, please use "Create Party & Begin with My Boss Timers" instead.`);
+        // --- SMOOTH REDIRECT FLOW ---
+        const shouldCreate = window.confirm(
+          `❌ Room "${roomName}" not found.\n\nWould you like to CREATE this room now using your current boss timers?`
+        );
+        
+        if (shouldCreate) {
+          await performCreateWithData(roomName);
+          onClose();
+        }
         setIsProcessing(false);
         return;
       }
 
-      // 2. Peek at room metadata
+      // 2. Room exists, proceed with normal Join
       const metadataRef = ref(database, `parties/${roomName}/metadata`);
       const metaSnapshot = await get(metadataRef);
       const roomMetadata = metaSnapshot.val();
@@ -109,7 +155,6 @@ export function ModalPartySharing({ onClose }: Props) {
 
       createBackup('AUTO', `Pre-Join: ${roomName} (${targetServer})`);
 
-      // 3. Fetch and Merge Online Data
       const serverMvpsRef = ref(database, `parties/${roomName}/${targetServer}/mvps`);
       const mvpSnapshot = await get(serverMvpsRef);
       const onlineMvps = mvpSnapshot.val() || [];
@@ -138,7 +183,7 @@ export function ModalPartySharing({ onClose }: Props) {
     } finally {
       setIsProcessing(false);
     }
-  }, [roomInput, server, changeServer, localSaveEnabled, toggleLocalSave, changePartyRoom, onClose, createBackup, isProcessing]);
+  }, [roomInput, server, changeServer, localSaveEnabled, toggleLocalSave, changePartyRoom, onClose, createBackup, isProcessing, performCreateWithData]);
 
   // 🆕 Create Fresh Party
   const handleCreateFresh = useCallback(async () => {
@@ -164,37 +209,6 @@ export function ModalPartySharing({ onClose }: Props) {
         setIsProcessing(false);
       }
     }
-  }, [roomInput, localSaveEnabled, toggleLocalSave, changePartyRoom, server, onClose, createBackup, isProcessing]);
-
-  // ⚔️ Create Party & Begin with My Boss Timers
-  const handleCreateWithData = useCallback(async () => {
-    const roomName = roomInput.trim();
-    if (!roomName || isProcessing) return;
-
-    setIsProcessing(true);
-    createBackup('AUTO', `Pre-Host with Data: ${roomName}`);
-    if (!localSaveEnabled) toggleLocalSave();
-    changePartyRoom(roomName);
-
-    const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-    if (allLocalData) {
-      try {
-        const parsed = JSON.parse(allLocalData);
-        if (parsed[server]) {
-          const metadataRef = ref(database, `parties/${roomName}/metadata`);
-          const serverRef = ref(database, `parties/${roomName}/${server}`);
-          const minimalMvps = parsed[server].map((m: any) => ({
-            id: m.id, deathTime: m.deathTime || null, deathMap: m.deathMap || null, deathPosition: m.deathPosition || null,
-          }));
-          await Promise.all([
-            set(metadataRef, { server, createdAt: dayjs().toISOString() }),
-            set(serverRef, { mvps: minimalMvps })
-          ]);
-          onClose();
-        } else onClose();
-      } catch (e) { onClose(); }
-    } else onClose();
-    setIsProcessing(false);
   }, [roomInput, localSaveEnabled, toggleLocalSave, changePartyRoom, server, onClose, createBackup, isProcessing]);
 
   const handleRestore = useCallback((backupId: string) => {
