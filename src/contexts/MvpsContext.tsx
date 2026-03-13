@@ -11,7 +11,7 @@ import dayjs from 'dayjs';
 
 import { useSettings } from './SettingsContext';
 
-import { database, ref, set, get, onValue, off } from '@/services/firebase';
+import { database, ref, set, get, onValue } from '@/services/firebase';
 import { getMvpRespawnTime, getServerData } from '../utils';
 import {
   loadMvpsFromLocalStorage,
@@ -146,6 +146,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setActiveMvps(sortMvpsByRespawnTime(rehydrated));
     if (localSaveEnabled) saveActiveMvpsToLocalStorage(rehydrated, server);
     if (partyRoom && cloudSyncEnabled) {
+      console.log(`☁️ Syncing to Cloud...`);
       const serverRef = ref(database, `parties/${partyRoom}/${server}`);
       const minimalMvps = rehydrated.map(m => ({
         id: m.id,
@@ -161,28 +162,42 @@ export function MvpProvider({ children }: MvpProviderProps) {
     loadBackups();
   }, [loadBackups]);
 
-  // Firebase Real-time Listener
+  // Firebase Real-time Listener - UPDATED FOR SMART MERGE
   useEffect(() => {
     if (!partyRoom) return;
     const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
+    
     const unsubscribe = onValue(mvpsRef, async (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        const remoteMvps = Array.isArray(data) ? data : Object.values(data);
-        if (originalAllMvps.length === 0) {
-          setActiveMvps(remoteMvps as IMvp[]);
-          setTimeout(() => setIsLoading(false), 3000);
-          return;
-        }
-        const rehydratedRemote = rehydrateMvps(remoteMvps);
-        setActiveMvps(sortMvpsByRespawnTime(rehydratedRemote));
-        if (localSaveEnabled) saveActiveMvpsToLocalStorage(rehydratedRemote, server);
-        setIsLoading(false);
-      } else {
-        setActiveMvps([]);
-        setIsLoading(false);
+      const remoteMvpsRaw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+      const rehydratedRemote = rehydrateMvps(remoteMvpsRaw);
+
+      // --- SMART MERGE LOGIC WITHIN LISTENER ---
+      // We need to fetch what's currently in LocalStorage to merge with Remote updates
+      const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+      const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
+      const localForServer = allLocal[server] || [];
+
+      // Create a map of Remote Bosses for quick lookup (ID + Map)
+      const remoteKeys = new Set(rehydratedRemote.map(m => `${m.id}-${m.deathMap}`));
+
+      // 1. Keep all Local Bosses that are NOT in the Remote list (Unique Local)
+      const uniqueLocal = localForServer.filter((m: any) => !remoteKeys.has(`${m.id}-${m.deathMap}`));
+
+      // 2. Combine Remote Bosses with Unique Local Bosses
+      const mergedResult = [...rehydratedRemote, ...uniqueLocal];
+      const sortedMerged = sortMvpsByRespawnTime(mergedResult);
+
+      setActiveMvps(sortedMerged);
+
+      // 3. Keep Local Storage in sync if enabled
+      if (localSaveEnabled) {
+        saveActiveMvpsToLocalStorage(sortedMerged, server);
       }
+      
+      setIsLoading(false);
     });
+    
     return () => unsubscribe();
   }, [partyRoom, server, originalAllMvps, rehydrateMvps, localSaveEnabled]);
 
