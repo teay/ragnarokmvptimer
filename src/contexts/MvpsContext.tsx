@@ -301,11 +301,16 @@ export function MvpProvider({ children }: MvpProviderProps) {
     setActiveMvps((s) => {
       const killedMvp = { ...mvp, deathTime };
       const existingMvpIndex = s.findIndex((m) => m && m.id === mvp.id && m.deathMap === mvp.deathMap);
-      let newState = existingMvpIndex !== -1 ? [...s] : [...s, killedMvp];
-      if (existingMvpIndex !== -1) newState[existingMvpIndex] = killedMvp;
+      
+      const isNew = existingMvpIndex === -1;
+      let newState = isNew ? [...s, killedMvp] : [...s];
+      if (!isNew) newState[existingMvpIndex] = killedMvp;
+      
       saveMvps(newState);
       if (autoSnapshotEnabled) {
-        setTimeout(() => createBackup('CHANGE', 'Boss Added/Updated', `Saved: ${mvp.name}`), 100);
+        const actionLabel = isNew ? 'Boss Added' : 'Boss Updated';
+        const detailLabel = isNew ? `Added: ${mvp.name}` : `Updated: ${mvp.name}`;
+        setTimeout(() => createBackup('CHANGE', actionLabel, detailLabel), 100);
       }
       return sortMvpsByRespawnTime(newState);
     });
