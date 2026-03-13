@@ -81,7 +81,7 @@ export const messages = {
     share_link: 'Share Link',
     join_live_room: 'Join Existing Party',
     join_live_room_merge: 'Join & Merge with Group',
-    join_live_room_with_local: 'Create Party & Share My Boss Timers',
+    join_live_room_with_local: 'Create Party & Begin with My Boss Timers',
     create_fresh_party: 'Create Fresh Party (Empty)',
     leave_and_keep_data: 'Leave Party & Continue Solo with these Timers',
     leave_and_discard_data: 'Leave Party (Discard Online Changes)',
