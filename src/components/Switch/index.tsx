@@ -5,17 +5,19 @@ interface SwitchProps {
   onChange: () => void;
   id?: string;
   name?: string;
+  disabled?: boolean;
 }
 
-export function Switch({ onChange, checked, id, name }: SwitchProps) {
+export function Switch({ onChange, checked, id, name, disabled }: SwitchProps) {
   return (
-    <Container>
+    <Container disabled={disabled}>
       <Input
         type='checkbox'
-        onChange={onChange}
+        onChange={disabled ? () => {} : onChange}
         checked={checked}
         id={id}
         name={name}
+        disabled={disabled}
       />
       <Thumb />
     </Container>
