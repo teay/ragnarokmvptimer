@@ -14,7 +14,8 @@ interface ModalSelectServerProps {
   close: () => void;
 }
 
-const serversNames = Object.keys(SERVERS).sort((a, b) =>
+// Fixed: Use SERVERS array directly instead of Object.keys
+const serversNames = [...SERVERS].sort((a, b) =>
   a.toLowerCase().localeCompare(b.toLowerCase())
 );
 
@@ -42,13 +43,13 @@ export function ModalSelectServer({ close }: ModalSelectServerProps) {
         </Title>
 
         <ServerList>
-          {serversNames.map((i) => (
+          {serversNames.map((name) => (
             <ServerItem
-              key={i}
-              onClick={() => setSelectedServer(i)}
-              active={selectedServer === i}
+              key={name}
+              onClick={() => setSelectedServer(name)}
+              active={selectedServer === name}
             >
-              {i}
+              {name}
             </ServerItem>
           ))}
         </ServerList>

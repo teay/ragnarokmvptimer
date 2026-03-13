@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useCallback, useEffect } from 'react';
 
 import { usePersistedState } from '@/hooks/usePersistedState';
 
@@ -90,6 +90,17 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     LOCAL_STORAGE_SETTINGS_KEY,
     DEFAULT_SETTINGS
   );
+
+  // Safety Check: Ensure 'server' is a valid server name, not an index or garbage
+  useEffect(() => {
+    if (settings.server && !SERVERS.includes(settings.server)) {
+      console.warn(`Invalid server detected: ${settings.server}. Resetting to default: ${DEFAULT_SETTINGS.server}`);
+      setSettings(prev => ({
+        ...prev,
+        server: DEFAULT_SETTINGS.server
+      }));
+    }
+  }, [settings.server, setSettings]);
 
   const toggleUltraLite = useCallback(() => {
     setSettings((prev) => {
