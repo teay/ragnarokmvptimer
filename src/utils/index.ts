@@ -2,10 +2,10 @@ import type { Dayjs } from 'dayjs';
 
 import Question from '../assets/question.gif';
 
-// Explicitly import and map assets to ensure they work in production
-const mapImages = import.meta.glob('../assets/mvp_maps/*.webp', { eager: true, import: 'default' });
-const mvpIcons = import.meta.glob('../assets/mvp_icons/*.webp', { eager: true, import: 'default' });
-const animatedMvpIcons = import.meta.glob('../assets/mvp_icons_animated/*.webp', { eager: true, import: 'default' });
+// Explicitly import and map assets based on actual file extensions found
+const mapImages = import.meta.glob('../assets/mvp_maps/*.png', { eager: true, import: 'default' });
+const mvpIcons = import.meta.glob('../assets/mvp_icons/*.png', { eager: true, import: 'default' });
+const animatedMvpIcons = import.meta.glob('../assets/mvp_icons_animated/*.{png,gif}', { eager: true, import: 'default' });
 
 /**
  * Robust asset path resolver that works in both dev and production
