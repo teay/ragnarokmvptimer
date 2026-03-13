@@ -3,7 +3,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import type { Duration } from 'dayjs/plugin/duration';
 
 import { useCountdown } from '@/hooks';
-import { RESPAWN_TIMER_SOON_THRESHOLD_MS } from '@/constants';
+import { formatTime } from '@/utils';
 
 import { Container, RespawnTimeText } from './styles';
 
@@ -20,21 +20,9 @@ function getTimeString(
   missedRespawn?: boolean
 ) {
   if (respawnAsCountdown) {
-    // If it's missed, show humanized "ago" or just zeros
     if (missedRespawn) return duration.humanize(true);
-
-    const hours = Math.floor(duration.asHours());
-    const minutes = duration.minutes();
-    const seconds = duration.seconds();
-
-    const hStr = String(Math.abs(hours)).padStart(2, '0');
-    const mStr = String(Math.abs(minutes)).padStart(2, '0');
-    const sStr = String(Math.abs(seconds)).padStart(2, '0');
-
-    return `${hStr}:${mStr}:${sStr}`;
+    return formatTime(duration.asMilliseconds());
   }
-
-  if (missedRespawn) return duration.humanize(true);
 
   return nextRespawn.format('HH:mm:ss');
 }
@@ -47,9 +35,15 @@ export function MvpCardCountdown({
   const { duration } = useCountdown(nextRespawn);
 
   const durationAsMs = duration.asMilliseconds();
-  const respawningSoon =
-    durationAsMs >= 0 && durationAsMs <= RESPAWN_TIMER_SOON_THRESHOLD_MS;
-  const missedRespawn = durationAsMs < 0;
+  
+  // LOGIC FIX: 
+  // In RO, "Respawning" (กำลังเกิด) should only show when the MINIMUM time has passed.
+  // Original logic was showing it 10 mins BEFORE. 
+  // Now: If duration is negative (time has passed) and not too long ago, it's "Respawning".
+  // Note: Since our data doesn't have explicit 'window' yet, we assume it's spawning now if time is up.
+  const isTimeUp = durationAsMs <= 0;
+  const respawningNow = isTimeUp && Math.abs(durationAsMs) < (1000 * 60 * 10); // Spawning within 10 min window after time up
+  const missedRespawn = isTimeUp && !respawningNow;
 
   const formattedTimeString = getTimeString(
     nextRespawn,
@@ -58,9 +52,8 @@ export function MvpCardCountdown({
     missedRespawn
   );
 
-  const shouldTriggerNotification =
-    Math.trunc(duration.asSeconds()) ===
-    RESPAWN_TIMER_SOON_THRESHOLD_MS / 1000;
+  // Notification trigger (1 minute before)
+  const shouldTriggerNotification = Math.floor(duration.asSeconds()) === 60;
 
   if (onTriggerNotification && shouldTriggerNotification) {
     onTriggerNotification();
@@ -70,7 +63,7 @@ export function MvpCardCountdown({
     <Container>
       <FormattedMessage
         id={
-          respawningSoon
+          respawningNow
             ? 'respawning'
             : missedRespawn
             ? 'already_respawned'
@@ -81,10 +74,10 @@ export function MvpCardCountdown({
       />
 
       <RespawnTimeText
-        respawningSoon={respawningSoon}
+        respawningSoon={respawningNow}
         missedRespawn={missedRespawn}
       >
-        {formattedTimeString || '-- : -- : --'} {'\n'}
+        {formattedTimeString || '-- : -- : --'}
       </RespawnTimeText>
     </Container>
   );
