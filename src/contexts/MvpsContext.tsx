@@ -133,6 +133,28 @@ export function MvpProvider({ children }: MvpProviderProps) {
     }
   }, [partyRoom, server, rehydrateMvps, localSaveEnabled, cloudSyncEnabled]);
 
+  // Effect to handle Auto-sync when Cloud Sync is toggled ON
+  useEffect(() => {
+    if (partyRoom && cloudSyncEnabled && activeMvps.length > 0) {
+      console.log('🔄 Cloud Sync toggled ON. Performing immediate synchronization...');
+      saveMvps(activeMvps);
+    }
+  }, [cloudSyncEnabled]); // Run whenever sync toggle changes
+
+  // Effect to warn user if they try to leave while saving is paused
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!localSaveEnabled) {
+        e.preventDefault();
+        e.returnValue = 'Data saving is currently paused. If you leave, your recent changes will be lost!';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [localSaveEnabled]);
+
   // Firebase Real-time Listener
   useEffect(() => {
     if (!partyRoom) return;
