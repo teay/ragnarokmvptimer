@@ -22,6 +22,8 @@ import {
   SettingSecondary,
   ActionButton,
   Input,
+  InputWrapper,
+  RandomButton,
   LiveStatus,
   ControlRow,
   StatusBadge,
@@ -74,6 +76,43 @@ export function ModalPartySharing({ onClose }: Props) {
   // 🛡️ Room Name Validation: 8 English Chars + 1-24 Digits
   const isRoomValid = roomInput.length > 0 && /^[A-Z]{8}[0-9]{1,24}$/.test(roomInput.toUpperCase());
   const isNicknameValid = nicknameInput.length >= 4 && nicknameInput.length <= 8 && !backups.some(b => b.user === nicknameInput && b.user !== nickname);
+
+  const handleRandomNickname = useCallback(() => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const length = Math.floor(Math.random() * 5) + 4; // 4 to 8
+    let result = '';
+    
+    // Try up to 10 times to get a unique nickname
+    for (let attempt = 0; attempt < 10; attempt++) {
+      let candidate = '';
+      for (let i = 0; i < length; i++) {
+        candidate += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      if (!backups.some(b => b.user === candidate)) {
+        result = candidate;
+        break;
+      }
+      if (attempt === 9) result = candidate; // Fallback
+    }
+    
+    setNicknameInput(result);
+    changeNickname(result);
+  }, [backups, changeNickname]);
+
+  const handleRandomRoom = useCallback(() => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const nums = '0123456789';
+    let letters = '';
+    for (let i = 0; i < 8; i++) {
+      letters += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    let digits = '';
+    const digitLength = Math.floor(Math.random() * 8) + 1; // 1 to 8 for reasonable length
+    for (let i = 0; i < digitLength; i++) {
+      digits += nums.charAt(Math.floor(Math.random() * nums.length));
+    }
+    setRoomInput(letters + digits);
+  }, []);
 
   const handleExportData = useCallback(() => {
     const allLocalData = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
@@ -277,16 +316,21 @@ export function ModalPartySharing({ onClose }: Props) {
                 <Activity size={24} color="#fbc02d" /> Your Nickname
               </div>
             </SettingName>
-            <Input 
-              id="userNickname" 
-              name="userNickname" 
-              placeholder="Nickname (4-8 UPPERCASE)" 
-              value={nicknameInput} 
-              onChange={handleNicknameChange} 
-              disabled={isProcessing} 
-              maxLength={8}
-              style={!isNicknameValid && nicknameInput.length > 0 ? { borderColor: '#d32f2f', background: 'rgba(211, 47, 47, 0.05)' } : {}}
-            />
+            <InputWrapper>
+              <Input 
+                id="userNickname" 
+                name="userNickname" 
+                placeholder="Nickname (4-8 UPPERCASE)" 
+                value={nicknameInput} 
+                onChange={handleNicknameChange} 
+                disabled={isProcessing} 
+                maxLength={8}
+                style={!isNicknameValid && nicknameInput.length > 0 ? { borderColor: '#d32f2f', background: 'rgba(211, 47, 47, 0.05)' } : {}}
+              />
+              <RandomButton onClick={handleRandomNickname} title="Random Nickname" type="button">
+                <RefreshCw />
+              </RandomButton>
+            </InputWrapper>
             {!isNicknameValid && nicknameInput.length > 0 && (
               <p style={{ fontSize: '1.1rem', color: '#f44336', marginTop: '-0.5rem', marginBottom: '0.5rem' }}>
                 {nicknameInput.length < 4 ? 'At least 4 chars' : backups.some(b => b.user === nicknameInput && b.user !== nickname) ? 'Nickname taken in history' : ''}
@@ -321,15 +365,20 @@ export function ModalPartySharing({ onClose }: Props) {
               </>
             ) : (
               <>
-                <Input 
-                  id="partyRoomName" 
-                  name="partyRoomName" 
-                  placeholder="8 English + 1-24 Digits (e.g. ROOMNAME123)" 
-                  value={roomInput} 
-                  onChange={(e) => setRoomInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} 
-                  disabled={isProcessing} 
-                  style={!isRoomValid && roomInput.length > 0 ? { borderColor: '#d32f2f', background: 'rgba(211, 47, 47, 0.05)' } : {}}
-                />
+                <InputWrapper>
+                  <Input 
+                    id="partyRoomName" 
+                    name="partyRoomName" 
+                    placeholder="8 English + 1-24 Digits (e.g. ROOMNAME123)" 
+                    value={roomInput} 
+                    onChange={(e) => setRoomInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} 
+                    disabled={isProcessing} 
+                    style={!isRoomValid && roomInput.length > 0 ? { borderColor: '#d32f2f', background: 'rgba(211, 47, 47, 0.05)' } : {}}
+                  />
+                  <RandomButton onClick={handleRandomRoom} title="Random Room Name" type="button">
+                    <RefreshCw />
+                  </RandomButton>
+                </InputWrapper>
                 {!isRoomValid && roomInput.length > 0 && (
                   <p style={{ fontSize: '1.1rem', color: '#f44336', marginTop: '-0.5rem', marginBottom: '1rem' }}>
                     Must be 8 letters followed by 1-24 numbers.
