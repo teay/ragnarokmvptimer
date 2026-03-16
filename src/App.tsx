@@ -60,6 +60,8 @@ export default function App() {
     server,
   } = useSettings();
   
+  const [isJoinIntentActive, setIsJoinIntentActive] = useState(false);
+  
   const { theme } = useTheme();
   const {
     hasNotificationPermission,
@@ -110,6 +112,8 @@ export default function App() {
       setJoinRoomId(room);
       if (serverParam) setJoinServer(serverParam);
       if (nick) setJoinNickname(nick);
+      
+      setIsJoinIntentActive(true);
 
       if (nick || nickname) {
         setJoinState('joining');
@@ -159,6 +163,7 @@ export default function App() {
         }
 
         setJoinState('idle');
+        setIsJoinIntentActive(false);
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -247,11 +252,11 @@ export default function App() {
       >
         {joinState === 'joining' && <JoiningScreen />}
         {joinState === 'success' && <SuccessScreen />}
-        {joinState === 'idle' && new URLSearchParams(window.location.search).get('room') && (
+        {joinState === 'idle' && isJoinIntentActive && !nickname && (
           <NicknamePrompt />
         )}
 
-        {!hideActiveContent && joinState === 'idle' && !new URLSearchParams(window.location.search).get('room') && (
+        {!hideActiveContent && joinState === 'idle' && !isJoinIntentActive && (
           <>
             {!hasNotificationPermission && (
               <WarningHeader
