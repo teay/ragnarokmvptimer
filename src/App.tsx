@@ -17,16 +17,22 @@ import { WarningHeader } from './components/WarningHeader';
 import { Footer } from './components/Footer';
 
 import { useSettings } from './contexts/SettingsContext';
-import { MvpProvider } from './contexts/MvpsContext';
+import { MvpProvider, useMvpsContext } from './contexts/MvpsContext';
 import { useNotification } from './hooks';
 import { useTheme } from './hooks';
 
 import { LOCALES } from './locales';
 import { messages } from './locales/messages';
+import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from './constants';
 
 const APP_VERSION = '2'; // Define the current version of the application
 
 export default function App() {
+  const { 
+    activeMvps,
+    saveMvps,
+  } = useMvpsContext();
+
   const { 
     language, 
     isGlassUIEnabled, 
@@ -51,6 +57,7 @@ export default function App() {
     changePartyRoom,
     changeServer,
     changeNickname,
+    server,
   } = useSettings();
   
   const { theme } = useTheme();
@@ -63,10 +70,7 @@ export default function App() {
   // Handle Global Shortcuts
   useEffect(() => {
     const handleGlobalShortcuts = async (e: KeyboardEvent) => {
-      // 1. Toggle MVP Maps with physical 'M' key (KeyM)
-      // Works even if layout is Thai (ท)
       if (e.code === 'KeyM' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        // Prevent triggering if user is typing in an input or textarea
         const target = e.target as HTMLElement;
         const isInput = target.tagName === 'INPUT' || 
                         target.tagName === 'TEXTAREA' || 
@@ -77,7 +81,6 @@ export default function App() {
         }
       }
 
-      // 2. F11 or Alt+Enter for Fullscreen (Tauri Only)
       if (e.code === 'F11' || (e.altKey && e.code === 'Enter')) {
         if (window.__TAURI_INTERNALS__) {
           e.preventDefault();
@@ -100,30 +103,26 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const room = params.get('room');
-    const server = params.get('server');
+    const serverParam = params.get('server');
     const nick = params.get('nickname');
 
     if (room) {
       setJoinRoomId(room);
-      if (server) setJoinServer(server);
+      if (serverParam) setJoinServer(serverParam);
       if (nick) setJoinNickname(nick);
 
-      // If we have a nickname already (from params or settings), go straight to joining
       if (nick || nickname) {
         setJoinState('joining');
       } else {
         setJoinState('idle');
       }
 
-      // Cleanup URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [nickname, setJoinNickname, setJoinRoomId, setJoinServer, setJoinState]);
 
   useEffect(() => {
     if (joinState === 'joining') {
-      // Simulate/Implement joining logic
-      // In a real scenario, this would involve a Firebase check or call
       const timer = setTimeout(() => {
         setJoinState('success');
       }, 2000);
@@ -133,29 +132,41 @@ export default function App() {
 
   useEffect(() => {
     if (joinState === 'success') {
-      // Apply the joined room and redirect
       const timer = setTimeout(() => {
-        // 1. Get the data we stored earlier
         const room = joinRoomId;
-        const server = joinServer;
+        const serverToJoin = joinServer || server;
         const nick = joinNickname;
 
-        // 2. Apply to actual settings
-        if (room) changePartyRoom(room);
-        if (server) changeServer(server);
-        if (nick) changeNickname(nick);
+        try {
+          const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+          const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
+          const myLocalData = allLocal[serverToJoin] || [];
+          
+          if (room) {
+            changePartyRoom(room);
+            if (joinServer) changeServer(joinServer);
+            if (nick) changeNickname(nick);
+            
+            if (myLocalData.length > 0) {
+              setTimeout(() => {
+                 saveMvps([...activeMvps, ...myLocalData]); 
+              }, 500);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to merge local data into room", e);
+          if (room) changePartyRoom(room);
+        }
 
-        // 3. Finish the flow
         setJoinState('idle');
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [joinState, setJoinState, joinRoomId, joinServer, joinNickname, changePartyRoom, changeServer, changeNickname]);
+  }, [joinState, setJoinState, joinRoomId, joinServer, joinNickname, changePartyRoom, changeServer, changeNickname, server, activeMvps, saveMvps]);
 
   useEffect(() => {
     const storedVersion = localStorage.getItem('appVersion');
     if (storedVersion !== APP_VERSION) {
-      console.log('Old app version detected, clearing storage and reloading.');
       localStorage.clear();
       localStorage.setItem('appVersion', APP_VERSION);
       window.location.reload();
@@ -203,14 +214,13 @@ export default function App() {
         html.classList.remove('non-glass-ui');
       }
 
-      // Add/remove class for main content transparency
       if (isMainContentTransparent) {
         html.classList.add('transparent-main-content');
       } else {
         html.classList.remove('transparent-main-content');
       }
     }
-  }, [isGlassUIEnabled, isMainContentTransparent]); // Add isMainContentTransparent to dependencies
+  }, [isGlassUIEnabled, isMainContentTransparent]);
 
   useEffect(() => {
     const html = document.querySelector('html');
@@ -226,12 +236,10 @@ export default function App() {
     }
   }, [font]);
 
-  const isJoiningFlow = joinState !== 'idle' || (new URLSearchParams(window.location.search).get('room'));
-
   return (
     <>
-      {isAnimatedBackgroundEnabled && <LuminousParticlesBackground />} {/* Conditionally render */}
-      {isSparkleEffectEnabled && <SparkleEffect count={sparkleDensity} />} {/* Conditionally render SparkleEffect */}
+      {isAnimatedBackgroundEnabled && <LuminousParticlesBackground />}
+      {isSparkleEffectEnabled && <SparkleEffect count={sparkleDensity} />}
       <IntlProvider
         messages={messages[language]}
         locale={language}

@@ -303,52 +303,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
       }
 
       const rehydratedRemote = rehydrateMvps(remoteMvpsRaw);
+      const sortedResult = sortMvpsByRespawnTime(rehydratedRemote);
       
-      // Load current local data for comparison
-      let localForServer: any[] = [];
-      try {
-        const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-        const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
-        localForServer = allLocal[server] || [];
-      } catch (e) {}
-
-      // SMART SYNC: Latest Kill Wins
-      const finalMvps = [...rehydratedRemote];
-      let hasBetterLocalData = false;
-
-      localForServer.forEach((localMvp: any) => {
-        if (!localMvp) return;
-        const remoteMatch = rehydratedRemote.find(rm => rm && rm.id === localMvp.id && rm.deathMap === localMvp.deathMap);
-        
-        if (!remoteMatch) {
-          // 1. If only in Local, keep it
-          finalMvps.push(localMvp);
-          hasBetterLocalData = true;
-        } else {
-          // 2. If in both, compare timestamps
-          const localTime = dayjs(localMvp.deathTime);
-          const remoteTime = dayjs(remoteMatch.deathTime);
-          
-          if (localTime.isAfter(remoteTime)) {
-            // Local data is NEWER! Replace the remote one in our final result
-            const index = finalMvps.findIndex(m => m && m.id === localMvp.id && m.deathMap === localMvp.deathMap);
-            if (index !== -1) {
-              finalMvps[index] = localMvp;
-              hasBetterLocalData = true;
-            }
-          }
-        }
-      });
-
-      const sortedResult = sortMvpsByRespawnTime(finalMvps);
       setActiveMvps(sortedResult);
       
-      if (localSaveEnabled) saveActiveMvpsToLocalStorage(sortedResult, server);
-      
-      // If we found better (newer) data locally, push it up to the cloud so everyone gets it
-      if (hasBetterLocalData && cloudSyncEnabled && partyRoom) {
-        // Use a small delay to avoid race conditions with the listener
-        setTimeout(() => saveMvps(sortedResult), 500);
+      if (localSaveEnabled) {
+        saveActiveMvpsToLocalStorage(sortedResult, server);
       }
 
       setIsLoading(false);
