@@ -85,6 +85,14 @@ interface SettingsContextData {
   toggleAutoSnapshot: () => void;
   nickname: string;
   changeNickname: (nickname: string) => void;
+  joinState: 'idle' | 'joining' | 'success' | 'error';
+  setJoinState: (state: 'idle' | 'joining' | 'success' | 'error') => void;
+  joinRoomId: string | null;
+  setJoinRoomId: (id: string | null) => void;
+  joinServer: string | null;
+  setJoinServer: (server: string | null) => void;
+  joinNickname: string | null;
+  setJoinNickname: (nickname: string | null) => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -94,6 +102,14 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     LOCAL_STORAGE_SETTINGS_KEY,
     DEFAULT_SETTINGS
   );
+
+  const [joinState, setJoinState] = usePersistedState<'idle' | 'joining' | 'success' | 'error'>(
+    'joinState',
+    'idle'
+  );
+  const [joinRoomId, setJoinRoomId] = usePersistedState<string | null>('joinRoomId', null);
+  const [joinServer, setJoinServer] = usePersistedState<string | null>('joinServer', null);
+  const [joinNickname, setJoinNickname] = usePersistedState<string | null>('joinNickname', null);
 
   // Safety Check: Ensure 'server' is a valid server name, not an index or garbage
   useEffect(() => {
@@ -544,6 +560,14 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleCloudSync,
         toggleAutoSnapshot,
         changeNickname,
+        joinState,
+        setJoinState,
+        joinRoomId,
+        setJoinRoomId,
+        joinServer,
+        setJoinServer,
+        joinNickname,
+        setJoinNickname,
       }}
     >
       {children}

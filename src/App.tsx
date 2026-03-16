@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import LuminousParticlesBackground from './components/LuminousParticlesBackground';
 import { SparkleEffect } from './components/SparkleEffect';
 import { IntlProvider } from 'react-intl';
@@ -39,6 +39,15 @@ export default function App() {
     toggleHideActiveContent,
     toggleShowMvpMap, // Get the toggle function
     ultraLite,
+    joinState,
+    setJoinState,
+    setJoinRoomId,
+    setJoinServer,
+    setJoinNickname,
+    nickname,
+    changePartyRoom,
+    changeServer,
+    changeNickname,
   } = useSettings();
   
   const { theme } = useTheme();
@@ -84,6 +93,54 @@ export default function App() {
     window.addEventListener('keydown', handleGlobalShortcuts);
     return () => window.removeEventListener('keydown', handleGlobalShortcuts);
   }, [toggleShowMvpMap]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room');
+    const server = params.get('server');
+    const nick = params.get('nickname');
+
+    if (room) {
+      setJoinRoomId(room);
+      if (server) setJoinServer(server);
+      if (nick) setJoinNickname(nick);
+
+      // If we have a nickname already (from params or settings), go straight to joining
+      if (nick || nickname) {
+        setJoinState('joining');
+      } else {
+        setJoinState('idle');
+      }
+
+      // Cleanup URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [nickname, setJoinNickname, setJoinRoomId, setJoinServer, setJoinState]);
+
+  useEffect(() => {
+    if (joinState === 'joining') {
+      // Simulate/Implement joining logic
+      // In a real scenario, this would involve a Firebase check or call
+      const timer = setTimeout(() => {
+        setJoinState('success');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [joinState, setJoinState]);
+
+  useEffect(() => {
+    if (joinState === 'success') {
+      // Apply the joined room and redirect
+      // For now, just apply settings and go back to normal
+      const timer = setTimeout(() => {
+        // Here we would call the actual room join logic
+        // changePartyRoom(joinRoomId); 
+        // if (joinServer) changeServer(joinServer);
+        setJoinState('idle');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [joinState, setJoinState]);
 
   useEffect(() => {
     const storedVersion = localStorage.getItem('appVersion');
@@ -159,6 +216,8 @@ export default function App() {
     }
   }, [font]);
 
+  const isJoiningFlow = joinState !== 'idle' || (new URLSearchParams(window.location.search).get('room'));
+
   return (
     <>
       {isAnimatedBackgroundEnabled && <LuminousParticlesBackground />} {/* Conditionally render */}
@@ -168,7 +227,13 @@ export default function App() {
         locale={language}
         defaultLocale={LOCALES.ENGLISH}
       >
-        {!hideActiveContent && (
+        {joinState === 'joining' && <JoiningScreen />}
+        {joinState === 'success' && <SuccessScreen />}
+        {joinState === 'idle' && new URLSearchParams(window.location.search).get('room') && (
+          <NicknamePrompt />
+        )}
+
+        {!hideActiveContent && joinState === 'idle' && !new URLSearchParams(window.location.search).get('room') && (
           <>
             {!hasNotificationPermission && (
               <WarningHeader
@@ -194,5 +259,66 @@ export default function App() {
         )}
       </IntlProvider>
     </>
+  );
+}
+
+function NicknamePrompt() {
+  const { setJoinState, setJoinNickname, changeNickname } = useSettings();
+  const [value, setValue] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (value.trim()) {
+      changeNickname(value.trim());
+      setJoinNickname(value.trim());
+      setJoinState('joining');
+    }
+  };
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+      height: '100vh', color: 'white', textAlign: 'center', padding: '20px'
+    }}>
+      <h1>Welcome to the Hunt!</h1>
+      <p>Please enter a nickname to join the room:</p>
+      <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
+        <input 
+          type="text" 
+          value={value} 
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Your Nickname"
+          style={{ padding: '10px', borderRadius: '5px', border: 'none', marginRight: '10px' }}
+        />
+        <button type="submit" style={{ padding: '10px 20px', borderRadius: '5px', cursor: 'pointer' }}>
+          Join Room
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function JoiningScreen() {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+      height: '100vh', color: 'white', textAlign: 'center'
+    }}>
+      <div className="loader"></div>
+      <h1 style={{ marginTop: '20px' }}>Joining Room...</h1>
+      <p>Synchronizing with the party data.</p>
+    </div>
+  );
+}
+
+function SuccessScreen() {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+      height: '100vh', color: 'white', textAlign: 'center'
+    }}>
+      <h1 style={{ color: '#4CAF50' }}>Success!</h1>
+      <p>You have joined the room. Redirecting to the main board...</p>
+    </div>
   );
 }
