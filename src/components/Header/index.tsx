@@ -1,17 +1,29 @@
+import { useCallback } from 'react';
 import { HeaderTimer } from '../HeaderTimer';
 import { ServerButton } from '../ServerButton';
 import { SettingsButton } from '../SettingsButton';
 import { PartyButton } from '../PartyButton';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
+import { Copy } from '@styled-icons/feather';
 
 import mvpImg from '@/assets/mvp.png';
 
 import { Container, Customization, Logo, LogoContainer, Title, LiveBadge, DataBadge } from './styles';
 
 export function Header() {
-  const { use24HourFormat, partyRoom, cloudSyncEnabled, localSaveEnabled } = useSettings();
+  const { use24HourFormat, partyRoom, server, cloudSyncEnabled, localSaveEnabled } = useSettings();
   const { dataLocation } = useMvpsContext();
+
+  const handleCopyInviteLink = useCallback(() => {
+    if (!partyRoom) return;
+    const url = new URL(window.location.origin + window.location.pathname);
+    url.searchParams.set('room', partyRoom);
+    url.searchParams.set('server', server);
+    
+    navigator.clipboard.writeText(url.toString());
+    alert('Invite link copied!');
+  }, [partyRoom, server]);
 
   const getBadgeStatus = (): 'local' | 'online' | 'ghost' | 'warning' => {
     if (!localSaveEnabled) return 'warning';
@@ -35,7 +47,15 @@ export function Header() {
         <DataBadge location={getBadgeStatus()}>
           {getBadgeText()}
         </DataBadge>
-        {partyRoom && <LiveBadge>Live: {partyRoom}</LiveBadge>}
+        {partyRoom && (
+          <LiveBadge 
+            onClick={handleCopyInviteLink} 
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+            title="Click to copy invite link"
+          >
+            <Copy size={12} /> {partyRoom}
+          </LiveBadge>
+        )}
       </LogoContainer>
 
       <HeaderTimer use24HourFormat={use24HourFormat} />
