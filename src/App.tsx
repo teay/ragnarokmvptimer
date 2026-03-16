@@ -131,16 +131,23 @@ export default function App() {
   useEffect(() => {
     if (joinState === 'success') {
       // Apply the joined room and redirect
-      // For now, just apply settings and go back to normal
       const timer = setTimeout(() => {
-        // Here we would call the actual room join logic
-        // changePartyRoom(joinRoomId); 
-        // if (joinServer) changeServer(joinServer);
+        // 1. Get the data we stored earlier
+        const room = joinRoomId;
+        const server = joinServer;
+        const nick = joinNickname;
+
+        // 2. Apply to actual settings
+        if (room) changePartyRoom(room);
+        if (server) changeServer(server);
+        if (nick) changeNickname(nick);
+
+        // 3. Finish the flow
         setJoinState('idle');
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [joinState, setJoinState]);
+  }, [joinState, setJoinState, joinRoomId, joinServer, joinNickname, changePartyRoom, changeServer, changeNickname]);
 
   useEffect(() => {
     const storedVersion = localStorage.getItem('appVersion');
