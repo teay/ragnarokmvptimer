@@ -296,23 +296,61 @@ export function MvpProvider({ children }: MvpProviderProps) {
     const unsubscribe = onValue(mvpsRef, async (snapshot) => {
       const data = snapshot.val();
       const remoteMvpsRaw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+      
       if (originalAllMvps.length === 0) {
         setActiveMvps(remoteMvpsRaw as IMvp[]);
         return;
       }
+
       const rehydratedRemote = rehydrateMvps(remoteMvpsRaw);
-      let allLocal: any = {};
+      
+      // Load current local data for comparison
+      let localForServer: any[] = [];
       try {
         const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-        allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
+        const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
+        localForServer = allLocal[server] || [];
       } catch (e) {}
-      const localForServer = allLocal[server] || [];
-      const remoteKeys = new Set(rehydratedRemote.map(m => m ? `${m.id}-${m.deathMap}` : ''));
-      const uniqueLocal = localForServer.filter((m: any) => m && !remoteKeys.has(`${m.id}-${m.deathMap}`));
-      const mergedResult = [...rehydratedRemote, ...uniqueLocal];
-      const sortedMerged = sortMvpsByRespawnTime(mergedResult);
-      setActiveMvps(sortedMerged);
-      if (localSaveEnabled) saveActiveMvpsToLocalStorage(sortedMerged, server);
+
+      // SMART SYNC: Latest Kill Wins
+      const finalMvps = [...rehydratedRemote];
+      let hasBetterLocalData = false;
+
+      localForServer.forEach((localMvp: any) => {
+        if (!localMvp) return;
+        const remoteMatch = rehydratedRemote.find(rm => rm && rm.id === localMvp.id && rm.deathMap === localMvp.deathMap);
+        
+        if (!remoteMatch) {
+          // 1. If only in Local, keep it
+          finalMvps.push(localMvp);
+          hasBetterLocalData = true;
+        } else {
+          // 2. If in both, compare timestamps
+          const localTime = dayjs(localMvp.deathTime);
+          const remoteTime = dayjs(remoteMatch.deathTime);
+          
+          if (localTime.isAfter(remoteTime)) {
+            // Local data is NEWER! Replace the remote one in our final result
+            const index = finalMvps.findIndex(m => m && m.id === localMvp.id && m.deathMap === localMvp.deathMap);
+            if (index !== -1) {
+              finalMvps[index] = localMvp;
+              hasBetterLocalData = true;
+            }
+          }
+        }
+      });
+
+      const sortedResult = sortMvpsByRespawnTime(finalMvps);
+      setActiveMvps(sortedResult);
+      
+      if (localSaveEnabled) saveActiveMvpsToLocalStorage(sortedResult, server);
+      
+      // If we found better (newer) data locally, push it up to the cloud so everyone gets it
+      if (hasBetterLocalData && cloudSyncEnabled && partyRoom) {
+        // Use a small delay to avoid race conditions with the listener
+        setTimeout(() => saveMvps(sortedResult), 500);
+      }
+
       setIsLoading(false);
     });
     return () => unsubscribe();
