@@ -12,7 +12,7 @@ import mvpImg from '@/assets/mvp.png';
 import { Container, Customization, Logo, LogoContainer, Title, LiveBadge, DataBadge } from './styles';
 
 export function Header() {
-  const { use24HourFormat, partyRoom, server, cloudSyncEnabled, localSaveEnabled } = useSettings();
+  const { use24HourFormat, partyRoom, server, nickname, cloudSyncEnabled, localSaveEnabled } = useSettings();
   const { dataLocation } = useMvpsContext();
 
   const handleCopyInviteLink = useCallback(() => {
