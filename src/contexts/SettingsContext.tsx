@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useCallback, useEffect, useState } from 'react';
+import { createContext, useContext, ReactNode, useCallback, useEffect } from 'react';
 
 import { usePersistedState } from '@/hooks/usePersistedState';
 
@@ -76,10 +76,7 @@ interface SettingsContextData {
   ultraLite: boolean;
   toggleUltraLite: () => void;
   partyRoom: string | null;
-  roomHistory: string[];
   changePartyRoom: (room: string | null) => void;
-  removeFromRoomHistory: (room: string) => void;
-  clearRoomHistory: () => void;
   localSaveEnabled: boolean;
   toggleLocalSave: () => void;
   cloudSyncEnabled: boolean;
@@ -88,21 +85,6 @@ interface SettingsContextData {
   toggleAutoSnapshot: () => void;
   nickname: string;
   changeNickname: (nickname: string) => void;
-  isForceNicknamePromptOpen: boolean;
-  setForceNicknamePromptOpen: (isOpen: boolean) => void;
-  isJoinedViaLink: boolean;
-  setJoinedViaLink: (isJoined: boolean) => void;
-  isPartyModalOpen: boolean;
-  setIsPartyModalOpen: (isOpen: boolean) => void;
-  // Joining Flow States
-  joinState: 'idle' | 'joining' | 'success' | 'error';
-  setJoinState: (state: 'idle' | 'joining' | 'success' | 'error') => void;
-  joinRoomId: string | null;
-  setJoinRoomId: (roomId: string | null) => void;
-  joinServer: string | null;
-  setJoinServer: (server: string | null) => void;
-  joinNickname: string | null;
-  setJoinNickname: (nickname: string | null) => void;
 }
 
 export const SettingsContext = createContext({} as SettingsContextData);
@@ -112,16 +94,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     LOCAL_STORAGE_SETTINGS_KEY,
     DEFAULT_SETTINGS
   );
-
-  const [isForceNicknamePromptOpen, setForceNicknamePromptOpen] = useState(false);
-  const [isJoinedViaLink, setJoinedViaLink] = useState(false);
-  const [isPartyModalOpen, setIsPartyModalOpen] = useState(false);
-  // New joining states
-  const [joinState, setJoinState] = useState<'idle' | 'joining' | 'success' | 'error'>('idle');
-  const [joinRoomId, setJoinRoomId] = useState<string | null>(null);
-  const [joinServer, setJoinServer] = useState<string | null>(null);
-  const [joinNickname, setJoinNickname] = useState<string | null>(null);
-
 
   // Safety Check: Ensure 'server' is a valid server name, not an index or garbage
   useEffect(() => {
@@ -139,6 +111,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       const newValue = !prev.ultraLite;
       
       if (newValue) {
+        // Force Disable heavy effects for Ultra Lite, but allow sprites to stay animated
         return {
           ...prev,
           ultraLite: true,
@@ -146,6 +119,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           isAnimatedBackgroundEnabled: false,
           isSparkleEffectEnabled: false,
           isFallingElementsEnabled: false,
+          // animatedSprites: false, // REMOVED: allow sprites to stay animated if they were
           particleDensity: 'Empty',
           isGlassUIEnabled: false,
           isMainContentTransparent: false,
@@ -165,6 +139,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       const newValue = !prev.simpleGlassUI;
       
       if (newValue) {
+        // When enabling Simple Glass UI, disable all heavy effects
         return {
           ...prev,
           simpleGlassUI: true,
@@ -206,6 +181,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       ...prev,
       animatedSprites: !prev.animatedSprites,
       simpleGlassUI: !prev.animatedSprites ? false : prev.simpleGlassUI,
+      // Removed ultraLite check to allow animated sprites in ultra lite mode
     }));
   }, [setSettings]);
 
@@ -473,6 +449,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           waveTrailOpacity: 1.0,
         };
       } else {
+        // dark default
         return {
           ...prev,
           particleColor: '#fa0000',
@@ -490,34 +467,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
   const changePartyRoom = useCallback(
     (room: string | null) => {
-      setSettings((prev) => {
-        const newHistory = room 
-          ? [room, ...prev.roomHistory.filter(r => r !== room)].slice(0, 10) 
-          : prev.roomHistory;
-        
-        return {
-          ...prev,
-          partyRoom: room,
-          roomHistory: newHistory,
-        };
-      });
+      setSettings((prev) => ({
+        ...prev,
+        partyRoom: room,
+      }));
     },
     [setSettings]
   );
-
-  const removeFromRoomHistory = useCallback((room: string) => {
-    setSettings(prev => ({
-      ...prev,
-      roomHistory: prev.roomHistory.filter(r => r !== room)
-    }));
-  }, [setSettings]);
-
-  const clearRoomHistory = useCallback(() => {
-    setSettings(prev => ({
-      ...prev,
-      roomHistory: []
-    }));
-  }, [setSettings]);
 
   const toggleLocalSave = useCallback(() => {
     setSettings((prev) => ({
@@ -584,27 +540,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleSimpleGlassUI,
         toggleUltraLite,
         changePartyRoom,
-        removeFromRoomHistory,
-        clearRoomHistory,
         toggleLocalSave,
         toggleCloudSync,
         toggleAutoSnapshot,
         changeNickname,
-        isForceNicknamePromptOpen,
-        setForceNicknamePromptOpen,
-        isJoinedViaLink,
-        setJoinedViaLink,
-        isPartyModalOpen,
-        setIsPartyModalOpen,
-        // Joining Flow States
-        joinState,
-        setJoinState,
-        joinRoomId,
-        setJoinRoomId,
-        joinServer,
-        setJoinServer,
-        joinNickname,
-        setJoinNickname,
       }}
     >
       {children}
