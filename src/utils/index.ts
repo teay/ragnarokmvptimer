@@ -27,7 +27,10 @@ export function getMapImage(mapName: string): string {
 
 export function getMvpIcon(mvpId: number, animated?: boolean): string {
   if (animated) {
-    return resolveAsset(animatedMvpIcons, mvpId);
+    const animatedIcon = resolveAsset(animatedMvpIcons, mvpId);
+    if (animatedIcon !== Question) {
+      return animatedIcon;
+    }
   }
   return resolveAsset(mvpIcons, mvpId);
 }
