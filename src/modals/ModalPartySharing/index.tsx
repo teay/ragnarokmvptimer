@@ -129,10 +129,10 @@ export function ModalPartySharing({ onClose }: Props) {
     if (allLocalData) {
       try {
         const base64Data = btoa(unescape(encodeURIComponent(allLocalData)));
-        const url = new URL(window.location.href);
+        const url = new URL(window.location.origin + window.location.pathname);
         url.searchParams.set('party', base64Data);
         navigator.clipboard.writeText(url.toString());
-        alert('Share link copied to clipboard!');
+        alert('Data share link copied to clipboard!');
       } catch (e) {
         alert('Failed to generate share link.');
       }
@@ -140,6 +140,16 @@ export function ModalPartySharing({ onClose }: Props) {
       alert('No MVP data found in local storage.');
     }
   }, []);
+
+  const handleCopyInviteLink = useCallback(() => {
+    if (!partyRoom) return;
+    const url = new URL(window.location.origin + window.location.pathname);
+    url.searchParams.set('room', partyRoom);
+    url.searchParams.set('server', server);
+    
+    navigator.clipboard.writeText(url.toString());
+    alert('Invite link copied! Send this to your friends.');
+  }, [partyRoom, server]);
 
   // Shared creation logic to be reused by the redirect
   const performCreateWithData = useCallback(async (roomName: string) => {
@@ -354,6 +364,10 @@ export function ModalPartySharing({ onClose }: Props) {
               <>
                 <LiveStatus active>Connected to: {partyRoom}</LiveStatus>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ActionButton onClick={handleCopyInviteLink} style={{ background: '#1976d2', width: '100%', justifyContent: 'center' }}>
+                    <Copy size={18} /> Copy Invite Link
+                  </ActionButton>
+
                   <ActionButton onClick={handleLeaveRoom} style={{ background: '#388e3c', width: '100%', justifyContent: 'center' }}>
                     <ZapOff /> <FormattedMessage id='leave_and_keep_data' />
                   </ActionButton>
