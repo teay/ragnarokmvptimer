@@ -24,9 +24,18 @@ function getTimeString(
 ) {
   if (respawnAsCountdown) {
     if (missedRespawn) {
-      // Show time passed since MAX respawn time (End of window)
-      // This makes the transition smooth: 00:00:01 -> a few seconds ago
-      return dayjs.duration(dayjs().diff(nextRespawnMax)).humanize(true);
+      // Show elapsed time since MAX respawn time (End of window)
+      const elapsedMs = dayjs().diff(nextRespawnMax);
+      // Ensure we don't show negative time if somehow time goes backward
+      const displayMs = Math.max(0, elapsedMs); 
+      // Format elapsed time to HH:mm:ss
+      const seconds = Math.floor(displayMs / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      
+      return `Already Respawned ${hours}:${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
     
     if (isWithinWindow) {
@@ -59,6 +68,8 @@ export function MvpCardCountdown({
   const { duration: durationMin } = useCountdown(nextRespawnMin);
   const durationAsMs = durationMin.asMilliseconds();
   
+  // Removed durationMax related lines as per user request to trigger at nextRespawnMin === 0
+
   const isTimeUp = durationAsMs <= 0;
   const isWithinWindow = isTimeUp && dayjs().isBefore(nextRespawnMax);
   const missedRespawn = isTimeUp && !isWithinWindow;
@@ -72,8 +83,8 @@ export function MvpCardCountdown({
     missedRespawn
   );
 
-  // Notification trigger (1 minute before MIN time)
-  const shouldTriggerNotification = Math.floor(durationMin.asSeconds()) === 60;
+  // Notification trigger (at MIN respawn time)
+  const shouldTriggerNotification = Math.floor(durationMin.asSeconds()) === 0;
   if (onTriggerNotification && shouldTriggerNotification) {
     onTriggerNotification();
   }
