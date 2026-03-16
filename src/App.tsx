@@ -296,19 +296,30 @@ function NicknamePrompt() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-      height: '100vh', color: 'white', textAlign: 'center', padding: '20px'
+      height: '100vh', color: 'white', textAlign: 'center', padding: '20px',
+      background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)'
     }}>
-      <h1>Welcome to the Hunt!</h1>
-      <p>Please enter a nickname to join the room:</p>
-      <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
+      <h1 style={{ fontSize: '3rem', marginBottom: '10px', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Welcome to the Hunt!</h1>
+      <p style={{ fontSize: '1.5rem', marginBottom: '30px', opacity: 0.9 }}>Please enter a nickname to join the room:</p>
+      <form onSubmit={handleSubmit} style={{ 
+        marginTop: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' 
+      }}>
         <input 
           type="text" 
           value={value} 
           onChange={(e) => setValue(e.target.value)}
           placeholder="Your Nickname"
-          style={{ padding: '10px', borderRadius: '5px', border: 'none', marginRight: '10px' }}
+          autoFocus
+          style={{ 
+            padding: '15px 25px', fontSize: '1.2rem', borderRadius: '10px', border: 'none',
+            minWidth: '250px', boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+          }}
         />
-        <button type="submit" style={{ padding: '10px 20px', borderRadius: '5px', cursor: 'pointer' }}>
+        <button type="submit" style={{ 
+          padding: '15px 40px', fontSize: '1.2rem', borderRadius: '10px', cursor: 'pointer',
+          background: '#4CAF50', color: 'white', border: 'none', fontWeight: 'bold',
+          transition: 'transform 0.2s', boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+        }}>
           Join Room
         </button>
       </form>
@@ -320,11 +331,18 @@ function JoiningScreen() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-      height: '100vh', color: 'white', textAlign: 'center'
+      height: '100vh', color: 'white', textAlign: 'center',
+      background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(15px)'
     }}>
-      <div className="loader"></div>
-      <h1 style={{ marginTop: '20px' }}>Joining Room...</h1>
-      <p>Synchronizing with the party data.</p>
+      <div style={{
+        width: '80px', height: '80px', border: '8px solid #f3f3f3', borderTop: '8px solid #3498db',
+        borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '30px'
+      }}></div>
+      <style>{`
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      `}</style>
+      <h1 style={{ fontSize: '2.5rem', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Joining Room...</h1>
+      <p style={{ fontSize: '1.2rem', opacity: 0.8, marginTop: '10px' }}>Synchronizing with the party data.</p>
     </div>
   );
 }
@@ -333,10 +351,18 @@ function SuccessScreen() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-      height: '100vh', color: 'white', textAlign: 'center'
+      height: '100vh', color: 'white', textAlign: 'center',
+      background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(15px)'
     }}>
-      <h1 style={{ color: '#4CAF50' }}>Success!</h1>
-      <p>You have joined the room. Redirecting to the main board...</p>
+      <div style={{ 
+        fontSize: '6rem', color: '#4CAF50', marginBottom: '20px', 
+        animation: 'bounce 1s ease infinite'
+      }}>✓</div>
+      <style>{`
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+      `}</style>
+      <h1 style={{ fontSize: '3.5rem', color: '#4CAF50', textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>Success!</h1>
+      <p style={{ fontSize: '1.5rem', marginTop: '10px' }}>You have joined the room. Redirecting...</p>
     </div>
   );
 }
