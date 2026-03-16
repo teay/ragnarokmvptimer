@@ -48,13 +48,23 @@ export function Header() {
           {getBadgeText()}
         </DataBadge>
         {partyRoom && (
-          <LiveBadge 
-            onClick={handleCopyInviteLink} 
-            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-            title="Click to copy invite link"
-          >
-            <Copy size={12} /> {partyRoom}
-          </LiveBadge>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <LiveBadge 
+              onClick={handleCopyInviteLink} 
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              title="Click to copy invite link"
+            >
+              <Copy size={12} /> {partyRoom}
+            </LiveBadge>
+            {nickname && (
+              <span style={{ 
+                fontSize: '1.2rem', color: '#fbc02d', fontWeight: 'bold', 
+                background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: '4px' 
+              }}>
+                @{nickname}
+              </span>
+            )}
+          </div>
         )}
       </LogoContainer>
 

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Copy, Share, Zap, ZapOff, Database, Cloud, Activity, PlusSquare, Users, RefreshCw, Clock, Trash2, Save, RotateCcw, XOctagon } from '@styled-icons/feather';
 import dayjs from 'dayjs';
@@ -48,12 +48,25 @@ export function ModalPartySharing({ onClose }: Props) {
     autoSnapshotEnabled, toggleAutoSnapshot, nickname, changeNickname 
   } = useSettings();
   
-  const { leaveParty, backups, personalBackups, roomBackups, createBackup, restoreBackup, deleteBackup } = useMvpsContext();
+  const { leaveParty, backups, personalBackups, roomBackups, createBackup, restoreBackup, deleteBackup, activeMvps, saveMvps } = useMvpsContext();
   const [roomInput, setRoomInput] = useState(partyRoom || '');
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [roomCreator, setRoomCreator] = useState<string | null>(null);
 
   const modalRef = useClickOutside(onClose);
+
+  // Fetch room metadata to check for creator
+  useEffect(() => {
+    if (partyRoom) {
+      const metaRef = ref(database, `parties/${partyRoom}/metadata`);
+      get(metaRef).then(snapshot => {
+        if (snapshot.exists()) {
+          setRoomCreator(snapshot.val().creator || null);
+        }
+      });
+    }
+  }, [partyRoom]);
 
   const handleNicknameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     // 🛡️ Security & Format Filter: Only English letters (A-Z), max 8
@@ -168,15 +181,18 @@ export function ModalPartySharing({ onClose }: Props) {
             id: m.id, deathTime: m.deathTime || null, deathMap: m.deathMap || null, deathPosition: m.deathPosition || null,
           }));
           await Promise.all([
-            set(metadataRef, { server, createdAt: dayjs().toISOString() }),
+            set(metadataRef, { server, createdAt: dayjs().toISOString(), creator: nickname }),
             set(serverRef, { mvps: minimalMvps })
           ]);
           return true;
         }
       } catch (e) { console.error(e); }
     }
-    return true; // Still return true to join empty room if parsing fails
-  }, [server, localSaveEnabled, toggleLocalSave, changePartyRoom, createBackup]);
+    // Fallback if no data
+    const metadataRef = ref(database, `parties/${roomName}/metadata`);
+    await set(metadataRef, { server, createdAt: dayjs().toISOString(), creator: nickname });
+    return true;
+  }, [server, localSaveEnabled, toggleLocalSave, changePartyRoom, createBackup, nickname]);
 
   // ⚔️ Create Party & Begin with My Boss Timers (Main Button)
   const handleCreateWithData = useCallback(async () => {
@@ -273,7 +289,7 @@ export function ModalPartySharing({ onClose }: Props) {
       const serverRef = ref(database, `parties/${roomName}/${server}`);
       try {
         await Promise.all([
-          set(metadataRef, { server, createdAt: dayjs().toISOString() }),
+          set(metadataRef, { server, createdAt: dayjs().toISOString(), creator: nickname }),
           set(serverRef, { mvps: [] })
         ]);
         onClose();
@@ -283,7 +299,7 @@ export function ModalPartySharing({ onClose }: Props) {
         setIsProcessing(false);
       }
     }
-  }, [roomInput, localSaveEnabled, toggleLocalSave, changePartyRoom, server, onClose, createBackup, isProcessing]);
+  }, [roomInput, localSaveEnabled, toggleLocalSave, changePartyRoom, server, onClose, createBackup, isProcessing, nickname]);
 
   const handleRestore = useCallback((backupId: string, source: 'local' | 'personal' | 'room' = 'local') => {
     restoreBackup(backupId, source);
@@ -372,9 +388,11 @@ export function ModalPartySharing({ onClose }: Props) {
                     <ZapOff /> <FormattedMessage id='leave_and_keep_data' />
                   </ActionButton>
                   
-                  <ActionButton onClick={handleDestroyRoomData} disabled={isProcessing} style={{ background: 'transparent', border: '1px solid #d32f2f', color: '#d32f2f', width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
-                    <XOctagon size={18} /> Destroy Cloud Room Data
-                  </ActionButton>
+                  {(!roomCreator || roomCreator === nickname) && (
+                    <ActionButton onClick={handleDestroyRoomData} disabled={isProcessing} style={{ background: 'transparent', border: '1px solid #d32f2f', color: '#d32f2f', width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
+                      <XOctagon size={18} /> Destroy Cloud Room Data
+                    </ActionButton>
+                  )}
                 </div>
               </>
             ) : (
