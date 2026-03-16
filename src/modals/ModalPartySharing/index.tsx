@@ -388,7 +388,7 @@ export function ModalPartySharing({ onClose }: Props) {
                     <ZapOff /> <FormattedMessage id='leave_and_keep_data' />
                   </ActionButton>
                   
-                  {(!roomCreator || roomCreator === nickname) && (
+                  {(roomCreator && roomCreator === nickname) && (
                     <ActionButton onClick={handleDestroyRoomData} disabled={isProcessing} style={{ background: 'transparent', border: '1px solid #d32f2f', color: '#d32f2f', width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
                       <XOctagon size={18} /> Destroy Cloud Room Data
                     </ActionButton>
