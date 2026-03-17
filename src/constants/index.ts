@@ -28,17 +28,17 @@ export const DEFAULT_SERVER = 'iRO';
 export const DEFAULT_SETTINGS = {
   respawnAsCountdown: true,
   hideActiveContent: false,
-  animatedSprites: false,
+  animatedSprites: true, // Enabled Animated MVP Sprites
   use24HourFormat: true,
   isNotificationSoundEnabled: true,
-  isGlassUIEnabled: true, 
-  isAnimatedBackgroundEnabled: true,
-  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center',
-  particleDensity: 'medium' as 'low' | 'medium' | 'high' | 'Empty',
+  isGlassUIEnabled: false, // Disabled for Ultra Lite Mode
+  isAnimatedBackgroundEnabled: false, // Disabled for Ultra Lite Mode
+  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center', // Keep default or adjust if needed
+  particleDensity: 'low' as 'low' | 'medium' | 'high' | 'Empty', // Set particle density to low
   particleColor: '#fa0000',
   particleOpacity: 0.5,
-  waveAmplitude: 150,
-  waveLineWidth: 5,
+  waveAmplitude: 0, // Minimized for Extreme Performance
+  waveLineWidth: 0, // Minimized for Extreme Performance
   waveColor: '#0011ff',
   waveOpacity: 0.1,
   animatedBackgroundColor: '#000000',
@@ -46,12 +46,12 @@ export const DEFAULT_SETTINGS = {
   isMainContentTransparent: true, 
   waveTrailColor: '#0011ff',
   waveTrailOpacity: 0.1,
-  isSparkleEffectEnabled: false,
-  sparkleDensity: 50,
-  isFallingElementsEnabled: true, 
-  simpleGlassUI: false,
-  ultraLite: false,
-  particleEffect: 'default' as 'default' | 'gravity',
+  isSparkleEffectEnabled: false, // Disabled
+  sparkleDensity: 0, // Set sparkle density to 0
+  isFallingElementsEnabled: false, // Disabled for Ultra Lite Mode
+  simpleGlassUI: true, // Enabled for Lite Mode
+  ultraLite: true, // Enabled Ultra Lite Mode
+  particleEffect: 'default' as 'default' | 'gravity', // Keep default or adjust
   language: DEFAULT_LANG,
   server: DEFAULT_SERVER,
   font: 'Jost',
