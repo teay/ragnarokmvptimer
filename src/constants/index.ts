@@ -31,29 +31,29 @@ export const DEFAULT_SETTINGS = {
   animatedSprites: true, // Enabled Animated MVP Sprites
   use24HourFormat: true,
   isNotificationSoundEnabled: true,
-  isGlassUIEnabled: false, // Disabled for Ultra Lite Mode
-  isAnimatedBackgroundEnabled: false, // Disabled for Ultra Lite Mode
-  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center', // Keep default or adjust if needed
-  particleDensity: 'low' as 'low' | 'medium' | 'high' | 'Empty', // Set particle density to low
+  isGlassUIEnabled: true, // User prefers glass UI enabled
+  isAnimatedBackgroundEnabled: false, // Keep off for performance
+  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center',
+  particleDensity: 'Empty' as 'low' | 'medium' | 'high' | 'Empty', // Empty for performance
   particleColor: '#fa0000',
   particleOpacity: 0.5,
-  waveAmplitude: 0, // Minimized for Extreme Performance
-  waveLineWidth: 0, // Minimized for Extreme Performance
+  waveAmplitude: 150, // As per user's preferred setting
+  waveLineWidth: 5, // As per user's preferred setting
   waveColor: '#0011ff',
-  waveOpacity: 0.1,
+  waveOpacity: 1, // As per user's preferred setting
   animatedBackgroundColor: '#000000',
-  animatedBackgroundOpacity: 0.05,
-  isMainContentTransparent: true, 
+  animatedBackgroundOpacity: 1, // As per user's preferred setting
+  isMainContentTransparent: false,
   waveTrailColor: '#0011ff',
-  waveTrailOpacity: 0.1,
-  isSparkleEffectEnabled: false, // Disabled
-  sparkleDensity: 0, // Set sparkle density to 0
-  isFallingElementsEnabled: false, // Disabled for Ultra Lite Mode
-  simpleGlassUI: true, // Enabled for Lite Mode
-  ultraLite: true, // Enabled Ultra Lite Mode
-  particleEffect: 'default' as 'default' | 'gravity', // Keep default or adjust
+  waveTrailOpacity: 1,
+  isSparkleEffectEnabled: false,
+  sparkleDensity: 0,
+  isFallingElementsEnabled: false,
+  simpleGlassUI: false,
+  ultraLite: true, // Enabled Ultra Lite Mode (but note: may conflict with glass UI; user wants both)
+  particleEffect: 'default' as 'default' | 'gravity',
   language: DEFAULT_LANG,
-  server: DEFAULT_SERVER,
+  server: 'thROG', // User's preferred server
   font: 'Jost',
   showMvpMap: true,
   partyRoom: null as string | null,

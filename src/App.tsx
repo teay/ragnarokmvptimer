@@ -28,20 +28,17 @@ import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from './constants';
 const APP_VERSION = '2'; // Define the current version of the application
 
 export default function App() {
-  const { 
-    activeMvps,
-    saveMvps,
-  } = useMvpsContext();
+  const { activeMvps, saveMvps } = useMvpsContext();
 
-  const { 
-    language, 
-    isGlassUIEnabled, 
-    isAnimatedBackgroundEnabled, 
-    isMainContentTransparent, 
-    font, 
-    isSparkleEffectEnabled, 
-    sparkleDensity, 
-    hideActiveContent, 
+  const {
+    language,
+    isGlassUIEnabled,
+    isAnimatedBackgroundEnabled,
+    isMainContentTransparent,
+    font,
+    isSparkleEffectEnabled,
+    sparkleDensity,
+    hideActiveContent,
     toggleHideActiveContent,
     toggleShowMvpMap, // Get the toggle function
     ultraLite,
@@ -59,9 +56,9 @@ export default function App() {
     changeNickname,
     server,
   } = useSettings();
-  
+
   const [isJoinIntentActive, setIsJoinIntentActive] = useState(false);
-  
+
   const { theme } = useTheme();
   const {
     hasNotificationPermission,
@@ -74,10 +71,11 @@ export default function App() {
     const handleGlobalShortcuts = async (e: KeyboardEvent) => {
       if (e.code === 'KeyM' && !e.ctrlKey && !e.altKey && !e.metaKey) {
         const target = e.target as HTMLElement;
-        const isInput = target.tagName === 'INPUT' || 
-                        target.tagName === 'TEXTAREA' || 
-                        target.isContentEditable;
-        
+        const isInput =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable;
+
         if (!isInput) {
           toggleShowMvpMap();
         }
@@ -112,7 +110,7 @@ export default function App() {
       setJoinRoomId(room);
       if (serverParam) setJoinServer(serverParam);
       if (nick) setJoinNickname(nick);
-      
+
       setIsJoinIntentActive(true);
 
       if (nick || nickname) {
@@ -142,23 +140,25 @@ export default function App() {
         const nick = joinNickname;
 
         try {
-          const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+          const allLocalRaw = localStorage.getItem(
+            LOCAL_STORAGE_ACTIVE_MVPS_KEY
+          );
           const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
           const myLocalData = allLocal[serverToJoin] || [];
-          
+
           if (room) {
             changePartyRoom(room);
             if (joinServer) changeServer(joinServer);
             if (nick) changeNickname(nick);
-            
+
             if (myLocalData.length > 0) {
               setTimeout(() => {
-                 saveMvps([...activeMvps, ...myLocalData]); 
+                saveMvps([...activeMvps, ...myLocalData]);
               }, 500);
             }
           }
         } catch (e) {
-          console.error("Failed to merge local data into room", e);
+          console.error('Failed to merge local data into room', e);
           if (room) changePartyRoom(room);
         }
 
@@ -167,7 +167,19 @@ export default function App() {
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [joinState, setJoinState, joinRoomId, joinServer, joinNickname, changePartyRoom, changeServer, changeNickname, server, activeMvps, saveMvps]);
+  }, [
+    joinState,
+    setJoinState,
+    joinRoomId,
+    joinServer,
+    joinNickname,
+    changePartyRoom,
+    changeServer,
+    changeNickname,
+    server,
+    activeMvps,
+    saveMvps,
+  ]);
 
   useEffect(() => {
     const storedVersion = localStorage.getItem('appVersion');
@@ -299,32 +311,72 @@ function NicknamePrompt() {
   };
 
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-      height: '100vh', color: 'white', textAlign: 'center', padding: '20px',
-      background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)'
-    }}>
-      <h1 style={{ fontSize: '3rem', marginBottom: '10px', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Welcome to the Hunt!</h1>
-      <p style={{ fontSize: '1.5rem', marginBottom: '30px', opacity: 0.9 }}>Please enter a nickname to join the room:</p>
-      <form onSubmit={handleSubmit} style={{ 
-        marginTop: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' 
-      }}>
-        <input 
-          type="text" 
-          value={value} 
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        color: 'white',
+        textAlign: 'center',
+        padding: '20px',
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(10px)',
+      }}
+    >
+      <h1
+        style={{
+          fontSize: '3rem',
+          marginBottom: '10px',
+          textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+        }}
+      >
+        Welcome to the Hunt!
+      </h1>
+      <p style={{ fontSize: '1.5rem', marginBottom: '30px', opacity: 0.9 }}>
+        Please enter a nickname to join the room:
+      </p>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          marginTop: '20px',
+          display: 'flex',
+          gap: '15px',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}
+      >
+        <input
+          type='text'
+          value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Your Nickname"
+          placeholder='Your Nickname'
           autoFocus
-          style={{ 
-            padding: '15px 25px', fontSize: '1.2rem', borderRadius: '10px', border: 'none',
-            minWidth: '250px', boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+          style={{
+            padding: '15px 25px',
+            fontSize: '1.2rem',
+            borderRadius: '10px',
+            border: 'none',
+            minWidth: '250px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
           }}
         />
-        <button type="submit" style={{ 
-          padding: '15px 40px', fontSize: '1.2rem', borderRadius: '10px', cursor: 'pointer',
-          background: '#4CAF50', color: 'white', border: 'none', fontWeight: 'bold',
-          transition: 'transform 0.2s', boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
-        }}>
+        <button
+          type='submit'
+          style={{
+            padding: '15px 40px',
+            fontSize: '1.2rem',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            background: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            fontWeight: 'bold',
+            transition: 'transform 0.2s',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+          }}
+        >
           Join Room
         </button>
       </form>
@@ -334,40 +386,88 @@ function NicknamePrompt() {
 
 function JoiningScreen() {
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-      height: '100vh', color: 'white', textAlign: 'center',
-      background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(15px)'
-    }}>
-      <div style={{
-        width: '80px', height: '80px', border: '8px solid #f3f3f3', borderTop: '8px solid #3498db',
-        borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '30px'
-      }}></div>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        color: 'white',
+        textAlign: 'center',
+        background: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(15px)',
+      }}
+    >
+      <div
+        style={{
+          width: '80px',
+          height: '80px',
+          border: '8px solid #f3f3f3',
+          borderTop: '8px solid #3498db',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '30px',
+        }}
+      ></div>
       <style>{`
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       `}</style>
-      <h1 style={{ fontSize: '2.5rem', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Joining Room...</h1>
-      <p style={{ fontSize: '1.2rem', opacity: 0.8, marginTop: '10px' }}>Synchronizing with the party data.</p>
+      <h1
+        style={{
+          fontSize: '2.5rem',
+          textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+        }}
+      >
+        Joining Room...
+      </h1>
+      <p style={{ fontSize: '1.2rem', opacity: 0.8, marginTop: '10px' }}>
+        Synchronizing with the party data.
+      </p>
     </div>
   );
 }
 
 function SuccessScreen() {
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-      height: '100vh', color: 'white', textAlign: 'center',
-      background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(15px)'
-    }}>
-      <div style={{ 
-        fontSize: '6rem', color: '#4CAF50', marginBottom: '20px', 
-        animation: 'bounce 1s ease infinite'
-      }}>✓</div>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        color: 'white',
+        textAlign: 'center',
+        background: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(15px)',
+      }}
+    >
+      <div
+        style={{
+          fontSize: '6rem',
+          color: '#4CAF50',
+          marginBottom: '20px',
+          animation: 'bounce 1s ease infinite',
+        }}
+      >
+        ✓
+      </div>
       <style>{`
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
       `}</style>
-      <h1 style={{ fontSize: '3.5rem', color: '#4CAF50', textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>Success!</h1>
-      <p style={{ fontSize: '1.5rem', marginTop: '10px' }}>You have joined the room. Redirecting...</p>
+      <h1
+        style={{
+          fontSize: '3.5rem',
+          color: '#4CAF50',
+          textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+        }}
+      >
+        Success!
+      </h1>
+      <p style={{ fontSize: '1.5rem', marginTop: '10px' }}>
+        You have joined the room. Redirecting...
+      </p>
     </div>
   );
 }
