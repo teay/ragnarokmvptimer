@@ -4,13 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      branchToDeploy:
-        description: 'Branch to deploy to GitHub Pages'
-        required: true
-        default: 'feature/history-limit-selection'
-        type: string
+  workflow_dispatch: # อนุญาตให้รันเองจากหน้า GitHub Actions ได้
 
 permissions:
   contents: write
@@ -21,8 +15,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.branchToDeploy }} 
 
       - name: Setup Node
         uses: actions/setup-node@v4
