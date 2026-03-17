@@ -68,12 +68,14 @@ jobs:
           name: Tauri-Windows-EXE
           path: ${{ steps.find_exe.outputs.exe_path }}
 
-      - name: Create Release (optional, only on push to main)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.sha }}
-          name: 'Build ${{ github.sha }}'
-          draft: false
-          prerelease: false
-          files: ${{ steps.find_exe.outputs.exe_path }}
+      # Optional: Create a release only when pushing a tag (e.g., v1.0.0)
+      # Uncomment and adjust if you want automated releases on tags.
+      # - name: Create Release (on tag push)
+      #   if: github.ref_type == 'tag'
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     name: "Release ${{ github.ref_name }}"
+      #     draft: false
+      #     prerelease: false
+      #     files: ${{ steps.find_exe.outputs.exe_path }}
