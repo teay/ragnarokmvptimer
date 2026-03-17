@@ -20,6 +20,11 @@ export async function loadMvpsFromLocalStorage(
 
     const originalServerData = await getServerData(server);
 
+    if (!originalServerData || !Array.isArray(originalServerData)) {
+      console.error('getServerData returned invalid data for server:', server);
+      return [];
+    }
+
     const finalData = savedServerData.map((mvp: IMvp) => {
       const original = originalServerData.find((m) => m && m.id === mvp.id);
       return {
