@@ -4,7 +4,13 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # อนุญาตให้รันเองจากหน้า GitHub Actions ได้
+  workflow_dispatch:
+    inputs:
+      branchToDeploy:
+        description: 'Branch to deploy to GitHub Pages'
+        required: true
+        default: 'feature/history-limit-selection'
+        type: string
 
 permissions:
   contents: write
@@ -15,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branchToDeploy }} 
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -40,6 +48,6 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist # โฟลเดอร์ที่ได้จากการ build (vite ใช้ dist)
-          branch: gh-pages # branch ปลายทางสำหรับแสดงผลเว็บ
+          folder: dist
+          branch: gh-pages
           clean: true
