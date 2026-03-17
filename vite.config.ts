@@ -30,7 +30,6 @@ export default defineConfig(({ command, mode }) => {
       react(),
       wyw({
         include: ['**/*.{ts,tsx}'],
-        base: base,
       }),
       imagetools({
         exclude: ['./src/assets/mvp_icons_animated/**/*'],
