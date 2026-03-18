@@ -43,7 +43,7 @@ export default defineConfig(({ command, mode }) => {
       VitePWA({
         disable: !!process.env.TAURI_PLATFORM,
         base: base,
-        injectRegister: false,
+        injectRegister: 'auto',
         registerType: 'autoUpdate',
         devOptions: {
           enabled: process.env.NODE_ENV === 'development',
