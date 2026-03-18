@@ -59,9 +59,6 @@ interface MvpsContextData {
 
 export const MvpsContext = createContext({} as MvpsContextData);
 
-/**
- * Safety-guarded Sort Function
- */
 function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
   if (!mvps) return [];
   return [...mvps].sort((a: IMvp, b: IMvp) => {
@@ -122,7 +119,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
     }
   }, []);
 
-  // Sync Personal Cloud Backups
   useEffect(() => {
     if (!nickname || nickname.length < 4) {
       setPersonalBackups([]);
@@ -146,7 +142,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
     });
   }, [nickname]);
 
-  // Sync Room History
   useEffect(() => {
     if (!partyRoom || !cloudSyncEnabled) {
       setRoomBackups([]);
@@ -185,7 +180,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
           id: dayjs().valueOf().toString(),
           timestamp: dayjs().toISOString(),
           type, description, data: allLocalData, bossCount: serverData.length, server,
-          changeDetail,
+          changeDetail: changeDetail ?? null, // FIXED: Prevent undefined
           sequence: lastSequence + 1,
           user: nickname || undefined,
         };
@@ -200,11 +195,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
         const newCloudBackup = {
           timestamp: dayjs().toISOString(),
           type, description, data: allLocalData, bossCount: serverData.length, server,
-          changeDetail,
+          changeDetail: changeDetail ?? null, // FIXED: Prevent undefined
           user: nickname,
         };
         
-        // Push and then prune oldest if needed
         push(personalRef, newCloudBackup).then(() => {
           get(query(personalRef, limitToLast(MAX_BACKUPS + 1))).then(snap => {
             const data = snap.val();
@@ -222,7 +216,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         const newRoomBackup = {
           timestamp: dayjs().toISOString(),
           type, description, data: allLocalData, bossCount: serverData.length, server,
-          changeDetail,
+          changeDetail: changeDetail ?? null, // FIXED: Prevent undefined
           user: nickname || 'ANON',
         };
         
@@ -289,7 +283,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   useEffect(() => { loadBackups(); }, [loadBackups]);
 
-  // Firebase Real-time Listener
   useEffect(() => {
     if (!partyRoom) return;
     const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
@@ -306,17 +299,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
       const sortedResult = sortMvpsByRespawnTime(rehydratedRemote);
       
       setActiveMvps(sortedResult);
-      
-      if (localSaveEnabled) {
-        saveActiveMvpsToLocalStorage(sortedResult, server);
-      }
-
+      if (localSaveEnabled) saveActiveMvpsToLocalStorage(sortedResult, server);
       setIsLoading(false);
     });
     return () => unsubscribe();
   }, [partyRoom, server, originalAllMvps, rehydrateMvps, localSaveEnabled]);
 
-  // Effect to handle case where originalAllMvps loads AFTER Firebase data
   useEffect(() => {
     if (partyRoom && originalAllMvps.length > 0 && activeMvps.length > 0 && isLoading) {
       const mergedMvps = rehydrateMvps(activeMvps);
