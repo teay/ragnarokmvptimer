@@ -1,0 +1,31 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "parties": {
+      "$partyId": {
+        ".read": "true",
+        ".write": "true",
+        "metadata": {
+          ".validate": "newData.hasChildren(['creator', 'server', 'createdAt'])"
+        },
+        "history": {
+          "$backupId": {
+            ".validate": "newData.hasChildren(['timestamp', 'type', 'data'])"
+          }
+        }
+      }
+    },
+    "users": {
+      "$nickname": {
+        ".read": "true",
+        ".write": "true",
+        "backups": {
+          "$backupId": {
+            ".validate": "newData.hasChildren(['timestamp', 'type', 'data'])"
+          }
+        }
+      }
+    }
+  }
+}
