@@ -5,6 +5,7 @@ import { SettingsButton } from '../SettingsButton';
 import { PartyButton } from '../PartyButton';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
+import { useTimer } from '@/contexts/TimerContext'; // <-- เปลี่ยนจาก useTimerContext เป็น useTimer
 import { Copy } from '@styled-icons/feather';
 
 import mvpImg from '@/assets/mvp.png';
@@ -14,6 +15,11 @@ import { Container, Customization, Logo, LogoContainer, Title, LiveBadge, DataBa
 export function Header() {
   const { use24HourFormat, partyRoom, server, nickname, cloudSyncEnabled, localSaveEnabled } = useSettings();
   const { dataLocation } = useMvpsContext();
+  const { partyMembers } = useTimer(); // <-- เปลี่ยนจาก useTimerContext() เป็น useTimer()
+
+  console.log('PartyRoom in Header:', partyRoom); // Log partyRoom
+  console.log('Nickname in Header:', nickname); // Log nickname
+  console.log('PartyMembers from context in Header:', partyMembers); // Log partyMembers from context
 
   const handleCopyInviteLink = useCallback(() => {
     if (!partyRoom) return;
@@ -56,6 +62,32 @@ export function Header() {
             >
               <Copy size={12} /> {partyRoom}
             </LiveBadge>
+            
+            {/* Check condition before rendering members */}
+            {console.log('Header Render - Should render member list condition:', partyMembers && partyMembers.length > 0)}
+            {partyMembers && partyMembers.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px', flexWrap: 'wrap' }}>
+                <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Members:</span>
+                {partyMembers.map((member, index) => (
+                  <>
+                    {console.log('Header map processing member:', member, 'with key:', index)}
+                    <span 
+                      key={member} // Changed key from index to member for stability
+                      style={{ 
+                        fontSize: '0.9rem', 
+                        color: member === nickname ? '#fbc02d' : '#e0e0e0', // Highlight current user
+                        fontWeight: member === nickname ? 'bold' : 'normal',
+                        background: 'rgba(0,0,0,0.3)', 
+                        padding: '2px 6px', 
+                        borderRadius: '4px' 
+                      }}
+                    >
+                      @{member}
+                    </span>
+                  </>
+                ))}
+              </div>
+            )}
             {nickname && (
               <span style={{ 
                 fontSize: '1.2rem', color: '#fbc02d', fontWeight: 'bold', 

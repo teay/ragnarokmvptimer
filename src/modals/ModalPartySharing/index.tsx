@@ -11,7 +11,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useScrollBlock, useClickOutside, useKey } from '@/hooks';
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY, MAX_BACKUPS } from '@/constants';
-import { database, ref, set, get, remove } from '@/services/firebase';
+import { database, ref, set, get, remove } from '@/services/firebase'; // Ensure set and ref are imported
 import { saveActiveMvpsToLocalStorage } from '@/controllers/mvp';
 
 import {
@@ -171,6 +171,8 @@ export function ModalPartySharing({ onClose }: Props) {
     changePartyRoom(roomName);
 
     const allLocalDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+    let success = false; // Use a flag to track success
+
     if (allLocalDataRaw) {
       try {
         const parsed = JSON.parse(allLocalDataRaw);
@@ -180,19 +182,48 @@ export function ModalPartySharing({ onClose }: Props) {
           const minimalMvps = parsed[server].map((m: any) => ({
             id: m.id, deathTime: m.deathTime || null, deathMap: m.deathMap || null, deathPosition: m.deathPosition || null,
           }));
+          
+          console.log('Creating party:', roomName, 'Server:', server, 'Creator:', nickname);
+
           await Promise.all([
             set(metadataRef, { server, createdAt: dayjs().toISOString(), creator: nickname }),
             set(serverRef, { mvps: minimalMvps })
           ]);
-          return true;
+          
+          // Add creator as the first member
+          if (nickname) {
+            console.log('Adding creator as member:', nickname, 'to room:', roomName);
+            const membersRef = ref(database, `parties/${roomName}/members/${nickname}`); // Use nickname as key
+            await set(membersRef, { name: nickname }); // Store name
+          }
+          success = true;
         }
-      } catch (e) { console.error(e); }
+      } catch (e) { 
+        console.error('Error during create/join with data:', e);
+        alert('Failed to create room with data. Please check connection or try again.');
+      }
+    } else {
+      // Fallback if no data
+      const metadataRef = ref(database, `parties/${roomName}/metadata`);
+      try {
+        await set(metadataRef, { server, createdAt: dayjs().toISOString(), creator: nickname });
+        // Add creator as the first member (for fallback case too)
+        if (nickname) {
+          console.log('Adding creator as member (fallback):', nickname, 'to room:', roomName);
+          const membersRef = ref(database, `parties/${roomName}/members/${nickname}`);
+          await set(membersRef, { name: nickname });
+        }
+        success = true;
+      } catch (e) {
+        console.error('Error during fallback create:', e);
+        alert('Failed to create room. Please check connection or try again.');
+      }
     }
-    // Fallback if no data
-    const metadataRef = ref(database, `parties/${roomName}/metadata`);
-    await set(metadataRef, { server, createdAt: dayjs().toISOString(), creator: nickname });
-    return true;
-  }, [server, localSaveEnabled, toggleLocalSave, changePartyRoom, createBackup, nickname]);
+    // Update state and return success
+    changePartyRoom(roomName); 
+    setIsProcessing(false); // Reset processing state
+    return success; // Return actual success status
+  }, [server, localSaveEnabled, toggleLocalSave, changePartyRoom, createBackup, nickname, onClose, isProcessing, roomInput]); // Added dependencies that might be missing
 
   // ⚔️ Create Party & Begin with My Boss Timers (Main Button)
   const handleCreateWithData = useCallback(async () => {
@@ -219,7 +250,9 @@ export function ModalPartySharing({ onClose }: Props) {
       if (!roomSnapshot.exists()) {
         // --- SMOOTH REDIRECT FLOW ---
         const shouldCreate = window.confirm(
-          `❌ Room "${roomName}" not found.\n\nWould you like to CREATE this room now using your current boss timers?`
+          `❌ Room "${roomName}" not found.
+
+Would you like to CREATE this room now using your current boss timers?`
         );
         
         if (shouldCreate) {
@@ -266,6 +299,12 @@ export function ModalPartySharing({ onClose }: Props) {
 
       if (!localSaveEnabled) toggleLocalSave();
       changePartyRoom(roomName);
+      // Add joining member to Firebase
+      if (nickname) {
+        console.log('Joining party: Adding member', nickname, 'to room', roomName);
+        const membersRef = ref(database, `parties/${roomName}/members/${nickname}`); // Use roomName being joined and nickname
+        await set(membersRef, { name: nickname }); // Store the name
+      }
       onClose();
     } catch (e) {
       console.error('Join failed', e);
@@ -292,9 +331,16 @@ export function ModalPartySharing({ onClose }: Props) {
           set(metadataRef, { server, createdAt: dayjs().toISOString(), creator: nickname }),
           set(serverRef, { mvps: [] })
         ]);
+        // Add creator as the first member (for fresh creation)
+        if (nickname) {
+          console.log('Adding creator as member (fresh create):', nickname, 'to room:', roomName);
+          const membersRef = ref(database, `parties/${roomName}/members/${nickname}`);
+          await set(membersRef, { name: nickname });
+        }
         onClose();
       } catch (e) {
-        onClose();
+        console.error('Error during fresh create:', e);
+        alert('Failed to create room. Please check connection or try again.');
       } finally {
         setIsProcessing(false);
       }
@@ -307,7 +353,7 @@ export function ModalPartySharing({ onClose }: Props) {
   }, [restoreBackup, onClose]);
 
   const handleLeaveRoom = useCallback(() => {
-    leaveParty(true);
+    leaveParty(true); // 'true' might indicate clearing cloud data? Check leaveParty implementation.
     onClose();
   }, [leaveParty, onClose]);
 
@@ -322,6 +368,7 @@ export function ModalPartySharing({ onClose }: Props) {
         leaveParty(true); 
         onClose();
       } catch (e) {
+        console.error('Failed to destroy room data:', e);
         alert('Failed to destroy room data.');
       } finally {
         setIsProcessing(false);
@@ -457,120 +504,6 @@ export function ModalPartySharing({ onClose }: Props) {
           <div style={{ width: '100%' }}>
             <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={24} color="#64b5f6" /> Data Time Machine
-              </div>
-            </SettingName>
-            
-            <ControlRow>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '1.6rem', fontWeight: 600 }}>Auto-Snapshot on Change</span>
-                  <StatusBadge active={autoSnapshotEnabled}>{autoSnapshotEnabled ? 'Enabled' : 'Disabled'}</StatusBadge>
-                </div>
-                <span style={{ fontSize: '1.2rem', opacity: 0.7 }}>Save state whenever boss is added or removed</span>
-              </div>
-              <Switch id="autoSnapshot" name="autoSnapshot" checked={autoSnapshotEnabled} onChange={toggleAutoSnapshot} disabled={isProcessing} />
-            </ControlRow>
-
-            <BackupSection>
-              <ActionButton onClick={() => createBackup('MANUAL', 'Manual Checkpoint')} disabled={isProcessing} style={{ background: 'var(--primary)', width: '100%', justifyContent: 'center', marginBottom: '1.5rem' }}>
-                <Save size={18} /> Create Manual Checkpoint
-              </ActionButton>
-
-              {/* 🏠 LOCAL LAYER */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '1.4rem', fontWeight: 600, color: '#fff' }}>🏠 Local Backups</span>
-                <span style={{ fontSize: '1.2rem', opacity: 0.6 }}>{backups.length} / {MAX_BACKUPS}</span>
-              </div>
-              {backups.length === 0 ? (<p style={{ fontSize: '1.1rem', opacity: 0.4, marginBottom: '1rem' }}>No local backups.</p>) : (
-                backups.map((backup, index) => (
-                  <BackupItem key={backup.id} style={{ marginBottom: '0.5rem' }}>
-                    <BackupInfo>
-                      <span className="date">#{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
-                      <span className="desc">
-                        <span style={{ color: '#fff' }}>[{backup.type}]</span> {backup.description}
-                        {backup.changeDetail && <span style={{ color: '#ffeb3b' }}>: {backup.changeDetail.split(': ')[1] || backup.changeDetail}</span>}
-                        {backup.user && <span style={{ color: '#aaa', marginLeft: '8px', fontSize: '1rem' }}>(โดย: {backup.user})</span>}
-                      </span>
-                      <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
-                    </BackupInfo>
-                    <BackupActions>
-                      <MiniButton onClick={() => handleRestore(backup.id, 'local')} disabled={isProcessing}><RotateCcw size={12} /> Restore</MiniButton>
-                      <MiniButton onClick={() => deleteBackup(backup.id, 'local')} disabled={isProcessing} variant="danger"><Trash2 size={12} /></MiniButton>
-                    </BackupActions>
-                  </BackupItem>
-                ))
-              )}
-
-              <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '1rem 0' }} />
-
-              {/* 👤 PERSONAL CLOUD LAYER */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '1.4rem', fontWeight: 600, color: '#fbc02d' }}>👤 Personal Vault (Cloud)</span>
-                <span style={{ fontSize: '1.2rem', opacity: 0.6 }}>{personalBackups.length} / {MAX_BACKUPS}</span>
-              </div>
-              {!nickname || nickname.length < 4 ? (
-                <p style={{ fontSize: '1.1rem', opacity: 0.4, marginBottom: '1rem' }}>Set nickname to enable Personal Vault.</p>
-              ) : personalBackups.length === 0 ? (
-                <p style={{ fontSize: '1.1rem', opacity: 0.4, marginBottom: '1rem' }}>No personal cloud backups.</p>
-              ) : (
-                personalBackups.map((backup, index) => (
-                  <BackupItem key={backup.id} style={{ marginBottom: '0.5rem', borderLeftColor: '#fbc02d' }}>
-                    <BackupInfo>
-                      <span className="date">Cloud #{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
-                      <span className="desc">
-                        <span style={{ color: '#fbc02d' }}>[{backup.type}]</span> {backup.description}
-                        {backup.changeDetail && <span style={{ color: '#ffeb3b' }}>: {backup.changeDetail.split(': ')[1] || backup.changeDetail}</span>}
-                        {backup.user && <span style={{ color: '#aaa', marginLeft: '8px', fontSize: '1rem' }}>(โดย: {backup.user})</span>}
-                      </span>
-                      <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
-                    </BackupInfo>
-                    <BackupActions>
-                      <MiniButton onClick={() => handleRestore(backup.id, 'personal')} disabled={isProcessing}><RotateCcw size={12} /> Restore</MiniButton>
-                      <MiniButton onClick={() => deleteBackup(backup.id, 'personal')} disabled={isProcessing} variant="danger"><Trash2 size={12} /></MiniButton>
-                    </BackupActions>
-                  </BackupItem>
-                ))
-              )}
-
-              <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '1rem 0' }} />
-
-              {/* 👥 ROOM HISTORY LAYER */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '1.4rem', fontWeight: 600, color: '#64b5f6' }}>👥 Room Live History</span>
-                <span style={{ fontSize: '1.2rem', opacity: 0.6 }}>{roomBackups.length} / {MAX_BACKUPS}</span>
-              </div>
-              {!partyRoom ? (
-                <p style={{ fontSize: '1.1rem', opacity: 0.4 }}>Join a room to see shared history.</p>
-              ) : roomBackups.length === 0 ? (
-                <p style={{ fontSize: '1.1rem', opacity: 0.4 }}>No history in this room.</p>
-              ) : (
-                roomBackups.map((backup, index) => (
-                  <BackupItem key={backup.id} style={{ marginBottom: '0.5rem', borderLeftColor: '#64b5f6' }}>
-                    <BackupInfo>
-                      <span className="date">Room #{index + 1} - {dayjs(backup.timestamp).format('DD/MM HH:mm:ss')}</span>
-                      <span className="desc">
-                        <span style={{ color: '#64b5f6' }}>[{backup.description}]</span> 
-                        {backup.changeDetail && <span style={{ color: '#ffeb3b' }}> {backup.changeDetail.split(': ')[1] || backup.changeDetail}</span>}
-                        <span style={{ color: '#aaa', marginLeft: '8px', fontSize: '1rem' }}>(โดย: {backup.user})</span>
-                      </span>
-                      <span className="stats">{backup.bossCount} Bosses • {backup.server}</span>
-                    </BackupInfo>
-                    <BackupActions>
-                      <MiniButton onClick={() => handleRestore(backup.id, 'room')} disabled={isProcessing}><RotateCcw size={12} /> Restore</MiniButton>
-                      <MiniButton onClick={() => deleteBackup(backup.id, 'room')} disabled={isProcessing} variant="danger"><Trash2 size={12} /></MiniButton>
-                    </BackupActions>
-                  </BackupItem>
-                ))
-              )}
-            </BackupSection>
-          </div>
-
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2rem 0' }} />
-
-          <div style={{ width: '100%' }}>
-            <SettingName style={{ marginBottom: '1.5rem', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Activity size={24} color="#fbc02d" /> Data Flow Control
               </div>
             </SettingName>
@@ -590,9 +523,7 @@ export function ModalPartySharing({ onClose }: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Cloud size={16} /> 
                   <span style={{ fontSize: '1.6rem', fontWeight: 600 }}>Cloud Sync</span>
-                  <StatusBadge active={cloudSyncEnabled && !!partyRoom}>
-                    {partyRoom ? (cloudSyncEnabled ? 'Syncing' : 'Ghost Mode') : 'Offline'}
-                  </StatusBadge>
+                  <StatusBadge active={cloudSyncEnabled && !!partyRoom}>{partyRoom ? (cloudSyncEnabled ? 'Syncing' : 'Ghost Mode') : 'Offline'}</StatusBadge>
                 </div>
                 <span style={{ fontSize: '1.2rem', opacity: 0.7 }}>Broadcast your kills to party</span>
               </div>
