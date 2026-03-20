@@ -11,6 +11,9 @@ export const Container = styled.header`
   background-color: var(--header_bg);
   backdrop-filter: var(--header_backdrop_filter);
   box-shadow: var(--header_box_shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 
   @media (max-width: 768px) {
     padding: 0 15px;
