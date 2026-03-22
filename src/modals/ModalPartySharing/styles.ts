@@ -60,7 +60,7 @@ export const Setting = styled.div<{ disabled?: boolean }>`
 export const SettingName = styled.span`
   color: var(---modal_text);
 
-  font-size: 2.0rem;
+  font-size: 2rem;
   font-weight: 500;
 
   display: flex;
@@ -191,71 +191,8 @@ export const StatusBadge = styled.div<{ active: boolean }>`
   font-size: 1.2rem;
   font-weight: bold;
   text-transform: uppercase;
-  background: ${props => props.active ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)'};
-  color: ${props => props.active ? '#4caf50' : '#f44336'};
-  border: 1px solid ${props => props.active ? '#4caf50' : '#f44336'};
-`;
-
-export const BackupSection = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-export const BackupItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 4px;
-  border-left: 3px solid var(--primary);
-`;
-
-export const BackupInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  text-align: left;
-
-  span.date {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: #fff;
-  }
-
-  span.desc {
-    font-size: 1.2rem;
-    opacity: 0.6;
-  }
-
-  span.stats {
-    font-size: 1.1rem;
-    color: var(--primary);
-    font-weight: bold;
-  }
-`;
-
-export const BackupActions = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-export const MiniButton = styled.button<{ variant?: 'danger' }>`
-  background: ${props => props.variant === 'danger' ? 'rgba(244, 67, 54, 0.1)' : 'rgba(255, 255, 255, 0.1)'};
-  color: ${props => props.variant === 'danger' ? '#f44336' : '#fff'};
-  border: 1px solid ${props => props.variant === 'danger' ? '#f44336' : 'rgba(255, 255, 255, 0.2)'};
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  &:hover {
-    background: ${props => props.variant === 'danger' ? '#f44336' : 'var(--primary)'};
-    color: #fff;
-  }
+  background: ${(props) =>
+    props.active ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)'};
+  color: ${(props) => (props.active ? '#4caf50' : '#f44336')};
+  border: 1px solid ${(props) => (props.active ? '#4caf50' : '#f44336')};
 `;
