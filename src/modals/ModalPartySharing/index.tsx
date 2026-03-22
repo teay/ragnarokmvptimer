@@ -39,6 +39,8 @@ export function ModalPartySharing({ onClose }: Props) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [partyNameError, setPartyNameError] = useState<string | null>(null);
   const [nicknameError, setNicknameError] = useState<string | null>(null);
+  const [rememberNickname, setRememberNickname] = useState(true);
+  const [rememberParty, setRememberParty] = useState(true);
 
   // Sync input values when settings change
   useEffect(() => {
@@ -72,14 +74,16 @@ export function ModalPartySharing({ onClose }: Props) {
     if (!validateForm()) return;
     setIsProcessing(true);
 
-    changeNickname(nicknameInput.trim());
+    if (rememberNickname) {
+      changeNickname(nicknameInput.trim());
+    }
 
     if (mode === 'solo') {
-      // Solo mode: don't store partyRoom, just nickname
       changePartyRoom(null);
     } else {
-      // Party mode: store party name
-      changePartyRoom(partyNameInput.trim().toUpperCase());
+      if (rememberParty) {
+        changePartyRoom(partyNameInput.trim().toUpperCase());
+      }
     }
 
     setIsProcessing(false);
@@ -92,6 +96,8 @@ export function ModalPartySharing({ onClose }: Props) {
     changePartyRoom,
     isProcessing,
     onClose,
+    rememberNickname,
+    rememberParty,
   ]);
 
   return (
@@ -118,19 +124,36 @@ export function ModalPartySharing({ onClose }: Props) {
                     : {}
                 }
               />
-              {nicknameError && (
-                <p
-                  style={{
-                    fontSize: '1.1rem',
-                    color: '#f44336',
-                    marginTop: '-0.5rem',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  {nicknameError}
-                </p>
-              )}
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  whiteSpace: 'nowrap',
+                  color: '#aaa',
+                  fontSize: '1.1rem',
+                }}
+              >
+                <input
+                  type='checkbox'
+                  checked={rememberNickname}
+                  onChange={(e) => setRememberNickname(e.target.checked)}
+                />
+                จำ
+              </label>
             </InputWrapper>
+            {nicknameError && (
+              <p
+                style={{
+                  fontSize: '1.1rem',
+                  color: '#f44336',
+                  marginTop: '-0.5rem',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                {nicknameError}
+              </p>
+            )}
           </div>
 
           {/* Mode selection buttons */}
@@ -192,6 +215,23 @@ export function ModalPartySharing({ onClose }: Props) {
                       : {}
                   }
                 />
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    whiteSpace: 'nowrap',
+                    color: '#aaa',
+                    fontSize: '1.1rem',
+                  }}
+                >
+                  <input
+                    type='checkbox'
+                    checked={rememberParty}
+                    onChange={(e) => setRememberParty(e.target.checked)}
+                  />
+                  จำ
+                </label>
                 {partyNameError && (
                   <p
                     style={{
