@@ -17,5 +17,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
+// Data separation strategy:
+// In development, we use 'dev-parties' to avoid corrupting production data.
+// In production, we use 'parties'.
+export const DB_ROOT_PATH = import.meta.env.DEV ? 'dev-parties' : 'parties';
+
 export { database, ref, set, get, remove, onValue, off, push, query, limitToLast, update };
 export type { DatabaseReference };

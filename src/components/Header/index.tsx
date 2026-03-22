@@ -63,19 +63,15 @@ export function Header() {
               <Copy size={12} /> {partyRoom}
             </LiveBadge>
             
-            {/* Check condition before rendering members */}
-            {console.log('Header Render - Should render member list condition:', partyMembers && partyMembers.length > 0)}
             {partyMembers && partyMembers.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px', flexWrap: 'wrap' }}>
                 <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Members:</span>
-                {partyMembers.map((member, index) => (
-                  <>
-                    {console.log('Header map processing member:', member, 'with key:', index)}
+                {partyMembers.map((member) => (
                     <span 
-                      key={member} // Changed key from index to member for stability
+                      key={member}
                       style={{ 
                         fontSize: '0.9rem', 
-                        color: member === nickname ? '#fbc02d' : '#e0e0e0', // Highlight current user
+                        color: member === nickname ? '#fbc02d' : '#e0e0e0',
                         fontWeight: member === nickname ? 'bold' : 'normal',
                         background: 'rgba(0,0,0,0.3)', 
                         padding: '2px 6px', 
@@ -84,7 +80,6 @@ export function Header() {
                     >
                       @{member}
                     </span>
-                  </>
                 ))}
               </div>
             )}
