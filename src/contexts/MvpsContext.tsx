@@ -21,6 +21,7 @@ interface MvpProviderProps {
 interface MvpsContextData {
   activeMvps: IMvp[];
   allMvps: IMvp[];
+  originalAllMvps: IMvp[];
   editingMvp: IMvp | undefined;
   editingTimeMvp: IMvp | undefined;
   killingMvp: IMvp | undefined;
@@ -381,6 +382,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
       value={{
         activeMvps,
         allMvps,
+        originalAllMvps,
         editingMvp,
         editingTimeMvp,
         killingMvp,
