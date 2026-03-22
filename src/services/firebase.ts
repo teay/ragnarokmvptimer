@@ -1,12 +1,26 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, get, remove, onValue, off, push, query, limitToLast, update, DatabaseReference } from 'firebase/database';
+import {
+  getDatabase,
+  ref,
+  set,
+  get,
+  remove,
+  onValue,
+  off,
+  push,
+  query,
+  limitToLast,
+  update,
+  DatabaseReference,
+} from 'firebase/database';
 
 // Firebase configuration using your provided credentials
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   // Hardcoding the databaseURL for reliability (it's public anyway)
-  databaseURL: "https://ragnarokmvptimer-ace0a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  databaseURL:
+    'https://ragnarokmvptimer-ace0a-default-rtdb.asia-southeast1.firebasedatabase.app/',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -17,10 +31,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Data separation strategy:
-// In development, we use 'dev-parties' to avoid corrupting production data.
-// In production, we use 'parties'.
-export const DB_ROOT_PATH = import.meta.env.DEV ? 'dev-parties' : 'parties';
+// Always use 'parties' for both development and production
+export const DB_ROOT_PATH = 'parties';
 
-export { database, ref, set, get, remove, onValue, off, push, query, limitToLast, update };
+export {
+  database,
+  ref,
+  set,
+  get,
+  remove,
+  onValue,
+  off,
+  push,
+  query,
+  limitToLast,
+  update,
+};
 export type { DatabaseReference };
