@@ -58,7 +58,7 @@ export function MvpCardCountdown({
   onTriggerNotification,
 }: MvpCardCountdownProps) {
   const nextRespawnMin = useMemo(
-    () => dayjs(mvp.deathTime).add(mvp.spawn.find(s => s.mapname === mvp.deathMap)?.respawnTime || 0, 'ms'),
+    () => dayjs(mvp.deathTime).add(mvp.spawn?.find(s => s.mapname === mvp.deathMap)?.respawnTime || 0, 'ms'),
     [mvp]
   );
   
