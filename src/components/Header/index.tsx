@@ -87,24 +87,28 @@ export function Header() {
                   justifyContent: 'center',
                 }}
               >
-                {partyMembers.map((member) => (
-                  <span
-                    key={member}
-                    style={{
-                      fontSize: '0.8rem',
-                      color: member === nickname ? '#fbc02d' : '#e0e0e0',
-                      fontWeight: member === nickname ? 'bold' : 'normal',
-                      background:
-                        member === nickname
-                          ? 'rgba(251,192,45,0.2)'
-                          : 'rgba(255,255,255,0.08)',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    {member === nickname ? '⭐ ' : ''}@{member}
-                  </span>
-                ))}
+                {partyMembers
+                  .sort((a, b) =>
+                    b === nickname ? 1 : a === nickname ? -1 : 0
+                  )
+                  .map((member) => (
+                    <span
+                      key={member}
+                      style={{
+                        fontSize: '0.8rem',
+                        color: member === nickname ? '#fbc02d' : '#e0e0e0',
+                        fontWeight: member === nickname ? 'bold' : 'normal',
+                        background:
+                          member === nickname
+                            ? 'rgba(251,192,45,0.2)'
+                            : 'rgba(255,255,255,0.08)',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      {member === nickname ? '⭐ ' : ''}@{member}
+                    </span>
+                  ))}
               </div>
             )}
           </div>
