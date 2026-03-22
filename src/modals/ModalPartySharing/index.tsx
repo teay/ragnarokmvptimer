@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { ZapOff, Play } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
@@ -31,12 +31,21 @@ export function ModalPartySharing({ onClose }: Props) {
     changeNickname,
   } = useSettings();
 
-  const [mode, setMode] = useState<'solo' | 'party'>('party');
+  const [mode, setMode] = useState<'solo' | 'party'>(
+    currentPartyRoom ? 'party' : 'solo'
+  );
   const [partyNameInput, setPartyNameInput] = useState(currentPartyRoom || '');
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [partyNameError, setPartyNameError] = useState<string | null>(null);
   const [nicknameError, setNicknameError] = useState<string | null>(null);
+
+  // Sync input values when settings change
+  useEffect(() => {
+    setNicknameInput(nickname || '');
+    setPartyNameInput(currentPartyRoom || '');
+    setMode(currentPartyRoom ? 'party' : 'solo');
+  }, [nickname, currentPartyRoom]);
 
   const modalRef = useClickOutside(onClose);
 
