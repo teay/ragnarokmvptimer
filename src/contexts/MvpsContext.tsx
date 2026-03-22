@@ -88,6 +88,29 @@ export function MvpProvider({ children }: MvpProviderProps) {
     ? 'online'
     : 'local';
 
+  // Write to party members when joining
+  useEffect(() => {
+    if (!partyRoom || !nickname) return;
+
+    const membersRef = ref(
+      database,
+      `${DB_ROOT_PATH}/party/${partyRoom}/members/${nickname}`
+    );
+    set(membersRef, {
+      name: nickname,
+      joinedAt: dayjs().toISOString(),
+    }).catch(console.error);
+
+    // Cleanup: remove self when leaving
+    return () => {
+      const selfRef = ref(
+        database,
+        `${DB_ROOT_PATH}/party/${partyRoom}/members/${nickname}`
+      );
+      set(selfRef, null).catch(console.error);
+    };
+  }, [partyRoom, nickname]);
+
   const rehydrateMvps = useCallback(
     (mvps: any[]) => {
       if (!mvps) return [];
