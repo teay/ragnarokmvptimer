@@ -88,8 +88,8 @@ export function ModalPartySharing({ onClose }: Props) {
       // Solo mode: use a special solo room ID derived from nickname
       changePartyRoom(`solo:${nicknameInput.trim()}`);
     } else {
-      // Party mode: ensure uppercase and set party room
-      changePartyRoom(partyNameInput.trim().toUpperCase());
+      // Party mode: use "party:" prefix for clarity
+      changePartyRoom(`party:${partyNameInput.trim().toUpperCase()}`);
     }
 
     setIsProcessing(false);
