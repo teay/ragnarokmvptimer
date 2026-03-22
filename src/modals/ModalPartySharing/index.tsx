@@ -4,7 +4,12 @@ import { ZapOff, Play } from '@styled-icons/feather';
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { useSettings } from '@/contexts/SettingsContext';
-import { useScrollBlock, useClickOutside, useKey } from '@/hooks';
+import {
+  useScrollBlock,
+  useClickOutside,
+  useKey,
+  usePersistedState,
+} from '@/hooks';
 
 import {
   Modal,
@@ -39,8 +44,14 @@ export function ModalPartySharing({ onClose }: Props) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [partyNameError, setPartyNameError] = useState<string | null>(null);
   const [nicknameError, setNicknameError] = useState<string | null>(null);
-  const [rememberNickname, setRememberNickname] = useState(true);
-  const [rememberParty, setRememberParty] = useState(true);
+  const [rememberNickname, setRememberNickname] = usePersistedState(
+    'rememberNickname',
+    true
+  );
+  const [rememberParty, setRememberParty] = usePersistedState(
+    'rememberParty',
+    true
+  );
 
   // Sync input values when settings change
   useEffect(() => {
