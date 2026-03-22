@@ -84,50 +84,72 @@ export function Header() {
               >
                 <Copy size={12} /> {partyRoom}
               </LiveBadge>
-              {nickname && (
-                <span
-                  style={{
-                    fontSize: '1.1rem',
-                    color: '#fbc02d',
-                    fontWeight: 'bold',
-                    background: 'rgba(0,0,0,0.3)',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                  }}
-                >
-                  @{nickname}
-                </span>
-              )}
             </div>
             {partyMembers && partyMembers.length > 0 && (
               <div
                 style={{
                   display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
                   alignItems: 'center',
-                  gap: '6px',
-                  flexWrap: 'wrap',
-                  justifyContent: 'center',
                 }}
               >
-                <span style={{ color: '#aaa', fontSize: '0.9rem' }}>
-                  Members:
-                </span>
-                {partyMembers.map((member) => (
-                  <span
-                    key={member}
+                {partyMembers.filter((m) => m !== nickname).length > 0 && (
+                  <div
                     style={{
-                      fontSize: '0.9rem',
-                      color: member === nickname ? '#fbc02d' : '#e0e0e0',
-                      fontWeight: member === nickname ? 'bold' : 'normal',
-                      background: 'rgba(0,0,0,0.3)',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
                     }}
                   >
-                    {member === nickname ? '• ' : ''}
-                    {member}
-                  </span>
-                ))}
+                    <span style={{ color: '#aaa', fontSize: '0.85rem' }}>
+                      👥
+                    </span>
+                    {partyMembers
+                      .filter((m) => m !== nickname)
+                      .map((member) => (
+                        <span
+                          key={member}
+                          style={{
+                            fontSize: '0.85rem',
+                            color: '#e0e0e0',
+                            background: 'rgba(255,255,255,0.1)',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                          }}
+                        >
+                          @{member}
+                        </span>
+                      ))}
+                  </div>
+                )}
+                {nickname && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span style={{ color: '#fbc02d', fontSize: '0.85rem' }}>
+                      👤
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        color: '#fbc02d',
+                        fontWeight: 'bold',
+                        background: 'rgba(251,192,45,0.2)',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      @{nickname} (You)
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
