@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { RefreshCw, ZapOff, Play } from '@styled-icons/feather';
+import { ZapOff, Play } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
@@ -14,7 +14,6 @@ import {
   ActionButton,
   Input,
   InputWrapper,
-  RandomButton,
 } from './styles';
 
 type Props = {
@@ -46,24 +45,6 @@ export function ModalPartySharing({ onClose }: Props) {
     const trimmed = rawValue.slice(0, 12);
     setNicknameInput(trimmed);
     setNicknameError(trimmed === '' ? 'Nickname is required' : null);
-  };
-
-  const handleRandomNickname = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++)
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    setNicknameInput(result);
-    setNicknameError(null);
-  };
-
-  const handleRandomPartyName = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++)
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    setPartyNameInput(result);
-    setPartyNameError(null);
   };
 
   const validateForm = () => {
@@ -128,9 +109,6 @@ export function ModalPartySharing({ onClose }: Props) {
                     : {}
                 }
               />
-              <RandomButton onClick={handleRandomNickname}>
-                <RefreshCw />
-              </RandomButton>
               {nicknameError && (
                 <p
                   style={{
@@ -205,9 +183,6 @@ export function ModalPartySharing({ onClose }: Props) {
                       : {}
                   }
                 />
-                <RandomButton onClick={handleRandomPartyName}>
-                  <RefreshCw />
-                </RandomButton>
                 {partyNameError && (
                   <p
                     style={{

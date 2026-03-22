@@ -128,33 +128,6 @@ export const InputWrapper = styled.div`
   margin-bottom: 1rem;
 `;
 
-export const RandomButton = styled.button`
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  color: #fff;
-  padding: 0 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-
-  &:hover {
-    background: var(--primary);
-    border-color: var(--primary);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  > svg {
-    width: 18px;
-    height: 18px;
-  }
-`;
-
 export const LiveStatus = styled.div<{ active?: boolean }>`
   display: flex;
   align-items: center;
