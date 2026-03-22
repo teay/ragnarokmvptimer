@@ -39,7 +39,7 @@ export function ModalPartySharing({ onClose }: Props) {
     server,
   } = useSettings();
 
-  const { allMvps } = useMvpsContext();
+  const { originalAllMvps } = useMvpsContext();
 
   const [mode, setMode] = useState<'solo' | 'party'>(
     currentPartyRoom ? 'party' : 'solo'
@@ -88,9 +88,9 @@ export function ModalPartySharing({ onClose }: Props) {
         return;
       }
 
-      // Add boss name to each MVP
+      // Add boss name to each MVP using original database
       const exportData = data.map((mvp: any) => {
-        const bossInfo = allMvps.find((m) => m.id === mvp.id);
+        const bossInfo = originalAllMvps.find((m) => m.id === mvp.id);
         return {
           ...mvp,
           name: bossInfo?.name || `Unknown (${mvp.id})`,
