@@ -4,6 +4,7 @@ import { ZapOff, Play, Download, Upload } from '@styled-icons/feather';
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useMvpsContext } from '@/contexts/MvpsContext';
 import { database, ref, get, set } from '@/services/firebase';
 import {
   useScrollBlock,
@@ -37,6 +38,8 @@ export function ModalPartySharing({ onClose }: Props) {
     changeNickname,
     server,
   } = useSettings();
+
+  const { allMvps } = useMvpsContext();
 
   const [mode, setMode] = useState<'solo' | 'party'>(
     currentPartyRoom ? 'party' : 'solo'
@@ -85,7 +88,16 @@ export function ModalPartySharing({ onClose }: Props) {
         return;
       }
 
-      const json = JSON.stringify(data, null, 2);
+      // Add boss name to each MVP
+      const exportData = data.map((mvp: any) => {
+        const bossInfo = allMvps.find((m) => m.id === mvp.id);
+        return {
+          ...mvp,
+          name: bossInfo?.name || `Unknown (${mvp.id})`,
+        };
+      });
+
+      const json = JSON.stringify(exportData, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
