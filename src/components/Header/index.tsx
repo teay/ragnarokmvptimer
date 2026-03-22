@@ -6,7 +6,6 @@ import { PartyButton } from '../PartyButton';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useTimer } from '@/contexts/TimerContext'; // <-- เปลี่ยนจาก useTimerContext เป็น useTimer
-import { Copy } from '@styled-icons/feather';
 
 import mvpImg from '@/assets/mvp.png';
 
@@ -68,88 +67,44 @@ export function Header() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '4px',
+              gap: '6px',
+              marginLeft: '20px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <LiveBadge
-                onClick={handleCopyInviteLink}
-                style={{
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-                title='Click to copy invite link'
-              >
-                <Copy size={12} /> {partyRoom}
-              </LiveBadge>
-            </div>
+            <LiveBadge
+              onClick={handleCopyInviteLink}
+              style={{ cursor: 'pointer' }}
+              title='Click to copy invite link'
+            >
+              📋 {partyRoom}
+            </LiveBadge>
             {partyMembers && partyMembers.length > 0 && (
               <div
                 style={{
                   display: 'flex',
-                  flexDirection: 'column',
+                  flexWrap: 'wrap',
                   gap: '4px',
-                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                {partyMembers.filter((m) => m !== nickname).length > 0 && (
-                  <div
+                {partyMembers.map((member) => (
+                  <span
+                    key={member}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      flexWrap: 'wrap',
-                      justifyContent: 'center',
+                      fontSize: '0.8rem',
+                      color: member === nickname ? '#fbc02d' : '#e0e0e0',
+                      fontWeight: member === nickname ? 'bold' : 'normal',
+                      background:
+                        member === nickname
+                          ? 'rgba(251,192,45,0.2)'
+                          : 'rgba(255,255,255,0.08)',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
                     }}
                   >
-                    <span style={{ color: '#aaa', fontSize: '0.85rem' }}>
-                      👥
-                    </span>
-                    {partyMembers
-                      .filter((m) => m !== nickname)
-                      .map((member) => (
-                        <span
-                          key={member}
-                          style={{
-                            fontSize: '0.85rem',
-                            color: '#e0e0e0',
-                            background: 'rgba(255,255,255,0.1)',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                          }}
-                        >
-                          @{member}
-                        </span>
-                      ))}
-                  </div>
-                )}
-                {nickname && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <span style={{ color: '#fbc02d', fontSize: '0.85rem' }}>
-                      👤
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '0.85rem',
-                        color: '#fbc02d',
-                        fontWeight: 'bold',
-                        background: 'rgba(251,192,45,0.2)',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      @{nickname} (You)
-                    </span>
-                  </div>
-                )}
+                    {member === nickname ? '⭐ ' : ''}@{member}
+                  </span>
+                ))}
               </div>
             )}
           </div>
