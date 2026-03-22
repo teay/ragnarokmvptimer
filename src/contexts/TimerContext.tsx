@@ -38,12 +38,16 @@ export function TimerProvider({ children }: { children: ReactNode }) {
 
   // Effect to listen for party members from Firebase
   useEffect(() => {
-    if (!partyRoom || partyRoom.startsWith('solo:')) {
+    // Solo mode: partyRoom is null, no members to listen
+    if (!partyRoom) {
       setPartyMembers(undefined);
       return;
     }
 
-    const membersRef = ref(database, `${DB_ROOT_PATH}/${partyRoom}/members`);
+    const membersRef = ref(
+      database,
+      `${DB_ROOT_PATH}/party/${partyRoom}/members`
+    );
 
     const unsubscribe = onValue(membersRef, (snapshot) => {
       if (snapshot.exists()) {

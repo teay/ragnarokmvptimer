@@ -138,15 +138,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
   useEffect(() => {
     if (!originalAllMvps.length) return;
 
-    let effectivePartyRoom = partyRoom;
-    let isSoloMode = false;
+    // Solo mode: partyRoom is null but nickname exists
+    // Party mode: partyRoom has value
+    const isSoloMode = !partyRoom && !!nickname;
 
-    if (!partyRoom && nickname) {
-      effectivePartyRoom = `solo:${nickname}`;
-      isSoloMode = true;
-    }
-
-    if (!effectivePartyRoom) {
+    if (!isSoloMode && !partyRoom) {
       setActiveMvps([]);
       setIsLoading(false);
       return;
@@ -154,18 +150,16 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
     setIsLoading(true);
 
-    if (effectivePartyRoom.startsWith('solo:')) {
-      isSoloMode = true;
-    }
-
     let mvpsRef;
     if (isSoloMode) {
-      const userId = effectivePartyRoom.substring(5);
-      mvpsRef = ref(database, `${DB_ROOT_PATH}/solo/${userId}/${server}/mvps`);
+      mvpsRef = ref(
+        database,
+        `${DB_ROOT_PATH}/solo/${nickname}/${server}/mvps`
+      );
     } else {
       mvpsRef = ref(
         database,
-        `${DB_ROOT_PATH}/party/${effectivePartyRoom}/${server}/mvps`
+        `${DB_ROOT_PATH}/party/${partyRoom}/${server}/mvps`
       );
     }
 
@@ -213,32 +207,19 @@ export function MvpProvider({ children }: MvpProviderProps) {
         updatedBy: nickname || 'Anon',
       }));
 
-      let effectivePartyRoom = partyRoom;
-      let isSoloMode = false;
+      const isSoloMode = !partyRoom && !!nickname;
 
-      if (!partyRoom && nickname) {
-        effectivePartyRoom = `solo:${nickname}`;
-        isSoloMode = true;
-      }
-
-      if (effectivePartyRoom) {
-        if (effectivePartyRoom.startsWith('solo:')) {
-          isSoloMode = true;
-        }
-
-        let serverRef;
-        if (isSoloMode) {
-          const userId = effectivePartyRoom.substring(5);
-          serverRef = ref(
-            database,
-            `${DB_ROOT_PATH}/solo/${userId}/${server}/mvps`
-          );
-        } else {
-          serverRef = ref(
-            database,
-            `${DB_ROOT_PATH}/party/${effectivePartyRoom}/${server}/mvps`
-          );
-        }
+      if (isSoloMode) {
+        const serverRef = ref(
+          database,
+          `${DB_ROOT_PATH}/solo/${nickname}/${server}/mvps`
+        );
+        set(serverRef, minimalMvps).catch((err) => console.error(err));
+      } else if (partyRoom) {
+        const serverRef = ref(
+          database,
+          `${DB_ROOT_PATH}/party/${partyRoom}/${server}/mvps`
+        );
         set(serverRef, minimalMvps).catch((err) => console.error(err));
       }
     },
