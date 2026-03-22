@@ -10,17 +10,11 @@
 ### Medium Priority
 
 - [ ] **Import data จาก Party → Solo** - Copy MVP data ข้าม mode
-- [ ] **Firebase Analytics Integration** - ดูว่า user ใช้งานเท่าไหร่
-
-## Known Issues
-
-- ถ้า 2 คนฆ่าบอสเดียวกันเกือบเวลาเดียวกัน → คนเน็ตเร็วกว่าชนะ
 
 ## Ideas
 
-- [ ] User Analytics - ดูว่าใครใช้ server ไหน, เล่น Solo หรือ Party
 - [ ] Notification หลายเครื่อง - ถ้าฆ่าบอสใน party ให้แจ้งทุกเครื่อง
-- [ ] Copy MVP data จาก party ไป solo ได้
+- [ ] ปรับปรุง UI/UX
 
 ## Completed ✅
 
@@ -33,7 +27,6 @@
 - [x] Export/Import JSON buttons
 - [x] Remember nickname/party checkbox
 - [x] ลบปุ่มสุ่มชื่อ
-
----
-
-_Updated: $(date)_
+- [x] Party members display (show online members)
+- [x] Auto-join party members
+- [x] Export มีชื่อบอสด้วย
