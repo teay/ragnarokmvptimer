@@ -1,11 +1,17 @@
-import { createContext, useContext, ReactNode, useCallback, useEffect } from 'react';
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useCallback,
+  useEffect,
+} from 'react';
 
 import { usePersistedState } from '@/hooks/usePersistedState';
 
-import { 
-  SERVERS, 
-  DEFAULT_SETTINGS, 
-  LOCAL_STORAGE_SETTINGS_KEY 
+import {
+  SERVERS,
+  DEFAULT_SETTINGS,
+  LOCAL_STORAGE_SETTINGS_KEY,
 } from '@/constants';
 
 interface SettingsProviderProps {
@@ -35,7 +41,9 @@ interface SettingsContextData {
   isAnimatedBackgroundEnabled: boolean;
   toggleAnimatedBackground: () => void;
   backgroundEffectMode: 'full' | 'top' | 'bottom' | 'center';
-  changeBackgroundEffectMode: (mode: 'full' | 'top' | 'bottom' | 'center') => void;
+  changeBackgroundEffectMode: (
+    mode: 'full' | 'top' | 'bottom' | 'center'
+  ) => void;
   particleDensity: 'low' | 'medium' | 'high' | 'Empty';
   changeParticleDensity: (density: 'low' | 'medium' | 'high' | 'Empty') => void;
   particleColor: string;
@@ -81,8 +89,6 @@ interface SettingsContextData {
   toggleLocalSave: () => void;
   cloudSyncEnabled: boolean;
   toggleCloudSync: () => void;
-  autoSnapshotEnabled: boolean;
-  toggleAutoSnapshot: () => void;
   nickname: string;
   changeNickname: (nickname: string) => void;
   joinState: 'idle' | 'joining' | 'success' | 'error';
@@ -103,21 +109,31 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     DEFAULT_SETTINGS
   );
 
-  const [joinState, setJoinState] = usePersistedState<'idle' | 'joining' | 'success' | 'error'>(
-    'joinState',
-    'idle'
+  const [joinState, setJoinState] = usePersistedState<
+    'idle' | 'joining' | 'success' | 'error'
+  >('joinState', 'idle');
+  const [joinRoomId, setJoinRoomId] = usePersistedState<string | null>(
+    'joinRoomId',
+    null
   );
-  const [joinRoomId, setJoinRoomId] = usePersistedState<string | null>('joinRoomId', null);
-  const [joinServer, setJoinServer] = usePersistedState<string | null>('joinServer', null);
-  const [joinNickname, setJoinNickname] = usePersistedState<string | null>('joinNickname', null);
+  const [joinServer, setJoinServer] = usePersistedState<string | null>(
+    'joinServer',
+    null
+  );
+  const [joinNickname, setJoinNickname] = usePersistedState<string | null>(
+    'joinNickname',
+    null
+  );
 
   // Safety Check: Ensure 'server' is a valid server name, not an index or garbage
   useEffect(() => {
     if (settings.server && !SERVERS.includes(settings.server)) {
-      console.warn(`Invalid server detected: ${settings.server}. Resetting to default: ${DEFAULT_SETTINGS.server}`);
-      setSettings(prev => ({
+      console.warn(
+        `Invalid server detected: ${settings.server}. Resetting to default: ${DEFAULT_SETTINGS.server}`
+      );
+      setSettings((prev) => ({
         ...prev,
-        server: DEFAULT_SETTINGS.server
+        server: DEFAULT_SETTINGS.server,
       }));
     }
   }, [settings.server, setSettings]);
@@ -125,7 +141,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   const toggleUltraLite = useCallback(() => {
     setSettings((prev) => {
       const newValue = !prev.ultraLite;
-      
+
       if (newValue) {
         // Force Disable heavy effects for Ultra Lite, but allow sprites to stay animated
         return {
@@ -142,7 +158,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           showMvpMap: true,
         };
       }
-      
+
       return {
         ...prev,
         ultraLite: false,
@@ -153,7 +169,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   const toggleSimpleGlassUI = useCallback(() => {
     setSettings((prev) => {
       const newValue = !prev.simpleGlassUI;
-      
+
       if (newValue) {
         // When enabling Simple Glass UI, disable all heavy effects
         return {
@@ -168,7 +184,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           isMainContentTransparent: true,
         };
       }
-      
+
       return {
         ...prev,
         simpleGlassUI: false,
@@ -235,7 +251,9 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((prev) => ({
       ...prev,
       isAnimatedBackgroundEnabled: !prev.isAnimatedBackgroundEnabled,
-      simpleGlassUI: !prev.isAnimatedBackgroundEnabled ? false : prev.simpleGlassUI,
+      simpleGlassUI: !prev.isAnimatedBackgroundEnabled
+        ? false
+        : prev.simpleGlassUI,
       ultraLite: !prev.isAnimatedBackgroundEnabled ? false : prev.ultraLite,
     }));
   }, [setSettings]);
@@ -420,66 +438,74 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
-  const changeSparkleDensity = useCallback((density: number) => {
-    setSettings((prev) => ({
-      ...prev,
-      sparkleDensity: density,
-      simpleGlassUI: density > 0 ? false : prev.simpleGlassUI,
-      ultraLite: density > 0 ? false : prev.ultraLite,
-    }));
-  }, [setSettings]);
+  const changeSparkleDensity = useCallback(
+    (density: number) => {
+      setSettings((prev) => ({
+        ...prev,
+        sparkleDensity: density,
+        simpleGlassUI: density > 0 ? false : prev.simpleGlassUI,
+        ultraLite: density > 0 ? false : prev.ultraLite,
+      }));
+    },
+    [setSettings]
+  );
 
   const toggleFallingElements = useCallback(() => {
     setSettings((prev) => ({
       ...prev,
       isFallingElementsEnabled: !prev.isFallingElementsEnabled,
-      simpleGlassUI: !prev.isFallingElementsEnabled ? false : prev.simpleGlassUI,
+      simpleGlassUI: !prev.isFallingElementsEnabled
+        ? false
+        : prev.simpleGlassUI,
       ultraLite: !prev.isFallingElementsEnabled ? false : prev.ultraLite,
     }));
   }, [setSettings]);
 
-  const resetColorsToThemeDefaults = useCallback((theme: string) => {
-    setSettings((prev) => {
-      if (theme === 'light') {
-        return {
-          ...prev,
-          particleColor: '#01d5ab',
-          particleOpacity: 0.5,
-          waveColor: '#2836f0',
-          waveOpacity: 1.0,
-          animatedBackgroundColor: '#858585',
-          animatedBackgroundOpacity: 1.0,
-          waveTrailColor: '#2836f0',
-          waveTrailOpacity: 1.0,
-        };
-      } else if (theme === 'darkest') {
-        return {
-          ...prev,
-          particleColor: '#2a2e8d',
-          particleOpacity: 0.5,
-          waveColor: '#3f15e0',
-          waveOpacity: 1.0,
-          animatedBackgroundColor: '#000000',
-          animatedBackgroundOpacity: 1.0,
-          waveTrailColor: '#3f15e0',
-          waveTrailOpacity: 1.0,
-        };
-      } else {
-        // dark default
-        return {
-          ...prev,
-          particleColor: '#fa0000',
-          particleOpacity: 0.5,
-          waveColor: '#0011ff',
-          waveOpacity: 1.0,
-          animatedBackgroundColor: '#000000',
-          animatedBackgroundOpacity: 1.0,
-          waveTrailColor: '#0011ff',
-          waveTrailOpacity: 1.0,
-        };
-      }
-    });
-  }, [setSettings]);
+  const resetColorsToThemeDefaults = useCallback(
+    (theme: string) => {
+      setSettings((prev) => {
+        if (theme === 'light') {
+          return {
+            ...prev,
+            particleColor: '#01d5ab',
+            particleOpacity: 0.5,
+            waveColor: '#2836f0',
+            waveOpacity: 1.0,
+            animatedBackgroundColor: '#858585',
+            animatedBackgroundOpacity: 1.0,
+            waveTrailColor: '#2836f0',
+            waveTrailOpacity: 1.0,
+          };
+        } else if (theme === 'darkest') {
+          return {
+            ...prev,
+            particleColor: '#2a2e8d',
+            particleOpacity: 0.5,
+            waveColor: '#3f15e0',
+            waveOpacity: 1.0,
+            animatedBackgroundColor: '#000000',
+            animatedBackgroundOpacity: 1.0,
+            waveTrailColor: '#3f15e0',
+            waveTrailOpacity: 1.0,
+          };
+        } else {
+          // dark default
+          return {
+            ...prev,
+            particleColor: '#fa0000',
+            particleOpacity: 0.5,
+            waveColor: '#0011ff',
+            waveOpacity: 1.0,
+            animatedBackgroundColor: '#000000',
+            animatedBackgroundOpacity: 1.0,
+            waveTrailColor: '#0011ff',
+            waveTrailOpacity: 1.0,
+          };
+        }
+      });
+    },
+    [setSettings]
+  );
 
   const changePartyRoom = useCallback(
     (room: string | null) => {
@@ -505,19 +531,15 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, [setSettings]);
 
-  const toggleAutoSnapshot = useCallback(() => {
-    setSettings((prev) => ({
-      ...prev,
-      autoSnapshotEnabled: !prev.autoSnapshotEnabled,
-    }));
-  }, [setSettings]);
-
-  const changeNickname = useCallback((nickname: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      nickname,
-    }));
-  }, [setSettings]);
+  const changeNickname = useCallback(
+    (nickname: string) => {
+      setSettings((prev) => ({
+        ...prev,
+        nickname,
+      }));
+    },
+    [setSettings]
+  );
 
   return (
     <SettingsContext.Provider
@@ -558,7 +580,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         changePartyRoom,
         toggleLocalSave,
         toggleCloudSync,
-        toggleAutoSnapshot,
         changeNickname,
         joinState,
         setJoinState,

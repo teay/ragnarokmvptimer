@@ -1,10 +1,3 @@
-import type { Dayjs } from 'dayjs';
-
-import {
-  LOCAL_STORAGE_ACTIVE_MVPS_KEY,
-  LOCAL_STORAGE_BACKUPS_KEY,
-} from '@/constants';
-
 import Question from '../assets/question.gif';
 
 // Explicitly import and map assets based on actual file extensions found
@@ -95,7 +88,6 @@ export function getMvpRespawnWindow(mvp: IMvp): number {
 }
 
 export function clearData() {
-  // Clear only MVP-related localStorage (not settings, theme, etc.)
-  localStorage.removeItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-  localStorage.removeItem(LOCAL_STORAGE_BACKUPS_KEY);
+  // Clear local MVP data (Firebase data stays)
+  localStorage.removeItem('activeMvps');
 }
