@@ -6,17 +6,14 @@ import {
   ReactNode,
   useCallback,
   useMemo,
+  useRef,
 } from 'react';
 import dayjs from 'dayjs';
 
 import { useSettings } from './SettingsContext';
 
-import { database, ref, set, get, onValue, push, query, limitToLast, remove } from '@/services/firebase';
+import { database, ref, set, get, onValue, push, query, limitToLast, remove, DB_ROOT_PATH } from '@/services/firebase';
 import { getMvpRespawnTime, getServerData } from '../utils';
-import {
-  loadMvpsFromLocalStorage,
-  saveActiveMvpsToLocalStorage,
-} from '@/controllers/mvp';
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY, LOCAL_STORAGE_BACKUPS_KEY, MAX_BACKUPS } from '@/constants';
 
 interface MvpProviderProps {
@@ -77,6 +74,19 @@ function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
   });
 }
 
+/**
+ * Generates or retrieves a persistent User ID for solo play.
+ */
+function getOrCreateSoloRoomId(): string {
+  const STORAGE_KEY = 'solo_user_id';
+  let userId = localStorage.getItem(STORAGE_KEY);
+  if (!userId) {
+    userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem(STORAGE_KEY, userId);
+  }
+  return userId;
+}
+
 export function MvpProvider({ children }: MvpProviderProps) {
   const { 
     server, partyRoom, changePartyRoom, localSaveEnabled, toggleLocalSave, cloudSyncEnabled, autoSnapshotEnabled, nickname 
@@ -86,26 +96,47 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const [editingMvp, setEditingMvp] = useState<IMvp>();
   const [editingTimeMvp, setEditingTimeMvp] = useState<IMvp>();
   const [killingMvp, setKillingMvp] = useState<IMvp>();
+  
+  // The Single Source of Truth for UI (synced from Cloud)
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
+  
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
   const [backups, setBackups] = useState<IMvpBackup[]>([]);
   const [personalBackups, setPersonalBackups] = useState<IMvpBackup[]>([]);
   const [roomBackups, setRoomBackups] = useState<IMvpBackup[]>([]);
 
+  // Persistent User ID for solo play
+  const soloRoomId = useRef(getOrCreateSoloRoomId()).current;
+  
+  // Determine effective room ID: Party Room OR Solo User ID
+  const effectiveRoomId = partyRoom || soloRoomId;
+
+  // Visual indicator for data source
   const dataLocation: 'local' | 'online' | 'ghost' | 'warning' = !localSaveEnabled 
     ? 'warning' 
-    : (partyRoom ? (cloudSyncEnabled ? 'online' : 'ghost') : 'local');
+    : (partyRoom ? 'online' : 'local'); // Simplified: 'local' now means 'private cloud' essentially
 
+  /**
+   * Rehydrate Helper: Merges Cloud Data with Static JSON Data
+   */
   const rehydrateMvps = useCallback((mvps: any[]) => {
     if (!mvps) return [];
+    if (originalAllMvps.length === 0) return mvps; // Fallback if static data isn't ready
+
     return mvps.map(mvp => {
       if (!mvp) return mvp;
+      // Find original static data to get full details (images, spawn info, etc.)
       const original = originalAllMvps.find(o => o && Number(o.id) === Number(mvp.id));
+      
       if (original) {
         const deathTime = mvp.deathTime ? new Date(mvp.deathTime) : undefined;
+        // Filter spawn points to match the specific map
         const specificSpawn = original.spawn ? original.spawn.filter(s => s && s.mapname === mvp.deathMap) : [];
+        
         return { 
-          ...original, ...mvp, deathTime,
+          ...original, // Base static data
+          ...mvp,      // Overwrite with Cloud data (time, etc.)
+          deathTime,   // Ensure Date object
           spawn: specificSpawn.length > 0 ? specificSpawn : original.spawn 
         };
       }
@@ -113,23 +144,184 @@ export function MvpProvider({ children }: MvpProviderProps) {
     });
   }, [originalAllMvps]);
 
+  // --- 1. Load Static Data (Server JSON) ---
+  useEffect(() => {
+    async function loadOriginalAllMvps() {
+      try {
+        const data = await getServerData(server);
+        setOriginalAllMvps(data || []);
+      } catch (e) {
+        console.error("Failed to load server data", e);
+      }
+    }
+    loadOriginalAllMvps();
+  }, [server]);
+
+  // --- 2. Main Cloud Sync Logic (The "Cloud First" Core) ---
+  useEffect(() => {
+    if (!originalAllMvps.length) return; // Wait for static data
+
+    setIsLoading(true);
+    
+    // Path: /parties/{roomId}/{server}/mvps
+    // OR /dev-parties/{roomId}/{server}/mvps
+    const mvpsRef = ref(database, `${DB_ROOT_PATH}/${effectiveRoomId}/${server}/mvps`);
+
+    const unsubscribe = onValue(mvpsRef, (snapshot) => {
+      const data = snapshot.val();
+      const remoteMvpsRaw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+
+      // 1. Process Data
+      const rehydrated = rehydrateMvps(remoteMvpsRaw);
+      const sorted = sortMvpsByRespawnTime(rehydrated);
+
+      // 2. Update UI
+      setActiveMvps(sorted);
+      
+      // 3. Update Local Cache (for offline/backup)
+      if (localSaveEnabled) {
+        // We only save the RAW cloud data structure to local storage to match the cloud format
+        const cacheData = { [server]: remoteMvpsRaw }; 
+        // Note: We might need to preserve other servers' data in local storage
+        try {
+          const existingCacheRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+          const existingCache = existingCacheRaw ? JSON.parse(existingCacheRaw) : {};
+          const newCache = { ...existingCache, ...cacheData };
+          localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(newCache));
+        } catch (e) { console.error("Cache update failed", e); }
+      }
+
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Firebase Sync Error:", error);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [effectiveRoomId, server, originalAllMvps, rehydrateMvps, localSaveEnabled]);
+
+  // --- 3. Initial Cache Load (Optimistic Start) ---
+  useEffect(() => {
+    // Only load from cache if we are initializing and have no data yet
+    if (activeMvps.length === 0 && isLoading) {
+      const cachedRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
+      if (cachedRaw) {
+        try {
+          const cached = JSON.parse(cachedRaw);
+          const serverCache = cached[server];
+          if (serverCache && Array.isArray(serverCache)) {
+             // We render cached data immediately while waiting for Cloud
+             // Note: We don't set isLoading(false) because we are still connecting
+             const rehydrated = rehydrateMvps(serverCache);
+             setActiveMvps(sortMvpsByRespawnTime(rehydrated));
+          }
+        } catch (e) { console.error("Cache load failed", e); }
+      }
+    }
+  }, [server, rehydrateMvps]); // Intentionally limited dependencies
+
+
+  // --- Actions: Direct Cloud Updates ---
+
+  const saveMvpsToCloud = useCallback((mvps: IMvp[]) => {
+    // Convert full objects back to minimal Cloud format
+    const minimalMvps = mvps.map(m => ({
+      id: m.id,
+      deathTime: m.deathTime ? (m.deathTime instanceof Date ? m.deathTime.toISOString() : m.deathTime) : null,
+      deathMap: m.deathMap || null,
+      deathPosition: m.deathPosition || null,
+    }));
+
+    const serverRef = ref(database, `${DB_ROOT_PATH}/${effectiveRoomId}/${server}/mvps`);
+    set(serverRef, minimalMvps).catch(err => console.error("Cloud save failed", err));
+  }, [effectiveRoomId, server]);
+
+  /**
+   * Helper to modify state via callback and save to cloud
+   */
+  const modifyMvps = useCallback((modifier: (currentMvps: IMvp[]) => IMvp[], actionType?: string, actionDetail?: string) => {
+    // We use the current 'activeMvps' as the base.
+    // In a high-concurrency environment, we might want to use a transaction,
+    // but for this app, Last-Write-Wins based on latest local state is acceptable for MVP.
+    // Ideally, we should use firebase transaction, but rewriting all logic to transaction is complex.
+    // We will stick to: Read State -> Modify -> Set Cloud.
+    
+    const newMvps = modifier(activeMvps);
+    saveMvpsToCloud(newMvps);
+
+    // Snapshot logic (optional)
+    if (autoSnapshotEnabled && actionType) {
+       // We delay slightly to let the cloud update happen, though strictly not required
+       setTimeout(() => createBackup('CHANGE', actionType, actionDetail), 100);
+    }
+  }, [activeMvps, saveMvpsToCloud, autoSnapshotEnabled]);
+
+
+  const resetMvpTimer = useCallback((mvp: IMvp) => {
+    modifyMvps((current) => {
+      const updatedMvp = { ...mvp, deathTime: new Date(), deathPosition: undefined };
+      return current.map(m => (m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m));
+    }, 'Boss Reset', `Reset: ${mvp.name}`);
+  }, [modifyMvps]);
+
+  const killMvp = useCallback((mvp: IMvp, deathTime = new Date()) => {
+    modifyMvps((current) => {
+      const killedMvp = { ...mvp, deathTime };
+      const exists = current.some(m => m.id === mvp.id && m.deathMap === mvp.deathMap);
+      if (exists) {
+        return current.map(m => (m.id === mvp.id && m.deathMap === mvp.deathMap ? killedMvp : m));
+      } else {
+        return [...current, killedMvp];
+      }
+    }, 'Boss Added', `Added: ${mvp.name}`);
+  }, [modifyMvps]);
+
+  const updateMvp = useCallback((mvp: IMvp, deathTime = mvp.deathTime) => {
+    modifyMvps((current) => {
+       const updatedMvp = { ...mvp, deathTime };
+       const exists = current.some(m => m.id === mvp.id && m.deathMap === mvp.deathMap);
+       return exists 
+         ? current.map(m => (m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m))
+         : [...current, updatedMvp];
+    }, 'Boss Time Updated', `Edited: ${mvp.name}`);
+  }, [modifyMvps]);
+
+  const updateMvpDeathLocation = useCallback((mvpId: number, oldDeathMap: string, newDeathMap: string, newDeathPosition: IMapMark) => {
+     modifyMvps((current) => {
+       return current.map(m => {
+         if (m.id === mvpId && m.deathMap === oldDeathMap) {
+           return { ...m, deathMap: newDeathMap, deathPosition: newDeathPosition };
+         }
+         return m;
+       });
+     }, 'Tomb Location Updated', `Tomb updated`);
+  }, [modifyMvps]);
+
+  const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
+    const target = activeMvps.find(m => m.id === mvpID && m.deathMap === deathMap);
+    modifyMvps((current) => {
+      return current.filter(m => !(m.id === mvpID && m.deathMap === deathMap));
+    }, 'Boss Removed', target ? `Removed: ${target.name}` : 'Removed Boss');
+  }, [modifyMvps, activeMvps]);
+
+  // --- Backups & History (Simplified to respect DataLocation) ---
+  
   const loadBackups = useCallback(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_BACKUPS_KEY);
     if (saved) {
-      try {
-        setBackups(JSON.parse(saved));
-      } catch (e) { console.error('Failed to parse backups', e); }
+      try { setBackups(JSON.parse(saved)); } catch (e) { console.error(e); }
     }
   }, []);
+  
+  useEffect(() => { loadBackups(); }, [loadBackups]);
 
-  // Sync Personal Cloud Backups
+  // Unified History Sync (Party OR Solo)
   useEffect(() => {
-    if (!nickname || nickname.length < 4) {
-      setPersonalBackups([]);
-      return;
-    }
-    const personalRef = ref(database, `users/${nickname}/backups`);
-    const q = query(personalRef, limitToLast(MAX_BACKUPS));
+    if (!cloudSyncEnabled) return;
+    
+    // Path: /parties/{roomId}/history OR /dev-parties/...
+    const historyRef = ref(database, `${DB_ROOT_PATH}/${effectiveRoomId}/history`);
+    const q = query(historyRef, limitToLast(MAX_BACKUPS));
     
     return onValue(q, (snapshot) => {
       const data = snapshot.val();
@@ -137,108 +329,55 @@ export function MvpProvider({ children }: MvpProviderProps) {
         const list = Object.entries(data).map(([key, val]: [string, any]) => ({
           ...val,
           id: key,
-          source: 'personal'
+          source: partyRoom ? 'room' : 'personal'
         } as IMvpBackup)).sort((a, b) => dayjs(a.timestamp).diff(dayjs(b.timestamp)));
-        setPersonalBackups(list);
+        
+        if (partyRoom) setRoomBackups(list);
+        else setPersonalBackups(list);
       } else {
-        setPersonalBackups([]);
+        if (partyRoom) setRoomBackups([]);
+        else setPersonalBackups([]);
       }
     });
-  }, [nickname]);
-
-  // Sync Room History
-  useEffect(() => {
-    if (!partyRoom || !cloudSyncEnabled) {
-      setRoomBackups([]);
-      return;
-    }
-    const roomRef = ref(database, `parties/${partyRoom}/history`);
-    const q = query(roomRef, limitToLast(MAX_BACKUPS));
-    
-    return onValue(q, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const list = Object.entries(data).map(([key, val]: [string, any]) => ({
-          ...val,
-          id: key,
-          source: 'room'
-        } as IMvpBackup)).sort((a, b) => dayjs(a.timestamp).diff(dayjs(b.timestamp)));
-        setRoomBackups(list);
-      } else {
-        setRoomBackups([]);
-      }
-    });
-  }, [partyRoom, cloudSyncEnabled]);
+  }, [effectiveRoomId, partyRoom, cloudSyncEnabled]);
 
   const createBackup = useCallback((type: 'AUTO' | 'MANUAL' | 'CHANGE', description: string, changeDetail?: string) => {
-    const allLocalDataRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-    if (!allLocalDataRaw) return;
+     // Prepare Backup Data
+     const backupData = {
+       timestamp: dayjs().toISOString(),
+       type, description, changeDetail,
+       data: { [server]: activeMvps.map(m => ({ // Minimal backup
+          id: m.id, deathTime: m.deathTime, deathMap: m.deathMap, deathPosition: m.deathPosition
+       }))},
+       bossCount: activeMvps.length,
+       server,
+       user: nickname || 'Anon',
+     };
 
-    try {
-      const allLocalData = JSON.parse(allLocalDataRaw);
-      const serverData = allLocalData[server] || [];
+     // 1. Save to Cloud History
+     if (cloudSyncEnabled) {
+       const historyRef = ref(database, `${DB_ROOT_PATH}/${effectiveRoomId}/history`);
+       push(historyRef, backupData).then(() => {
+          // Prune old entries
+           get(query(historyRef, limitToLast(MAX_BACKUPS + 1))).then(snap => {
+            const data = snap.val();
+            if (data && Object.keys(data).length > MAX_BACKUPS) {
+              const oldestKey = Object.keys(data).sort((a, b) => (data[a].timestamp > data[b].timestamp ? 1 : -1))[0];
+              remove(ref(database, `${DB_ROOT_PATH}/${effectiveRoomId}/history/${oldestKey}`));
+            }
+          });
+       });
+     }
 
-      // 1. Local Backup
-      setBackups(prev => {
-        const lastSequence = prev.length > 0 ? Math.max(...prev.map(b => b.sequence || 0)) : 0;
-        const newBackup: IMvpBackup = {
-          id: dayjs().valueOf().toString(),
-          timestamp: dayjs().toISOString(),
-          type, description, data: allLocalData, bossCount: serverData.length, server,
-          changeDetail,
-          sequence: lastSequence + 1,
-          user: nickname || undefined,
-        };
-        const updated = [...prev, newBackup].slice(-MAX_BACKUPS);
+     // 2. Save to Local Backup (Legacy/Redundant but safe)
+     setBackups(prev => {
+        const newLocalBackup = { ...backupData, id: dayjs().valueOf().toString(), sequence: prev.length + 1 };
+        const updated = [...prev, newLocalBackup].slice(-MAX_BACKUPS);
         localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
         return updated;
-      });
+     });
 
-      // 2. Personal Cloud Backup
-      if (nickname && nickname.length >= 4) {
-        const personalRef = ref(database, `users/${nickname}/backups`);
-        const newCloudBackup = {
-          timestamp: dayjs().toISOString(),
-          type, description, data: allLocalData, bossCount: serverData.length, server,
-          changeDetail,
-          user: nickname,
-        };
-        
-        // Push and then prune oldest if needed
-        push(personalRef, newCloudBackup).then(() => {
-          get(query(personalRef, limitToLast(MAX_BACKUPS + 1))).then(snap => {
-            const data = snap.val();
-            if (data && Object.keys(data).length > MAX_BACKUPS) {
-              const oldestKey = Object.keys(data).sort((a, b) => (data[a].timestamp > data[b].timestamp ? 1 : -1))[0];
-              remove(ref(database, `users/${nickname}/backups/${oldestKey}`));
-            }
-          });
-        });
-      }
-
-      // 3. Room History Backup
-      if (partyRoom && cloudSyncEnabled) {
-        const roomHistoryRef = ref(database, `parties/${partyRoom}/history`);
-        const newRoomBackup = {
-          timestamp: dayjs().toISOString(),
-          type, description, data: allLocalData, bossCount: serverData.length, server,
-          changeDetail,
-          user: nickname || 'ANON',
-        };
-        
-        push(roomHistoryRef, newRoomBackup).then(() => {
-          get(query(roomHistoryRef, limitToLast(MAX_BACKUPS + 1))).then(snap => {
-            const data = snap.val();
-            if (data && Object.keys(data).length > MAX_BACKUPS) {
-              const oldestKey = Object.keys(data).sort((a, b) => (data[a].timestamp > data[b].timestamp ? 1 : -1))[0];
-              remove(ref(database, `parties/${partyRoom}/history/${oldestKey}`));
-            }
-          });
-        });
-      }
-
-    } catch (e) { console.error('Backup creation failed', e); }
-  }, [server, nickname, partyRoom, cloudSyncEnabled]);
+  }, [effectiveRoomId, server, activeMvps, cloudSyncEnabled, nickname]);
 
   const restoreBackup = useCallback((backupId: string, source: 'local' | 'personal' | 'room' = 'local') => {
     let backup;
@@ -247,206 +386,57 @@ export function MvpProvider({ children }: MvpProviderProps) {
     else if (source === 'room') backup = roomBackups.find(b => b.id === backupId);
 
     if (!backup) return;
-    if (window.confirm(`Restore backup from ${dayjs(backup.timestamp).format('DD/MM HH:mm')}? This overwrites CURRENT local data.`)) {
-      localStorage.setItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY, JSON.stringify(backup.data));
-      const serverMvps = backup.data[server] || [];
-      const rehydrated = rehydrateMvps(serverMvps);
-      setActiveMvps(sortMvpsByRespawnTime(rehydrated));
-      alert('Data restored successfully!');
+
+    if (window.confirm(`Restore backup from ${dayjs(backup.timestamp).format('DD/MM HH:mm')}? This overwrites CURRENT data.`)) {
+      // Restore simply means pushing the backup data to the Cloud
+      // which will then sync back to us and everyone else.
+      const backupServerData = backup.data[server];
+      if (backupServerData) {
+         saveMvpsToCloud(backupServerData); // This triggers the update loop!
+         alert('Restoring data... Please wait for sync.');
+      }
     }
-  }, [backups, personalBackups, roomBackups, server, rehydrateMvps]);
+  }, [backups, personalBackups, roomBackups, server, saveMvpsToCloud]);
 
   const deleteBackup = useCallback((backupId: string, source: 'local' | 'personal' | 'room' = 'local') => {
-    if (source === 'local') {
-      setBackups(prev => {
-        const updated = prev.filter(b => b.id !== backupId);
-        localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
-        return updated;
-      });
-    } else if (source === 'personal' && nickname) {
-      remove(ref(database, `users/${nickname}/backups/${backupId}`));
-    } else if (source === 'room' && partyRoom) {
-      remove(ref(database, `parties/${partyRoom}/history/${backupId}`));
-    }
-  }, [nickname, partyRoom]);
-
-  const saveMvps = useCallback(async (mvps: IMvp[]) => {
-    if (!mvps) return;
-    const rehydrated = rehydrateMvps(mvps);
-    setActiveMvps(sortMvpsByRespawnTime(rehydrated));
-    if (localSaveEnabled) saveActiveMvpsToLocalStorage(rehydrated, server);
-    if (partyRoom && cloudSyncEnabled) {
-      const serverRef = ref(database, `parties/${partyRoom}/${server}`);
-      const minimalMvps = rehydrated.map(m => ({
-        id: m.id,
-        deathTime: m.deathTime ? (m.deathTime instanceof Date ? m.deathTime.toISOString() : m.deathTime) : null,
-        deathMap: m.deathMap || null,
-        deathPosition: m.deathPosition || null,
-      }));
-      set(serverRef, { mvps: minimalMvps });
-    }
-  }, [partyRoom, server, rehydrateMvps, localSaveEnabled, cloudSyncEnabled]);
-
-  useEffect(() => { loadBackups(); }, [loadBackups]);
-
-  // Firebase Real-time Listener
-  useEffect(() => {
-    if (!partyRoom) return;
-    const mvpsRef = ref(database, `parties/${partyRoom}/${server}/mvps`);
-    const unsubscribe = onValue(mvpsRef, async (snapshot) => {
-      const data = snapshot.val();
-      const remoteMvpsRaw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-      
-      if (originalAllMvps.length === 0) {
-        setActiveMvps(remoteMvpsRaw as IMvp[]);
-        return;
+      if (source === 'local') {
+        setBackups(prev => {
+          const updated = prev.filter(b => b.id !== backupId);
+          localStorage.setItem(LOCAL_STORAGE_BACKUPS_KEY, JSON.stringify(updated));
+          return updated;
+        });
+      } else {
+        // Remove from cloud
+        remove(ref(database, `${DB_ROOT_PATH}/${effectiveRoomId}/history/${backupId}`));
       }
+  }, [effectiveRoomId]);
 
-      const rehydratedRemote = rehydrateMvps(remoteMvpsRaw);
-      const sortedResult = sortMvpsByRespawnTime(rehydratedRemote);
-      
-      setActiveMvps(sortedResult);
-      
-      if (localSaveEnabled) {
-        saveActiveMvpsToLocalStorage(sortedResult, server);
-      }
-
-      setIsLoading(false);
-    });
-    return () => unsubscribe();
-  }, [partyRoom, server, originalAllMvps, rehydrateMvps, localSaveEnabled]);
-
-  // Effect to handle case where originalAllMvps loads AFTER Firebase data
-  useEffect(() => {
-    if (partyRoom && originalAllMvps.length > 0 && activeMvps.length > 0 && isLoading) {
-      const mergedMvps = rehydrateMvps(activeMvps);
-      setActiveMvps(sortMvpsByRespawnTime(mergedMvps));
-      setIsLoading(false);
-    } else if (partyRoom && originalAllMvps.length > 0 && activeMvps.length === 0 && isLoading) {
-      setIsLoading(false);
-    }
-  }, [originalAllMvps, partyRoom, rehydrateMvps, activeMvps, isLoading]);
-
-  useEffect(() => {
-    if (partyRoom && cloudSyncEnabled && activeMvps.length > 0) saveMvps(activeMvps);
-  }, [cloudSyncEnabled]);
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!localSaveEnabled) {
-        e.preventDefault();
-        e.returnValue = 'Data saving is currently paused!';
-        return e.returnValue;
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [localSaveEnabled]);
-
-  useEffect(() => {
-    async function init() {
-      setIsLoading(true);
-      if (partyRoom) return;
-      const savedActiveMvps = await loadMvpsFromLocalStorage(server);
-      setActiveMvps(sortMvpsByRespawnTime(savedActiveMvps || []));
-      setIsLoading(false);
-    }
-    init();
-  }, [server, partyRoom]);
-
-  useEffect(() => {
-    async function loadOriginalAllMvps() {
-      const data = await getServerData(server);
-      setOriginalAllMvps(data);
-    }
-    loadOriginalAllMvps();
-  }, [server]);
 
   const leaveParty = useCallback((saveToLocal: boolean) => {
+    // In Cloud-First, 'leaving party' just means switching roomId back to soloRoomId.
+    // Data is preserved in the cloud room.
+    // If saveToLocal is true, we might want to COPY data from party to solo room?
+    // For now, let's keep it simple: Just switch room.
+    
     if (saveToLocal) {
-      const rehydrated = rehydrateMvps(activeMvps);
-      saveActiveMvpsToLocalStorage(rehydrated, server);
-      setActiveMvps(sortMvpsByRespawnTime(rehydrated));
-    } else {
-      loadMvpsFromLocalStorage(server).then(saved => {
-        setActiveMvps(sortMvpsByRespawnTime(saved || []));
-      });
+       // Deep copy current party MVPs to Solo Room
+       const currentPartyMvps = [...activeMvps];
+       // We temporarily switch ID to solo to save, then the effect will trigger? 
+       // No, better to write directly to solo path.
+       const soloRef = ref(database, `${DB_ROOT_PATH}/${soloRoomId}/${server}/mvps`);
+       const minimal = currentPartyMvps.map(m => ({
+          id: m.id,
+          deathTime: m.deathTime ? (m.deathTime instanceof Date ? m.deathTime.toISOString() : m.deathTime) : null,
+          deathMap: m.deathMap || null,
+          deathPosition: m.deathPosition || null,
+       }));
+       set(soloRef, minimal);
     }
-    changePartyRoom(null);
-    if (!localSaveEnabled) toggleLocalSave();
-    setTimeout(() => setIsLoading(false), 100);
-  }, [activeMvps, server, changePartyRoom, rehydrateMvps, localSaveEnabled, toggleLocalSave]);
+    
+    changePartyRoom(null); // This triggers the useEffect to switch effectiveRoomId
+  }, [activeMvps, soloRoomId, server, changePartyRoom]);
 
-  const resetMvpTimer = useCallback((mvp: IMvp) => {
-    const updatedMvp = { ...mvp, deathTime: new Date(), deathPosition: undefined };
-    setActiveMvps((state) => {
-      const newState = state.map((m) => (m && m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m));
-      saveMvps(newState);
-      if (autoSnapshotEnabled) {
-        setTimeout(() => createBackup('CHANGE', 'Boss Reset', `Reset: ${mvp.name}`), 100);
-      }
-      return sortMvpsByRespawnTime(newState);
-    });
-  }, [saveMvps, autoSnapshotEnabled, createBackup]);
-
-  const removeMvpByMap = useCallback((mvpID: number, deathMap: string) => {
-    setActiveMvps((state) => {
-      const bossToRemove = state.find(m => m && m.id === mvpID && m.deathMap === deathMap);
-      const newState = state.filter((m) => m && (mvpID !== m.id || m.deathMap !== deathMap));
-      saveMvps(newState);
-      if (autoSnapshotEnabled && bossToRemove) {
-        setTimeout(() => createBackup('CHANGE', 'Boss Removed', `Removed: ${bossToRemove.name}`), 100);
-      }
-      return sortMvpsByRespawnTime(newState);
-    });
-  }, [saveMvps, autoSnapshotEnabled, createBackup]);
-
-  const killMvp = useCallback((mvp: IMvp, deathTime = new Date()) => {
-    setActiveMvps((s) => {
-      const killedMvp = { ...mvp, deathTime };
-      const existingMvpIndex = s.findIndex((m) => m && m.id === mvp.id && m.deathMap === mvp.deathMap);
-      
-      const isNew = existingMvpIndex === -1;
-      let newState = isNew ? [...s, killedMvp] : [...s];
-      if (!isNew) newState[existingMvpIndex] = killedMvp;
-      
-      saveMvps(newState);
-      if (autoSnapshotEnabled) {
-        setTimeout(() => createBackup('CHANGE', 'Boss Added', `Added: ${mvp.name}`), 100);
-      }
-      return sortMvpsByRespawnTime(newState);
-    });
-  }, [saveMvps, autoSnapshotEnabled, createBackup]);
-
-  const updateMvp = useCallback((mvp: IMvp, deathTime = mvp.deathTime) => {
-    setActiveMvps((s) => {
-      const updatedMvp = { ...mvp, deathTime };
-      const existingMvpIndex = s.findIndex((m) => m && m.id === mvp.id && m.deathMap === mvp.deathMap);
-      let newState = existingMvpIndex !== -1 ? [...s] : [...s, updatedMvp];
-      if (existingMvpIndex !== -1) newState[existingMvpIndex] = updatedMvp;
-      saveMvps(newState);
-      if (autoSnapshotEnabled) {
-        setTimeout(() => createBackup('CHANGE', 'Boss Time & Map Updated', `Edited: ${mvp.name}`), 100);
-      }
-      return sortMvpsByRespawnTime(newState);
-    });
-  }, [saveMvps, autoSnapshotEnabled, createBackup]);
-
-  const updateMvpDeathLocation = useCallback((mvpId: number, oldDeathMap: string, newDeathMap: string, newDeathPosition: IMapMark) => {
-    setActiveMvps((s) => {
-      const existingMvpIndex = s.findIndex((m) => m && m.id === mvpId && m.deathMap === oldDeathMap);
-      if (existingMvpIndex === -1) return s;
-      const updatedMvp = { ...s[existingMvpIndex], deathMap: newDeathMap, deathPosition: newDeathPosition };
-      const newState = [...s];
-      newState[existingMvpIndex] = updatedMvp;
-      saveMvps(newState);
-      if (autoSnapshotEnabled) {
-        setTimeout(() => createBackup('CHANGE', 'Tomb Location Updated', `Tomb: ${updatedMvp.name}`), 100);
-      }
-      return sortMvpsByRespawnTime(newState);
-    });
-  }, [saveMvps, autoSnapshotEnabled, createBackup]);
-
+  // Computed Properties
   const allMvps = useMemo(() => {
     const activeMvpKeys = new Set(activeMvps.map((mvp) => mvp ? `${mvp.id}-${mvp.deathMap}` : ''));
     return originalAllMvps
@@ -454,6 +444,9 @@ export function MvpProvider({ children }: MvpProviderProps) {
       .filter((mvp) => mvp && !activeMvpKeys.has(`${mvp.id}-${mvp.deathMap}`))
       .map(({ deathTime, ...rest }) => rest);
   }, [activeMvps, originalAllMvps]);
+
+  // Legacy support function (empty implementation to satisfy interface if needed, or mapped to cloud save)
+  const saveMvps = saveMvpsToCloud;
 
   return (
     <MvpsContext.Provider value={{

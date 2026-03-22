@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Copy, Share, Zap, ZapOff, Database, Cloud, Activity, PlusSquare, Users, RefreshCw, Clock, Trash2, Save, RotateCcw, XOctagon } from '@styled-icons/feather';
+import { Copy, Share, Zap, ZapOff, Database, Cloud, Activity, PlusSquare, Users, RefreshCw, XOctagon } from '@styled-icons/feather';
 import dayjs from 'dayjs';
 
 import { ModalBase } from '../ModalBase';
@@ -10,9 +10,8 @@ import { Switch } from '@/components/Switch';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useScrollBlock, useClickOutside, useKey } from '@/hooks';
-import { LOCAL_STORAGE_ACTIVE_MVPS_KEY, MAX_BACKUPS } from '@/constants';
-import { database, ref, set, get, remove } from '@/services/firebase'; // Ensure set and ref are imported
-import { saveActiveMvpsToLocalStorage } from '@/controllers/mvp';
+import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from '@/constants';
+import { database, ref, set, get, remove, DB_ROOT_PATH } from '@/services/firebase';
 
 import {
   Modal,
@@ -27,11 +26,6 @@ import {
   LiveStatus,
   ControlRow,
   StatusBadge,
-  BackupSection,
-  BackupItem,
-  BackupInfo,
-  BackupActions,
-  MiniButton,
 } from './styles';
 
 type Props = {
@@ -43,12 +37,12 @@ export function ModalPartySharing({ onClose }: Props) {
   useKey('Escape', onClose);
 
   const { 
-    server, servers, changeServer, partyRoom, changePartyRoom, 
+    server, changeServer, partyRoom, changePartyRoom, 
     localSaveEnabled, toggleLocalSave, cloudSyncEnabled, toggleCloudSync,
-    autoSnapshotEnabled, toggleAutoSnapshot, nickname, changeNickname 
+    nickname, changeNickname 
   } = useSettings();
   
-  const { leaveParty, backups, personalBackups, roomBackups, createBackup, restoreBackup, deleteBackup, activeMvps, saveMvps } = useMvpsContext();
+  const { backups, createBackup, leaveParty } = useMvpsContext();
   const [roomInput, setRoomInput] = useState(partyRoom || '');
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -59,7 +53,7 @@ export function ModalPartySharing({ onClose }: Props) {
   // Fetch room metadata to check for creator
   useEffect(() => {
     if (partyRoom) {
-      const metaRef = ref(database, `parties/${partyRoom}/metadata`);
+      const metaRef = ref(database, `${DB_ROOT_PATH}/${partyRoom}/metadata`);
       get(metaRef).then(snapshot => {
         if (snapshot.exists()) {
           setRoomCreator(snapshot.val().creator || null);
@@ -177,8 +171,8 @@ export function ModalPartySharing({ onClose }: Props) {
       try {
         const parsed = JSON.parse(allLocalDataRaw);
         if (parsed[server]) {
-          const metadataRef = ref(database, `parties/${roomName}/metadata`);
-          const serverRef = ref(database, `parties/${roomName}/${server}`);
+          const metadataRef = ref(database, `${DB_ROOT_PATH}/${roomName}/metadata`);
+          const serverRef = ref(database, `${DB_ROOT_PATH}/${roomName}/${server}`);
           const minimalMvps = parsed[server].map((m: any) => ({
             id: m.id, deathTime: m.deathTime || null, deathMap: m.deathMap || null, deathPosition: m.deathPosition || null,
           }));
@@ -193,7 +187,7 @@ export function ModalPartySharing({ onClose }: Props) {
           // Add creator as the first member
           if (nickname) {
             console.log('Adding creator as member:', nickname, 'to room:', roomName);
-            const membersRef = ref(database, `parties/${roomName}/members/${nickname}`); // Use nickname as key
+            const membersRef = ref(database, `${DB_ROOT_PATH}/${roomName}/members/${nickname}`); // Use nickname as key
             await set(membersRef, { name: nickname }); // Store name
           }
           success = true;
@@ -204,13 +198,13 @@ export function ModalPartySharing({ onClose }: Props) {
       }
     } else {
       // Fallback if no data
-      const metadataRef = ref(database, `parties/${roomName}/metadata`);
+      const metadataRef = ref(database, `${DB_ROOT_PATH}/${roomName}/metadata`);
       try {
         await set(metadataRef, { server, createdAt: dayjs().toISOString(), creator: nickname });
         // Add creator as the first member (for fallback case too)
         if (nickname) {
           console.log('Adding creator as member (fallback):', nickname, 'to room:', roomName);
-          const membersRef = ref(database, `parties/${roomName}/members/${nickname}`);
+          const membersRef = ref(database, `${DB_ROOT_PATH}/${roomName}/members/${nickname}`);
           await set(membersRef, { name: nickname });
         }
         success = true;
@@ -223,7 +217,7 @@ export function ModalPartySharing({ onClose }: Props) {
     changePartyRoom(roomName); 
     setIsProcessing(false); // Reset processing state
     return success; // Return actual success status
-  }, [server, localSaveEnabled, toggleLocalSave, changePartyRoom, createBackup, nickname, onClose, isProcessing, roomInput]); // Added dependencies that might be missing
+  }, [server, localSaveEnabled, toggleLocalSave, changePartyRoom, createBackup, nickname, onClose, isProcessing, roomInput]); 
 
   // ⚔️ Create Party & Begin with My Boss Timers (Main Button)
   const handleCreateWithData = useCallback(async () => {
@@ -244,7 +238,7 @@ export function ModalPartySharing({ onClose }: Props) {
     setIsProcessing(true);
     try {
       // 1. Verify if room exists
-      const roomRef = ref(database, `parties/${roomName}`);
+      const roomRef = ref(database, `${DB_ROOT_PATH}/${roomName}`);
       const roomSnapshot = await get(roomRef);
       
       if (!roomSnapshot.exists()) {
@@ -264,7 +258,7 @@ Would you like to CREATE this room now using your current boss timers?`
       }
 
       // 2. Room exists, proceed with normal Join
-      const metadataRef = ref(database, `parties/${roomName}/metadata`);
+      const metadataRef = ref(database, `${DB_ROOT_PATH}/${roomName}/metadata`);
       const metaSnapshot = await get(metadataRef);
       const roomMetadata = metaSnapshot.val();
       
@@ -278,31 +272,14 @@ Would you like to CREATE this room now using your current boss timers?`
 
       createBackup('AUTO', `Pre-Join: ${roomName} (${targetServer})`);
 
-      const serverMvpsRef = ref(database, `parties/${roomName}/${targetServer}/mvps`);
-      const mvpSnapshot = await get(serverMvpsRef);
-      const onlineMvps = mvpSnapshot.val() || [];
-      const remoteMvps = Array.isArray(onlineMvps) ? onlineMvps : Object.values(onlineMvps);
-
-      if (remoteMvps.length > 0) {
-        const allLocalRaw = localStorage.getItem(LOCAL_STORAGE_ACTIVE_MVPS_KEY);
-        const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
-        const localForServer = allLocal[targetServer] || [];
-
-        const merged = [...localForServer];
-        remoteMvps.forEach((rm: any) => {
-          const idx = merged.findIndex((lm: any) => lm.id === rm.id && lm.deathMap === rm.deathMap);
-          if (idx !== -1) merged[idx] = { ...merged[idx], ...rm };
-          else merged.push(rm);
-        });
-        saveActiveMvpsToLocalStorage(merged, targetServer);
-      }
-
+      // Just switch room. Cloud sync handles the rest!
       if (!localSaveEnabled) toggleLocalSave();
       changePartyRoom(roomName);
+      
       // Add joining member to Firebase
       if (nickname) {
         console.log('Joining party: Adding member', nickname, 'to room', roomName);
-        const membersRef = ref(database, `parties/${roomName}/members/${nickname}`); // Use roomName being joined and nickname
+        const membersRef = ref(database, `${DB_ROOT_PATH}/${roomName}/members/${nickname}`); // Use roomName being joined and nickname
         await set(membersRef, { name: nickname }); // Store the name
       }
       onClose();
@@ -312,7 +289,7 @@ Would you like to CREATE this room now using your current boss timers?`
     } finally {
       setIsProcessing(false);
     }
-  }, [roomInput, server, changeServer, localSaveEnabled, toggleLocalSave, changePartyRoom, onClose, createBackup, isProcessing, performCreateWithData]);
+  }, [roomInput, server, changeServer, localSaveEnabled, toggleLocalSave, changePartyRoom, onClose, createBackup, isProcessing, performCreateWithData, nickname]);
 
   // 🆕 Create Fresh Party
   const handleCreateFresh = useCallback(async () => {
@@ -324,8 +301,8 @@ Would you like to CREATE this room now using your current boss timers?`
       createBackup('AUTO', `Pre-Create Fresh: ${roomName}`);
       if (!localSaveEnabled) toggleLocalSave();
       changePartyRoom(roomName);
-      const metadataRef = ref(database, `parties/${roomName}/metadata`);
-      const serverRef = ref(database, `parties/${roomName}/${server}`);
+      const metadataRef = ref(database, `${DB_ROOT_PATH}/${roomName}/metadata`);
+      const serverRef = ref(database, `${DB_ROOT_PATH}/${roomName}/${server}`);
       try {
         await Promise.all([
           set(metadataRef, { server, createdAt: dayjs().toISOString(), creator: nickname }),
@@ -334,7 +311,7 @@ Would you like to CREATE this room now using your current boss timers?`
         // Add creator as the first member (for fresh creation)
         if (nickname) {
           console.log('Adding creator as member (fresh create):', nickname, 'to room:', roomName);
-          const membersRef = ref(database, `parties/${roomName}/members/${nickname}`);
+          const membersRef = ref(database, `${DB_ROOT_PATH}/${roomName}/members/${nickname}`);
           await set(membersRef, { name: nickname });
         }
         onClose();
@@ -347,11 +324,6 @@ Would you like to CREATE this room now using your current boss timers?`
     }
   }, [roomInput, localSaveEnabled, toggleLocalSave, changePartyRoom, server, onClose, createBackup, isProcessing, nickname]);
 
-  const handleRestore = useCallback((backupId: string, source: 'local' | 'personal' | 'room' = 'local') => {
-    restoreBackup(backupId, source);
-    onClose(); 
-  }, [restoreBackup, onClose]);
-
   const handleLeaveRoom = useCallback(() => {
     leaveParty(true); // 'true' might indicate clearing cloud data? Check leaveParty implementation.
     onClose();
@@ -362,7 +334,7 @@ Would you like to CREATE this room now using your current boss timers?`
     if (window.confirm(`🧨 DANGER: This will permanently DELETE all boss timers in room "${partyRoom}" from the CLOUD. Your local data will NOT be affected. Are you sure?`)) {
       setIsProcessing(true);
       try {
-        const roomRef = ref(database, `parties/${partyRoom}`);
+        const roomRef = ref(database, `${DB_ROOT_PATH}/${partyRoom}`);
         await remove(roomRef);
         alert(`Room "${partyRoom}" data has been wiped from cloud.`);
         leaveParty(true); 
