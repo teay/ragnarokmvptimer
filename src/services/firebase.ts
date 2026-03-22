@@ -31,8 +31,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Always use 'parties' for both development and production
-export const DB_ROOT_PATH = 'parties';
+// Firebase root path for MVP hunting data
+export const DB_ROOT_PATH = 'hunting';
 
 export {
   database,
