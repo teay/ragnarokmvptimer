@@ -1,9 +1,10 @@
-import { useCallback, useState, useEffect } from 'react';
-import { ZapOff, Play } from '@styled-icons/feather';
+import { useCallback, useState, useEffect, useRef } from 'react';
+import { ZapOff, Play, Download, Upload } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { useSettings } from '@/contexts/SettingsContext';
+import { database, ref, get, set } from '@/services/firebase';
 import {
   useScrollBlock,
   useClickOutside,
@@ -34,6 +35,7 @@ export function ModalPartySharing({ onClose }: Props) {
     changePartyRoom,
     nickname,
     changeNickname,
+    server,
   } = useSettings();
 
   const [mode, setMode] = useState<'solo' | 'party'>(
@@ -59,6 +61,77 @@ export function ModalPartySharing({ onClose }: Props) {
     setPartyNameInput(currentPartyRoom || '');
     setMode(currentPartyRoom ? 'party' : 'solo');
   }, [nickname, currentPartyRoom]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = async () => {
+    try {
+      let path: string;
+      if (currentPartyRoom) {
+        path = `hunting/party/${currentPartyRoom}/${server}/mvps`;
+      } else if (nickname) {
+        path = `hunting/solo/${nickname}/${server}/mvps`;
+      } else {
+        alert('No data to export. Please set nickname first.');
+        return;
+      }
+
+      const mvpsRef = ref(database, path);
+      const snapshot = await get(mvpsRef);
+      const data = snapshot.val();
+
+      if (!data) {
+        alert('No MVP data to export.');
+        return;
+      }
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mvp-data-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Export failed. Please try again.');
+    }
+  };
+
+  const handleImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      let path: string;
+      if (currentPartyRoom) {
+        path = `hunting/party/${currentPartyRoom}/${server}/mvps`;
+      } else if (nickname) {
+        path = `hunting/solo/${nickname}/${server}/mvps`;
+      } else {
+        alert('Please set nickname first.');
+        return;
+      }
+
+      const mvpsRef = ref(database, path);
+      await set(mvpsRef, data);
+      alert('Import successful!');
+      onClose();
+    } catch (err) {
+      console.error('Import failed:', err);
+      alert('Import failed. Please check your JSON file.');
+    }
+
+    e.target.value = '';
+  };
 
   const modalRef = useClickOutside(onClose);
 
@@ -385,6 +458,46 @@ export function ModalPartySharing({ onClose }: Props) {
               <ZapOff /> Leave Party
             </ActionButton>
           )}
+
+          {/* Export / Import buttons */}
+          <div
+            style={{
+              width: '100%',
+              marginTop: '2rem',
+              display: 'flex',
+              gap: '1rem',
+            }}
+          >
+            <ActionButton
+              onClick={handleExport}
+              style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}
+            >
+              <Download size={16} style={{ marginRight: '8px' }} /> Export
+            </ActionButton>
+            <ActionButton
+              onClick={handleImport}
+              style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}
+            >
+              <Upload size={16} style={{ marginRight: '8px' }} /> Import
+            </ActionButton>
+          </div>
+
+          {/* Hidden file input for import */}
+          <input
+            type='file'
+            accept='.json'
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
         </SettingsContainer>
       </Modal>
     </ModalBase>
