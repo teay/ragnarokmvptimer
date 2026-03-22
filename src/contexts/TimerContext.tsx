@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import dayjs from 'dayjs';
 import { ref, onValue } from '@/services/firebase'; // Use shared service
 import { database, DB_ROOT_PATH } from '@/services/firebase';
@@ -15,7 +21,9 @@ const TimerContext = createContext<TimerContextData>({} as TimerContextData);
 
 export function TimerProvider({ children }: { children: ReactNode }) {
   const [now, setNow] = useState(dayjs());
-  const [partyMembers, setPartyMembers] = useState<string[] | undefined>(undefined);
+  const [partyMembers, setPartyMembers] = useState<string[] | undefined>(
+    undefined
+  );
 
   const { partyRoom } = useSettings();
 
@@ -30,7 +38,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
 
   // Effect to listen for party members from Firebase
   useEffect(() => {
-    if (!partyRoom) {
+    if (!partyRoom || partyRoom.startsWith('solo:')) {
       setPartyMembers(undefined);
       return;
     }
@@ -40,7 +48,9 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onValue(membersRef, (snapshot) => {
       if (snapshot.exists()) {
         const membersData = snapshot.val();
-        const membersArray = Object.keys(membersData).map(key => membersData[key].name || key);
+        const membersArray = Object.keys(membersData).map(
+          (key) => membersData[key].name || key
+        );
         setPartyMembers(membersArray);
       } else {
         setPartyMembers([]);

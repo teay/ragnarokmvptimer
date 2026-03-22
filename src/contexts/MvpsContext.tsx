@@ -161,11 +161,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
     let mvpsRef;
     if (isSoloMode) {
       const userId = effectivePartyRoom.substring(5);
-      mvpsRef = ref(database, `${DB_ROOT_PATH}/users/${userId}/${server}/mvps`);
+      mvpsRef = ref(database, `${DB_ROOT_PATH}/solo/${userId}/${server}/mvps`);
     } else {
       mvpsRef = ref(
         database,
-        `${DB_ROOT_PATH}/${effectivePartyRoom}/${server}/mvps`
+        `${DB_ROOT_PATH}/party/${effectivePartyRoom}/${server}/mvps`
       );
     }
 
@@ -231,12 +231,12 @@ export function MvpProvider({ children }: MvpProviderProps) {
           const userId = effectivePartyRoom.substring(5);
           serverRef = ref(
             database,
-            `${DB_ROOT_PATH}/users/${userId}/${server}/mvps`
+            `${DB_ROOT_PATH}/solo/${userId}/${server}/mvps`
           );
         } else {
           serverRef = ref(
             database,
-            `${DB_ROOT_PATH}/${effectivePartyRoom}/${server}/mvps`
+            `${DB_ROOT_PATH}/party/${effectivePartyRoom}/${server}/mvps`
           );
         }
         set(serverRef, minimalMvps).catch((err) => console.error(err));
