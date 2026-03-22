@@ -15,11 +15,7 @@ import { Container, Customization, Logo, LogoContainer, Title, LiveBadge, DataBa
 export function Header() {
   const { use24HourFormat, partyRoom, server, nickname, cloudSyncEnabled, localSaveEnabled } = useSettings();
   const { dataLocation } = useMvpsContext();
-  const { partyMembers } = useTimer(); // <-- เปลี่ยนจาก useTimerContext() เป็น useTimer()
-
-  console.log('PartyRoom in Header:', partyRoom); // Log partyRoom
-  console.log('Nickname in Header:', nickname); // Log nickname
-  console.log('PartyMembers from context in Header:', partyMembers); // Log partyMembers from context
+  const { partyMembers } = useTimer();
 
   const handleCopyInviteLink = useCallback(() => {
     if (!partyRoom) return;

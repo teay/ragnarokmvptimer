@@ -16,11 +16,8 @@ const defaultCoordinates: IMapMark = {
   y: -1,
 };
 
-export function Map({
-  mapName,
-  onChange,
-  coordinates = defaultCoordinates,
-}: MapProps) {
+export function Map({ mapName, onChange, coordinates }: MapProps) {
+  const safeCoords = coordinates ?? defaultCoordinates;
   const mapMark = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       if (!onChange) return;
@@ -42,11 +39,11 @@ export function Map({
         alt={mapName}
         onClick={mapMark}
         clickable={!!onChange}
-        isSelected={coordinates.x !== -1 || coordinates.y !== -1}
+        isSelected={safeCoords.x !== -1 || safeCoords.y !== -1}
         // loading='lazy'
       />
-      {(coordinates.x !== -1 || coordinates.y !== -1) && (
-        <MapMark x={coordinates.x} y={coordinates.y} />
+      {(safeCoords.x !== -1 || safeCoords.y !== -1) && (
+        <MapMark x={safeCoords.x} y={safeCoords.y} />
       )}
     </div>
   );
