@@ -85,11 +85,11 @@ export function ModalPartySharing({ onClose }: Props) {
     changeNickname(nicknameInput.trim());
 
     if (mode === 'solo') {
-      // Solo mode: use a special solo room ID derived from nickname
-      changePartyRoom(`solo:${nicknameInput.trim()}`);
+      // Solo mode: don't store partyRoom, just nickname
+      changePartyRoom(null);
     } else {
-      // Party mode: use "party:" prefix for clarity
-      changePartyRoom(`party:${partyNameInput.trim().toUpperCase()}`);
+      // Party mode: store party name
+      changePartyRoom(partyNameInput.trim().toUpperCase());
     }
 
     setIsProcessing(false);
