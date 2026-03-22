@@ -10,10 +10,25 @@ import { Copy } from '@styled-icons/feather';
 
 import mvpImg from '@/assets/mvp.png';
 
-import { Container, Customization, Logo, LogoContainer, Title, LiveBadge, DataBadge } from './styles';
+import {
+  Container,
+  Customization,
+  Logo,
+  LogoContainer,
+  Title,
+  LiveBadge,
+  DataBadge,
+} from './styles';
 
 export function Header() {
-  const { use24HourFormat, partyRoom, server, nickname, cloudSyncEnabled, localSaveEnabled } = useSettings();
+  const {
+    use24HourFormat,
+    partyRoom,
+    server,
+    nickname,
+    cloudSyncEnabled,
+    localSaveEnabled,
+  } = useSettings();
   const { dataLocation } = useMvpsContext();
   const { partyMembers } = useTimer();
 
@@ -22,7 +37,7 @@ export function Header() {
     const url = new URL(window.location.origin + window.location.pathname);
     url.searchParams.set('room', partyRoom);
     url.searchParams.set('server', server);
-    
+
     navigator.clipboard.writeText(url.toString());
     alert('Invite link copied!');
   }, [partyRoom, server]);
@@ -46,46 +61,74 @@ export function Header() {
       <LogoContainer>
         <Logo src={mvpImg} alt='mvp' />
         <Title>Ragnarok MVP Timer</Title>
-        <DataBadge location={getBadgeStatus()}>
-          {getBadgeText()}
-        </DataBadge>
+        <DataBadge location={getBadgeStatus()}>{getBadgeText()}</DataBadge>
         {partyRoom && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <LiveBadge 
-              onClick={handleCopyInviteLink} 
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-              title="Click to copy invite link"
-            >
-              <Copy size={12} /> {partyRoom}
-            </LiveBadge>
-            
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <LiveBadge
+                onClick={handleCopyInviteLink}
+                style={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                title='Click to copy invite link'
+              >
+                <Copy size={12} /> {partyRoom}
+              </LiveBadge>
+              {nickname && (
+                <span
+                  style={{
+                    fontSize: '1.1rem',
+                    color: '#fbc02d',
+                    fontWeight: 'bold',
+                    background: 'rgba(0,0,0,0.3)',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  @{nickname}
+                </span>
+              )}
+            </div>
             {partyMembers && partyMembers.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px', flexWrap: 'wrap' }}>
-                <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Members:</span>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                }}
+              >
+                <span style={{ color: '#aaa', fontSize: '0.9rem' }}>
+                  Members:
+                </span>
                 {partyMembers.map((member) => (
-                    <span 
-                      key={member}
-                      style={{ 
-                        fontSize: '0.9rem', 
-                        color: member === nickname ? '#fbc02d' : '#e0e0e0',
-                        fontWeight: member === nickname ? 'bold' : 'normal',
-                        background: 'rgba(0,0,0,0.3)', 
-                        padding: '2px 6px', 
-                        borderRadius: '4px' 
-                      }}
-                    >
-                      @{member}
-                    </span>
+                  <span
+                    key={member}
+                    style={{
+                      fontSize: '0.9rem',
+                      color: member === nickname ? '#fbc02d' : '#e0e0e0',
+                      fontWeight: member === nickname ? 'bold' : 'normal',
+                      background: 'rgba(0,0,0,0.3)',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    {member === nickname ? '• ' : ''}
+                    {member}
+                  </span>
                 ))}
               </div>
-            )}
-            {nickname && (
-              <span style={{ 
-                fontSize: '1.2rem', color: '#fbc02d', fontWeight: 'bold', 
-                background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: '4px' 
-              }}>
-                @{nickname}
-              </span>
             )}
           </div>
         )}
