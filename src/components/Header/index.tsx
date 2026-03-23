@@ -26,13 +26,17 @@ if (!document.getElementById(styleId)) {
   style.id = styleId;
   style.textContent = `
     @keyframes glow {
-      0%, 100% { 
+      0% { 
         box-shadow: 0 0 2px #4caf50;
-        opacity: 0.7;
       }
-      50% { 
+      30% { 
         box-shadow: 0 0 6px #4caf50;
-        opacity: 1;
+      }
+      60% {
+        box-shadow: 0 0 2px #4caf50;
+      }
+      100% {
+        box-shadow: 0 0 2px #4caf50;
       }
     }
   `;
@@ -138,7 +142,7 @@ export function Header() {
                         borderRadius: '4px',
                         opacity: member.isOnline ? 1 : 0.6,
                         animation: member.isOnline
-                          ? 'glow 4s ease-in-out infinite'
+                          ? 'glow 6s ease-in-out infinite'
                           : 'none',
                       }}
                     >
