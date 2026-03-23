@@ -19,24 +19,18 @@ import {
   DataBadge,
 } from './styles';
 
-// CSS Keyframes for online glow
+// CSS Keyframes for background pulse
 const styleId = 'online-pulse-styles';
 if (!document.getElementById(styleId)) {
   const style = document.createElement('style');
   style.id = styleId;
   style.textContent = `
     @keyframes glow {
-      0% { 
-        box-shadow: 0 0 2px rgba(251,192,45,0.4);
+      0%, 100% { 
+        box-shadow: 0 0 2px rgba(76,175,80,0.3);
       }
-      30% { 
-        box-shadow: 0 0 8px rgba(251,192,45,0.8);
-      }
-      60% {
-        box-shadow: 0 0 2px rgba(251,192,45,0.4);
-      }
-      100% {
-        box-shadow: 0 0 2px rgba(251,192,45,0.4);
+      50% { 
+        box-shadow: 0 0 10px rgba(76,175,80,0.6);
       }
     }
   `;
@@ -136,13 +130,13 @@ export function Header() {
                           member.name === nickname
                             ? 'rgba(251,192,45,0.2)'
                             : member.isOnline
-                            ? 'rgba(255,255,255,0.08)'
+                            ? 'rgba(76,175,80,0.15)'
                             : 'rgba(128,128,128,0.1)',
                         padding: '2px 6px',
                         borderRadius: '4px',
                         opacity: member.isOnline ? 1 : 0.6,
                         animation: member.isOnline
-                          ? 'glow 6s ease-in-out infinite'
+                          ? 'glow 2s ease-in-out infinite'
                           : 'none',
                       }}
                     >
