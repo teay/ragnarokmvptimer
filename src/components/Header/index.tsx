@@ -28,9 +28,11 @@ if (!document.getElementById(styleId)) {
     @keyframes glow {
       0%, 100% { 
         box-shadow: 0 0 2px #4caf50;
+        opacity: 0.7;
       }
       50% { 
-        box-shadow: 0 0 8px #4caf50;
+        box-shadow: 0 0 6px #4caf50;
+        opacity: 1;
       }
     }
   `;
@@ -136,7 +138,7 @@ export function Header() {
                         borderRadius: '4px',
                         opacity: member.isOnline ? 1 : 0.6,
                         animation: member.isOnline
-                          ? 'glow 2s ease-in-out infinite'
+                          ? 'glow 4s ease-in-out infinite'
                           : 'none',
                       }}
                     >
