@@ -19,6 +19,20 @@ import {
   DataBadge,
 } from './styles';
 
+// CSS Keyframes for online pulse
+const styleId = 'online-pulse-styles';
+if (!document.getElementById(styleId)) {
+  const style = document.createElement('style');
+  style.id = styleId;
+  style.textContent = `
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 export function Header() {
   const {
     use24HourFormat,
@@ -117,6 +131,9 @@ export function Header() {
                         padding: '2px 6px',
                         borderRadius: '4px',
                         opacity: member.isOnline ? 1 : 0.6,
+                        animation: member.isOnline
+                          ? 'pulse 2s ease-in-out infinite'
+                          : 'none',
                       }}
                     >
                       {member.name === nickname
