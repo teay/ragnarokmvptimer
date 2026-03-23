@@ -19,15 +19,19 @@ import {
   DataBadge,
 } from './styles';
 
-// CSS Keyframes for online pulse
+// CSS Keyframes for online glow
 const styleId = 'online-pulse-styles';
 if (!document.getElementById(styleId)) {
   const style = document.createElement('style');
   style.id = styleId;
   style.textContent = `
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+    @keyframes glow {
+      0%, 100% { 
+        box-shadow: 0 0 2px #4caf50;
+      }
+      50% { 
+        box-shadow: 0 0 8px #4caf50;
+      }
     }
   `;
   document.head.appendChild(style);
@@ -132,7 +136,7 @@ export function Header() {
                         borderRadius: '4px',
                         opacity: member.isOnline ? 1 : 0.6,
                         animation: member.isOnline
-                          ? 'pulse 2s ease-in-out infinite'
+                          ? 'glow 2s ease-in-out infinite'
                           : 'none',
                       }}
                     >
