@@ -6,22 +6,28 @@ import {
   ReactNode,
 } from 'react';
 import dayjs from 'dayjs';
-import { ref, onValue } from '@/services/firebase'; // Use shared service
+import { ref, onValue } from '@/services/firebase';
 import { database, DB_ROOT_PATH } from '@/services/firebase';
 import { useSettings } from '@/contexts/SettingsContext';
 
-// Define the structure for Timer Context
-interface TimerContextData {
-  now: dayjs.Dayjs;
-  partyMembers: string[] | undefined;
+interface PartyMember {
+  name: string;
+  lastSeen: string;
+  isOnline: boolean;
 }
 
-// Create the context
+interface TimerContextData {
+  now: dayjs.Dayjs;
+  partyMembers: PartyMember[] | undefined;
+}
+
 const TimerContext = createContext<TimerContextData>({} as TimerContextData);
+
+const ONLINE_THRESHOLD_MS = 60000; // 1 minute
 
 export function TimerProvider({ children }: { children: ReactNode }) {
   const [now, setNow] = useState(dayjs());
-  const [partyMembers, setPartyMembers] = useState<string[] | undefined>(
+  const [partyMembers, setPartyMembers] = useState<PartyMember[] | undefined>(
     undefined
   );
 
@@ -38,7 +44,6 @@ export function TimerProvider({ children }: { children: ReactNode }) {
 
   // Effect to listen for party members from Firebase
   useEffect(() => {
-    // Solo mode: partyRoom is null, no members to listen
     if (!partyRoom) {
       setPartyMembers(undefined);
       return;
@@ -52,10 +57,22 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onValue(membersRef, (snapshot) => {
       if (snapshot.exists()) {
         const membersData = snapshot.val();
-        const membersArray = Object.keys(membersData).map(
-          (key) => membersData[key].name || key
+        const now = dayjs();
+
+        const membersList: PartyMember[] = Object.keys(membersData).map(
+          (key) => {
+            const data = membersData[key];
+            const lastSeen = data.lastSeen ? dayjs(data.lastSeen) : dayjs(0);
+            const isOnline = now.diff(lastSeen) < ONLINE_THRESHOLD_MS;
+
+            return {
+              name: data.name || key,
+              lastSeen: data.lastSeen || '',
+              isOnline,
+            };
+          }
         );
-        setPartyMembers(membersArray);
+        setPartyMembers(membersList);
       } else {
         setPartyMembers([]);
       }

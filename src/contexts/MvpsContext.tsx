@@ -97,13 +97,24 @@ export function MvpProvider({ children }: MvpProviderProps) {
       database,
       `${DB_ROOT_PATH}/party/${partyRoom}/members/${nickname}`
     );
-    set(membersRef, {
-      name: nickname,
-      joinedAt: dayjs().toISOString(),
-    }).catch(console.error);
+
+    // Function to update heartbeat
+    const updateHeartbeat = () => {
+      set(membersRef, {
+        name: nickname,
+        lastSeen: dayjs().toISOString(),
+      }).catch(console.error);
+    };
+
+    // Initial heartbeat
+    updateHeartbeat();
+
+    // Update heartbeat every 30 seconds
+    const interval = setInterval(updateHeartbeat, 30000);
 
     // Cleanup: remove self when leaving
     return () => {
+      clearInterval(interval);
       const selfRef = ref(
         database,
         `${DB_ROOT_PATH}/party/${partyRoom}/members/${nickname}`

@@ -88,25 +88,43 @@ export function Header() {
                 }}
               >
                 {partyMembers
-                  .sort((a, b) =>
-                    b === nickname ? 1 : a === nickname ? -1 : 0
-                  )
+                  .sort((a, b) => {
+                    // Sort: self first, then online, then offline
+                    if (a.name === nickname) return -1;
+                    if (b.name === nickname) return 1;
+                    if (a.isOnline !== b.isOnline) return b.isOnline ? 1 : -1;
+                    return 0;
+                  })
                   .map((member) => (
                     <span
-                      key={member}
+                      key={member.name}
                       style={{
                         fontSize: '0.8rem',
-                        color: member === nickname ? '#fbc02d' : '#e0e0e0',
-                        fontWeight: member === nickname ? 'bold' : 'normal',
+                        color:
+                          member.name === nickname
+                            ? '#fbc02d'
+                            : member.isOnline
+                            ? '#e0e0e0'
+                            : '#888',
+                        fontWeight:
+                          member.name === nickname ? 'bold' : 'normal',
                         background:
-                          member === nickname
+                          member.name === nickname
                             ? 'rgba(251,192,45,0.2)'
-                            : 'rgba(255,255,255,0.08)',
+                            : member.isOnline
+                            ? 'rgba(255,255,255,0.08)'
+                            : 'rgba(128,128,128,0.1)',
                         padding: '2px 6px',
                         borderRadius: '4px',
+                        opacity: member.isOnline ? 1 : 0.6,
                       }}
                     >
-                      {member === nickname ? '⭐ ' : ''}@{member}
+                      {member.name === nickname
+                        ? '⭐ '
+                        : member.isOnline
+                        ? '🟢 '
+                        : '⬜ '}
+                      @{member.name}
                     </span>
                   ))}
               </div>
