@@ -27,16 +27,16 @@ if (!document.getElementById(styleId)) {
   style.textContent = `
     @keyframes glow {
       0% { 
-        box-shadow: 0 0 2px rgba(255,255,255,0.3);
+        box-shadow: 0 0 2px rgba(251,192,45,0.4);
       }
       30% { 
-        box-shadow: 0 0 6px rgba(255,255,255,0.6);
+        box-shadow: 0 0 8px rgba(251,192,45,0.8);
       }
       60% {
-        box-shadow: 0 0 2px rgba(255,255,255,0.3);
+        box-shadow: 0 0 2px rgba(251,192,45,0.4);
       }
       100% {
-        box-shadow: 0 0 2px rgba(255,255,255,0.3);
+        box-shadow: 0 0 2px rgba(251,192,45,0.4);
       }
     }
   `;
