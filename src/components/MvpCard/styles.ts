@@ -226,3 +226,45 @@ export const ButtonGroupDivider = styled.hr`
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   margin: 8px 0;
 `;
+
+export const ActionGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 200px;
+  gap: 8px;
+  margin: 0 auto;
+`;
+
+export const MiniControl = styled.button<{ variant?: 'danger' | 'secondary' | 'back' }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 4px;
+  background-color: ${({ variant }) => {
+    if (variant === 'danger') return '#b33a3a';
+    if (variant === 'back') return '#d65a5a';
+    return '#4a4a4a';
+  }} !important;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    margin-bottom: 4px;
+  }
+
+  span {
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+`;

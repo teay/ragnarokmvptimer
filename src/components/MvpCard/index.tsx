@@ -41,6 +41,8 @@ import {
   ButtonGroupPrimary,
   ButtonGroupTimer,
   ButtonGroupSecondary,
+  ActionGrid,
+  MiniControl,
 } from './styles';
 
 interface MvpCardProps {
@@ -144,87 +146,83 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
 
           {isActive ? (
             <Controls>
-              <ButtonGroup variant='timer-position'>
+              <ButtonGroup variant="timer-position">
                 <Control
                   onClick={() => {
                     resetMvpTimer(mvp);
                     setIsMapModalOpen(true);
                   }}
-                  title='Reset timer and record new position'
+                  title="Reset timer and record new position"
                 >
                   <MapPin />
                   <ControlText>
-                    <FormattedMessage id='reset_timer_position' />
+                    <FormattedMessage id="reset_timer_position" />
                   </ControlText>
                 </Control>
               </ButtonGroup>
-              <ButtonGroup variant='timer'>
-                <Control onClick={() => resetMvpTimer(mvp)} title='Reset timer'>
+              <ButtonGroup variant="timer">
+                <Control onClick={() => resetMvpTimer(mvp)} title="Reset timer">
                   <RefreshCcw />
                   <ControlText>
-                    <FormattedMessage id='reset_timer' />
+                    <FormattedMessage id="reset_timer" />
                   </ControlText>
                 </Control>
               </ButtonGroup>
               <ButtonGroupDivider />
-              <ButtonGroup variant='secondary'>
-                <Control
+              <ActionGrid>
+                <MiniControl
                   onClick={() => setEditingMvp(mvp)}
-                  title='Edit this mvp'
+                  title="Edit MVP"
+                  variant="secondary"
                 >
                   <Edit2 />
-                  <ControlText>
-                    <FormattedMessage id='edit_mvp' />
-                  </ControlText>
-                </Control>
-              </ButtonGroup>
-              <ButtonGroup variant='danger'>
-                <Control
+                  <span>{intl.formatMessage({ id: 'edit' })}</span>
+                </MiniControl>
+                <MiniControl
                   onClick={() => removeMvpByMap(mvp.id, mvp.deathMap)}
-                  title='Remove this mvp'
+                  title="Remove MVP"
+                  variant="danger"
                 >
                   <Trash2 />
-                  <ControlText>
-                    <FormattedMessage id='remove_mvp' />
-                  </ControlText>
-                </Control>
-              </ButtonGroup>
-              <ButtonGroup variant='back'>
-                <Control
+                  <span>RMV</span>
+                </MiniControl>
+                <MiniControl
                   onClick={() => unpinMvp(mvp, false)}
-                  title='Back to wait'
+                  title="Back to wait"
+                  variant="back"
                 >
                   <Star />
-                  <ControlText>
-                    <FormattedMessage id='backToWait' />
-                  </ControlText>
-                </Control>
-              </ButtonGroup>
+                  <span>BACK</span>
+                </MiniControl>
+              </ActionGrid>
             </Controls>
           ) : isPinnedOnly ? (
             <Controls>
-              <ButtonGroup variant='primary'>
+              <ButtonGroup variant="primary">
                 <KilledNow onClick={handleKilledNow}>
-                  <FormattedMessage id='killed_now' />
+                  <FormattedMessage id="killed_now" />
                 </KilledNow>
               </ButtonGroup>
               <ButtonGroupDivider />
-              <ButtonGroup variant='secondary'>
-                <EditButton onClick={() => setEditingMvp(mvp)}>
-                  <FormattedMessage id='edit' />
-                </EditButton>
-              </ButtonGroup>
-              <ButtonGroup variant='back'>
-                <Control
+              <ActionGrid>
+                <MiniControl
+                  onClick={() => setEditingMvp(mvp)}
+                  title="Edit MVP"
+                  variant="secondary"
+                >
+                  <Edit2 />
+                  <span>{intl.formatMessage({ id: 'edit' })}</span>
+                </MiniControl>
+                <div />
+                <MiniControl
                   onClick={() => unpinMvp(mvp, true)}
-                  title='Back to All'
+                  title="Cancel Hunting"
+                  variant="back"
                 >
                   <X />
-                  <ControlText>
-                    <FormattedMessage id='unpin' />
-                  </ControlText>
-                </Control>
-              </ButtonGroup>
+                  <span>CANCEL</span>
+                </MiniControl>
+              </ActionGrid>
             </Controls>
           ) : (
             <Controls>
@@ -243,11 +241,18 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
                 </KilledNow>
               </ButtonGroup>
               <ButtonGroupDivider />
-              <ButtonGroup variant="secondary">
-                <EditButton onClick={() => setEditingMvp(mvp)}>
-                  <FormattedMessage id="edit" />
-                </EditButton>
-              </ButtonGroup>
+              <ActionGrid>
+                <div />
+                <MiniControl
+                  onClick={() => setEditingMvp(mvp)}
+                  title="Edit MVP"
+                  variant="secondary"
+                >
+                  <Edit2 />
+                  <span>{intl.formatMessage({ id: 'edit' })}</span>
+                </MiniControl>
+                <div />
+              </ActionGrid>
             </Controls>
           )}
         </BottomControls>
