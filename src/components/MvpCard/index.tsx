@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react';
-import { RefreshCcw, Trash2, Edit2, MapPin } from '@styled-icons/feather';
+import {
+  RefreshCcw,
+  Trash2,
+  Edit2,
+  MapPin,
+  Star,
+  X,
+} from '@styled-icons/feather';
 import { FormattedMessage, useIntl } from 'react-intl';
 import dayjs from 'dayjs';
 
@@ -29,17 +36,25 @@ import {
   ControlText,
   BottomControls,
   MapWrapper,
+  ButtonGroup,
+  ButtonGroupDivider,
+  ButtonGroupPrimary,
+  ButtonGroupTimer,
+  ButtonGroupSecondary,
 } from './styles';
 
 interface MvpCardProps {
   mvp: IMvp;
+  zone?: 'active' | 'wait' | 'all';
 }
 
-export function MvpCard({ mvp }: MvpCardProps) {
+export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
   const {
     killMvp,
     resetMvpTimer,
     removeMvpByMap,
+    pinMvp,
+    unpinMvp,
     setEditingMvp,
     setEditingTimeMvp,
     editingMvp,
@@ -52,6 +67,8 @@ export function MvpCard({ mvp }: MvpCardProps) {
   const intl = useIntl();
 
   const isActive = !!mvp.deathTime;
+  const isPinned = mvp.isPinned === true;
+  const isPinnedOnly = isPinned && !isActive;
   const isEditing = editingMvp?.id === mvp.id;
 
   const nextRespawn = useMemo(
@@ -69,9 +86,13 @@ export function MvpCard({ mvp }: MvpCardProps) {
       : killMvp({ ...mvp, deathMap: mvp.spawn[0].mapname });
   }
 
+  function handleSelectToKill() {
+    pinMvp(mvp);
+  }
+
   return (
     <>
-      <Container isEditing={isEditing}>
+      <Container isEditing={isEditing} zone={zone}>
         <Header>
           <ID>{`((${mvp.id}))`}</ID>
           <Name>{mvp.name}</Name>
@@ -79,18 +100,31 @@ export function MvpCard({ mvp }: MvpCardProps) {
 
         <MvpSprite id={mvp.id} name={mvp.name} animated={animatedSprites} />
 
-        {isActive && (
-          <MvpCardCountdown
-            mvp={mvp}
-            respawnAsCountdown={respawnAsCountdown}
-            onTriggerNotification={() =>
-              respawnNotification(
-                mvp.id,
-                `${mvp.name} ${intl.formatMessage({ id: 'will_respawn' })}`,
-                `${mvp.deathMap} - ${nextRespawn.format('HH:mm')}`
-              )
-            }
-          />
+        {(isActive || isPinnedOnly) && (
+          <>
+            {isActive && (
+              <MvpCardCountdown
+                mvp={mvp}
+                respawnAsCountdown={respawnAsCountdown}
+                onTriggerNotification={() =>
+                  respawnNotification(
+                    mvp.id,
+                    `${mvp.name} ${intl.formatMessage({ id: 'will_respawn' })}`,
+                    `${mvp.deathMap} - ${nextRespawn.format('HH:mm')}`
+                  )
+                }
+              />
+            )}
+            {isPinnedOnly && (
+              <Tombstone>
+                <Star
+                  size={18}
+                  style={{ marginRight: 4, verticalAlign: 'middle' }}
+                />
+                <FormattedMessage id='pinned' />
+              </Tombstone>
+            )}
+          </>
         )}
 
         <BottomControls>
@@ -109,25 +143,8 @@ export function MvpCard({ mvp }: MvpCardProps) {
           )}
 
           {isActive ? (
-            <>
-              <Tombstone
-                onClick={() => setEditingTimeMvp(mvp)}
-                title={intl.formatMessage({ id: 'edit_mvp' })}
-              >
-                <FormattedMessage id='when_was_mvp_killed' />
-                <br />
-                <Bold>{dayjs(mvp.deathTime).format('DD/MM/YYYY HH:mm')}</Bold>
-                <Edit2
-                  size={18}
-                  style={{
-                    marginLeft: 8,
-                    verticalAlign: 'middle',
-                    opacity: 0.8,
-                  }}
-                />
-              </Tombstone>
-
-              <Controls>
+            <Controls>
+              <ButtonGroup variant='timer-position'>
                 <Control
                   onClick={() => {
                     resetMvpTimer(mvp);
@@ -140,21 +157,17 @@ export function MvpCard({ mvp }: MvpCardProps) {
                     <FormattedMessage id='reset_timer_position' />
                   </ControlText>
                 </Control>
+              </ButtonGroup>
+              <ButtonGroup variant='timer'>
                 <Control onClick={() => resetMvpTimer(mvp)} title='Reset timer'>
                   <RefreshCcw />
                   <ControlText>
                     <FormattedMessage id='reset_timer' />
                   </ControlText>
                 </Control>
-                <Control
-                  onClick={() => removeMvpByMap(mvp.id, mvp.deathMap)}
-                  title='Remove this mvp'
-                >
-                  <Trash2 />
-                  <ControlText>
-                    <FormattedMessage id='remove_mvp' />
-                  </ControlText>
-                </Control>
+              </ButtonGroup>
+              <ButtonGroupDivider />
+              <ButtonGroup variant='secondary'>
                 <Control
                   onClick={() => setEditingMvp(mvp)}
                   title='Edit this mvp'
@@ -164,16 +177,88 @@ export function MvpCard({ mvp }: MvpCardProps) {
                     <FormattedMessage id='edit_mvp' />
                   </ControlText>
                 </Control>
-              </Controls>
-            </>
+              </ButtonGroup>
+              <ButtonGroup variant='danger'>
+                <Control
+                  onClick={() => removeMvpByMap(mvp.id, mvp.deathMap)}
+                  title='Remove this mvp'
+                >
+                  <Trash2 />
+                  <ControlText>
+                    <FormattedMessage id='remove_mvp' />
+                  </ControlText>
+                </Control>
+              </ButtonGroup>
+              <ButtonGroup variant='back'>
+                <Control
+                  onClick={() => unpinMvp(mvp, false)}
+                  title='Back to wait'
+                >
+                  <Star />
+                  <ControlText>
+                    <FormattedMessage id='backToWait' />
+                  </ControlText>
+                </Control>
+              </ButtonGroup>
+            </Controls>
+          ) : isPinnedOnly ? (
+            <Controls>
+              <ButtonGroup variant='primary'>
+                <KilledNow onClick={handleKilledNow}>
+                  <FormattedMessage id='killed_now' />
+                </KilledNow>
+              </ButtonGroup>
+              <ButtonGroupDivider />
+              <ButtonGroup variant='secondary'>
+                <EditButton onClick={() => setEditingMvp(mvp)}>
+                  <FormattedMessage id='edit' />
+                </EditButton>
+              </ButtonGroup>
+              <ButtonGroup variant='back'>
+                <Control
+                  onClick={() => unpinMvp(mvp, true)}
+                  title='Back to All'
+                >
+                  <X />
+                  <ControlText>
+                    <FormattedMessage id='unpin' />
+                  </ControlText>
+                </Control>
+              </ButtonGroup>
+            </Controls>
           ) : (
             <Controls>
-              <KilledNow onClick={handleKilledNow}>
-                <FormattedMessage id='killed_now' />
-              </KilledNow>
-              <EditButton onClick={() => setEditingMvp(mvp)}>
-                <FormattedMessage id='edit' />
-              </EditButton>
+              <ButtonGroup variant='primary'>
+                {mvp.spawn.length > 1 ? (
+                  <Control onClick={handleSelectToKill} title='Select to kill'>
+                    <Star />
+                    <ControlText>
+                      <FormattedMessage id='pin' />
+                    </ControlText>
+                  </Control>
+                ) : (
+                  <KilledNow onClick={handleKilledNow}>
+                    <FormattedMessage id='killed_now' />
+                  </KilledNow>
+                )}
+              </ButtonGroup>
+              <ButtonGroupDivider />
+              <ButtonGroup variant='secondary'>
+                <Control
+                  onClick={() => {
+                    pinMvp(mvp);
+                  }}
+                  title='Pin this mvp'
+                >
+                  <Star />
+                  <ControlText>
+                    <FormattedMessage id='pin' />
+                  </ControlText>
+                </Control>
+                <EditButton onClick={() => setEditingMvp(mvp)}>
+                  <FormattedMessage id='edit' />
+                </EditButton>
+              </ButtonGroup>
             </Controls>
           )}
         </BottomControls>

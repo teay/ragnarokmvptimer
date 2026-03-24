@@ -15,8 +15,17 @@ import { sortBy } from '@/utils/sort';
 import { Container, Section, SectionTitle, MvpsContainer } from './styles';
 
 export function Main() {
-  const { activeMvps, allMvps, editingMvp, editingTimeMvp, killingMvp, isLoading } =
-    useMvpsContext();
+  const {
+    activeMvps,
+    allMvps,
+    editingMvp,
+    editingTimeMvp,
+    killingMvp,
+    isLoading,
+  } = useMvpsContext();
+
+  const normalActiveMvps = activeMvps.filter((m) => m.deathTime);
+  const pinnedMvps = activeMvps.filter((m) => m.isPinned && !m.deathTime);
   const [searchQuery, setSearchQuery] = useState<string>(
     sessionStorage.getItem('search') || ''
   );
@@ -47,21 +56,41 @@ export function Main() {
     window.scrollTo(0, 0);
   }, []);
 
-  
-
   return (
     <>
       {isLoading && <LoadingOverlay />}
       <Container>
-        {activeMvps.length > 0 && (
+        {normalActiveMvps.length > 0 && (
           <Section>
             <SectionTitle>
               <FormattedMessage id='active' />
             </SectionTitle>
 
             <MvpsContainer>
-              {activeMvps.map((mvp: IMvp) => (
-                <MvpCard key={`${mvp.id}-${mvp.deathMap}`} mvp={mvp} />
+              {normalActiveMvps.map((mvp: IMvp) => (
+                <MvpCard
+                  key={`${mvp.id}-${mvp.deathMap}`}
+                  mvp={mvp}
+                  zone='active'
+                />
+              ))}
+            </MvpsContainer>
+          </Section>
+        )}
+
+        {pinnedMvps.length > 0 && (
+          <Section>
+            <SectionTitle>
+              <FormattedMessage id='pinned' />
+            </SectionTitle>
+
+            <MvpsContainer>
+              {pinnedMvps.map((mvp: IMvp) => (
+                <MvpCard
+                  key={`${mvp.id}-${mvp.deathMap}`}
+                  mvp={mvp}
+                  zone='wait'
+                />
               ))}
             </MvpsContainer>
           </Section>
@@ -92,7 +121,11 @@ export function Main() {
           {nonActiveMvps.length > 0 && (
             <MvpsContainer>
               {nonActiveMvps.map((mvp: IMvp) => (
-                <MvpCard key={`${mvp.id}-${mvp.deathMap}`} mvp={mvp} />
+                <MvpCard
+                  key={`${mvp.id}-${mvp.deathMap}`}
+                  mvp={mvp}
+                  zone='all'
+                />
               ))}
             </MvpsContainer>
           )}

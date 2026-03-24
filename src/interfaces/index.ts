@@ -21,4 +21,5 @@ interface IMvp {
   deathTime?: Date;
   deathMap?: string;
   deathPosition?: IMapMark;
+  isPinned?: boolean;
 }
