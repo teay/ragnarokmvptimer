@@ -4,7 +4,10 @@ export const MapWrapper = styled.div`
   cursor: pointer;
 `;
 
-export const Container = styled.div<{ isEditing: boolean }>`
+export const Container = styled.div<{
+  isEditing: boolean;
+  zone?: 'active' | 'wait' | 'all';
+}>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,7 +19,6 @@ export const Container = styled.div<{ isEditing: boolean }>`
 
   background-color: var(--mvpCard_bg);
   backdrop-filter: var(--mvpCard_backdrop_filter);
-  border: none;
   position: relative;
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 
@@ -58,6 +60,10 @@ export const BottomControls = styled.div`
   margin-top: auto; /* This will push it to the bottom */
   width: 100%;
   padding: 0;
+
+  > *:not(:first-child) {
+    margin-top: 10px;
+  }
 `;
 
 export const Details = styled.div`
@@ -141,13 +147,9 @@ const Button = styled.button`
   }
 `;
 
-export const KilledNow = styled(Button)`
-  background-color: var(--mvpCard_killButton);
-`;
+export const KilledNow = styled(Button)``;
 
-export const EditButton = styled(Button)`
-  background-color: var(--mvpCard_editButton);
-`;
+export const EditButton = styled(Button)``;
 
 export const Controls = styled.div`
   display: flex;
@@ -160,11 +162,6 @@ export const Controls = styled.div`
 `;
 
 export const Control = styled.button`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   width: 200px; /* Fixed width */
   margin: 0 auto; /* Center the button */
   height: auto;
@@ -189,25 +186,43 @@ export const Control = styled.button`
   &:hover {
     opacity: 0.8;
   }
-
-  &:nth-child(1) {
-    background-color: var(--mvpCard_controls_resetPosition);
-  }
-
-  &:nth-child(2) {
-    background-color: var(--mvpCard_controls_reset);
-  }
-
-  &:nth-child(3) {
-    background-color: var(--mvpCard_controls_delete);
-  }
-
-  &:nth-child(4) {
-    background-color: var(--mvpCard_controls_edit);
-  }
 `;
 
 export const ControlText = styled.span`
   font-size: 1.6rem;
   color: #e0e0e0;
+`;
+
+export const ButtonGroup = styled.div<{
+  variant?:
+    | 'primary'
+    | 'timer'
+    | 'timer-position'
+    | 'secondary'
+    | 'back'
+    | 'danger';
+}>`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 8px;
+
+  & > button,
+  & > * > button {
+    background-color: ${({ variant }) => {
+      if (variant === 'primary') return '#8b5a2b'; // น้ำตาล - ปุ่มหลัก
+      if (variant === 'timer-position') return '#4a7a9b'; // ฟ้ากลาง - Reset Timer & Position
+      if (variant === 'timer') return '#7a9bad'; // ฟ้าอ่อน - Reset Timer
+      if (variant === 'back') return '#d65a5a'; // แดงอ่อน - ปุ่มกลับ
+      if (variant === 'danger') return '#b33a3a'; // แดงเข้ม - Remove
+      return '#4a4a4a'; // เทาเข้ม - ปุ่มรอง
+    }} !important;
+  }
+`;
+
+export const ButtonGroupDivider = styled.hr`
+  width: 80%;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 8px 0;
 `;

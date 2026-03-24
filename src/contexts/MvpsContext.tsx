@@ -37,6 +37,8 @@ interface MvpsContextData {
     newDeathPosition: IMapMark
   ) => void;
   removeMvpByMap: (mvpID: number, deathMap: string) => void;
+  pinMvp: (mvp: IMvp) => void;
+  unpinMvp: (mvp: IMvp) => void;
   setEditingMvp: (mvp: IMvp) => void;
   closeEditMvpModal: () => void;
   setEditingTimeMvp: (mvp: IMvp) => void;
@@ -239,6 +241,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
           : null,
         deathMap: m.deathMap || null,
         deathPosition: m.deathPosition || null,
+        isPinned: m.isPinned || false,
         updatedBy: nickname || 'Anon',
       }));
 
@@ -288,7 +291,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const killMvp = useCallback(
     (mvp: IMvp, deathTime = new Date()) => {
       modifyMvps((current) => {
-        const killedMvp = { ...mvp, deathTime };
+        const killedMvp = {
+          ...mvp,
+          deathTime,
+          isPinned: mvp.isPinned || false,
+        };
         const exists = current.some(
           (m) => m.id === mvp.id && m.deathMap === mvp.deathMap
         );
@@ -361,6 +368,46 @@ export function MvpProvider({ children }: MvpProviderProps) {
     [modifyMvps, activeMvps]
   );
 
+  const pinMvp = useCallback(
+    (mvp: IMvp) => {
+      const pinnedMvp = { ...mvp, isPinned: true };
+      modifyMvps((current) => {
+        const exists = current.some(
+          (m) => m.id === mvp.id && m.deathMap === mvp.deathMap
+        );
+        return exists
+          ? current.map((m) =>
+              m.id === mvp.id && m.deathMap === mvp.deathMap
+                ? { ...m, isPinned: true }
+                : m
+            )
+          : [...current, pinnedMvp];
+      });
+    },
+    [modifyMvps]
+  );
+
+  const unpinMvp = useCallback(
+    (mvp: IMvp, removeFromActive = false) => {
+      if (removeFromActive) {
+        modifyMvps((current) => {
+          return current.filter(
+            (m) => !(m.id === mvp.id && m.deathMap === mvp.deathMap)
+          );
+        });
+      } else {
+        modifyMvps((current) => {
+          return current.map((m) =>
+            m.id === mvp.id && m.deathMap === mvp.deathMap
+              ? { ...m, deathTime: undefined }
+              : m
+          );
+        });
+      }
+    },
+    [modifyMvps]
+  );
+
   const leaveParty = useCallback(
     (saveToLocal: boolean) => {
       changePartyRoom(null);
@@ -402,6 +449,8 @@ export function MvpProvider({ children }: MvpProviderProps) {
         updateMvp,
         updateMvpDeathLocation,
         removeMvpByMap,
+        pinMvp,
+        unpinMvp,
         setEditingMvp,
         closeEditMvpModal: () => setEditingMvp(undefined),
         setEditingTimeMvp,
