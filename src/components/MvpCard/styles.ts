@@ -98,7 +98,7 @@ export const MapName = styled.span`
   text-align: center;
   white-space: pre-wrap;
   margin-top: 5px;
-  color: #E0E0E0 !important;
+  color: #e0e0e0 !important;
   font-size: 1.8rem;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -134,7 +134,7 @@ const Button = styled.button`
 
   font-size: 1.6rem;
   font-weight: bold;
-  color: #E0E0E0;
+  color: #e0e0e0;
 
   &:hover {
     opacity: 0.8;
@@ -178,7 +178,7 @@ export const Control = styled.button`
     stroke-width: 2px;
     width: 24px;
     height: 24px;
-    color: #E0E0E0;
+    color: #e0e0e0;
   }
 
   &:disabled {
@@ -190,20 +190,24 @@ export const Control = styled.button`
     opacity: 0.8;
   }
 
-  &:first-child {
-    background-color: var(--mvpCard_controls_showMap);
+  &:nth-child(1) {
+    background-color: var(--mvpCard_controls_resetPosition);
   }
 
   &:nth-child(2) {
-    background-color: var(--mvpCard_controls_delete);
+    background-color: var(--mvpCard_controls_reset);
   }
 
   &:nth-child(3) {
+    background-color: var(--mvpCard_controls_delete);
+  }
+
+  &:nth-child(4) {
     background-color: var(--mvpCard_controls_edit);
   }
 `;
 
 export const ControlText = styled.span`
   font-size: 1.6rem;
-  color: #E0E0E0;
+  color: #e0e0e0;
 `;
