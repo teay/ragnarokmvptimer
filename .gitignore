@@ -27,4 +27,14 @@ yarn-error.log*
 .vercel
 /dev-dist
 
-.vite/
+.vite/terminal/node_modules/
+terminal/dist/
+.repo/
+.vscode/
+.github/
+# ถ้ายังไม่แน่ใจเรื่อง terminal/ ให้ใส่ไว้ก่อนกันพลาด
+# terminal/
+vite
+node_modules/
+terminal/node_modules/
+terminal/dist/
