@@ -228,35 +228,24 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
             </Controls>
           ) : (
             <Controls>
-              <ButtonGroup variant='primary'>
-                {mvp.spawn.length > 1 ? (
-                  <Control onClick={handleSelectToKill} title='Select to kill'>
-                    <Star />
-                    <ControlText>
-                      <FormattedMessage id='pin' />
-                    </ControlText>
-                  </Control>
-                ) : (
-                  <KilledNow onClick={handleKilledNow}>
-                    <FormattedMessage id='killed_now' />
-                  </KilledNow>
-                )}
-              </ButtonGroup>
-              <ButtonGroupDivider />
-              <ButtonGroup variant='secondary'>
-                <Control
-                  onClick={() => {
-                    pinMvp(mvp);
-                  }}
-                  title='Pin this mvp'
-                >
+              <ButtonGroup variant="primary">
+                <Control onClick={handleSelectToKill} title="Select to kill">
                   <Star />
                   <ControlText>
-                    <FormattedMessage id='pin' />
+                    <FormattedMessage id="pin" />
                   </ControlText>
                 </Control>
+              </ButtonGroup>
+              <ButtonGroupDivider />
+              <ButtonGroup variant="timer">
+                <KilledNow onClick={handleKilledNow}>
+                  <FormattedMessage id="killed_now" />
+                </KilledNow>
+              </ButtonGroup>
+              <ButtonGroupDivider />
+              <ButtonGroup variant="secondary">
                 <EditButton onClick={() => setEditingMvp(mvp)}>
-                  <FormattedMessage id='edit' />
+                  <FormattedMessage id="edit" />
                 </EditButton>
               </ButtonGroup>
             </Controls>
