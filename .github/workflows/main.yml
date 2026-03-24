@@ -1,0 +1,61 @@
+name: 'Build Windows Release'
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version Number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # บรรทัดนี้สำคัญ: แก้ไข Version ใน tauri.conf.json ให้ตรงกับที่เราพิมพ์เข้าไป
+      - name: sync version
+        run: |
+          $ver = "${{ github.event.inputs.version }}"
+          (Get-Content src-tauri/tauri.conf.json) -replace '"version":\s*"[^"]+"', """version"": ""$ver""" | Set-Content src-tauri/tauri.conf.json
+
+      - name: build tauri app
+        run: npm run tauri:build
+
+      # เก็บไฟล์เข้า Artifacts (เผื่อโหลดมาดูเองที่หน้า Actions)
+      - name: upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ragnarok-timer-v${{ github.event.inputs.version }}
+          path: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/exe/*.exe
+
+      # สร้างหน้า Release และอัปโหลดไฟล์ให้จบในตัวเดียว (ไม่ใช่ Draft)
+      - name: create release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: Ragnarok MVP Timer v${{ github.event.inputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/exe/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
