@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Ragnarok MVP Timer (Beta)",
-    "version": "1.0.0.1",
-  "identifier": "ragnarok-mvp-timer.app",
+  "productName": "Ragnarok-MVP-Timer-Beta",
+  "version": "1.0.0",
+  "identifier": "com.teay.ragnarok.mvptimer",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,15 +12,10 @@
   "app": {
     "windows": [
       {
-        "title": "Ragnarok MVP Timer",
+        "title": "Ragnarok MVP Timer (Beta)",
         "width": 1400,
         "height": 1000,
-        "resizable": true,
-        "fullscreen": false,
-        "maximized": false,
-        "theme": "Dark",
-        "visible": true,
-        "center": true
+        "theme": "Dark"
       }
     ],
     "security": {
