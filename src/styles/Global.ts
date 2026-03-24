@@ -37,11 +37,11 @@ export const globals = css`
       color-scheme: dark;
       --primary: #5543cf96; /* SlateBlue */
       --secondary: #2c2457ff; /* BlueViolet */
-      --tertiary: #2C2C4A; /* Dark Blue/Purple for backgrounds */
-      --quaternary: #1A1A2E; /* Even darker for main body background */
-      --border: #4A4A6A;
+      --tertiary: #2c2c4a; /* Dark Blue/Purple for backgrounds */
+      --quaternary: #1a1a2e; /* Even darker for main body background */
+      --border: #4a4a6a;
 
-      --text: #E0E0E0;
+      --text: #e0e0e0;
       --header_text: var(--text);
 
       --header_bg: rgba(44, 44, 74, 0.8); /* Semi-transparent for dark theme */
@@ -56,21 +56,23 @@ export const globals = css`
       --scrollbar_thumb: var(--primary);
 
       --mvpCard_id: var(--text);
-      --mvpCard_name: #9370DB;
+      --mvpCard_name: #9370db;
       --mvpCard_bg: var(--tertiary);
       background-blend-mode: normal;
       --mvpCard_text: var(--text);
-      --mvpCard_killButton: #F25858;
+      --mvpCard_killButton: #f25858;
       --mvpCard_editButton: var(--primary);
       --mvpCard_controls_showMap: var(--primary);
+      --mvpCard_controls_resetPosition: #c07020;
+      --mvpCard_controls_reset: var(--primary);
       --mvpCard_controls_edit: var(--primary);
-      --mvpCard_controls_delete: #F25858;
+      --mvpCard_controls_delete: #f25858;
 
       --scrollbar_thumb: var(--primary);
 
-      --timers_passed: #F25858;
-      --timers_normal: #FFFFFF;
-      --timers_respawning: #FFFF00;
+      --timers_passed: #f25858;
+      --timers_normal: #ffffff;
+      --timers_respawning: #ffff00;
 
       --switch_bg: var(--primary);
       --switch_handle: var(--quaternary);
@@ -79,7 +81,7 @@ export const globals = css`
       background-blend-mode: normal;
       --modal_backdrop_filter: none;
       --modal_hl: var(--text);
-      --modal_name: #9370DB;
+      --modal_name: #9370db;
       --modal_time: var(--primary);
       --modal_button: var(--primary);
 
@@ -122,14 +124,19 @@ export const globals = css`
       color-scheme: dark; /* Changed to dark color scheme */
       --primary: #6553df96; /* Brighter version of dark primary */
       --secondary: #3c3467ff; /* Brighter version of dark secondary */
-      --tertiary: #3C3C5A; /* Brighter version of dark tertiary */
-      --quaternary: #2A2A3E; /* Brighter version of dark quaternary */
-      --border: #5A5A7A; /* Brighter version of dark border */
+      --tertiary: #3c3c5a; /* Brighter version of dark tertiary */
+      --quaternary: #2a2a3e; /* Brighter version of dark quaternary */
+      --border: #5a5a7a; /* Brighter version of dark border */
 
-      --text: #E0E0E0; /* Keep dark theme text color */
+      --text: #e0e0e0; /* Keep dark theme text color */
       --header_text: var(--text);
 
-      --header_bg: rgba(60, 60, 90, 0.8); /* Semi-transparent for brighter dark theme */
+      --header_bg: rgba(
+        60,
+        60,
+        90,
+        0.8
+      ); /* Semi-transparent for brighter dark theme */
       background-blend-mode: normal;
       --header_backdrop_filter: blur(10px); /* Keep glass effect */
       --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
@@ -141,19 +148,21 @@ export const globals = css`
       --scrollbar_thumb: var(--primary); /* From dark theme */
 
       --mvpCard_id: var(--text); /* From dark theme */
-      --mvpCard_name: #9370DB; /* From dark theme */
+      --mvpCard_name: #9370db; /* From dark theme */
       --mvpCard_bg: var(--tertiary);
       background-blend-mode: normal;
       --mvpCard_text: var(--text); /* From dark theme */
-      --mvpCard_killButton: #F25858; /* From dark theme */
+      --mvpCard_killButton: #f25858; /* From dark theme */
       --mvpCard_editButton: var(--primary); /* From dark theme */
       --mvpCard_controls_showMap: var(--primary); /* From dark theme */
+      --mvpCard_controls_resetPosition: #c07020;
+      --mvpCard_controls_reset: var(--primary); /* From dark theme */
       --mvpCard_controls_edit: var(--primary); /* From dark theme */
-      --mvpCard_controls_delete: #F25858; /* From dark theme */
+      --mvpCard_controls_delete: #f25858; /* From dark theme */
 
-      --timers_passed: #F25858; /* Already Respawned (Red) */
-      --timers_normal: #FFFFFF;
-      --timers_respawning: #FFFF00; /* Respawning (Yellow) */
+      --timers_passed: #f25858; /* Already Respawned (Red) */
+      --timers_normal: #ffffff;
+      --timers_respawning: #ffff00; /* Respawning (Yellow) */
 
       --switch_bg: var(--primary); /* From dark theme */
       --switch_handle: var(--quaternary); /* From dark theme */
@@ -162,7 +171,7 @@ export const globals = css`
       background-blend-mode: normal;
       --modal_backdrop_filter: blur(20px); /* Keep glass effect */
       --modal_hl: var(--text); /* From dark theme */
-      --modal_name: #9370DB; /* From dark theme */
+      --modal_name: #9370db; /* From dark theme */
       --modal_time: var(--primary); /* From dark theme */
       --modal_button: var(--primary); /* From dark theme */
 
@@ -191,7 +200,12 @@ export const globals = css`
 
       --footer_text: var(--text); /* From dark theme */
       --footer_link: var(--primary); /* From dark theme */
-      --footer_bg: rgba(60, 60, 90, 0.8); /* Semi-transparent for brighter dark theme */
+      --footer_bg: rgba(
+        60,
+        60,
+        90,
+        0.8
+      ); /* Semi-transparent for brighter dark theme */
       background-blend-mode: normal;
       --footer_backdrop_filter: blur(10px); /* Keep glass effect */
       --footer_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
@@ -212,7 +226,12 @@ export const globals = css`
       --text: #1a1d20; /* Even Darker gray for general text */
       --header_text: var(--text);
 
-      --header_bg: rgba(216, 220, 224, 0.9); /* Header background: Based on tertiary, less transparent */
+      --header_bg: rgba(
+        216,
+        220,
+        224,
+        0.9
+      ); /* Header background: Based on tertiary, less transparent */
       background-blend-mode: normal;
       --header_backdrop_filter: blur(10px); /* Keep glass effect if desired */
       --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2); /* Slightly darker shadow */
@@ -231,6 +250,8 @@ export const globals = css`
       --mvpCard_killButton: #b01e2e; /* Even Darker red */
       --mvpCard_editButton: var(--primary);
       --mvpCard_controls_showMap: var(--primary);
+      --mvpCard_controls_resetPosition: #c07020;
+      --mvpCard_controls_reset: var(--primary);
       --mvpCard_controls_edit: var(--primary);
       --mvpCard_controls_delete: #b01e2e; /* Even Darker red */
 
@@ -254,7 +275,9 @@ export const globals = css`
       --modal_serverSelect_bg: var(--quaternary);
       --modal_serverSelect_bgActive: var(--primary);
       --modal_serverSelect_text: var(--text);
-      --modal_serverSelect_textActive: var(--text); /* Change to dark text on active primary */
+      --modal_serverSelect_textActive: var(
+        --text
+      ); /* Change to dark text on active primary */
       --modal_serverSelect_border: transparent;
 
       --modal_changeMap_border: var(--primary);
@@ -274,7 +297,12 @@ export const globals = css`
 
       --footer_text: var(--text);
       --footer_link: var(--primary);
-      --footer_bg: rgba(216, 220, 224, 0.9); /* Footer background: Based on tertiary, less transparent */
+      --footer_bg: rgba(
+        216,
+        220,
+        224,
+        0.9
+      ); /* Footer background: Based on tertiary, less transparent */
       background-blend-mode: normal;
       --footer_backdrop_filter: blur(10px); /* Keep glass effect if desired */
       --footer_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
@@ -286,7 +314,7 @@ export const globals = css`
 
     /* Aggressive override for ModalSelectMap text */
     .m12h3ctv span {
-      color: #E0E0E0 !important;
+      color: #e0e0e0 !important;
     }
 
     html.non-glass-ui[data-theme='darkest'] {
@@ -331,9 +359,19 @@ export const globals = css`
 
     html.transparent-main-content[data-theme='light'] {
       /* Main component background */
-      --secondary: rgba(192, 196, 200, 0.1); /* Semi-transparent based on new secondary */
+      --secondary: rgba(
+        192,
+        196,
+        200,
+        0.1
+      ); /* Semi-transparent based on new secondary */
       /* MvpCard background */
-      --mvpCard_bg: rgba(216, 220, 224, 0.9); /* Semi-transparent based on new tertiary */
+      --mvpCard_bg: rgba(
+        216,
+        220,
+        224,
+        0.9
+      ); /* Semi-transparent based on new tertiary */
     }
 
     /* Ultra Lite Overrides */
@@ -343,7 +381,7 @@ export const globals = css`
       --footer_backdrop_filter: none !important;
       --filterSearch_backdrop_filter: none !important;
       --languagePicker_backdrop_filter: none !important;
-      
+
       --header_box_shadow: none !important;
       --footer_box_shadow: none !important;
 
@@ -364,8 +402,8 @@ export const globals = css`
     }
 
     /* Keep MVP Sprites animated as requested */
-    html.ultra-lite img[alt], 
-    html.ultra-lite [class*="Sprite"] {
+    html.ultra-lite img[alt],
+    html.ultra-lite [class*='Sprite'] {
       animation-duration: unset !important;
       transition-duration: unset !important;
     }

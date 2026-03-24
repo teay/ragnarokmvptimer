@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { RefreshCcw, Trash2, Edit2 } from '@styled-icons/feather';
+import { RefreshCcw, Trash2, Edit2, MapPin } from '@styled-icons/feather';
 import { FormattedMessage, useIntl } from 'react-intl';
 import dayjs from 'dayjs';
 
@@ -45,7 +45,8 @@ export function MvpCard({ mvp }: MvpCardProps) {
     editingMvp,
     setKillingMvp,
   } = useMvpsContext();
-  const { respawnAsCountdown, animatedSprites, showMvpMap, toggleShowMvpMap } = useSettings();
+  const { respawnAsCountdown, animatedSprites, showMvpMap, toggleShowMvpMap } =
+    useSettings();
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const intl = useIntl();
@@ -94,7 +95,7 @@ export function MvpCard({ mvp }: MvpCardProps) {
 
         <BottomControls>
           <MapName onClick={toggleShowMvpMap}>
-            <FormattedMessage id='map' />: {' '}
+            <FormattedMessage id='map' />:{' '}
             <Bold>{isActive ? mvp.deathMap : mvp.spawn[0].mapname}</Bold>
           </MapName>
 
@@ -116,27 +117,52 @@ export function MvpCard({ mvp }: MvpCardProps) {
                 <FormattedMessage id='when_was_mvp_killed' />
                 <br />
                 <Bold>{dayjs(mvp.deathTime).format('DD/MM/YYYY HH:mm')}</Bold>
-                <Edit2 size={18} style={{ marginLeft: 8, verticalAlign: 'middle', opacity: 0.8 }} />
+                <Edit2
+                  size={18}
+                  style={{
+                    marginLeft: 8,
+                    verticalAlign: 'middle',
+                    opacity: 0.8,
+                  }}
+                />
               </Tombstone>
 
               <Controls>
+                <Control
+                  onClick={() => {
+                    resetMvpTimer(mvp);
+                    setIsMapModalOpen(true);
+                  }}
+                  title='Reset timer and record new position'
+                >
+                  <MapPin />
+                  <ControlText>
+                    <FormattedMessage id='reset_timer_position' />
+                  </ControlText>
+                </Control>
                 <Control onClick={() => resetMvpTimer(mvp)} title='Reset timer'>
                   <RefreshCcw />
-                  <ControlText><FormattedMessage id='reset_timer' /></ControlText>
+                  <ControlText>
+                    <FormattedMessage id='reset_timer' />
+                  </ControlText>
                 </Control>
                 <Control
                   onClick={() => removeMvpByMap(mvp.id, mvp.deathMap)}
                   title='Remove this mvp'
                 >
                   <Trash2 />
-                  <ControlText><FormattedMessage id='remove_mvp' /></ControlText>
+                  <ControlText>
+                    <FormattedMessage id='remove_mvp' />
+                  </ControlText>
                 </Control>
                 <Control
                   onClick={() => setEditingMvp(mvp)}
                   title='Edit this mvp'
                 >
                   <Edit2 />
-                  <ControlText><FormattedMessage id='edit_mvp' /></ControlText>
+                  <ControlText>
+                    <FormattedMessage id='edit_mvp' />
+                  </ControlText>
                 </Control>
               </Controls>
             </>
@@ -151,14 +177,10 @@ export function MvpCard({ mvp }: MvpCardProps) {
             </Controls>
           )}
         </BottomControls>
-
       </Container>
 
       {isActive && isMapModalOpen && (
-        <ModalMvpMap
-          mvp={mvp}
-          close={() => setIsMapModalOpen(false)}
-        />
+        <ModalMvpMap mvp={mvp} close={() => setIsMapModalOpen(false)} />
       )}
     </>
   );
