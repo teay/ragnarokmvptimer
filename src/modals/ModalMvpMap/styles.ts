@@ -75,11 +75,7 @@ export const Footer = styled.footer`
 export const ChangeMapButton = styled.button<{ size?: 'sm' | 'md' | 'lg' }>`
   min-width: 100px;
   padding: ${({ size }) =>
-    size === 'sm'
-      ? '8px 12px'
-      : size === 'lg'
-      ? '12px 24px'
-      : '10px 20px'};
+    size === 'sm' ? '8px 12px' : size === 'lg' ? '12px 24px' : '10px 20px'};
   font-size: ${({ size }) =>
     size === 'sm' ? '0.9rem' : size === 'lg' ? '1.4rem' : '1.1rem'};
   border: none;
@@ -94,4 +90,12 @@ export const ChangeMapButton = styled.button<{ size?: 'sm' | 'md' | 'lg' }>`
     filter: brightness(0.9);
     box-shadow: 0 0 15px var(--secondary);
   }
+`;
+
+export const KeyboardHint = styled.div`
+  color: #aaa;
+  font-size: 1.4rem;
+  margin-top: 1rem;
+  display: flex;
+  gap: 2rem;
 `;

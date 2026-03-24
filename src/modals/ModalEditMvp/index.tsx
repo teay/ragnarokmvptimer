@@ -22,6 +22,7 @@ import {
   Question,
   Optional,
   Footer,
+  KeyboardHint,
 } from './styles';
 
 const ButtonBase = styled.button`
@@ -68,7 +69,12 @@ const ChangeMapButton = styled(ButtonBase)`
 
 export function ModalEditMvp() {
   useScrollBlock(true);
-  const { killMvp, updateMvp, editingMvp: mvp, closeEditMvpModal } = useMvpsContext();
+  const {
+    killMvp,
+    updateMvp,
+    editingMvp: mvp,
+    closeEditMvpModal,
+  } = useMvpsContext();
   const { animatedSprites } = useSettings();
 
   const [newTime, setNewTime] = useState<Date | null>(
@@ -76,28 +82,27 @@ export function ModalEditMvp() {
   );
 
   const [selectedMap, setSelectedMap] = useState<string>(mvp.deathMap || '');
-  const [markCoordinates, setMarkCoordinates] = useState<IMapMark>({
-    x: -1,
-    y: -1,
-  });
+  const [markCoordinates, setMarkCoordinates] = useState<IMapMark>(
+    mvp.deathPosition || { x: -1, y: -1 }
+  );
 
   const hasMoreThanOneMap = mvp.spawn.length > 1;
 
   function handleConfirm() {
     if (!selectedMap) return;
-  
+
     const updatedMvp: IMvp = {
       ...mvp,
       deathMap: selectedMap,
       deathPosition: markCoordinates,
     };
-  
+
     if (mvp.deathTime) {
       updateMvp(updatedMvp, newTime);
     } else {
       killMvp(updatedMvp, newTime);
     }
-    
+
     closeEditMvpModal();
   }
 
@@ -106,6 +111,7 @@ export function ModalEditMvp() {
   }, [hasMoreThanOneMap, mvp.spawn]);
 
   useKey('Escape', closeEditMvpModal);
+  useKey('Enter', handleConfirm);
 
   if (!selectedMap) {
     return (
@@ -145,7 +151,11 @@ export function ModalEditMvp() {
                 (<FormattedMessage id='optional_mark' />)
               </Optional>
             </Question>
-            <Map mapName={selectedMap} onChange={setMarkCoordinates} coordinates={markCoordinates} />
+            <Map
+              mapName={selectedMap}
+              onChange={setMarkCoordinates}
+              coordinates={markCoordinates}
+            />
           </>
         )}
 
@@ -162,6 +172,15 @@ export function ModalEditMvp() {
             <FormattedMessage id='confirm' />
           </PrimaryButton>
         </Footer>
+
+        <KeyboardHint>
+          <span>
+            <FormattedMessage id='press_esc_to_close' />
+          </span>
+          <span>
+            <FormattedMessage id='press_enter_to_confirm' />
+          </span>
+        </KeyboardHint>
       </Modal>
     </ModalBase>
   );

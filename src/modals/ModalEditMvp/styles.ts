@@ -1,4 +1,4 @@
-import { styled } from "@linaria/react";
+import { styled } from '@linaria/react';
 
 export const Modal = styled.div`
   width: 100%;
@@ -65,7 +65,7 @@ export const Name = styled.span`
 `;
 
 export const Question = styled.span`
-  color: #E0E0E0 !important;
+  color: #e0e0e0 !important;
 
   font-size: 1.8rem;
   font-weight: 700;
@@ -87,4 +87,12 @@ export const Footer = styled.footer`
   justify-content: center;
   margin-top: 10px;
   gap: 16px;
+`;
+
+export const KeyboardHint = styled.div`
+  color: #aaa;
+  font-size: 1.4rem;
+  margin-top: 1rem;
+  display: flex;
+  gap: 2rem;
 `;

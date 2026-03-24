@@ -17,6 +17,7 @@ import {
   Optional,
   Footer,
   ChangeMapButton,
+  KeyboardHint,
 } from './styles';
 
 interface MvpMapModalProps {
@@ -39,14 +40,10 @@ export function ModalMvpMap({ mvp, close }: MvpMapModalProps) {
 
   useScrollBlock(true);
   useKey('Escape', close);
+  useKey('Enter', handleConfirm);
 
   function handleConfirm() {
-    updateMvpDeathLocation(
-      mvp.id,
-      mvp.deathMap,
-      selectedMap,
-      markCoordinates
-    );
+    updateMvpDeathLocation(mvp.id, mvp.deathMap, selectedMap, markCoordinates);
     close();
   }
 
@@ -90,6 +87,15 @@ export function ModalMvpMap({ mvp, close }: MvpMapModalProps) {
             <FormattedMessage id='confirm' />
           </ModalPrimaryButton>
         </Footer>
+
+        <KeyboardHint>
+          <span>
+            <FormattedMessage id='press_esc_to_close' />
+          </span>
+          <span>
+            <FormattedMessage id='press_enter_to_confirm' />
+          </span>
+        </KeyboardHint>
       </Modal>
     </ModalBase>
   );
