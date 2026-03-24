@@ -9,7 +9,7 @@ export const messages = {
     active: 'Active',
     pinned: 'Wait for kill',
     pin: 'Select to kill',
-    unpin: 'Back to All',
+    unpin: 'Cancel Hunting',
     backToWait: 'Back to wait',
     all: 'All',
     respawning: 'Respawning',
