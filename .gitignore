@@ -1,30 +1,36 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-/dist
-
-# misc
-.env
+# --- System & Version Control ---
+.git/
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+Thumbs.db
+.idea/
+.vscode/
 
+# --- Node.js / Web (Vite, React, Next) ---
+node_modules/           # แนะนำให้เอา / ข้างหน้าออกเพื่อให้คลุมทุก sub-folder
+dist/
+build/
+.next/
+.cache/
+.vercel/
+.vite/
+dev-dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-.vercel
-/dev-dist
+# --- Tauri (Desktop App) ---
+src-tauri/target/       
+src-tauri/binaries/
+src-tauri/gen/
 
-.vite/
+# --- Database & Storage (Text-based / Backend) ---
+*.db
+*.sqlite
+*.sqlite-journal
+*.log
+*.tmp
+storage/
+terminal/               # เพิ่มตัวนี้เข้าไปถ้าข้างในไม่ใช่ Source Code ที่ต้องแก้
+
+# --- Opencode Specific ---
+.opencode/
