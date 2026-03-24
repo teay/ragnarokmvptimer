@@ -241,18 +241,11 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
                 </KilledNow>
               </ButtonGroup>
               <ButtonGroupDivider />
-              <ActionGrid>
-                <div />
-                <MiniControl
-                  onClick={() => setEditingMvp(mvp)}
-                  title="Edit MVP"
-                  variant="secondary"
-                >
-                  <Edit2 />
-                  <span>{intl.formatMessage({ id: 'edit' })}</span>
-                </MiniControl>
-                <div />
-              </ActionGrid>
+              <ButtonGroup variant="secondary">
+                <EditButton onClick={() => setEditingMvp(mvp)}>
+                  <FormattedMessage id="edit" />
+                </EditButton>
+              </ButtonGroup>
             </Controls>
           )}
         </BottomControls>
