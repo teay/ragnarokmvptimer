@@ -1,7 +1,17 @@
 name: 'Build Tauri Windows EXE'
 
 on:
-  workflow_dispatch: # รันเองจากหน้า GitHub Actions
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g., v0.1.0-beta.1)'
+        required: true
+        default: 'v0.1.0-beta.1'
+      release_notes:
+        description: 'Release notes'
+        required: false
+        default: 'Beta release with Reset Timer & Position feature'
+        type: string
 
 jobs:
   build:
@@ -12,6 +22,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,11 +49,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install WebView2 Runtime
+      - name: Update version in tauri.conf.json
         run: |
-          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile "$env:TEMP\WebView2Installer.exe"
-          Start-Process -FilePath "$env:TEMP\WebView2Installer.exe" -ArgumentList "/silent /install" -Wait
-          Remove-Item "$env:TEMP\WebView2Installer.exe"
+          $version = "${{ github.event.inputs.version }}"
+          (Get-Content 'src-tauri/tauri.conf.json') -replace '"version": "[^"]+"', """version"": ""$version""" | Set-Content 'src-tauri/tauri.conf.json'
 
       - name: Build Tauri app
         run: npm run tauri:build
@@ -49,16 +60,22 @@ jobs:
       - name: Find EXE file
         id: find_exe
         run: |
-          $exe = Get-ChildItem -Path src-tauri/target/release -Filter *.exe -Recurse | Select-Object -First 1
+          $exe = Get-ChildItem -Path src-tauri/target/release -Filter *.exe -Recurse | Where-Object { $_.Name -notlike "*setup*" } | Select-Object -First 1
           if (-not $exe) {
-            Write-Error "No .exe found"
+            Write-Error "No .exe found in release folder"
             exit 1
           }
           Write-Host "Found: $($exe.FullName)"
           echo "exe_path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
 
-      - name: Upload EXE as artifact
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: Ragnarok-MVP-Timer-Windows
-          path: ${{ steps.find_exe.outputs.exe_path }}
+          tag_name: ${{ github.event.inputs.version }}
+          name: Ragnarok MVP Timer ${{ github.event.inputs.version }}
+          body: ${{ github.event.inputs.release_notes }}
+          draft: true
+          prerelease: ${{ contains(github.event.inputs.version, 'beta') }}
+          files: ${{ steps.find_exe.outputs.exe_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

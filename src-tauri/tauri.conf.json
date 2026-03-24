@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "ragnarok-mvp-timer",
-  "version": "0.1.0",
+  "version": "0.1.0-beta.1",
   "identifier": "ragnarok-mvp-timer.app",
   "build": {
     "frontendDist": "../dist",
