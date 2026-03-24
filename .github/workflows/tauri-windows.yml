@@ -52,6 +52,7 @@ jobs:
       - name: Update version in tauri.conf.json
         run: |
           $version = "${{ github.event.inputs.version }}"
+          $version = $version -replace '^v', ''
           (Get-Content 'src-tauri/tauri.conf.json') -replace '"version": "[^"]+"', """version"": ""$version""" | Set-Content 'src-tauri/tauri.conf.json'
 
       - name: Build Tauri app
