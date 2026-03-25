@@ -98,7 +98,9 @@ export function ModalKillMvp() {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      console.log('Key pressed:', e.key, 'selectedMap:', selectedMap);
       if (e.key === 'Enter' && selectedMap) {
+        e.preventDefault();
         handleConfirm();
       } else if (e.key === 'Escape') {
         closeKillMvpModal();
