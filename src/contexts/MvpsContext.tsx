@@ -27,7 +27,6 @@ interface MvpsContextData {
   killingMvp: IMvp | undefined;
   isLoading: boolean;
   dataLocation: 'local' | 'online' | 'ghost' | 'warning';
-  resetMvpTimer: (mvp: IMvp) => void;
   killMvp: (mvp: IMvp, time?: Date | null) => void;
   updateMvp: (mvp: IMvp, time?: Date | null) => void;
   updateMvpDeathLocation: (
@@ -36,13 +35,10 @@ interface MvpsContextData {
     newDeathMap: string,
     newDeathPosition: IMapMark
   ) => void;
-  removeMvpByMap: (mvpID: number, deathMap: string) => void;
   moveToAll: (mvpID: number, deathMap: string) => void;
   addToWait: (mvp: IMvp) => void;
   removeFromWait: (mvp: IMvp) => void;
   moveToWait: (mvp: IMvp) => void;
-  pinMvp: (mvp: IMvp) => void;
-  unpinMvp: (mvp: IMvp, removeFromActive?: boolean) => void;
   setEditingMvp: (mvp: IMvp) => void;
   closeEditMvpModal: () => void;
   setEditingTimeMvp: (mvp: IMvp) => void;
@@ -276,22 +272,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
     [activeMvps, saveMvpsToTarget]
   );
 
-  const resetMvpTimer = useCallback(
-    (mvp: IMvp) => {
-      modifyMvps((current) => {
-        const updatedMvp = {
-          ...mvp,
-          deathTime: new Date(),
-          deathPosition: undefined,
-        };
-        return current.map((m) =>
-          m.id === mvp.id && m.deathMap === mvp.deathMap ? updatedMvp : m
-        );
-      });
-    },
-    [modifyMvps]
-  );
-
   const killMvp = useCallback(
     (mvp: IMvp, deathTime = new Date()) => {
       modifyMvps((current) => {
@@ -476,17 +456,13 @@ export function MvpProvider({ children }: MvpProviderProps) {
         editingMvp,
         editingTimeMvp,
         killingMvp,
-        resetMvpTimer,
         killMvp,
         updateMvp,
         updateMvpDeathLocation,
-        removeMvpByMap,
         moveToAll,
         addToWait,
         removeFromWait,
         moveToWait,
-        pinMvp,
-        unpinMvp,
         setEditingMvp,
         closeEditMvpModal: () => setEditingMvp(undefined),
         setEditingTimeMvp,
