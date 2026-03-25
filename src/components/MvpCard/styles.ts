@@ -79,6 +79,18 @@ export const Bold = styled.span`
   font-weight: bold;
 `;
 
+export const KillTime = styled.span`
+  font-size: 0.7rem;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    font-size: 1.4rem;
+    color: #fff;
+  }
+`;
+
 export const Header = styled.div`
   display: flex;
   flex-direction: row;
@@ -235,7 +247,9 @@ export const ActionGrid = styled.div`
   margin: 0 auto;
 `;
 
-export const MiniControl = styled.button<{ variant?: 'danger' | 'secondary' | 'back' }>`
+export const MiniControl = styled.button<{
+  variant?: 'danger' | 'secondary' | 'back';
+}>`
   display: flex;
   flex-direction: column;
   align-items: center;

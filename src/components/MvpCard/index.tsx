@@ -33,6 +33,7 @@ import {
   ButtonGroupDivider,
   ActionGrid,
   MiniControl,
+  KillTime,
 } from './styles';
 
 interface MvpCardProps {
@@ -77,13 +78,12 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
           <ID>{`((${mvp.id}))`}</ID>
           <Name>{mvp.name}</Name>
           {inActive && mvp.deathTime && (
-            <span
-              style={{ fontSize: '0.9rem', color: '#888', cursor: 'pointer' }}
+            <KillTime
               onClick={() => setEditingTimeMvp(mvp)}
               title='Click to edit time'
             >
               {dayjs(mvp.deathTime).format('DD/MM HH:mm')}
-            </span>
+            </KillTime>
           )}
         </Header>
 
