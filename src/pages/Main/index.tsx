@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FormattedMessage } from 'react-intl';
 
-import { MvpCard } from '@/components/MvpCard';
+import { MvpTable } from '@/components/MvpTable';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { MvpsContainerFilter } from '@/components/MvpsContainerFilter';
 import { MvpCardSkeleton } from '@/components/Skeletons/MvpCardSkeleton';
@@ -66,15 +66,9 @@ export function Main() {
               <FormattedMessage id='active' />
             </SectionTitle>
 
-            <MvpsContainer>
-              {normalActiveMvps.map((mvp: IMvp) => (
-                <MvpCard
-                  key={`${mvp.id}-${mvp.deathMap}`}
-                  mvp={mvp}
-                  zone='active'
-                />
-              ))}
-            </MvpsContainer>
+            {normalActiveMvps.length > 0 && (
+              <MvpTable mvps={normalActiveMvps} zone='active' />
+            )}
           </Section>
         )}
 
@@ -84,15 +78,9 @@ export function Main() {
               <FormattedMessage id='pinned' />
             </SectionTitle>
 
-            <MvpsContainer>
-              {pinnedMvps.map((mvp: IMvp) => (
-                <MvpCard
-                  key={`${mvp.id}-${mvp.deathMap}`}
-                  mvp={mvp}
-                  zone='wait'
-                />
-              ))}
-            </MvpsContainer>
+            {pinnedMvps.length > 0 && (
+              <MvpTable mvps={pinnedMvps} zone='wait' />
+            )}
           </Section>
         )}
 
@@ -119,15 +107,7 @@ export function Main() {
           )}
 
           {nonActiveMvps.length > 0 && (
-            <MvpsContainer>
-              {nonActiveMvps.map((mvp: IMvp) => (
-                <MvpCard
-                  key={`${mvp.id}-${mvp.deathMap}`}
-                  mvp={mvp}
-                  zone='all'
-                />
-              ))}
-            </MvpsContainer>
+            <MvpTable mvps={nonActiveMvps} zone='all' />
           )}
         </Section>
       </Container>
