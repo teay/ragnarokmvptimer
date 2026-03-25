@@ -96,17 +96,15 @@ export function ModalKillMvp() {
     if (!hasMoreThanOneMap) setSelectedMap(mvp.spawn[0].mapname);
   }, [hasMoreThanOneMap, mvp.spawn]);
 
-  const hasPosition = markCoordinates.x !== -1 && markCoordinates.y !== -1;
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && hasPosition && selectedMap) {
+      if (e.key === 'Enter' && selectedMap) {
         handleConfirm();
       } else if (e.key === 'Escape') {
         closeKillMvpModal();
       }
     },
-    [hasPosition, selectedMap, handleConfirm, closeKillMvpModal]
+    [selectedMap, handleConfirm, closeKillMvpModal]
   );
 
   useEffect(() => {
@@ -149,17 +147,8 @@ export function ModalKillMvp() {
               coordinates={markCoordinates}
             />
             <Hint>
-              {hasPosition ? (
-                <>
-                  <FormattedMessage id='press_enter_to_confirm' /> •{' '}
-                  <kbd>ESC</kbd> <FormattedMessage id='press_esc_to_close' />
-                </>
-              ) : (
-                <>
-                  <FormattedMessage id='optional_mark' /> • <kbd>ESC</kbd>{' '}
-                  <FormattedMessage id='press_esc_to_close' />
-                </>
-              )}
+              <kbd>ENTER</kbd> <FormattedMessage id='press_enter_to_confirm' />{' '}
+              • <kbd>ESC</kbd> <FormattedMessage id='press_esc_to_close' />
             </Hint>
           </>
         )}
