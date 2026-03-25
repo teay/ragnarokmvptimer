@@ -146,7 +146,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
 
           {isActive ? (
             <Controls>
-              <ButtonGroup variant="timer-position">
+              <ButtonGroup variant="primary">
                 <Control
                   onClick={() => {
                     resetMvpTimer(mvp);
@@ -160,7 +160,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
                   </ControlText>
                 </Control>
               </ButtonGroup>
-              <ButtonGroup variant="timer">
+              <ButtonGroup variant="primary">
                 <Control onClick={() => resetMvpTimer(mvp)} title="Reset timer">
                   <RefreshCcw />
                   <ControlText>
@@ -235,7 +235,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
                 </Control>
               </ButtonGroup>
               <ButtonGroupDivider />
-              <ButtonGroup variant="timer">
+              <ButtonGroup variant="primary">
                 <KilledNow onClick={handleKilledNow}>
                   <FormattedMessage id="killed_now" />
                 </KilledNow>
