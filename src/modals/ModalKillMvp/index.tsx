@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { styled } from '@linaria/react';
 
-import { useScrollBlock, useKey } from '@/hooks';
+import { useScrollBlock } from '@/hooks';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 
@@ -13,7 +13,6 @@ import { ModalSelectMap } from '../ModalSelectMap';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 
-
 import {
   Modal,
   SpriteWrapper,
@@ -21,6 +20,7 @@ import {
   Question,
   Optional,
   Footer,
+  Hint,
 } from './styles';
 
 const ButtonBase = styled.button`
@@ -78,18 +78,17 @@ export function ModalKillMvp() {
 
   const hasMoreThanOneMap = mvp.spawn.length > 1;
 
-
   function handleConfirm() {
     if (!selectedMap) return;
-  
+
     const updatedMvp: IMvp = {
       ...mvp,
       deathMap: selectedMap,
       deathPosition: markCoordinates,
     };
-  
+
     killMvp(updatedMvp, new Date());
-    
+
     closeKillMvpModal();
   }
 
@@ -97,7 +96,23 @@ export function ModalKillMvp() {
     if (!hasMoreThanOneMap) setSelectedMap(mvp.spawn[0].mapname);
   }, [hasMoreThanOneMap, mvp.spawn]);
 
-  useKey('Escape', closeKillMvpModal);
+  const hasPosition = markCoordinates.x !== -1 && markCoordinates.y !== -1;
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && hasPosition && selectedMap) {
+        handleConfirm();
+      } else if (e.key === 'Escape') {
+        closeKillMvpModal();
+      }
+    },
+    [hasPosition, selectedMap, handleConfirm, closeKillMvpModal]
+  );
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   if (!selectedMap) {
     return (
@@ -128,7 +143,24 @@ export function ModalKillMvp() {
                 (<FormattedMessage id='optional_mark' />)
               </Optional>
             </Question>
-            <Map mapName={selectedMap} onChange={setMarkCoordinates} coordinates={markCoordinates} />
+            <Map
+              mapName={selectedMap}
+              onChange={setMarkCoordinates}
+              coordinates={markCoordinates}
+            />
+            <Hint>
+              {hasPosition ? (
+                <>
+                  <FormattedMessage id='press_enter_to_confirm' /> •{' '}
+                  <kbd>ESC</kbd> <FormattedMessage id='press_esc_to_close' />
+                </>
+              ) : (
+                <>
+                  <FormattedMessage id='optional_mark' /> • <kbd>ESC</kbd>{' '}
+                  <FormattedMessage id='press_esc_to_close' />
+                </>
+              )}
+            </Hint>
           </>
         )}
 
@@ -138,10 +170,7 @@ export function ModalKillMvp() {
               <FormattedMessage id='change_map' />
             </ChangeMapButton>
           )}
-          <PrimaryButton
-            onClick={handleConfirm}
-            disabled={!selectedMap}
-          >
+          <PrimaryButton onClick={handleConfirm} disabled={!selectedMap}>
             <FormattedMessage id='confirm' />
           </PrimaryButton>
         </Footer>

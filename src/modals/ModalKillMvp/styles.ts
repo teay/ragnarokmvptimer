@@ -2,7 +2,7 @@
 // import { styled } from '@linaria/react';
 
 // src/modals/ModalEditMvp/styles.ts
-import { styled } from "@linaria/react";
+import { styled } from '@linaria/react';
 // Don't import ModalPrimaryButton here if it causes issues
 // import { ModalPrimaryButton } from "@/ui/ModalPrimaryButton";
 export const Modal = styled.div`
@@ -68,7 +68,7 @@ export const Name = styled.span`
 `;
 
 export const Question = styled.span`
-  color: #E0E0E0 !important;
+  color: #e0e0e0 !important;
 
   font-size: 1.8rem;
   font-weight: 700;
@@ -79,8 +79,22 @@ export const Question = styled.span`
 `;
 
 export const Optional = styled.span`
-  color: #E0E0E0 !important;
+  color: #e0e0e0 !important;
   font-size: 1.4rem;
+`;
+
+export const Hint = styled.div`
+  color: #aaa;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-top: 0.5rem;
+
+  kbd {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+  }
 `;
 
 export const Footer = styled.footer`
@@ -104,14 +118,10 @@ export const Footer = styled.footer`
 // อัพเดท definition ของ ChangeMapButton ให้รับ prop size
 export const ChangeMapButton = styled.button<{ size?: 'sm' | 'md' | 'lg' }>`
   min-width: 100px;
-  padding: ${({ size }) => 
-    size === 'sm' ? '8px 12px' : 
-    size === 'lg' ? '12px 24px' : 
-    '10px 20px'};
-  font-size: ${({ size }) => 
-    size === 'sm' ? '0.9rem' : 
-    size === 'lg' ? '1.4rem' : 
-    '1.1rem'};
+  padding: ${({ size }) =>
+    size === 'sm' ? '8px 12px' : size === 'lg' ? '12px 24px' : '10px 20px'};
+  font-size: ${({ size }) =>
+    size === 'sm' ? '0.9rem' : size === 'lg' ? '1.4rem' : '1.1rem'};
   border: none;
   border-radius: 5px;
   background-color: var(--primary);
