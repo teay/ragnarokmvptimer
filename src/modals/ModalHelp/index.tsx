@@ -25,51 +25,67 @@ interface ModalHelpProps {
 }
 
 const DEFAULT_FLOW = [
-  { id: 1, mvpName: 'Baphomet', status: 'ALREADY RESPAWNED', timer: '00:00:00', button: 'Select to kill', variant: 'primary', icon: <Star size={16} />, cursor: { top: 215, left: 160, click: true }, activeStep: 2 },
-  { id: 2, mvpName: 'Baphomet', status: 'WAIT FOR KILL', timer: '00:05:15', button: 'I killed now !', variant: 'primary', secondaryButton: 'CANCEL', secondaryVariant: 'back', cursor: { top: 205, left: 140, click: true }, activeStep: 3 },
-  { id: 3, mvpName: 'Drake', status: 'ALREADY RESPAWNED', timer: '00:00:00', button: 'Select to kill', variant: 'primary', icon: <Star size={16} />, cursor: { top: 215, left: 160, click: true }, activeStep: 2 },
-  { id: 4, mvpName: 'Drake', status: 'COUNTING DOWN', timer: '02:00:00', button: 'Reset Timer & Position', variant: 'timer', icon: <MapPin size={16} />, cursor: { top: 240, left: 260, click: false }, activeStep: 1 },
+  { 
+    id: 1, 
+    mvpName: 'Baphomet',
+    status: 'ALREADY RESPAWNED', 
+    timer: '00:00:00', 
+    button: 'Select to kill', 
+    variant: 'primary', 
+    icon: <Star size={16} />,
+    cursor: { top: 215, left: 160, click: true },
+    activeStep: 2
+  },
+  { 
+    id: 2, 
+    mvpName: 'Baphomet',
+    status: 'WAIT FOR KILL', 
+    timer: '00:05:15', 
+    button: 'I killed now !', 
+    variant: 'primary', 
+    secondaryButton: 'CANCEL', 
+    secondaryVariant: 'back',
+    cursor: { top: 205, left: 140, click: true },
+    activeStep: 3
+  },
+  { 
+    id: 3, 
+    mvpName: 'Drake',
+    status: 'ALREADY RESPAWNED', 
+    timer: '00:00:00', 
+    button: 'Select to kill', 
+    variant: 'primary', 
+    icon: <Star size={16} />,
+    cursor: { top: 215, left: 160, click: true },
+    activeStep: 2
+  },
+  { 
+    id: 4, 
+    mvpName: 'Drake',
+    status: 'COUNTING DOWN', 
+    timer: '02:00:00', 
+    button: 'Reset Timer & Position', 
+    variant: 'timer',
+    icon: <MapPin size={16} />,
+    cursor: { top: 240, left: 260, click: false },
+    activeStep: 1
+  },
 ];
 
 export function ModalHelp({ close }: ModalHelpProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [flowSteps, setFlowSteps] = useState(DEFAULT_FLOW);
 
   useKey('Escape', close);
 
   useEffect(() => {
-    // Try to load recorded steps
-    const saved = localStorage.getItem('recorded_tutorial_steps');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const dynamicFlow = parsed.map((s: any, idx: number) => ({
-          id: idx,
-          mvpName: s.mvpName,
-          status: s.status.toUpperCase(),
-          timer: s.action === 'reset' ? '02:00:00' : '00:00:00',
-          button: s.action === 'kill' ? 'I killed now !' : s.action === 'pin' ? 'Select to kill' : 'Reset Timer',
-          variant: s.action === 'reset' ? 'timer' : 'primary',
-          icon: s.action === 'pin' ? <Star size={16} /> : s.action === 'reset' ? <MapPin size={16} /> : undefined,
-          cursor: s.action === 'pin' ? { top: 215, left: 160, click: true } : { top: 205, left: 140, click: true },
-          activeStep: s.action === 'kill' ? 4 : s.action === 'pin' ? 3 : 1
-        }));
-        setFlowSteps(dynamicFlow);
-      } catch (e) {
-        console.error('Failed to parse recorded steps', e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (flowSteps.length === 0) return;
     const interval = setInterval(() => {
-      setStepIndex((prev) => (prev + 1) % flowSteps.length);
+      setStepIndex((prev) => (prev + 1) % DEFAULT_FLOW.length);
     }, 3500);
     return () => clearInterval(interval);
-  }, [flowSteps]);
+  }, []);
 
-  const current = flowSteps[stepIndex] || DEFAULT_FLOW[0];
+  const current = DEFAULT_FLOW[stepIndex];
+
   return (
     <ModalBase close={close}>
       <Container>
@@ -82,7 +98,7 @@ export function ModalHelp({ close }: ModalHelpProps) {
           </FakeCursor>
 
           <div style={{ fontSize: '1.2rem', color: '#8b5a2b', fontWeight: 'bold', marginBottom: '10px' }}>
-            REAL USAGE SIMULATION
+            HOW IT WORKS
           </div>
           <MiniCard>
             <div style={{ fontSize: '1.6rem', fontWeight: 'bold' }}>{current.mvpName}</div>

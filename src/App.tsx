@@ -27,9 +27,65 @@ import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from './constants';
 
 const APP_VERSION = '2'; // Define the current version of the application
 
-export default function App() {
-  const { activeMvps, saveMvps } = useMvpsContext();
+function RecordingControl() {
+  const { isRecording, toggleRecording } = useMvpsContext();
 
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '20px',
+        left: '20px',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        background: 'rgba(0,0,0,0.8)',
+        padding: '10px 15px',
+        borderRadius: '30px',
+        border: `2px solid ${isRecording ? '#ff4444' : '#444'}`,
+        boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+      }}
+    >
+      {isRecording && (
+        <div
+          style={{
+            width: '12px',
+            height: '12px',
+            background: '#ff4444',
+            borderRadius: '50%',
+            animation: 'blink 1s infinite',
+          }}
+        />
+      )}
+      <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }`}</style>
+      <button
+        onClick={toggleRecording}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: 'white',
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          fontSize: '1.2rem',
+        }}
+      >
+        {isRecording ? 'STOP RECORDING' : 'START REC (DEV)'}
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <MvpProvider>
+      <AppContent />
+    </MvpProvider>
+  );
+}
+
+function AppContent() {
+  const { activeMvps, saveMvps } = useMvpsContext();
   const {
     language,
     isGlassUIEnabled,
@@ -284,11 +340,9 @@ export default function App() {
               />
             )}
 
-            <MvpProvider>
-              <Header />
-              <Main />
-              <Footer />
-            </MvpProvider>
+            <Header />
+            <Main />
+            <Footer />
             <WarningHeader text={messages[language]['under_development']} />
           </>
         )}

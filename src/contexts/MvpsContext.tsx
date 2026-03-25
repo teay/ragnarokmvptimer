@@ -22,13 +22,9 @@ interface MvpsContextData {
   activeMvps: IMvp[];
   allMvps: IMvp[];
   originalAllMvps: IMvp[];
-  editingMvp: IMvp | undefined;
-  editingTimeMvp: IMvp | undefined;
   killingMvp: IMvp | undefined;
   isLoading: boolean;
   dataLocation: 'local' | 'online' | 'ghost' | 'warning';
-  isRecording: boolean;
-  toggleRecording: () => void;
   resetMvpTimer: (mvp: IMvp) => void;
   killMvp: (mvp: IMvp, time?: Date | null) => void;
   updateMvp: (mvp: IMvp, time?: Date | null) => void;
@@ -88,47 +84,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const [activeMvps, setActiveMvps] = useState<IMvp[]>([]);
   const [originalAllMvps, setOriginalAllMvps] = useState<IMvp[]>([]);
-
-  // Recording feature
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordedSteps, setRecordedSteps] = useState<any[]>([]);
-
-  const addRecordingStep = useCallback(
-    (mvp: IMvp, action: string, status: string) => {
-      if (!isRecording) return;
-      const step = {
-        id: recordedSteps.length + 1,
-        mvpName: mvp.name,
-        status,
-        action,
-        timestamp: new Date().toISOString(),
-      };
-      setRecordedSteps((prev) => [...prev, step]);
-      console.log('⏺️ Step recorded:', step);
-    },
-    [isRecording, recordedSteps.length]
-  );
-
-  const toggleRecording = useCallback(() => {
-    if (isRecording) {
-      console.log('⏹️ Recording stopped. Your Tutorial Steps:');
-      console.log(JSON.stringify(recordedSteps, null, 2));
-      
-      // Save to localStorage so ModalHelp can play it
-      if (recordedSteps.length > 0) {
-        localStorage.setItem('recorded_tutorial_steps', JSON.stringify(recordedSteps));
-        alert('Recording saved! Open the Help (?) menu to see your replay.');
-      } else {
-        alert('No steps recorded.');
-      }
-      
-      setRecordedSteps([]);
-    } else {
-      console.log('⏺️ Recording started...');
-      setRecordedSteps([]);
-    }
-    setIsRecording((prev) => !prev);
-  }, [isRecording, recordedSteps]);
 
   const dataLocation: 'local' | 'online' | 'ghost' | 'warning' = nickname
     ? 'online'
@@ -317,7 +272,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const resetMvpTimer = useCallback(
     (mvp: IMvp) => {
-      addRecordingStep(mvp, 'reset', 'Counting Down');
       modifyMvps((current) => {
         const updatedMvp = {
           ...mvp,
@@ -329,12 +283,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
         );
       });
     },
-    [modifyMvps, addRecordingStep]
+    [modifyMvps]
   );
 
   const killMvp = useCallback(
     (mvp: IMvp, deathTime = new Date()) => {
-      addRecordingStep(mvp, 'kill', 'Success');
       modifyMvps((current) => {
         const killedMvp = {
           ...mvp,
@@ -351,7 +304,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
           : [...current, killedMvp];
       });
     },
-    [modifyMvps, addRecordingStep]
+    [modifyMvps]
   );
 
   const updateMvp = useCallback(
@@ -415,7 +368,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const pinMvp = useCallback(
     (mvp: IMvp) => {
-      addRecordingStep(mvp, 'pin', 'Wait for kill');
       const pinnedMvp = { ...mvp, isPinned: true };
       modifyMvps((current) => {
         const exists = current.some(
@@ -430,12 +382,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
           : [...current, pinnedMvp];
       });
     },
-    [modifyMvps, addRecordingStep]
+    [modifyMvps]
   );
 
   const unpinMvp = useCallback(
     (mvp: IMvp, removeFromActive = false) => {
-      addRecordingStep(mvp, 'unpin', 'Cancelled');
       if (removeFromActive) {
         modifyMvps((current) => {
           return current.filter(
@@ -452,7 +403,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         });
       }
     },
-    [modifyMvps, addRecordingStep]
+    [modifyMvps]
   );
 
   const leaveParty = useCallback(
@@ -508,8 +459,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
         dataLocation,
         saveMvps,
         leaveParty,
-        isRecording,
-        toggleRecording,
       }}
     >
       {children}
