@@ -22,6 +22,8 @@ interface MvpsContextData {
   activeMvps: IMvp[];
   allMvps: IMvp[];
   originalAllMvps: IMvp[];
+  editingMvp: IMvp | undefined;
+  editingTimeMvp: IMvp | undefined;
   killingMvp: IMvp | undefined;
   isLoading: boolean;
   dataLocation: 'local' | 'online' | 'ghost' | 'warning';
@@ -35,6 +37,10 @@ interface MvpsContextData {
     newDeathPosition: IMapMark
   ) => void;
   removeMvpByMap: (mvpID: number, deathMap: string) => void;
+  moveToAll: (mvpID: number, deathMap: string) => void;
+  addToWait: (mvp: IMvp) => void;
+  removeFromWait: (mvp: IMvp) => void;
+  moveToWait: (mvp: IMvp) => void;
   pinMvp: (mvp: IMvp) => void;
   unpinMvp: (mvp: IMvp, removeFromActive?: boolean) => void;
   setEditingMvp: (mvp: IMvp) => void;
@@ -406,6 +412,34 @@ export function MvpProvider({ children }: MvpProviderProps) {
     [modifyMvps]
   );
 
+  const addToWait = useCallback(
+    (mvp: IMvp) => {
+      pinMvp(mvp);
+    },
+    [pinMvp]
+  );
+
+  const removeFromWait = useCallback(
+    (mvp: IMvp) => {
+      unpinMvp(mvp, true);
+    },
+    [unpinMvp]
+  );
+
+  const moveToWait = useCallback(
+    (mvp: IMvp) => {
+      unpinMvp(mvp, false);
+    },
+    [unpinMvp]
+  );
+
+  const moveToAll = useCallback(
+    (mvpID: number, deathMap: string) => {
+      removeMvpByMap(mvpID, deathMap);
+    },
+    [removeMvpByMap]
+  );
+
   const leaveParty = useCallback(
     (saveToLocal: boolean) => {
       changePartyRoom(null);
@@ -447,6 +481,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
         updateMvp,
         updateMvpDeathLocation,
         removeMvpByMap,
+        moveToAll,
+        addToWait,
+        removeFromWait,
+        moveToWait,
         pinMvp,
         unpinMvp,
         setEditingMvp,
