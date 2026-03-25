@@ -146,7 +146,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
 
           {isActive ? (
             <Controls>
-              <ButtonGroup variant="primary">
+              <ButtonGroup variant="secondary">
                 <Control
                   onClick={() => {
                     resetMvpTimer(mvp);
@@ -160,7 +160,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
                   </ControlText>
                 </Control>
               </ButtonGroup>
-              <ButtonGroup variant="primary">
+              <ButtonGroup variant="secondary">
                 <Control onClick={() => resetMvpTimer(mvp)} title="Reset timer">
                   <RefreshCcw />
                   <ControlText>
@@ -198,7 +198,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
             </Controls>
           ) : isPinnedOnly ? (
             <Controls>
-              <ButtonGroup variant="primary">
+              <ButtonGroup variant="secondary">
                 <KilledNow onClick={handleKilledNow}>
                   <FormattedMessage id="killed_now" />
                 </KilledNow>
@@ -226,7 +226,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
             </Controls>
           ) : (
             <Controls>
-              <ButtonGroup variant="primary">
+              <ButtonGroup variant="secondary">
                 <Control onClick={handleSelectToKill} title="Select to kill">
                   <Star />
                   <ControlText>
@@ -235,7 +235,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
                 </Control>
               </ButtonGroup>
               <ButtonGroupDivider />
-              <ButtonGroup variant="primary">
+              <ButtonGroup variant="secondary">
                 <KilledNow onClick={handleKilledNow}>
                   <FormattedMessage id="killed_now" />
                 </KilledNow>
