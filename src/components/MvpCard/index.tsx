@@ -76,6 +76,15 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
         <Header>
           <ID>{`((${mvp.id}))`}</ID>
           <Name>{mvp.name}</Name>
+          {inActive && mvp.deathTime && (
+            <span
+              style={{ fontSize: '0.9rem', color: '#888', cursor: 'pointer' }}
+              onClick={() => setEditingTimeMvp(mvp)}
+              title='Click to edit time'
+            >
+              {dayjs(mvp.deathTime).format('DD/MM HH:mm')}
+            </span>
+          )}
         </Header>
 
         <MvpSprite id={mvp.id} name={mvp.name} animated={animatedSprites} />

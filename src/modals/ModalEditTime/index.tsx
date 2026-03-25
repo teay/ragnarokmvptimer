@@ -13,13 +13,7 @@ import { SegmentedDateTimePicker } from '../../components/DateTimePicker';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 
-import {
-  Modal,
-  SpriteWrapper,
-  Name,
-  Question,
-  Footer,
-} from './styles';
+import { Modal, SpriteWrapper, Name, Question, Footer } from './styles';
 
 const ButtonBase = styled.button`
   min-height: 5rem;
@@ -54,7 +48,11 @@ const PrimaryButton = styled(ButtonBase)`
 
 export function ModalEditTime() {
   useScrollBlock(true);
-  const { updateMvp, editingTimeMvp: mvp, closeEditTimeMvpModal } = useMvpsContext();
+  const {
+    updateMvp,
+    editingTimeMvp: mvp,
+    closeEditTimeMvpModal,
+  } = useMvpsContext();
   const { animatedSprites } = useSettings();
 
   const [newTime, setNewTime] = useState<Date | null>(
@@ -70,6 +68,7 @@ export function ModalEditTime() {
   }
 
   useKey('Escape', closeEditTimeMvpModal);
+  useKey('Enter', handleConfirm);
 
   return (
     <ModalBase>
