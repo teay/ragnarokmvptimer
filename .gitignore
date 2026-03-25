@@ -17,7 +17,6 @@ src-tauri/target/
 # System / IDE
 .DS_Store
 .vscode/
-.github/
 .repo/
 .vercel
 .vite/
