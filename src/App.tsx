@@ -11,6 +11,7 @@ dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
 import { Main } from './pages/Main';
+import { WelcomeScreen } from './components/WelcomeScreen';
 
 import { Header } from './components/Header';
 import { WarningHeader } from './components/WarningHeader';
@@ -98,22 +99,12 @@ function AppContent() {
     toggleHideActiveContent,
     toggleShowMvpMap, // Get the toggle function
     ultraLite,
-    joinState,
-    setJoinState,
-    joinRoomId,
-    setJoinRoomId,
-    joinServer,
-    setJoinServer,
-    joinNickname,
-    setJoinNickname,
     nickname,
     changePartyRoom,
     changeServer,
     changeNickname,
     server,
   } = useSettings();
-
-  const [isJoinIntentActive, setIsJoinIntentActive] = useState(false);
 
   const { theme } = useTheme();
   const {
@@ -155,87 +146,6 @@ function AppContent() {
     window.addEventListener('keydown', handleGlobalShortcuts);
     return () => window.removeEventListener('keydown', handleGlobalShortcuts);
   }, [toggleShowMvpMap]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const room = params.get('room');
-    const serverParam = params.get('server');
-    const nick = params.get('nickname');
-
-    if (room) {
-      setJoinRoomId(room);
-      if (serverParam) setJoinServer(serverParam);
-      if (nick) setJoinNickname(nick);
-
-      setIsJoinIntentActive(true);
-
-      if (nick || nickname) {
-        setJoinState('joining');
-      } else {
-        setJoinState('idle');
-      }
-
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [nickname, setJoinNickname, setJoinRoomId, setJoinServer, setJoinState]);
-
-  useEffect(() => {
-    if (joinState === 'joining') {
-      const timer = setTimeout(() => {
-        setJoinState('success');
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [joinState, setJoinState]);
-
-  useEffect(() => {
-    if (joinState === 'success') {
-      const timer = setTimeout(() => {
-        const room = joinRoomId;
-        const serverToJoin = joinServer || server;
-        const nick = joinNickname;
-
-        try {
-          const allLocalRaw = localStorage.getItem(
-            LOCAL_STORAGE_ACTIVE_MVPS_KEY
-          );
-          const allLocal = allLocalRaw ? JSON.parse(allLocalRaw) : {};
-          const myLocalData = allLocal[serverToJoin] || [];
-
-          if (room) {
-            changePartyRoom(room);
-            if (joinServer) changeServer(joinServer);
-            if (nick) changeNickname(nick);
-
-            if (myLocalData.length > 0) {
-              setTimeout(() => {
-                saveMvps([...activeMvps, ...myLocalData]);
-              }, 500);
-            }
-          }
-        } catch (e) {
-          console.error('Failed to merge local data into room', e);
-          if (room) changePartyRoom(room);
-        }
-
-        setJoinState('idle');
-        setIsJoinIntentActive(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [
-    joinState,
-    setJoinState,
-    joinRoomId,
-    joinServer,
-    joinNickname,
-    changePartyRoom,
-    changeServer,
-    changeNickname,
-    server,
-    activeMvps,
-    saveMvps,
-  ]);
 
   useEffect(() => {
     const storedVersion = localStorage.getItem('appVersion');
@@ -318,13 +228,7 @@ function AppContent() {
         locale={language}
         defaultLocale={LOCALES.ENGLISH}
       >
-        {joinState === 'joining' && <JoiningScreen />}
-        {joinState === 'success' && <SuccessScreen />}
-        {joinState === 'idle' && isJoinIntentActive && !nickname && (
-          <NicknamePrompt />
-        )}
-
-        {!hideActiveContent && joinState === 'idle' && !isJoinIntentActive && (
+        {!hideActiveContent && (
           <>
             {!hasNotificationPermission && (
               <WarningHeader
@@ -340,10 +244,7 @@ function AppContent() {
               />
             )}
 
-            <Header />
-            <Main />
-            <Footer />
-            <WarningHeader text={messages[language]['under_development']} />
+            <WelcomeScreen />
           </>
         )}
       </IntlProvider>

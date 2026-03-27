@@ -1,20 +1,17 @@
-import { useState } from 'react';
 import { Users } from '@styled-icons/feather';
-import { ModalPartySharing } from '@/modals';
 import { Container } from './styles';
 
 export function PartyButton() {
-  const [isPartyModalOpen, setIsPartyModalOpen] = useState(false);
+  const handleClick = () => {
+    // Add query param to force show welcome screen, then reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('setup', 'true');
+    window.location.href = url.toString();
+  };
 
   return (
-    <>
-      <Container>
-        <Users onClick={() => setIsPartyModalOpen(true)} />
-      </Container>
-
-      {isPartyModalOpen && (
-        <ModalPartySharing onClose={() => setIsPartyModalOpen(false)} />
-      )}
-    </>
+    <Container>
+      <Users onClick={handleClick} />
+    </Container>
   );
 }

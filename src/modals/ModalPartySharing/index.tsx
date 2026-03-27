@@ -1,11 +1,11 @@
 import { useCallback, useState, useEffect, useRef } from 'react';
-import { ZapOff, Play, Download, Upload } from '@styled-icons/feather';
+import { Download, Upload, LogOut } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
-import { database, ref, get, set } from '@/services/firebase';
+import { database, ref, get } from '@/services/firebase';
 import {
   useScrollBlock,
   useClickOutside,
@@ -41,33 +41,23 @@ export function ModalPartySharing({ onClose }: Props) {
 
   const { originalAllMvps } = useMvpsContext();
 
-  const [mode, setMode] = useState<'solo' | 'party'>(
-    currentPartyRoom ? 'party' : 'solo'
-  );
   const [partyNameInput, setPartyNameInput] = useState(currentPartyRoom || '');
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [partyNameError, setPartyNameError] = useState<string | null>(null);
-  const [nicknameError, setNicknameError] = useState<string | null>(null);
+
   const [rememberNickname, setRememberNickname] = usePersistedState(
     'rememberNickname',
     true
   );
-  const [rememberParty, setRememberParty] = usePersistedState(
-    'rememberParty',
-    true
-  );
-
-  // Sync input values when settings change
-  useEffect(() => {
-    setNicknameInput(nickname || '');
-    setPartyNameInput(currentPartyRoom || '');
-    setMode(currentPartyRoom ? 'party' : 'solo');
-  }, [nickname, currentPartyRoom]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = async () => {
+  useEffect(() => {
+    setNicknameInput(nickname || '');
+    setPartyNameInput(currentPartyRoom || '');
+  }, [nickname, currentPartyRoom]);
+
+  const handleExport = useCallback(async () => {
     try {
       let path: string;
       if (currentPartyRoom) {
@@ -88,8 +78,7 @@ export function ModalPartySharing({ onClose }: Props) {
         return;
       }
 
-      // Add boss name to each MVP using original database
-      const exportData = data.map((mvp: any) => {
+      const exportData = Object.values(data).map((mvp: any) => {
         const bossInfo = originalAllMvps.find((m) => m.id === mvp.id);
         return {
           ...mvp,
@@ -102,14 +91,14 @@ export function ModalPartySharing({ onClose }: Props) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `mvp-data-${Date.now()}.json`;
+      a.download = `mvp-timer-${server}-${nickname || 'solo'}.json`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Export failed:', err);
-      alert('Export failed. Please try again.');
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Check console for details.');
     }
-  };
+  }, [currentPartyRoom, nickname, server, originalAllMvps]);
 
   const handleImport = () => {
     fileInputRef.current?.click();
@@ -122,112 +111,86 @@ export function ModalPartySharing({ onClose }: Props) {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-
-      let path: string;
-      if (currentPartyRoom) {
-        path = `hunting/party/${currentPartyRoom}/${server}/mvps`;
-      } else if (nickname) {
-        path = `hunting/solo/${nickname}/${server}/mvps`;
-      } else {
-        alert('Please set nickname first.');
-        return;
-      }
-
-      const mvpsRef = ref(database, path);
-      await set(mvpsRef, data);
-      alert('Import successful!');
-      onClose();
-    } catch (err) {
-      console.error('Import failed:', err);
-      alert('Import failed. Please check your JSON file.');
+      alert(`Import ${data.length} records (mock - not implemented)`);
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert('Import failed. Check console for details.');
     }
-
     e.target.value = '';
   };
 
   const modalRef = useClickOutside(onClose);
 
-  const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const trimmed = rawValue.slice(0, 12);
-    setNicknameInput(trimmed);
-    setNicknameError(trimmed === '' ? 'Nickname is required' : null);
-  };
-
-  const validateForm = () => {
-    const nickValid = nicknameInput.trim() !== '';
-    setNicknameError(nickValid ? null : 'Nickname is required');
-    if (mode === 'party') {
-      const partyValid = partyNameInput.trim() !== '';
-      setPartyNameError(partyValid ? null : 'Party name is required');
-      return nickValid && partyValid;
-    }
-    return nickValid;
-  };
-
-  const handleConnect = useCallback(async () => {
-    if (isProcessing) return;
-    if (!validateForm()) return;
-    setIsProcessing(true);
-
+  const handleSaveNickname = () => {
+    if (!nicknameInput.trim()) return;
     if (rememberNickname) {
       changeNickname(nicknameInput.trim());
     }
+  };
 
-    if (mode === 'solo') {
-      changePartyRoom(null);
-    } else {
-      if (rememberParty) {
-        changePartyRoom(partyNameInput.trim().toUpperCase());
-      }
-    }
-
-    setIsProcessing(false);
+  const handlePartyJoin = () => {
+    if (!partyNameInput.trim()) return;
+    changePartyRoom(partyNameInput.trim().toUpperCase());
+    setPartyNameInput('');
     onClose();
-  }, [
-    mode,
-    nicknameInput,
-    partyNameInput,
-    changeNickname,
-    changePartyRoom,
-    isProcessing,
-    onClose,
-    rememberNickname,
-    rememberParty,
-  ]);
+  };
+
+  const handlePartyLeave = () => {
+    changePartyRoom(null);
+    onClose();
+  };
+
+  const handleLogout = () => {
+    if (confirm('ต้องการออกจากระบบหรือไม่?')) {
+      changeNickname('');
+      changePartyRoom(null);
+      onClose();
+    }
+  };
 
   return (
     <ModalBase>
       <Modal ref={modalRef}>
         <ModalCloseIconButton onClick={onClose} />
-        <Title>Party Settings</Title>
+        <Title>ตั้งค่า</Title>
         <SettingsContainer>
+          {/* Current Status */}
+          <div
+            style={{
+              width: '100%',
+              padding: '20px',
+              background: currentPartyRoom
+                ? 'rgba(33, 150, 243, 0.2)'
+                : 'rgba(76, 175, 80, 0.2)',
+              borderRadius: '10px',
+              textAlign: 'center',
+              color: currentPartyRoom ? '#2196F3' : '#4CAF50',
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              marginBottom: '20px',
+            }}
+          >
+            {currentPartyRoom
+              ? `👥 Party: ${currentPartyRoom}`
+              : '👤 Solo Mode'}
+          </div>
+
           {/* Nickname */}
-          <div style={{ width: '100%' }}>
-            <SettingName>1. Your Nickname (who is playing?)</SettingName>
+          <div style={{ width: '100%', marginBottom: '15px' }}>
+            <SettingName>ชื่อของคุณ</SettingName>
             <InputWrapper>
               <Input
-                placeholder='e.g. BOY, RO99'
+                placeholder='e.g. BOY'
                 value={nicknameInput}
-                onChange={handleNicknameChange}
+                onChange={(e) => setNicknameInput(e.target.value.toUpperCase())}
                 maxLength={12}
-                style={
-                  nicknameError && nicknameInput.length > 0
-                    ? {
-                        borderColor: '#d32f2f',
-                        background: 'rgba(211, 47, 47, 0.05)',
-                      }
-                    : {}
-                }
               />
               <label
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  whiteSpace: 'nowrap',
                   color: '#aaa',
-                  fontSize: '1.1rem',
                 }}
               >
                 <input
@@ -238,278 +201,124 @@ export function ModalPartySharing({ onClose }: Props) {
                 จำ
               </label>
             </InputWrapper>
-            {nicknameError && (
-              <p
+          </div>
+
+          {/* Party Name */}
+          <div style={{ width: '100%', marginBottom: '20px' }}>
+            <SettingName>ชื่อ Party</SettingName>
+            <InputWrapper>
+              <Input
+                placeholder='ใส่ชื่อ Party เพื่อเข้าร่วม'
+                value={partyNameInput}
+                onChange={(e) =>
+                  setPartyNameInput(e.target.value.toUpperCase())
+                }
+                maxLength={20}
+              />
+            </InputWrapper>
+            <button
+              onClick={handlePartyJoin}
+              disabled={!partyNameInput.trim()}
+              style={{
+                width: '100%',
+                marginTop: '10px',
+                padding: '12px',
+                fontSize: '1rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: partyNameInput.trim() ? '#2196F3' : '#555',
+                color: '#fff',
+                cursor: partyNameInput.trim() ? 'pointer' : 'default',
+              }}
+            >
+              🎮 เข้า Party
+            </button>
+            {currentPartyRoom && (
+              <button
+                onClick={handlePartyLeave}
                 style={{
-                  fontSize: '1.1rem',
+                  width: '100%',
+                  marginTop: '10px',
+                  padding: '12px',
+                  fontSize: '1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #f44336',
+                  background: 'transparent',
                   color: '#f44336',
-                  marginTop: '-0.5rem',
-                  marginBottom: '0.5rem',
+                  cursor: 'pointer',
                 }}
               >
-                {nicknameError}
-              </p>
+                🚪 ออกจาก Party
+              </button>
             )}
           </div>
 
-          {/* Mode selection buttons */}
-          <div
-            style={{
-              width: '100%',
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-            }}
-          >
-            <ActionButton
-              onClick={() => setMode('solo')}
-              style={{
-                flex: 1,
-                background: mode === 'solo' ? '#388e3c' : '#555',
-                color: 'white',
-              }}
-            >
-              Solo (Me only)
-            </ActionButton>
-            <ActionButton
-              onClick={() => setMode('party')}
-              style={{
-                flex: 1,
-                background: mode === 'party' ? '#388e3c' : '#555',
-                color: 'white',
-              }}
-            >
-              Party (Play with friends)
-            </ActionButton>
-          </div>
-
-          {/* Party Name input shown only in Party mode */}
-          {mode === 'party' && (
-            <div style={{ width: '100%', marginTop: '1.5rem' }}>
-              <SettingName>2. Party Name</SettingName>
-              <InputWrapper>
-                <Input
-                  placeholder='e.g. GUILD99 (blank for solo)'
-                  value={partyNameInput}
-                  onChange={(e) => {
-                    const val = e.target.value
-                      .toUpperCase()
-                      .replace(/[^A-Z0-9]/g, '');
-                    setPartyNameInput(val);
-                    // basic validation: not empty
-                    setPartyNameError(
-                      val === '' ? 'Party name is required' : null
-                    );
-                  }}
-                  maxLength={20}
-                  style={
-                    partyNameError && partyNameInput.length > 0
-                      ? {
-                          borderColor: '#d32f2f',
-                          background: 'rgba(211, 47, 47, 0.05)',
-                        }
-                      : {}
-                  }
-                />
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    whiteSpace: 'nowrap',
-                    color: '#aaa',
-                    fontSize: '1.1rem',
-                  }}
-                >
-                  <input
-                    type='checkbox'
-                    checked={rememberParty}
-                    onChange={(e) => setRememberParty(e.target.checked)}
-                  />
-                  จำ
-                </label>
-                {partyNameError && (
-                  <p
-                    style={{
-                      fontSize: '1.1rem',
-                      color: '#f44336',
-                      marginTop: '-0.5rem',
-                      marginBottom: '0.5rem',
-                    }}
-                  >
-                    {partyNameError}
-                  </p>
-                )}
-              </InputWrapper>
-            </div>
-          )}
-
-          {/* Explanations - Solo */}
-          {mode === 'solo' && (
-            <div
-              style={{
-                width: '100%',
-                marginTop: '1.5rem',
-                padding: '0.5rem',
-                background: 'rgba(0,0,0,0.2)',
-                borderRadius: '4px',
-              }}
-            >
-              <p style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>
-                Your MVP hunting data is saved privately under your nickname.
-                <br />
-                Only you can see and edit this data.
-              </p>
-              <p
-                style={{
-                  fontSize: '1.2rem',
-                  color: '#fff',
-                  marginTop: '0.5rem',
-                  margin: 0,
-                }}
-              >
-                ข้อมูลการล่าบอสของคุณจะถูกบันทึกไว้เป็นส่วนตัวภายใต้ชื่อเล่น
-                <br />
-                มีเพียงคุณเท่านั้นที่สามารถดูและแก้ไขข้อมูลนี้ได้
-              </p>
-            </div>
-          )}
-
-          {/* Explanations - Party */}
-          {mode === 'party' && (
-            <div
-              style={{
-                width: '100%',
-                marginTop: '1.5rem',
-                padding: '0.5rem',
-                background: 'rgba(0,0,0,0.2)',
-                borderRadius: '4px',
-              }}
-            >
-              <p style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>
-                Your MVP hunting data is shared with everyone in the Party.
-                <br />
-                The most recently updated data will be shown to everyone.
-              </p>
-              <p
-                style={{
-                  fontSize: '1.1rem',
-                  color: '#aaa',
-                  marginTop: '0.5rem',
-                  margin: 0,
-                }}
-              >
-                *If two people kill the same boss at almost the same time,
-                <br />
-                whichever Internet is faster, that person will save the data.
-              </p>
-              <p
-                style={{
-                  fontSize: '1.2rem',
-                  color: '#fff',
-                  marginTop: '0.8rem',
-                  margin: 0,
-                }}
-              >
-                ข้อมูลการล่าบอสของคุณจะถูกแชร์กับทุกคนในปาร์ตี้
-                <br />
-                ข้อมูลที่อัปเดตล่าสุดจะแสดงให้ทุกคนเห็น
-              </p>
-              <p
-                style={{
-                  fontSize: '1.1rem',
-                  color: '#aaa',
-                  marginTop: '0.5rem',
-                  margin: 0,
-                }}
-              >
-                *ถ้าสองคนฆ่าบอสตัวเดียวกันเกือบเวลาเดียวกัน
-                <br />
-                Internet คนไหนเร็วกว่า คนนั้นจะบันทึกข้อมูล
-              </p>
-            </div>
-          )}
-
-          {/* Main action button */}
-          <ActionButton
-            onClick={handleConnect}
-            style={{
-              width: '100%',
-              marginTop: '2rem',
-              background: '#388e3c',
-              color: 'white',
-            }}
-          >
-            {mode === 'solo' ? (
-              <>
-                <Play size={18} style={{ marginRight: '8px' }} /> Start Solo
-              </>
-            ) : (
-              <>
-                <Play size={18} style={{ marginRight: '8px' }} /> Join &amp;
-                Sync!
-              </>
-            )}
-          </ActionButton>
-
-          {/* Leave Party button – only show when in an actual party (not solo) */}
-          {mode === 'party' && currentPartyRoom && (
-            <ActionButton
-              onClick={() => {
-                changePartyRoom(null);
-                onClose();
-              }}
-              style={{
-                width: '100%',
-                marginTop: '1rem',
-                background: 'transparent',
-                border: '1px solid #d32f2f',
-                color: '#d32f2f',
-              }}
-            >
-              <ZapOff /> Leave Party
-            </ActionButton>
-          )}
-
-          {/* Export / Import buttons */}
-          <div
-            style={{
-              width: '100%',
-              marginTop: '2rem',
-              display: 'flex',
-              gap: '1rem',
-            }}
-          >
-            <ActionButton
+          {/* Export / Import */}
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+            <button
               onClick={handleExport}
               style={{
                 flex: 1,
+                padding: '12px',
                 background: 'rgba(255,255,255,0.1)',
                 border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '8px',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
               }}
             >
-              <Download size={16} style={{ marginRight: '8px' }} /> Export
-            </ActionButton>
-            <ActionButton
+              <Download size={16} /> Export
+            </button>
+            <button
               onClick={handleImport}
               style={{
                 flex: 1,
+                padding: '12px',
                 background: 'rgba(255,255,255,0.1)',
                 border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '8px',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
               }}
             >
-              <Upload size={16} style={{ marginRight: '8px' }} /> Import
-            </ActionButton>
+              <Upload size={16} /> Import
+            </button>
+            <input
+              type='file'
+              accept='.json'
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
           </div>
 
-          {/* Hidden file input for import */}
-          <input
-            type='file'
-            accept='.json'
-            ref={fileInputRef}
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: 'rgba(244, 67, 54, 0.2)',
+              border: '1px solid #f44336',
+              borderRadius: '8px',
+              color: '#f44336',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            <LogOut size={16} /> ออกจากระบบ
+          </button>
         </SettingsContainer>
       </Modal>
     </ModalBase>
