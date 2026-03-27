@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { usePersistedState } from '../../hooks/usePersistedState';
+import { useMvpsContext } from '../../contexts/MvpsContext';
+import { database, ref, get } from '../../services/firebase';
 import { Header } from '../Header';
 import { Main } from '../../pages/Main';
 import { Footer } from '../Footer';
@@ -18,6 +20,8 @@ export function WelcomeScreen() {
     language,
     hideActiveContent,
   } = useSettings();
+
+  const { originalAllMvps } = useMvpsContext();
 
   // Check for setup param in URL
   const [urlParams] = useState(
@@ -55,6 +59,70 @@ export function WelcomeScreen() {
     changePartyRoom(null);
     setMode(null);
     setShowModeSelect(true);
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = async () => {
+    try {
+      let path: string;
+      if (partyRoom) {
+        path = `hunting/party/${partyRoom}/${server}/mvps`;
+      } else if (nickname) {
+        path = `hunting/solo/${nickname}/${server}/mvps`;
+      } else {
+        alert('No data to export. Please set nickname first.');
+        return;
+      }
+
+      const mvpsRef = ref(database, path);
+      const snapshot = await get(mvpsRef);
+      const data = snapshot.val();
+
+      if (!data) {
+        alert('No MVP data to export.');
+        return;
+      }
+
+      const exportData = Object.values(data).map((mvp: any) => {
+        const bossInfo = originalAllMvps.find((m) => m.id === mvp.id);
+        return {
+          ...mvp,
+          name: bossInfo?.name || `Unknown (${mvp.id})`,
+        };
+      });
+
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mvp-timer-${server}-${nickname || 'solo'}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Check console for details.');
+    }
+  };
+
+  const handleImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      alert(`Import ${data.length} records (mock - not implemented)`);
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert('Import failed. Check console for details.');
+    }
+    e.target.value = '';
   };
 
   const handleStart = () => {
@@ -170,6 +238,8 @@ export function WelcomeScreen() {
               } else {
                 changePartyRoom('PARTY');
               }
+              // Reload to fetch data from new path
+              window.location.reload();
             }}
             style={{
               padding: '25px 40px',
@@ -198,6 +268,54 @@ export function WelcomeScreen() {
           >
             ⬅️ กลับไปใช้งาน
           </button>
+
+          {/* Export / Import buttons */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '15px',
+              width: '100%',
+              maxWidth: '400px',
+            }}
+          >
+            <button
+              onClick={handleExport}
+              style={{
+                flex: 1,
+                padding: '20px',
+                fontSize: '1.4rem',
+                background: 'rgba(255,255,255,0.1)',
+                border: '2px solid rgba(255,255,255,0.2)',
+                borderRadius: '20px',
+                color: '#fff',
+                cursor: 'pointer',
+              }}
+            >
+              📤 Export
+            </button>
+            <button
+              onClick={handleImport}
+              style={{
+                flex: 1,
+                padding: '20px',
+                fontSize: '1.4rem',
+                background: 'rgba(255,255,255,0.1)',
+                border: '2px solid rgba(255,255,255,0.2)',
+                borderRadius: '20px',
+                color: '#fff',
+                cursor: 'pointer',
+              }}
+            >
+              📥 Import
+            </button>
+            <input
+              type='file'
+              accept='.json'
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+          </div>
 
           <button
             onClick={handleLogout}
