@@ -49,16 +49,6 @@ export function Header() {
   const { dataLocation } = useMvpsContext();
   const { partyMembers } = useTimer();
 
-  const handleCopyInviteLink = useCallback(() => {
-    if (!partyRoom) return;
-    const url = new URL(window.location.origin + window.location.pathname);
-    url.searchParams.set('room', partyRoom);
-    url.searchParams.set('server', server);
-
-    navigator.clipboard.writeText(url.toString());
-    alert('Invite link copied!');
-  }, [partyRoom, server]);
-
   const getBadgeStatus = (): 'local' | 'online' | 'ghost' | 'warning' => {
     if (!localSaveEnabled) return 'warning';
     if (partyRoom && !cloudSyncEnabled) return 'ghost';
@@ -70,6 +60,7 @@ export function Header() {
     if (!localSaveEnabled) return 'Save Paused';
     if (partyRoom && !cloudSyncEnabled) return 'Ghost Mode';
     if (partyRoom) return 'Party Sync';
+    if (nickname) return 'Solo Mode';
     return 'Local Data';
   };
 
@@ -79,6 +70,21 @@ export function Header() {
         <Logo src={mvpImg} alt='mvp' />
         <Title>Ragnarok MVP Timer</Title>
         <DataBadge location={getBadgeStatus()}>{getBadgeText()}</DataBadge>
+        {nickname && !partyRoom && (
+          <span
+            style={{
+              marginLeft: '15px',
+              padding: '8px 15px',
+              background: 'rgba(76, 175, 80, 0.3)',
+              borderRadius: '20px',
+              fontSize: '1rem',
+              color: '#4CAF50',
+              fontWeight: 'bold',
+            }}
+          >
+            👤 {nickname}
+          </span>
+        )}
         {partyRoom && (
           <div
             style={{
@@ -89,13 +95,12 @@ export function Header() {
               marginLeft: '20px',
             }}
           >
-            <LiveBadge
-              onClick={handleCopyInviteLink}
-              style={{ cursor: 'pointer' }}
-              title='Click to copy invite link'
-            >
-              📋 {partyRoom}
-            </LiveBadge>
+            <LiveBadge>👥 {partyRoom}</LiveBadge>
+            {nickname && (
+              <span style={{ fontSize: '0.85rem', color: '#aaa' }}>
+                {nickname}
+              </span>
+            )}
             {partyMembers && partyMembers.length > 0 && (
               <div
                 style={{
