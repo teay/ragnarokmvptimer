@@ -147,6 +147,8 @@ function AppContent() {
     return () => window.removeEventListener('keydown', handleGlobalShortcuts);
   }, [toggleShowMvpMap]);
 
+  // App version check - disabled for now
+  /*
   useEffect(() => {
     const storedVersion = localStorage.getItem('appVersion');
     if (storedVersion !== APP_VERSION) {
@@ -155,6 +157,7 @@ function AppContent() {
       window.location.reload();
     }
   }, []);
+  */
 
   useEffect(() => {
     dayjs.locale(language);

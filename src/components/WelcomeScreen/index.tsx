@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { usePersistedState } from '../../hooks/usePersistedState';
 import { useMvpsContext } from '../../contexts/MvpsContext';
@@ -23,15 +23,22 @@ export function WelcomeScreen() {
 
   const { originalAllMvps } = useMvpsContext();
 
-  // Check for setup param in URL
-  const [urlParams] = useState(
-    () => new URLSearchParams(window.location.search)
-  );
-  const shouldSetup = urlParams.get('setup') === 'true';
+  const [showModeSelect, setShowModeSelect] = useState(!nickname);
 
-  const [showModeSelect, setShowModeSelect] = useState(
-    shouldSetup || !nickname
-  );
+  useEffect(() => {
+    const handleShowWelcome = () => setShowModeSelect(true);
+    window.addEventListener('showWelcomeScreen', handleShowWelcome);
+
+    const shouldShowWelcome =
+      localStorage.getItem('showWelcomeScreen') === 'true';
+    if (shouldShowWelcome) {
+      localStorage.removeItem('showWelcomeScreen');
+      setShowModeSelect(true);
+    }
+
+    return () =>
+      window.removeEventListener('showWelcomeScreen', handleShowWelcome);
+  }, []);
   const [mode, setMode] = useState<'solo' | 'party' | null>(null);
   const [nicknameInput, setNicknameInput] = useState('');
   const [partyInput, setPartyInput] = useState('');
@@ -47,18 +54,13 @@ export function WelcomeScreen() {
     true
   );
 
-  const handleBackToApp = () => {
-    // Remove setup param and reload
-    const url = new URL(window.location.href);
-    url.searchParams.delete('setup');
-    window.location.href = url.toString();
-  };
-
   const handleLogout = () => {
-    changeNickname('');
-    changePartyRoom(null);
-    setMode(null);
-    setShowModeSelect(true);
+    localStorage.removeItem('settings');
+    localStorage.removeItem('joinState');
+    localStorage.removeItem('joinRoomId');
+    localStorage.removeItem('joinServer');
+    localStorage.removeItem('joinNickname');
+    window.location.reload();
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -233,12 +235,12 @@ export function WelcomeScreen() {
         >
           <button
             onClick={() => {
-              if (partyRoom) {
-                changePartyRoom(null);
-              } else {
-                changePartyRoom('PARTY');
-              }
-              // Reload to fetch data from new path
+              localStorage.removeItem('settings');
+              localStorage.removeItem('joinState');
+              localStorage.removeItem('joinRoomId');
+              localStorage.removeItem('joinServer');
+              localStorage.removeItem('joinNickname');
+              localStorage.setItem('showWelcomeScreen', 'true');
               window.location.reload();
             }}
             style={{
@@ -252,21 +254,6 @@ export function WelcomeScreen() {
             }}
           >
             🔄 เปลี่ยน mode ไป {partyRoom ? 'Solo' : 'Party'}
-          </button>
-
-          <button
-            onClick={handleBackToApp}
-            style={{
-              padding: '25px 40px',
-              fontSize: '1.6rem',
-              borderRadius: '20px',
-              border: '3px solid #666',
-              background: 'transparent',
-              color: '#aaa',
-              cursor: 'pointer',
-            }}
-          >
-            ⬅️ กลับไปใช้งาน
           </button>
 
           {/* Export / Import buttons */}
