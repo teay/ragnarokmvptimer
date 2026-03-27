@@ -43,6 +43,13 @@ export function WelcomeScreen() {
     true
   );
 
+  const handleBackToApp = () => {
+    // Remove setup param and reload
+    const url = new URL(window.location.href);
+    url.searchParams.delete('setup');
+    window.location.href = url.toString();
+  };
+
   const handleLogout = () => {
     changeNickname('');
     changePartyRoom(null);
@@ -141,7 +148,7 @@ export function WelcomeScreen() {
         </div>
 
         <p style={{ fontSize: '1.5rem', marginBottom: '10px', color: '#fff' }}>
-          {partyRoom ? `ห้อง: ${partyRoom}` : ''}
+          {partyRoom ? `ห้อง: ${partyRoom}` : '🎮 เล่นคนเดียว'}
         </p>
         <p style={{ fontSize: '1.5rem', marginBottom: '40px', color: '#fff' }}>
           ชื่อ: {nickname}
@@ -150,13 +157,20 @@ export function WelcomeScreen() {
         <div
           style={{
             display: 'flex',
-            gap: '25px',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
+            flexDirection: 'column',
+            gap: '15px',
+            width: '100%',
+            maxWidth: '400px',
           }}
         >
           <button
-            onClick={() => setShowModeSelect(true)}
+            onClick={() => {
+              if (partyRoom) {
+                changePartyRoom(null);
+              } else {
+                changePartyRoom('PARTY');
+              }
+            }}
             style={{
               padding: '25px 40px',
               fontSize: '1.6rem',
@@ -167,7 +181,22 @@ export function WelcomeScreen() {
               cursor: 'pointer',
             }}
           >
-            🔄 เปลี่ยน Mode
+            🔄 เปลี่ยน mode ไป {partyRoom ? 'Solo' : 'Party'}
+          </button>
+
+          <button
+            onClick={handleBackToApp}
+            style={{
+              padding: '25px 40px',
+              fontSize: '1.6rem',
+              borderRadius: '20px',
+              border: '3px solid #666',
+              background: 'transparent',
+              color: '#aaa',
+              cursor: 'pointer',
+            }}
+          >
+            ⬅️ กลับไปใช้งาน
           </button>
 
           <button
