@@ -1,6 +1,16 @@
+import dayjs from 'dayjs';
+import { getMvpRespawnTime } from './index';
+
 function getFastestRespawn(mvp: IMvp) {
-  if (mvp.spawn.length === 0) return 0;
-  return mvp.spawn.sort((i) => i.respawnTime)[0].respawnTime;
+  if (!mvp.spawn || mvp.spawn.length === 0) return 0;
+  return Math.min(...mvp.spawn.map((i) => i.respawnTime));
+}
+
+function getActualRespawnTime(mvp: IMvp) {
+  if (mvp.deathTime) {
+    return dayjs(mvp.deathTime).add(getMvpRespawnTime(mvp), 'ms').valueOf();
+  }
+  return getFastestRespawn(mvp);
 }
 
 export function sortBy(field?: string) {
@@ -13,12 +23,12 @@ export function sortBy(field?: string) {
   }
 
   if (field === 'respawnTime') {
-    return (a: IMvp, b: IMvp) => getFastestRespawn(a) - getFastestRespawn(b);
+    return (a: IMvp, b: IMvp) => getActualRespawnTime(a) - getActualRespawnTime(b);
   }
 
   if (field === 'name') {
     return (a: IMvp, b: IMvp) => a.name.localeCompare(b.name);
   }
 
-  return (a: IMvp, b: IMvp) => a[field] - b[field];
+  return (a: IMvp, b: IMvp) => (a as any)[field] - (b as any)[field];
 }
