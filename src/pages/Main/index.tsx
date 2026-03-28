@@ -24,17 +24,31 @@ export function Main() {
     isLoading,
   } = useMvpsContext();
 
-  const normalActiveMvps = activeMvps.filter((m) => m.deathTime);
-  const pinnedMvps = activeMvps.filter((m) => m.isPinned && !m.deathTime);
   const [searchQuery, setSearchQuery] = useState<string>(
     sessionStorage.getItem('search') || ''
   );
   const [currentSort, setCurrentSort] = useState<string>(
-    sessionStorage.getItem('sort') || 'id'
+    sessionStorage.getItem('sort') || 'respawnTime'
   );
   const [reverseSort, setReverseSort] = useState<boolean>(
     sessionStorage.getItem('reverse') === 'true'
   );
+
+  const activeSort = sortBy(currentSort);
+
+  const filteredActive = activeMvps.filter((m) => m.deathTime);
+  const filteredPinned = activeMvps.filter((m) => m.isPinned && !m.deathTime);
+
+  const sortedActive = [...filteredActive].sort(activeSort);
+  const sortedPinned = [...filteredPinned].sort(activeSort);
+
+  const normalActiveMvps = reverseSort
+    ? sortedActive.reverse()
+    : sortedActive;
+
+  const pinnedMvps = reverseSort
+    ? sortedPinned.reverse()
+    : sortedPinned;
 
   const allMvpsFilteredAndSorted = (
     searchQuery

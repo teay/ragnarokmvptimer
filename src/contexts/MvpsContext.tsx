@@ -55,21 +55,22 @@ function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
   if (!mvps) return [];
   return [...mvps].sort((a: IMvp, b: IMvp) => {
     if (!a || !b) return 0;
-    const bothHaveDeathTime = a.deathTime && b.deathTime;
-    if (!bothHaveDeathTime) return 0;
-    if (
-      !a.spawn ||
-      !Array.isArray(a.spawn) ||
-      !b.spawn ||
-      !Array.isArray(b.spawn)
-    )
-      return 0;
+
+    const hasDeathTimeA = !!a.deathTime;
+    const hasDeathTimeB = !!b.deathTime;
+
+    // Put MVPs without deathTime (pinned) at the end
+    if (!hasDeathTimeA && hasDeathTimeB) return 1;
+    if (hasDeathTimeA && !hasDeathTimeB) return -1;
+    if (!hasDeathTimeA && !hasDeathTimeB) return a.id - b.id;
+
     try {
       const respawnA = getMvpRespawnTime(a) || 0;
       const respawnB = getMvpRespawnTime(b) || 0;
-      return dayjs(a.deathTime)
-        .add(respawnA, 'ms')
-        .diff(dayjs(b.deathTime).add(respawnB, 'ms'));
+      const timeA = dayjs(a.deathTime).add(respawnA, 'ms').valueOf();
+      const timeB = dayjs(b.deathTime).add(respawnB, 'ms').valueOf();
+
+      return timeA - timeB;
     } catch (e) {
       return 0;
     }
