@@ -4,9 +4,11 @@ import {
   ReactNode,
   useCallback,
   useEffect,
+  useState,
 } from 'react';
 
 import { usePersistedState } from '@/hooks/usePersistedState';
+import { useSessionState } from '@/hooks/useSessionState';
 
 import {
   SERVERS,
@@ -108,6 +110,25 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     LOCAL_STORAGE_SETTINGS_KEY,
     DEFAULT_SETTINGS
   );
+
+  // Initialize partyRoom from URL or sessionStorage
+  const [partyRoom, setPartyRoom] = useSessionState<string | null>(
+    'partyRoom',
+    null
+  );
+
+  // Effect to handle URL parameters for party room
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roomFromUrl = params.get('room') || params.get('party');
+    
+    if (roomFromUrl && roomFromUrl !== partyRoom) {
+      setPartyRoom(roomFromUrl.toUpperCase());
+    } else if (!partyRoom && settings.partyRoom) {
+      // Migrate/Fallback from localStorage only if session is empty
+      setPartyRoom(settings.partyRoom);
+    }
+  }, [partyRoom, setPartyRoom, settings.partyRoom]);
 
   const [joinState, setJoinState] = usePersistedState<
     'idle' | 'joining' | 'success' | 'error'
@@ -509,12 +530,25 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
   const changePartyRoom = useCallback(
     (room: string | null) => {
+      setPartyRoom(room);
+      // We also update settings.partyRoom in localStorage to keep it as a default for next sessions
+      // but the session state will take precedence in current tab
       setSettings((prev) => ({
         ...prev,
         partyRoom: room,
       }));
+
+      // Update URL search params
+      const url = new URL(window.location.href);
+      if (room) {
+        url.searchParams.set('room', room);
+      } else {
+        url.searchParams.delete('room');
+        url.searchParams.delete('party');
+      }
+      window.history.replaceState({}, '', url.toString());
     },
-    [setSettings]
+    [setPartyRoom, setSettings]
   );
 
   const toggleLocalSave = useCallback(() => {
@@ -545,6 +579,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     <SettingsContext.Provider
       value={{
         ...settings,
+        partyRoom, // Use the session/URL room
         servers: SERVERS,
         toggleRespawnCountdown,
         toggleHideActiveContent,
