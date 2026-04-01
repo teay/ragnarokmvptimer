@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import dayjs from 'dayjs';
 import { styled } from '@linaria/react';
@@ -76,6 +76,7 @@ export function ModalEditMvp() {
     closeEditMvpModal,
   } = useMvpsContext();
   const { animatedSprites } = useSettings();
+  const datePickerRef = useRef<any>(null);
 
   const [newTime, setNewTime] = useState<Date | null>(
     mvp.deathTime || new Date()
@@ -113,6 +114,16 @@ export function ModalEditMvp() {
   useKey('Escape', closeEditMvpModal);
   useKey('Enter', handleConfirm);
 
+  const handleConfirmKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        datePickerRef.current?.focusFirst();
+      }
+    },
+    []
+  );
+
   if (!selectedMap) {
     return (
       <ModalSelectMap
@@ -126,7 +137,15 @@ export function ModalEditMvp() {
   return (
     <ModalBase>
       <Modal>
-        <ModalCloseIconButton onClick={closeEditMvpModal} />
+        <ModalCloseIconButton
+          onClick={closeEditMvpModal}
+          onKeyDown={(e) => {
+            if (e.key === 'Tab' && !e.shiftKey) {
+              e.preventDefault();
+              datePickerRef.current?.focusFirst();
+            }
+          }}
+        />
 
         <Name>{mvp.name}</Name>
 
@@ -139,8 +158,10 @@ export function ModalEditMvp() {
         </Question>
 
         <SegmentedDateTimePicker
+          ref={datePickerRef}
           value={newTime || new Date()}
           onChange={setNewTime}
+          autoFocus={true}
         />
 
         {selectedMap && (
@@ -167,6 +188,7 @@ export function ModalEditMvp() {
           )}
           <PrimaryButton
             onClick={handleConfirm}
+            onKeyDown={handleConfirmKeyDown}
             disabled={!selectedMap || !dayjs(newTime).isValid()}
           >
             <FormattedMessage id='confirm' />
@@ -175,10 +197,13 @@ export function ModalEditMvp() {
 
         <KeyboardHint>
           <span>
-            <FormattedMessage id='press_esc_to_close' />
+            <kbd>ESC</kbd> <FormattedMessage id='press_esc_to_close' />
           </span>
           <span>
-            <FormattedMessage id='press_enter_to_confirm' />
+            <kbd>ENTER</kbd> <FormattedMessage id='press_enter_to_confirm' />
+          </span>
+          <span>
+            <kbd>TAB</kbd> <FormattedMessage id='press_tab_to_loop' />
           </span>
         </KeyboardHint>
       </Modal>

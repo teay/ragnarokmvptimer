@@ -195,7 +195,8 @@ export function ModalKillMvp() {
             />
             <Hint>
               <kbd>ENTER</kbd> <FormattedMessage id='press_enter_to_confirm' />{' '}
-              • <kbd>ESC</kbd> <FormattedMessage id='press_esc_to_close' />
+              • <kbd>ESC</kbd> <FormattedMessage id='press_esc_to_close' />{' '}
+              • <kbd>TAB</kbd> <FormattedMessage id='press_tab_to_loop' />
             </Hint>
           </>
         )}
