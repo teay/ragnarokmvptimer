@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { styled } from '@linaria/react';
 import dayjs from 'dayjs';
@@ -71,6 +71,7 @@ export function ModalKillMvp() {
   useScrollBlock(true);
   const { killMvp, killingMvp: mvp, closeKillMvpModal } = useMvpsContext();
   const { animatedSprites } = useSettings();
+  const datePickerRef = useRef<any>(null);
 
   const [selectedMap, setSelectedMap] = useState<string>(mvp.deathMap || '');
   const [markCoordinates, setMarkCoordinates] = useState<IMapMark>({
@@ -126,6 +127,16 @@ export function ModalKillMvp() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  const handleConfirmKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        datePickerRef.current?.focusFirst();
+      }
+    },
+    []
+  );
+
   if (!selectedMap) {
     return (
       <ModalSelectMap
@@ -139,7 +150,15 @@ export function ModalKillMvp() {
   return (
     <ModalBase>
       <Modal>
-        <ModalCloseIconButton onClick={closeKillMvpModal} />
+        <ModalCloseIconButton
+          onClick={closeKillMvpModal}
+          onKeyDown={(e) => {
+            if (e.key === 'Tab' && !e.shiftKey) {
+              e.preventDefault();
+              datePickerRef.current?.focusFirst();
+            }
+          }}
+        />
 
         <Name>{mvp.name}</Name>
 
@@ -155,6 +174,7 @@ export function ModalKillMvp() {
         </Question>
 
         <SegmentedDateTimePicker
+          ref={datePickerRef}
           value={killTime}
           onChange={handleTimeChange}
           autoFocus={true}
@@ -188,6 +208,7 @@ export function ModalKillMvp() {
           )}
           <PrimaryButton
             onClick={handleConfirm}
+            onKeyDown={handleConfirmKeyDown}
             disabled={!selectedMap || (isTimeEdited && !dayjs(killTime).isValid())}
           >
             <FormattedMessage id='confirm' />

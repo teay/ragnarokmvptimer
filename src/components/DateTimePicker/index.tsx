@@ -23,7 +23,13 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
-  useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
+  useImperativeHandle(ref, () => ({
+    focusFirst: () => {
+      refs.day.current?.focus();
+      refs.day.current?.select();
+    },
+    ...containerRef.current
+  } as any));
 
   const refs = {
     day: useRef<HTMLInputElement>(null),
