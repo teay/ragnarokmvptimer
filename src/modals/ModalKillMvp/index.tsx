@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { styled } from '@linaria/react';
+import dayjs from 'dayjs';
 
 import { useScrollBlock } from '@/hooks';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -10,6 +11,7 @@ import { ModalBase } from '../ModalBase';
 import { MvpSprite } from '../../components/MvpSprite';
 import { Map } from '../../components/Map';
 import { ModalSelectMap } from '../ModalSelectMap';
+import { SegmentedDateTimePicker } from '../../components/DateTimePicker';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 
@@ -76,7 +78,15 @@ export function ModalKillMvp() {
     y: -1,
   });
 
+  const [killTime, setKillTime] = useState<Date | null>(new Date());
+  const [isTimeEdited, setIsTimeEdited] = useState(false);
+
   const hasMoreThanOneMap = mvp.spawn.length > 1;
+
+  const handleTimeChange = useCallback((date: Date | null) => {
+    setKillTime(date);
+    setIsTimeEdited(true);
+  }, []);
 
   function handleConfirm() {
     if (!selectedMap) return;
@@ -87,7 +97,10 @@ export function ModalKillMvp() {
       deathPosition: markCoordinates,
     };
 
-    killMvp(updatedMvp, new Date());
+    // If time was edited, use it. Otherwise use current "now"
+    const finalKillTime = isTimeEdited && killTime ? killTime : new Date();
+
+    killMvp(updatedMvp, finalKillTime);
 
     closeKillMvpModal();
   }
@@ -98,7 +111,6 @@ export function ModalKillMvp() {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      console.log('Key pressed:', e.key, 'selectedMap:', selectedMap);
       if (e.key === 'Enter' && selectedMap) {
         e.preventDefault();
         handleConfirm();
@@ -135,9 +147,22 @@ export function ModalKillMvp() {
           <MvpSprite id={mvp.id} name={mvp.name} animated={animatedSprites} />
         </SpriteWrapper>
 
+        <Question>
+          <FormattedMessage id='when_was_killed' />
+          <Optional>
+            (<FormattedMessage id='optional_default_now' />)
+          </Optional>
+        </Question>
+
+        <SegmentedDateTimePicker
+          value={killTime}
+          onChange={handleTimeChange}
+          autoFocus={true}
+        />
+
         {selectedMap && (
           <>
-            <Question>
+            <Question style={{ marginTop: '2rem' }}>
               <FormattedMessage id='wheres_tombstone' />
               <Optional>
                 (<FormattedMessage id='optional_mark' />)
@@ -161,7 +186,10 @@ export function ModalKillMvp() {
               <FormattedMessage id='change_map' />
             </ChangeMapButton>
           )}
-          <PrimaryButton onClick={handleConfirm} disabled={!selectedMap}>
+          <PrimaryButton
+            onClick={handleConfirm}
+            disabled={!selectedMap || (isTimeEdited && !dayjs(killTime).isValid())}
+          >
             <FormattedMessage id='confirm' />
           </PrimaryButton>
         </Footer>
