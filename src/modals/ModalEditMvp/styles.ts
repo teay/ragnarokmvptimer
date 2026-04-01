@@ -2,7 +2,7 @@ import { styled } from '@linaria/react';
 
 export const Modal = styled.div`
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   height: auto;
   max-height: 95vh;
 
@@ -91,8 +91,30 @@ export const Footer = styled.footer`
 
 export const KeyboardHint = styled.div`
   color: #aaa;
-  font-size: 1.4rem;
-  margin-top: 1rem;
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
+  flex-wrap: nowrap;
+  justify-content: center;
+  width: 100%;
+
+  kbd {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-right: 4px;
+    font-size: 1rem;
+    text-transform: uppercase;
+  }
+
+  span {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
 `;

@@ -7,7 +7,7 @@ import { styled } from '@linaria/react';
 // import { ModalPrimaryButton } from "@/ui/ModalPrimaryButton";
 export const Modal = styled.div`
   width: 100%;
-  max-width: 500px;
+  max-width: 550px;
   height: auto;
   max-height: 95vh;
 
@@ -85,15 +85,27 @@ export const Optional = styled.span`
 
 export const Hint = styled.div`
   color: #aaa;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   text-align: center;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  white-space: nowrap;
 
   kbd {
     background: rgba(255, 255, 255, 0.15);
+    color: #fff;
     padding: 2px 6px;
     border-radius: 4px;
     font-family: monospace;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-right: 4px;
+    font-size: 1rem;
+    text-transform: uppercase;
   }
 `;
 
