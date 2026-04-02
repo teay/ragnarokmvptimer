@@ -17,12 +17,9 @@ export function useNotification() {
 
   const respawnNotification = useCallback(
     (mvpID: number, title: string, body: string) => {
-      console.log(
-        `respawnNotification called: isNotificationSoundEnabled=${isNotificationSoundEnabled}, hasNotificationPermission=${hasNotificationPermission}`
-      );
       if (isNotificationSoundEnabled) {
         const audio = new Audio('notification.mp3');
-        audio.volume = 0.5; // Increased volume to 0.5 for better audibility
+        audio.volume = 0.5; // Setting volume to 0.5 as preferred
         audio.play().catch((e) => {
           // Silent catch for auto-play policy issues
           console.debug('Notification sound deferred until user interaction', e);

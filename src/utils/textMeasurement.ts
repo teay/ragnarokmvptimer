@@ -105,7 +105,7 @@ export function runBenchmark(text: string, iterations: number = 100) {
   const fontSize = 22;
   const fontFamily = 'Jost, sans-serif';
 
-  console.log(`%c Performance Test: "${text}" (%d iterations) `, 'background: #222; color: #bada55', iterations);
+  // Removed: console.log(`%c Performance Test: "${text}" (%d iterations) `, 'background: #222; color: #bada55', iterations);
 
   // DOM
   const startDOM = performance.now();
@@ -121,9 +121,9 @@ export function runBenchmark(text: string, iterations: number = 100) {
   }
   const canvasTime = performance.now() - startCanvas;
 
-  console.log(`[SLOW] DOM measurement:    ${domTime.toFixed(4)}ms`);
-  console.log(`[FAST] Canvas measurement: ${canvasTime.toFixed(4)}ms`);
-  console.log(`🚀 Canvas is %c${(domTime / canvasTime).toFixed(2)}x faster%c than DOM`, 'color: #00ff00; font-weight: bold', 'color: inherit');
+  // Removed: console.log(`[SLOW] DOM measurement:    ${domTime.toFixed(4)}ms`);
+  // Removed: console.log(`[FAST] Canvas measurement: ${canvasTime.toFixed(4)}ms`);
+  // Removed: console.log(`🚀 Canvas is %c${(domTime / canvasTime).toFixed(2)}x faster%c than DOM`, 'color: #00ff00; font-weight: bold', 'color: inherit');
 
   return { domTime, canvasTime };
 }
