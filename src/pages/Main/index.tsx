@@ -11,6 +11,7 @@ import { useKey } from '@/hooks';
 import { useSettings } from '@/contexts/SettingsContext';
 
 import { sortBy } from '@/utils/sort';
+import { runBenchmark } from '@/utils/textMeasurement';
 
 import { Container, Section, SectionTitle, MvpsContainer } from './styles';
 
@@ -69,6 +70,18 @@ export function Main() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    // Run the benchmark once we have any data
+    const anyMvp = activeMvps[0] || nonActiveMvps[0];
+    
+    if (!isLoading && anyMvp) {
+      console.log('%c --- Performance Test Starting --- ', 'background: #222; color: #bada55');
+      runBenchmark(anyMvp.name, 100);
+    } else if (!isLoading && !anyMvp) {
+      console.warn('Benchmark skipped: No MVPs found in data.');
+    }
+  }, [isLoading, activeMvps.length, nonActiveMvps.length]);
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import dayjs, { type Dayjs } from 'dayjs';
 
@@ -67,8 +67,21 @@ export function MvpCardCountdown({
 
   const { duration: durationMin } = useCountdown(nextRespawnMin);
   const durationAsMs = durationMin.asMilliseconds();
-  
-  // Removed durationMax related lines as per user request to trigger at nextRespawnMin === 0
+  const hasTriggered = useRef(false);
+
+  useEffect(() => {
+    // Reset trigger state when deathTime changes (new timer started)
+    hasTriggered.current = false;
+  }, [mvp.deathTime]);
+
+  // Notification trigger (at MIN respawn time)
+  useEffect(() => {
+    const secondsRemaining = Math.floor(durationMin.asSeconds());
+    if (onTriggerNotification && secondsRemaining === 0 && !hasTriggered.current) {
+      onTriggerNotification();
+      hasTriggered.current = true;
+    }
+  }, [durationMin, onTriggerNotification]);
 
   const isTimeUp = durationAsMs <= 0;
   const isWithinWindow = isTimeUp && dayjs().isBefore(nextRespawnMax);
@@ -82,12 +95,6 @@ export function MvpCardCountdown({
     isWithinWindow,
     missedRespawn
   );
-
-  // Notification trigger (at MIN respawn time)
-  const shouldTriggerNotification = Math.floor(durationMin.asSeconds()) === 0;
-  if (onTriggerNotification && shouldTriggerNotification) {
-    onTriggerNotification();
-  }
 
   return (
     <Container>

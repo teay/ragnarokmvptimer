@@ -104,6 +104,8 @@ function AppContent() {
     changeServer,
     changeNickname,
     server,
+    soundChoiceMade,
+    confirmSoundChoice,
   } = useSettings();
 
   const { theme } = useTheme();
@@ -245,13 +247,131 @@ function AppContent() {
                   ]
                 }
               />
-            )}
+        )}
 
             <WelcomeScreen />
           </>
         )}
       </IntlProvider>
     </>
+  );
+}
+
+function SoundChoiceModal({ onChoice }: { onChoice: (enabled: boolean) => void }) {
+  const handleChoice = (enabled: boolean) => {
+    if (enabled) {
+      // Prime the audio context by playing a short silent sound
+      const audio = new Audio('notification.mp3');
+      audio.volume = 0.01;
+      audio.play().catch(() => {});
+      
+      // Request notification permission
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+    onChoice(enabled);
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        color: 'white',
+        textAlign: 'center',
+        padding: '20px',
+        background: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(15px)',
+        zIndex: 10000,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      }}
+    >
+      <div
+        style={{
+          fontSize: '6rem',
+          marginBottom: '20px',
+          animation: 'pulse 2s infinite',
+        }}
+      >
+        🔔
+      </div>
+      <style>{`
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.1); opacity: 0.8; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+      <h1
+        style={{
+          fontSize: '3.5rem',
+          marginBottom: '15px',
+          fontWeight: 'bold',
+          textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+        }}
+      >
+        Enable Notifications & Sound?
+      </h1>
+      <p
+        style={{
+          fontSize: '1.6rem',
+          marginBottom: '40px',
+          maxWidth: '500px',
+          lineHeight: '1.6',
+          opacity: 0.9,
+        }}
+      >
+        To ensure you never miss an MVP respawn, we recommend enabling notification sounds and browser alerts.
+      </p>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '15px',
+          width: '100%',
+          maxWidth: '350px',
+        }}
+      >
+        <button
+          onClick={() => handleChoice(true)}
+          style={{
+            padding: '20px',
+            fontSize: '1.4rem',
+            borderRadius: '15px',
+            cursor: 'pointer',
+            background: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 15px rgba(76, 175, 80, 0.4)',
+          }}
+        >
+          ✅ Yes, Enable Sound & Alerts
+        </button>
+        <button
+          onClick={() => handleChoice(false)}
+          style={{
+            padding: '15px',
+            fontSize: '1.2rem',
+            borderRadius: '15px',
+            cursor: 'pointer',
+            background: 'rgba(255,255,255,0.1)',
+            color: '#ccc',
+            border: '1px solid rgba(255,255,255,0.2)',
+          }}
+        >
+          No, continue without sound
+        </button>
+      </div>
+    </div>
   );
 }
 

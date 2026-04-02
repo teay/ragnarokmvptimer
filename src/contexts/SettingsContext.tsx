@@ -575,6 +575,17 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     [setSettings]
   );
 
+  const confirmSoundChoice = useCallback(
+    (enabled: boolean) => {
+      setSettings((prev) => ({
+        ...prev,
+        isNotificationSoundEnabled: enabled,
+        soundChoiceMade: true,
+      }));
+    },
+    [setSettings]
+  );
+
   return (
     <SettingsContext.Provider
       value={{
@@ -616,6 +627,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         toggleLocalSave,
         toggleCloudSync,
         changeNickname,
+        confirmSoundChoice,
         joinState,
         setJoinState,
         joinRoomId,

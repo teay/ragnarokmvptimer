@@ -13,6 +13,7 @@ import { useNotification } from '@/hooks';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { getMvpRespawnTime } from '@/utils';
+import { getOptimalFontSize } from '@/utils/textMeasurement';
 
 import {
   Container,
@@ -62,6 +63,14 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
   const inWait = mvp.isPinned === true && !inActive;
   const isEditing = editingMvp?.id === mvp.id;
 
+  // Pretext: Calculate optimal font size for MVP name
+  const optimalFontSize = useMemo(() => {
+    const fontFamily =
+      document.documentElement.getAttribute('data-font') || 'Jost';
+    // Max width is container (280px) minus padding (20px) and some margin
+    return getOptimalFontSize(mvp.name, 22, 12, 220, fontFamily);
+  }, [mvp.name]);
+
   const nextRespawn = useMemo(
     () => dayjs(mvp.deathTime).add(getMvpRespawnTime(mvp), 'ms'),
     [mvp]
@@ -76,7 +85,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
       <Container isEditing={isEditing} zone={zone}>
         <Header>
           <ID>{`((${mvp.id}))`}</ID>
-          <Name>{mvp.name}</Name>
+          <Name fontSize={optimalFontSize}>{mvp.name}</Name>
           {inActive && mvp.deathTime && (
             <KillTime
               onClick={() => setEditingTimeMvp(mvp)}

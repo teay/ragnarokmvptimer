@@ -17,11 +17,19 @@ export function useNotification() {
 
   const respawnNotification = useCallback(
     (mvpID: number, title: string, body: string) => {
+      console.log(
+        `respawnNotification called: isNotificationSoundEnabled=${isNotificationSoundEnabled}, hasNotificationPermission=${hasNotificationPermission}`
+      );
       if (isNotificationSoundEnabled) {
         const audio = new Audio('notification.mp3');
-        audio.volume = 0.2;
-        audio.play();
+        audio.volume = 0.5; // Increased volume to 0.5 for better audibility
+        audio.play().catch((e) => {
+          // Silent catch for auto-play policy issues
+          console.debug('Notification sound deferred until user interaction', e);
+        });
       }
+
+
 
       if (hasNotificationPermission) {
         new Notification(title, {

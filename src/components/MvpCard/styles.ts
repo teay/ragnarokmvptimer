@@ -106,10 +106,10 @@ export const ID = styled.span`
   color: var(--mvpCard_id);
 `;
 
-export const Name = styled.span`
+export const Name = styled.span<{ fontSize?: number }>`
   font-weight: bold;
   color: var(--mvpCard_name);
-  font-size: 2.2rem;
+  font-size: ${({ fontSize }) => (fontSize ? `${fontSize}px` : '2.2rem')};
 `;
 
 export const MapName = styled.span`
