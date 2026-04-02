@@ -76,7 +76,7 @@ export function Main() {
     const anyMvp = activeMvps[0] || nonActiveMvps[0];
     
     if (!isLoading && anyMvp) {
-      console.log('%c --- Performance Test Starting --- ', 'background: #222; color: #bada55');
+      // console.log('%c --- Performance Test Starting --- ', 'background: #222; color: #bada55');
       runBenchmark(anyMvp.name, 100);
     } else if (!isLoading && !anyMvp) {
       console.warn('Benchmark skipped: No MVPs found in data.');
