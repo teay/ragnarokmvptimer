@@ -22,23 +22,28 @@
     "@styled-icons/feather": "^10.34.0",
     "@tauri-apps/api": "^2.10.1",
     "body-scroll-lock": "^4.0.0-beta.0",
-    "dayjs": "^1.11.10",
     "firebase": "^12.10.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-intl": "^5.24.8"
+    "react-intl": "^5.24.8",
+    "styled-components": "^6.3.12"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.10.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/body-scroll-lock": "^3.1.0",
-    "@types/node": "^18.19.6",
+    "@types/node": "^18.19.130",
     "@types/react": "^18.0.5",
     "@types/react-dom": "^18.0.1",
+    "@types/styled-components": "^5.1.36",
     "@typescript-eslint/eslint-plugin": "^5.23.0",
     "@typescript-eslint/parser": "^5.23.0",
     "@vitejs/plugin-react": "^4.0.0",
     "@wyw-in-js/vite": "^1.0.4",
     "babel-plugin-formatjs": "^10.3.19",
+    "dayjs": "^1.11.20",
     "eslint": "^8.15.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsx-a11y": "^6.5.1",
@@ -46,11 +51,13 @@
     "eslint-plugin-react": "^7.29.4",
     "eslint-plugin-react-hooks": "^4.5.0",
     "gh-pages": "^6.3.0",
+    "jsdom": "^29.0.1",
     "prettier": "2.6.2",
     "typescript": "^4.6.3",
     "vite": "^6.2.2",
     "vite-imagetools": "^5.0.9",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^4.1.2"
   },
   "engines": {
     "node": ">=18"

@@ -47,6 +47,8 @@ interface MvpsContextData {
   closeKillMvpModal: () => void;
   saveMvps: (mvps: IMvp[]) => void;
   leaveParty: (saveToLocal: boolean) => void;
+  // --- เพิ่มฟังก์ชันนี้เพื่อให้ Test สามารถเข้าถึงได้ ---
+  rehydrateMvps: (mvps: IMvp[]) => IMvp[];
 }
 
 export const MvpsContext = createContext({} as MvpsContextData);
@@ -59,7 +61,6 @@ function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
     const hasDeathTimeA = !!a.deathTime;
     const hasDeathTimeB = !!b.deathTime;
 
-    // Put MVPs without deathTime (pinned) at the end
     if (!hasDeathTimeA && hasDeathTimeB) return 1;
     if (hasDeathTimeA && !hasDeathTimeB) return -1;
     if (!hasDeathTimeA && !hasDeathTimeB) return a.id - b.id;
@@ -92,7 +93,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
     ? 'online'
     : 'local';
 
-  // Write to party members when joining
+  // Heartbeat Logic
   useEffect(() => {
     if (!partyRoom || !nickname) return;
 
@@ -101,7 +102,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
       `${DB_ROOT_PATH}/party/${partyRoom}/members/${nickname}`
     );
 
-    // Function to update heartbeat
     const updateHeartbeat = () => {
       set(membersRef, {
         name: nickname,
@@ -109,13 +109,9 @@ export function MvpProvider({ children }: MvpProviderProps) {
       }).catch(console.error);
     };
 
-    // Initial heartbeat
     updateHeartbeat();
-
-    // Update heartbeat every 30 seconds
     const interval = setInterval(updateHeartbeat, 30000);
 
-    // Cleanup: remove self when leaving
     return () => {
       clearInterval(interval);
       const selfRef = ref(
@@ -176,8 +172,6 @@ export function MvpProvider({ children }: MvpProviderProps) {
   useEffect(() => {
     if (!originalAllMvps.length) return;
 
-    // Solo mode: partyRoom is null but nickname exists
-    // Party mode: partyRoom has value
     const isSoloMode = !partyRoom && !!nickname;
 
     if (!isSoloMode && !partyRoom) {
@@ -392,40 +386,11 @@ export function MvpProvider({ children }: MvpProviderProps) {
     [modifyMvps]
   );
 
-  const addToWait = useCallback(
-    (mvp: IMvp) => {
-      pinMvp(mvp);
-    },
-    [pinMvp]
-  );
-
-  const removeFromWait = useCallback(
-    (mvp: IMvp) => {
-      unpinMvp(mvp, true);
-    },
-    [unpinMvp]
-  );
-
-  const moveToWait = useCallback(
-    (mvp: IMvp) => {
-      unpinMvp(mvp, false);
-    },
-    [unpinMvp]
-  );
-
-  const moveToAll = useCallback(
-    (mvpID: number, deathMap: string) => {
-      removeMvpByMap(mvpID, deathMap);
-    },
-    [removeMvpByMap]
-  );
-
-  const leaveParty = useCallback(
-    (saveToLocal: boolean) => {
-      changePartyRoom(null);
-    },
-    [changePartyRoom]
-  );
+  const addToWait = useCallback((mvp: IMvp) => pinMvp(mvp), [pinMvp]);
+  const removeFromWait = useCallback((mvp: IMvp) => unpinMvp(mvp, true), [unpinMvp]);
+  const moveToWait = useCallback((mvp: IMvp) => unpinMvp(mvp, false), [unpinMvp]);
+  const moveToAll = useCallback((mvpID: number, deathMap: string) => removeMvpByMap(mvpID, deathMap), [removeMvpByMap]);
+  const leaveParty = useCallback((saveToLocal: boolean) => changePartyRoom(null), [changePartyRoom]);
 
   const allMvps = useMemo(() => {
     const activeMvpKeys = new Set(
@@ -453,6 +418,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         activeMvps,
         allMvps,
         originalAllMvps,
+        rehydrateMvps, // ส่งออกไปเพื่อให้ Test เรียกใช้ได้
         editingMvp,
         editingTimeMvp,
         killingMvp,

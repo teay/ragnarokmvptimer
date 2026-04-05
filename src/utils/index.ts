@@ -1,4 +1,5 @@
 import Question from '../assets/question.gif';
+import { IMvp } from '../types';
 
 // Explicitly import and map assets based on actual file extensions found
 const mapImages = import.meta.glob('../assets/mvp_maps/*.png', {
@@ -54,7 +55,7 @@ export function formatTime(duration: number): string {
   const absDuration = Math.abs(duration);
   const seconds = Math.floor((absDuration / 1000) % 60);
   const minutes = Math.floor((absDuration / (1000 * 60)) % 60);
-  const hours = Math.floor(absDuration / (1000 * 60 * 60)); // Total hours
+  const hours = Math.floor(absDuration / (1000 * 60 * 60));
 
   const hoursStr = String(hours).padStart(2, '0');
   const minutesStr = String(minutes).padStart(2, '0');
@@ -68,9 +69,14 @@ export function formatTime(duration: number): string {
  */
 export function getMvpRespawnTime(mvp: IMvp): number {
   if (!mvp || !mvp.spawn || !Array.isArray(mvp.spawn)) return 0;
+
+  // ค้นหาเฉพาะแมพที่ตรงกับ deathMap เท่านั้น
   const deathMap = mvp.spawn.find(
     (spawn) => spawn && spawn.mapname === mvp.deathMap
   );
+
+  // ถ้าไม่เจอแมพที่ตรงกัน ให้คืนค่า 0 (ห้าม Fallback ไป spawn[0]) 
+  // เพื่อให้ผ่านเทส: should return 0 if no matching mapname is found
   return deathMap?.respawnTime || 0;
 }
 
@@ -79,15 +85,22 @@ export function getMvpRespawnTime(mvp: IMvp): number {
  * Default to 10 minutes if not specified in data.
  */
 export function getMvpRespawnWindow(mvp: IMvp): number {
-  if (!mvp || !mvp.spawn || !Array.isArray(mvp.spawn)) return 0;
+  const DEFAULT_WINDOW = 10 * 60 * 1000;
+  
+  if (!mvp || !mvp.spawn || !Array.isArray(mvp.spawn)) return DEFAULT_WINDOW;
+
+  // ค้นหาเฉพาะแมพที่ตรงกับ deathMap
   const deathMap = mvp.spawn.find(
     (spawn) => spawn && spawn.mapname === mvp.deathMap
   );
-  const window = deathMap?.window;
-  return window !== undefined ? window : 10 * 60 * 1000;
+
+  // ถ้าหาแมพไม่เจอ ให้คืนค่า DEFAULT_WINDOW (600,000) ทันที
+  if (!deathMap) return DEFAULT_WINDOW;
+
+  const window = deathMap.window;
+  return typeof window === 'number' ? window : DEFAULT_WINDOW;
 }
 
 export function clearData() {
-  // Clear local MVP data (Firebase data stays)
   localStorage.removeItem('activeMvps');
 }
