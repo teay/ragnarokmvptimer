@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import dayjs from 'dayjs';
 import { Container, Segment, Separator, Spacer } from './styles';
-import { SegmentedDateTimePickerProps } from './types';
+import { SegmentedDateTimePickerHandle, SegmentedDateTimePickerProps } from './types';
 
-export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateTimePickerProps>((props, ref) => {
+export const SegmentedDateTimePicker = forwardRef<SegmentedDateTimePickerHandle, SegmentedDateTimePickerProps>((props, ref) => {
   const { value, onChange, autoFocus = true } = props;
   
   // Use current date as fallback for internal state if value is null
@@ -28,8 +28,7 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
       refs.day.current?.focus();
       refs.day.current?.select();
     },
-    ...containerRef.current
-  } as any));
+  }));
 
   const refs = {
     day: useRef<HTMLInputElement>(null),
@@ -122,8 +121,8 @@ export const SegmentedDateTimePicker = forwardRef<HTMLDivElement, SegmentedDateT
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, part: keyof typeof displayValues) => {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
-      const unit = part === 'day' ? 'day' : part;
-      const nextDate = e.key === 'ArrowUp' ? date.add(1, unit as any) : date.subtract(1, unit as any);
+      const unit = (part === 'minute' ? 'minute' : part) as dayjs.ManipulateType;
+      const nextDate = e.key === 'ArrowUp' ? date.add(1, unit) : date.subtract(1, unit);
       
       if (nextDate.year() > MAX_YEAR || nextDate.year() < MIN_YEAR) return;
 

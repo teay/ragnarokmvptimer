@@ -11,7 +11,7 @@ import { ModalBase } from '../ModalBase';
 import { MvpSprite } from '../../components/MvpSprite';
 import { Map } from '../../components/Map';
 import { ModalSelectMap } from '../ModalSelectMap';
-import { SegmentedDateTimePicker } from '../../components/DateTimePicker';
+import { SegmentedDateTimePicker, SegmentedDateTimePickerHandle } from '../../components/DateTimePicker';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 
@@ -70,8 +70,8 @@ const ChangeMapButton = styled(ButtonBase)`
 export function ModalKillMvp() {
   useScrollBlock(true);
   const { killMvp, killingMvp: mvp, closeKillMvpModal } = useMvpsContext();
-  const { animatedSprites } = useSettings();
-  const datePickerRef = useRef<any>(null);
+  const { animatedSprites, nickname } = useSettings();
+  const datePickerRef = useRef<SegmentedDateTimePickerHandle>(null);
 
   const [selectedMap, setSelectedMap] = useState<string>(mvp.deathMap || '');
   const [markCoordinates, setMarkCoordinates] = useState<IMapMark>({

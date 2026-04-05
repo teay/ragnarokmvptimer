@@ -19,16 +19,26 @@ export function sortBy(field?: string) {
   }
 
   if (['level', 'health', 'baseExperience', 'jobExperience'].includes(field)) {
-    return (a: IMvp, b: IMvp) => a.stats[field] - b.stats[field];
+    const statsField = field as keyof IMvp['stats'];
+    return (a: IMvp, b: IMvp) => a.stats[statsField] - b.stats[statsField];
   }
 
   if (field === 'respawnTime') {
-    return (a: IMvp, b: IMvp) => getActualRespawnTime(a) - getActualRespawnTime(b);
+    return (a: IMvp, b: IMvp) =>
+      getActualRespawnTime(a) - getActualRespawnTime(b);
   }
 
   if (field === 'name') {
     return (a: IMvp, b: IMvp) => a.name.localeCompare(b.name);
   }
 
-  return (a: IMvp, b: IMvp) => (a as any)[field] - (b as any)[field];
+  const mvpField = field as keyof IMvp;
+  return (a: IMvp, b: IMvp) => {
+    const valA = a[mvpField];
+    const valB = b[mvpField];
+    if (typeof valA === 'number' && typeof valB === 'number') {
+      return valA - valB;
+    }
+    return 0;
+  };
 }

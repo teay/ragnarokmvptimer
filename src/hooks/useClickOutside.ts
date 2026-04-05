@@ -4,7 +4,7 @@ export function useClickOutside(onClick: () => void) {
   const ref = useRef<any>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: any) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (ref.current && !ref.current.contains(event.target)) {
         onClick();
       }

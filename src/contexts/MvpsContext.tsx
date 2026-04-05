@@ -127,7 +127,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
   }, [partyRoom, nickname]);
 
   const rehydrateMvps = useCallback(
-    (mvps: any[]) => {
+    (mvps: IMvp[]) => {
       if (!mvps) return [];
       if (originalAllMvps.length === 0) return mvps;
 
@@ -149,13 +149,13 @@ export function MvpProvider({ children }: MvpProviderProps) {
             deathTime,
             spawn:
               (specificSpawn.length > 0 ? specificSpawn : original.spawn) || [],
-          };
+          } as IMvp;
         }
         return {
           ...mvp,
           deathTime: mvp.deathTime ? new Date(mvp.deathTime) : undefined,
           spawn: mvp.spawn || [],
-        };
+        } as IMvp;
       });
     },
     [originalAllMvps]
@@ -211,11 +211,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
           return;
         }
 
-        const remoteMvpsRaw = data
-          ? Array.isArray(data)
-            ? data
-            : Object.values(data)
-          : [];
+        const remoteMvpsRaw: IMvp[] = Array.isArray(data)
+          ? data
+          : Object.values(data);
+
         const rehydrated = rehydrateMvps(remoteMvpsRaw);
         const sorted = sortMvpsByRespawnTime(rehydrated);
 

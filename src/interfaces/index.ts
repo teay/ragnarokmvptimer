@@ -6,6 +6,7 @@ interface IMapMark {
 interface ISpawn {
   mapname: string;
   respawnTime: number;
+  window?: number;
 }
 
 interface IMvp {

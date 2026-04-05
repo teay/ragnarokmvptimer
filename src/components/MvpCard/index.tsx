@@ -128,13 +128,13 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
         <BottomControls>
           <MapName onClick={toggleShowMvpMap}>
             <FormattedMessage id='map' />:{' '}
-            <Bold>{inActive ? mvp.deathMap : mvp.spawn[0].mapname}</Bold>
+            <Bold>{inActive ? mvp.deathMap : mvp.spawn?.[0]?.mapname || 'Unknown'}</Bold>
           </MapName>
 
           {showMvpMap && (
             <MapWrapper onClick={() => inActive && setIsMapModalOpen(true)}>
               <MvpMap
-                mapName={inActive ? mvp.deathMap : mvp.spawn[0].mapname}
+                mapName={inActive ? mvp.deathMap : mvp.spawn?.[0]?.mapname || ''}
                 coordinates={inActive ? mvp.deathPosition : undefined}
               />
             </MapWrapper>
@@ -194,7 +194,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
                 </MiniControl>
                 <MiniControl
                   onClick={() =>
-                    moveToAll(mvp.id, mvp.deathMap || mvp.spawn[0].mapname)
+                    moveToAll(mvp.id, mvp.deathMap || mvp.spawn?.[0]?.mapname || '')
                   }
                   title='Remove MVP'
                   variant='danger'

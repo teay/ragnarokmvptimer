@@ -11,7 +11,7 @@ import { ModalBase } from '../ModalBase';
 import { MvpSprite } from '../../components/MvpSprite';
 import { Map } from '../../components/Map';
 import { ModalSelectMap } from '../ModalSelectMap';
-import { SegmentedDateTimePicker } from '../../components/DateTimePicker';
+import { SegmentedDateTimePicker, SegmentedDateTimePickerHandle } from '../../components/DateTimePicker';
 
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 
@@ -76,7 +76,7 @@ export function ModalEditMvp() {
     closeEditMvpModal,
   } = useMvpsContext();
   const { animatedSprites } = useSettings();
-  const datePickerRef = useRef<any>(null);
+  const datePickerRef = useRef<SegmentedDateTimePickerHandle>(null);
 
   const [newTime, setNewTime] = useState<Date | null>(
     mvp.deathTime || new Date()

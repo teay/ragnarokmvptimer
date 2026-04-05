@@ -86,7 +86,7 @@ export function WelcomeScreen() {
         return;
       }
 
-      const exportData = Object.values(data).map((mvp: any) => {
+      const exportData = Object.values(data as Record<string, IMvp>).map((mvp: IMvp) => {
         const bossInfo = originalAllMvps.find((m) => m.id === mvp.id);
         return {
           ...mvp,

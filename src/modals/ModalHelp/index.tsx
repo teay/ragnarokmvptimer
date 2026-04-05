@@ -24,7 +24,21 @@ interface ModalHelpProps {
   close: () => void;
 }
 
-const DEFAULT_FLOW = [
+interface FlowStep {
+  id: number;
+  mvpName: string;
+  status: string;
+  timer: string;
+  button: string;
+  variant: 'primary' | 'timer' | 'back' | 'secondary';
+  icon?: JSX.Element;
+  cursor: { top: number; left: number; click: boolean };
+  activeStep: number;
+  secondaryButton?: string;
+  secondaryVariant?: 'primary' | 'timer' | 'back' | 'secondary';
+}
+
+const DEFAULT_FLOW: FlowStep[] = [
   { 
     id: 1, 
     mvpName: 'Baphomet',
@@ -105,11 +119,11 @@ export function ModalHelp({ close }: ModalHelpProps) {
             <StatusText>{current.status}</StatusText>
             <div style={{ fontSize: '2rem', fontFamily: 'monospace', color: '#e0e0e0' }}>{current.timer}</div>
             <div style={{ display: 'flex', gap: '5px', width: '100%' }}>
-              <DemoButton variant={current.variant as any}>
+              <DemoButton variant={current.variant}>
                 {current.icon} {current.button}
               </DemoButton>
               {current.secondaryButton && (
-                <DemoButton variant={current.secondaryVariant as any} style={{ width: '40px', flexShrink: 0 }}>
+                <DemoButton variant={current.secondaryVariant} style={{ width: '40px', flexShrink: 0 }}>
                   <X size={16} />
                 </DemoButton>
               )}

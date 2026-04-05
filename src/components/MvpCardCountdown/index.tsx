@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import dayjs, { type Dayjs } from 'dayjs';
+import type { Duration } from 'dayjs/plugin/duration';
 
 import { useCountdown } from '@/hooks';
 import { formatTime } from '@/utils';
@@ -17,7 +18,7 @@ interface MvpCardCountdownProps {
 function getTimeString(
   nextRespawnMin: Dayjs,
   nextRespawnMax: Dayjs,
-  durationMin: any,
+  durationMin: Duration,
   respawnAsCountdown?: boolean,
   isWithinWindow?: boolean,
   missedRespawn?: boolean

@@ -33,8 +33,8 @@ export const DEFAULT_SETTINGS = {
   isNotificationSoundEnabled: true,
   isGlassUIEnabled: true, // User prefers glass UI enabled
   isAnimatedBackgroundEnabled: false, // Keep off for performance
-  backgroundEffectMode: 'full' as 'full' | 'top' | 'bottom' | 'center',
-  particleDensity: 'Empty' as 'low' | 'medium' | 'high' | 'Empty', // Empty for performance
+  backgroundEffectMode: 'full',
+  particleDensity: 'Empty', // Empty for performance
   particleColor: '#fa0000',
   particleOpacity: 0.5,
   waveAmplitude: 150, // As per user's preferred setting
@@ -51,7 +51,7 @@ export const DEFAULT_SETTINGS = {
   isFallingElementsEnabled: false,
   simpleGlassUI: false,
   ultraLite: true, // Enabled Ultra Lite Mode (but note: may conflict with glass UI; user wants both)
-  particleEffect: 'default' as 'default' | 'gravity',
+  particleEffect: 'default',
   language: DEFAULT_LANG,
   server: 'thROG', // User's preferred server
   font: 'Jost',

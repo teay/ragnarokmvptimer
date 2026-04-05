@@ -1,3 +1,7 @@
+export interface SegmentedDateTimePickerHandle {
+  focusFirst: () => void;
+}
+
 export interface SegmentedDateTimePickerProps {
   value: Date | null;
   onChange: (date: Date | null) => void;

@@ -83,7 +83,7 @@ export function getMvpRespawnWindow(mvp: IMvp): number {
   const deathMap = mvp.spawn.find(
     (spawn) => spawn && spawn.mapname === mvp.deathMap
   );
-  const window = (deathMap as any)?.window;
+  const window = deathMap?.window;
   return window !== undefined ? window : 10 * 60 * 1000;
 }
 
