@@ -87,7 +87,6 @@ const mvpList = blessed.box({
   style: { fg: 'white' },
   content: '',
   scrollable: true,
-  alwaysScroll: false,
   mouse: true,
   tags: true,
 });
@@ -175,7 +174,7 @@ function render() {
       (pauseMode ? 'PAUSED' : 'RUNNING') +
       ' | ' +
       modeLabel +
-      ' | Up/Down: Navigate | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit '
+      ' | Up/Down:1 PgUp/Dn:10 Shift+Up/Dn:5 | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit '
   );
 
   var listContent = '';
@@ -301,79 +300,38 @@ screen.key(['right'], function () {
 });
 
 screen.key(['up'], function () {
-  var jump = 1;
-  selectedIndex = Math.max(0, selectedIndex - jump);
+  selectedIndex = Math.max(0, selectedIndex - 1);
   mvpList.setScroll(selectedIndex);
   render();
 });
 screen.key(['down'], function () {
   var total = active.length + wait.length + pending.length;
-  var jump = 1;
-  selectedIndex = Math.min(total - 1, selectedIndex + jump);
+  selectedIndex = Math.min(total - 1, selectedIndex + 1);
   mvpList.setScroll(selectedIndex);
   render();
 });
 
 screen.key(['pageup'], function () {
-  var jump = 10;
-  selectedIndex = Math.max(0, selectedIndex - jump);
+  selectedIndex = Math.max(0, selectedIndex - 10);
   mvpList.setScroll(selectedIndex);
   render();
 });
-
 screen.key(['pagedown'], function () {
   var total = active.length + wait.length + pending.length;
-  var jump = 10;
-  selectedIndex = Math.min(total - 1, selectedIndex + jump);
-  mvpList.setScroll(selectedIndex);
-  render();
-});
-
-screen.key(['S-down'], function () {
-  var total = active.length + wait.length + pending.length;
-  var jump = 5;
-  selectedIndex = Math.min(total - 1, selectedIndex + jump);
+  selectedIndex = Math.min(total - 1, selectedIndex + 10);
   mvpList.setScroll(selectedIndex);
   render();
 });
 
 screen.key(['S-up'], function () {
-  var jump = 5;
-  selectedIndex = Math.max(0, selectedIndex - jump);
+  selectedIndex = Math.max(0, selectedIndex - 5);
   mvpList.setScroll(selectedIndex);
   render();
 });
-
-screen.key(['pagedown'], function () {
-  var total = active.length + wait.length + pending.length;
-  var jump = 15;
-  selectedIndex = Math.min(total - 1, selectedIndex + jump);
-  mvpList.setScroll(selectedIndex - 20);
-  render();
-});
-
 screen.key(['S-down'], function () {
   var total = active.length + wait.length + pending.length;
-  var jump = 10;
-  selectedIndex = Math.min(total - 1, selectedIndex + jump);
-  mvpList.setScroll(selectedIndex - 20);
-  render();
-});
-
-screen.key(['S-up'], function () {
-  var jump = 10;
-  selectedIndex = Math.max(0, selectedIndex - jump);
-  mvpList.setScroll(Math.max(0, selectedIndex - 20));
-  render();
-});
-
-screen.key(['pagedown'], function () {
-  var total = active.length + wait.length + pending.length;
-  var jump = 10;
-  selectedIndex = Math.min(total - 1, selectedIndex + jump);
-  mvpList.setScrollPerc(
-    Math.min(100, Math.max(0, (selectedIndex * 100) / total))
-  );
+  selectedIndex = Math.min(total - 1, selectedIndex + 5);
+  mvpList.setScroll(selectedIndex);
   render();
 });
 
