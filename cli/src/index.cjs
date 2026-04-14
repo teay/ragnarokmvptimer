@@ -200,7 +200,7 @@ function render() {
   term.blue(' | ');
   term(modeLabel);
   term.blue(
-    ' | Up/Down:1 PgUp/Dn:10 Home/End | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+    ' | Up/Down:1 PgUp/Dn:10 Shift+Up/Dn:5 Home/End | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
   term.bold.cyan(
