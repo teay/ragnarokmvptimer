@@ -511,7 +511,7 @@ term.on('key', function (keyName, matches, data) {
     console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
     console.log('New (YYYY-MM-DD HH:MM) or Enter=now: ');
     term.grabInput(false);
-    process.stdin.once('data', function(data) {
+    process.stdin.once('data', function (data) {
       let input = data.toString().trim();
       let newTime;
       if (!input) {
@@ -528,9 +528,18 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'c' || keyName === 'C') {
-
+    let mvp = getMvpAtIndex(selectedIndex);
+    if (!mvp) return;
+    activeMvps = activeMvps.filter(function (a) {
+      return !(
+        a &&
+        a.id === mvp.id &&
+        (a.deathMap || a.mapname) === mvp.mapname
+      );
+    });
     render();
     return;
   }
 });
 
+render();
