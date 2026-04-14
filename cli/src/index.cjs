@@ -1,4 +1,4 @@
-const blessed = require('blessed');
+const term = require('terminal-kit').terminal;
 const { readFileSync, existsSync } = require('fs');
 const path = require('path');
 
@@ -69,67 +69,7 @@ let selectedIndex = 0,
   pauseMode = false,
   sortMode = 'name';
 
-const screen = blessed.screen({ smartCSR: true, title: 'Ragnarok MVP Timer' });
-const header = blessed.box({
-  top: 0,
-  left: 0,
-  width: '100%',
-  height: 3,
-  style: { fg: 'white', bg: 'blue' },
-  content: '',
-  tags: true,
-});
-const mvpList = blessed.box({
-  top: 3,
-  left: 0,
-  width: '100%',
-  height: '90%',
-  style: { fg: 'white' },
-  content: '',
-  scrollable: true,
-  alwaysScroll: true,
-  mouse: true,
-  tags: true,
-});
-const footer = blessed.box({
-  bottom: 0,
-  left: 0,
-  width: '100%',
-  height: 3,
-  style: { fg: 'white', bg: 'black' },
-  content: '',
-  tags: true,
-});
-screen.append(header);
-screen.append(mvpList);
-screen.append(footer);
-
-function formatTime(ms) {
-  if (ms <= 0) return 'READY!';
-  var s = Math.floor(ms / 1000),
-    h = Math.floor(s / 3600),
-    m = Math.floor((s % 3600) / 60),
-    sec = s % 60;
-  return h > 0
-    ? h + 'h ' + m + 'm ' + sec + 's'
-    : m > 0
-      ? m + 'm ' + sec + 's'
-      : sec + 's';
-}
-
-function getRespawnTime(mvp) {
-  return mvp.deathTime && mvp.respawnTime
-    ? mvp.deathTime + mvp.respawnTime - Date.now()
-    : null;
-}
-
-function getMvpAtIndex(idx) {
-  if (idx < active.length) return active[idx];
-  if (idx < active.length + wait.length) return wait[idx - active.length];
-  return pending[idx - active.length - wait.length];
-}
-
-function render() {
+function updateLists() {
   active = activeMvps.filter(function (m) {
     return m && m.deathTime;
   });
@@ -159,6 +99,50 @@ function render() {
 
   var totalItems = active.length + wait.length + pending.length;
   if (selectedIndex >= totalItems) selectedIndex = Math.max(0, totalItems - 1);
+}
+
+function formatTime(ms) {
+  if (ms <= 0) return 'READY!';
+  var s = Math.floor(ms / 1000),
+    h = Math.floor(s / 3600),
+    m = Math.floor((s % 3600) / 60),
+    sec = s % 60;
+  return h > 0
+    ? h + 'h ' + m + 'm ' + sec + 's'
+    : m > 0
+      ? m + 'm ' + sec + 's'
+      : sec + 's';
+}
+
+function getRespawnTime(mvp) {
+  return mvp.deathTime && mvp.respawnTime
+    ? mvp.deathTime + mvp.respawnTime - Date.now()
+    : null;
+}
+
+function getMvpAtIndex(idx) {
+  if (idx < active.length) return active[idx];
+  if (idx < active.length + wait.length) return wait[idx - active.length];
+  return pending[idx - active.length - wait.length];
+}
+
+function render() {
+  updateLists();
+
+  var termWidth = term.width;
+  var termHeight = term.height;
+  var totalItems = active.length + wait.length + pending.length;
+
+  var scrollOffset = 0;
+  if (totalItems > termHeight - 10) {
+    var visibleItems = termHeight - 10;
+    scrollOffset = Math.max(0, selectedIndex - Math.floor(visibleItems / 2));
+    var maxScroll = totalItems - visibleItems;
+    scrollOffset = Math.min(scrollOffset, maxScroll);
+  }
+
+  term.clear();
+  term.moveTo(1, 1);
 
   var modeLabel =
     'All (A:' +
@@ -168,22 +152,26 @@ function render() {
     ' P:' +
     pending.length +
     ')';
-  header.setContent(
-    ' [' +
-      currentServer +
-      '] MVP Timer | ' +
-      (pauseMode ? 'PAUSED' : 'RUNNING') +
-      ' | ' +
-      modeLabel +
-      ' | Up/Down:1 PgUp/Dn:10 Shift+Up/Dn:5 | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit '
+  term.bold.blue(' [');
+  term(currentServer);
+  term.blue('] MVP Timer | ');
+  term(pauseMode ? '{red}PAUSED{/red}' : '{green}RUNNING{/green}');
+  term.blue(' | ');
+  term(modeLabel);
+  term.blue(
+    ' | Up/Down:1 PgUp/Dn:10 Shift+Up/Dn:5 | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
-  var listContent = '';
   var currentIdx = 0;
 
   if (active.length > 0) {
-    listContent += '{blue}=== ACTIVE (Respawning) ==={/blue}\n';
+    term.bold.blue('=== ACTIVE (Respawning) ===\n');
     active.forEach(function (mvp) {
+      if (currentIdx < scrollOffset) {
+        currentIdx++;
+        return;
+      }
+      if (currentIdx >= scrollOffset + termHeight - 10) return;
       var respawnTime = getRespawnTime(mvp);
       var timeStr = respawnTime !== null ? formatTime(respawnTime) : 'READY!';
       var line =
@@ -193,52 +181,62 @@ function render() {
         timeStr +
         ' ' +
         (mvp.mapname || '');
-      listContent +=
-        currentIdx === selectedIndex
-          ? '{bold}{inverse}' + line + '{/inverse}{/bold}\n'
-          : line + '\n';
+      if (currentIdx === selectedIndex) {
+        term.inverse(line + '\n');
+      } else {
+        term(line + '\n');
+      }
       currentIdx++;
     });
   }
 
   if (wait.length > 0) {
-    listContent +=
-      (active.length > 0 ? '\n' : '') + '{blue}=== WAIT FOR KILL ==={/blue}\n';
+    if (active.length > 0) term('\n');
+    term.bold.blue('=== WAIT FOR KILL ===\n');
     wait.forEach(function (mvp) {
+      if (currentIdx < scrollOffset) {
+        currentIdx++;
+        return;
+      }
+      if (currentIdx >= scrollOffset + termHeight - 10) return;
       var line =
         '  [W] ' +
         mvp.name +
         ' '.repeat(Math.max(1, 26 - mvp.name.length)) +
         'Wait kill  ' +
         (mvp.mapname || '');
-      listContent +=
-        currentIdx === selectedIndex
-          ? '{bold}{inverse}' + line + '{/inverse}{/bold}\n'
-          : line + '\n';
+      if (currentIdx === selectedIndex) {
+        term.inverse(line + '\n');
+      } else {
+        term(line + '\n');
+      }
       currentIdx++;
     });
   }
 
   if (pending.length > 0) {
-    listContent +=
-      (active.length + wait.length > 0 ? '\n' : '') +
-      '{blue}=== SELECT TO KILL ==={/blue}\n';
+    if (active.length + wait.length > 0) term('\n');
+    term.bold.blue('=== SELECT TO KILL ===\n');
     pending.forEach(function (mvp) {
+      if (currentIdx < scrollOffset) {
+        currentIdx++;
+        return;
+      }
+      if (currentIdx >= scrollOffset + termHeight - 10) return;
       var line =
         '  [ ] ' +
         mvp.name +
         ' '.repeat(Math.max(1, 26 - mvp.name.length)) +
         'Select    ' +
         (mvp.mapname || '');
-      listContent +=
-        currentIdx === selectedIndex
-          ? '{bold}{inverse}' + line + '{/inverse}{/bold}\n'
-          : line + '\n';
+      if (currentIdx === selectedIndex) {
+        term.inverse(line + '\n');
+      } else {
+        term(line + '\n');
+      }
       currentIdx++;
     });
   }
-
-  mvpList.setContent(listContent);
 
   var selectedMvp = getMvpAtIndex(selectedIndex);
   if (selectedMvp) {
@@ -247,160 +245,192 @@ function render() {
       : selectedMvp.isPinned
         ? 'Wait for kill'
         : 'Select to kill';
-    footer.setContent(
-      ' ' +
-        statusLabel +
-        ': ' +
-        selectedMvp.name +
-        ' | Map: ' +
-        (selectedMvp.mapname || '?') +
-        ' | Level: ' +
-        ((selectedMvp.stats && selectedMvp.stats.level) || '?') +
-        ' | HP: ' +
-        (selectedMvp.stats && selectedMvp.stats.health
-          ? selectedMvp.stats.health.toLocaleString()
-          : '?') +
-        ' '
+    term.moveTo(1, termHeight);
+    term.bgWhite.black(' ');
+    term(statusLabel);
+    term(': ');
+    term(selectedMvp.name);
+    term(' | Map: ');
+    term(selectedMvp.mapname || '?');
+    term(' | Level: ');
+    term((selectedMvp.stats && selectedMvp.stats.level) || '?');
+    term(' | HP: ');
+    term(
+      selectedMvp.stats && selectedMvp.stats.health
+        ? selectedMvp.stats.health.toLocaleString()
+        : '?'
     );
+    term(' ');
   }
-  screen.render();
 }
 
 setInterval(function () {
-  if (!pauseMode) render();
+  if (!pauseMode) {
+    var changed = false;
+    activeMvps.forEach(function (m) {
+      if (m && m.deathTime) {
+        var remaining = m.deathTime + m.respawnTime - Date.now();
+        if (remaining <= 0) changed = true;
+      }
+    });
+    if (changed) render();
+  }
 }, 1000);
 
-screen.key(['escape', 'q', 'Q'], function () {
-  screen.destroy();
-  process.exit(0);
-});
-screen.key(['space'], function () {
-  pauseMode = !pauseMode;
-  render();
-});
-screen.key(['s', 'S'], function () {
-  sortMode = sortMode === 'name' ? 'map' : 'name';
-  render();
-});
-screen.key(['left'], function () {
-  currentServerIndex =
-    (currentServerIndex - 1 + serverKeys.length) % serverKeys.length;
-  currentServer = serverKeys[currentServerIndex];
-  originalAllMvps = loadMvpData(currentServer);
-  activeMvps = [];
-  selectedIndex = 0;
-  render();
-});
-screen.key(['right'], function () {
-  currentServerIndex = (currentServerIndex + 1) % serverKeys.length;
-  currentServer = serverKeys[currentServerIndex];
-  originalAllMvps = loadMvpData(currentServer);
-  activeMvps = [];
-  selectedIndex = 0;
-  render();
-});
+term.grabInput(true);
 
-screen.key(['up'], function () {
-  selectedIndex = Math.max(0, selectedIndex - 1);
-  mvpList.setScroll(Math.max(0, selectedIndex));
-  render();
-});
-screen.key(['down'], function () {
+term.on('key', function (keyName, matches, data) {
+  if (keyName === 'q' || keyName === 'Q' || keyName === 'ESCAPE') {
+    term.grabInput(false);
+    term.processExit();
+    process.exit(0);
+  }
+
+  if (keyName === 'space') {
+    pauseMode = !pauseMode;
+    render();
+    return;
+  }
+
+  if (keyName === 's' || keyName === 'S') {
+    sortMode = sortMode === 'name' ? 'map' : 'name';
+    render();
+    return;
+  }
+
+  if (keyName === 'LEFT') {
+    currentServerIndex =
+      (currentServerIndex - 1 + serverKeys.length) % serverKeys.length;
+    currentServer = serverKeys[currentServerIndex];
+    originalAllMvps = loadMvpData(currentServer);
+    activeMvps = [];
+    selectedIndex = 0;
+    render();
+    return;
+  }
+
+  if (keyName === 'RIGHT') {
+    currentServerIndex = (currentServerIndex + 1) % serverKeys.length;
+    currentServer = serverKeys[currentServerIndex];
+    originalAllMvps = loadMvpData(currentServer);
+    activeMvps = [];
+    selectedIndex = 0;
+    render();
+    return;
+  }
+
+  updateLists();
+
   var total = active.length + wait.length + pending.length;
-  selectedIndex = Math.min(total - 1, selectedIndex + 1);
-  mvpList.setScroll(Math.max(0, selectedIndex));
-  render();
-});
 
-screen.key(['pageup'], function () {
-  selectedIndex = Math.max(0, selectedIndex - 10);
-  mvpList.setScroll(Math.max(0, selectedIndex));
-  render();
-});
-screen.key(['pagedown'], function () {
-  var total = active.length + wait.length + pending.length;
-  selectedIndex = Math.min(total - 1, selectedIndex + 10);
-  mvpList.setScroll(Math.max(0, selectedIndex));
-  render();
-});
+  if (keyName === 'UP') {
+    selectedIndex = Math.max(0, selectedIndex - 1);
+    render();
+    return;
+  }
 
-screen.key(['S-up'], function () {
-  selectedIndex = Math.max(0, selectedIndex - 5);
-  mvpList.setScroll(Math.max(0, selectedIndex));
-  render();
-});
-screen.key(['S-down'], function () {
-  var total = active.length + wait.length + pending.length;
-  selectedIndex = Math.min(total - 1, selectedIndex + 5);
-  mvpList.setScroll(Math.max(0, selectedIndex));
-  render();
-});
+  if (keyName === 'DOWN') {
+    selectedIndex = Math.min(total - 1, selectedIndex + 1);
+    render();
+    return;
+  }
 
-screen.key(['enter', 'd', 'D'], function (e) {
-  var mvp = getMvpAtIndex(selectedIndex);
-  if (!mvp) return;
-  var existing = activeMvps.find(function (a) {
-    return a && a.id === mvp.id && (a.deathMap || a.mapname) === mvp.mapname;
-  });
+  if (keyName === 'PAGE_UP') {
+    selectedIndex = Math.max(0, selectedIndex - 10);
+    render();
+    return;
+  }
 
-  if (e.key === 'd' || e.key === 'D') {
-    if (existing) {
-      existing.deathTime = Date.now();
-      existing.isPinned = true;
-    } else {
-      activeMvps.push({
-        id: mvp.id,
-        name: mvp.name,
-        dbname: mvp.dbname,
-        spawn: mvp.spawn,
-        mapname: mvp.mapname,
-        respawnTime: mvp.respawnTime,
-        stats: mvp.stats,
-        isPinned: true,
-        deathTime: Date.now(),
-        deathMap: mvp.mapname,
-      });
-    }
-  } else {
-    if (existing) {
-      if (existing.deathTime) {
-        existing.deathTime = null;
-        existing.isPinned = true;
-      } else if (existing.isPinned) {
+  if (keyName === 'PAGE_DOWN') {
+    selectedIndex = Math.min(total - 1, selectedIndex + 10);
+    render();
+    return;
+  }
+
+  if (keyName === 'S-UP') {
+    selectedIndex = Math.max(0, selectedIndex - 5);
+    render();
+    return;
+  }
+
+  if (keyName === 'S-DOWN') {
+    selectedIndex = Math.min(total - 1, selectedIndex + 5);
+    render();
+    return;
+  }
+
+  if (keyName === 'ENTER' || keyName === 'd' || keyName === 'D') {
+    var mvp = getMvpAtIndex(selectedIndex);
+    if (!mvp) return;
+    var existing = activeMvps.find(function (a) {
+      return a && a.id === mvp.id && (a.deathMap || a.mapname) === mvp.mapname;
+    });
+
+    if (keyName === 'd' || keyName === 'D') {
+      if (existing) {
         existing.deathTime = Date.now();
+        existing.isPinned = true;
       } else {
-        activeMvps = activeMvps.filter(function (a) {
-          return !(
-            a &&
-            a.id === mvp.id &&
-            (a.deathMap || a.mapname) === mvp.mapname
-          );
+        activeMvps.push({
+          id: mvp.id,
+          name: mvp.name,
+          dbname: mvp.dbname,
+          spawn: mvp.spawn,
+          mapname: mvp.mapname,
+          respawnTime: mvp.respawnTime,
+          stats: mvp.stats,
+          isPinned: true,
+          deathTime: Date.now(),
+          deathMap: mvp.mapname,
         });
       }
     } else {
-      activeMvps.push({
-        id: mvp.id,
-        name: mvp.name,
-        dbname: mvp.dbname,
-        spawn: mvp.spawn,
-        mapname: mvp.mapname,
-        respawnTime: mvp.respawnTime,
-        stats: mvp.stats,
-        isPinned: true,
-      });
+      if (existing) {
+        if (existing.deathTime) {
+          existing.deathTime = null;
+          existing.isPinned = true;
+        } else if (existing.isPinned) {
+          existing.deathTime = Date.now();
+        } else {
+          activeMvps = activeMvps.filter(function (a) {
+            return !(
+              a &&
+              a.id === mvp.id &&
+              (a.deathMap || a.mapname) === mvp.mapname
+            );
+          });
+        }
+      } else {
+        activeMvps.push({
+          id: mvp.id,
+          name: mvp.name,
+          dbname: mvp.dbname,
+          spawn: mvp.spawn,
+          mapname: mvp.mapname,
+          respawnTime: mvp.respawnTime,
+          stats: mvp.stats,
+          isPinned: true,
+        });
+      }
     }
+    selectedIndex = 0;
+    render();
+    return;
   }
-  selectedIndex = 0;
-  render();
-});
 
-screen.key(['c', 'C'], function () {
-  var mvp = getMvpAtIndex(selectedIndex);
-  if (!mvp) return;
-  activeMvps = activeMvps.filter(function (a) {
-    return !(a && a.id === mvp.id && (a.deathMap || a.mapname) === mvp.mapname);
-  });
-  render();
+  if (keyName === 'c' || keyName === 'C') {
+    var mvp = getMvpAtIndex(selectedIndex);
+    if (!mvp) return;
+    activeMvps = activeMvps.filter(function (a) {
+      return !(
+        a &&
+        a.id === mvp.id &&
+        (a.deathMap || a.mapname) === mvp.mapname
+      );
+    });
+    render();
+    return;
+  }
 });
 
 render();
