@@ -174,6 +174,11 @@ function render() {
     ' | Up/Down:1 PgUp/Dn:10 Shift+Up/Dn:5 | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
+  term.bold.cyan(
+    '  #  Boss Name                Respawn     | Died At              | Map\n'
+  );
+  term.gray('-'.repeat(85) + '\n');
+
   let currentIdx = 0;
 
   if (active.length > 0) {
@@ -187,8 +192,8 @@ function render() {
       let respawnTime = getRespawnTime(mvp);
       let timeStr = respawnTime !== null ? formatTime(respawnTime) : 'READY!';
       let deathStr = mvp.deathTime ? formatDeathTime(mvp.deathTime) : '';
-      timeStr = timeStr.padEnd(10, ' ');
-      deathStr = deathStr.padEnd(19, ' ');
+      timeStr = timeStr.padEnd(11, ' ');
+      deathStr = deathStr.padEnd(20, ' ');
       let line =
         '  [A] ' +
         mvp.name +
@@ -220,9 +225,9 @@ function render() {
         '  [W] ' +
         mvp.name +
         ' '.repeat(Math.max(1, 24 - mvp.name.length)) +
-        'Wait kill'.padEnd(10, ' ') +
+        'Wait kill'.padEnd(11, ' ') +
         ' | ' +
-        ''.padEnd(19, ' ') +
+        ''.padEnd(20, ' ') +
         ' | ' +
         (mvp.mapname || '');
       if (currentIdx === selectedIndex) {
@@ -247,10 +252,10 @@ function render() {
         '  [ ] ' +
         mvp.name +
         ' '.repeat(Math.max(1, 24 - mvp.name.length)) +
-        'Select    '.padEnd(10, ' ') +
-        '| ' +
-        ''.padEnd(19, ' ') +
-        '| ' +
+        'Select    '.padEnd(11, ' ') +
+        ' | ' +
+        ''.padEnd(20, ' ') +
+        ' | ' +
         (mvp.mapname || '');
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
