@@ -302,43 +302,37 @@ screen.key(['right'], function () {
 
 screen.key(['up'], function () {
   selectedIndex = Math.max(0, selectedIndex - 1);
-  var maxScroll = mvpList.getMaxScroll() || 50;
-  mvpList.setScroll(Math.min(maxScroll, Math.max(0, selectedIndex)));
+  mvpList.setScroll(Math.max(0, selectedIndex));
   render();
 });
 screen.key(['down'], function () {
   var total = active.length + wait.length + pending.length;
-  var maxScroll = mvpList.getMaxScroll() || 50;
   selectedIndex = Math.min(total - 1, selectedIndex + 1);
-  mvpList.setScroll(Math.min(maxScroll, Math.max(0, selectedIndex)));
+  mvpList.setScroll(Math.max(0, selectedIndex));
   render();
 });
 
 screen.key(['pageup'], function () {
   selectedIndex = Math.max(0, selectedIndex - 10);
-  var maxScroll = mvpList.getMaxScroll() || 50;
-  mvpList.setScroll(Math.min(maxScroll, Math.max(0, selectedIndex)));
+  mvpList.setScroll(Math.max(0, selectedIndex));
   render();
 });
 screen.key(['pagedown'], function () {
   var total = active.length + wait.length + pending.length;
-  var maxScroll = mvpList.getMaxScroll() || 50;
   selectedIndex = Math.min(total - 1, selectedIndex + 10);
-  mvpList.setScroll(Math.min(maxScroll, Math.max(0, selectedIndex)));
+  mvpList.setScroll(Math.max(0, selectedIndex));
   render();
 });
 
 screen.key(['S-up'], function () {
   selectedIndex = Math.max(0, selectedIndex - 5);
-  var maxScroll = mvpList.getMaxScroll() || 50;
-  mvpList.setScroll(Math.min(maxScroll, Math.max(0, selectedIndex)));
+  mvpList.setScroll(Math.max(0, selectedIndex));
   render();
 });
 screen.key(['S-down'], function () {
   var total = active.length + wait.length + pending.length;
-  var maxScroll = mvpList.getMaxScroll() || 50;
   selectedIndex = Math.min(total - 1, selectedIndex + 5);
-  mvpList.setScroll(Math.min(maxScroll, Math.max(0, selectedIndex)));
+  mvpList.setScroll(Math.max(0, selectedIndex));
   render();
 });
 
