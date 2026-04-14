@@ -528,3 +528,9 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'c' || keyName === 'C') {
+
+    render();
+    return;
+  }
+});
+
