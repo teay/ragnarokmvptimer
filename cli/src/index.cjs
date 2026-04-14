@@ -301,59 +301,37 @@ screen.key(['right'], function () {
 
 screen.key(['up'], function () {
   selectedIndex = Math.max(0, selectedIndex - 1);
-  var currentScroll = mvpList.getScroll() || 0;
-  var maxVisible = 20;
-  if (selectedIndex < currentScroll) {
-    mvpList.setScroll(Math.max(0, selectedIndex - 2));
-  }
+  mvpList.setScroll(Math.max(0, selectedIndex - 5));
   render();
 });
 screen.key(['down'], function () {
   var total = active.length + wait.length + pending.length;
   selectedIndex = Math.min(total - 1, selectedIndex + 1);
-  var currentScroll = mvpList.getScroll() || 0;
-  var maxVisible = 20;
-  if (selectedIndex > currentScroll + maxVisible - 3) {
-    mvpList.setScroll(selectedIndex - maxVisible + 3);
-  }
+  mvpList.setScroll(Math.max(0, selectedIndex - 5));
   render();
 });
 
 screen.key(['pageup'], function () {
   selectedIndex = Math.max(0, selectedIndex - 10);
-  var currentScroll = mvpList.getScroll() || 0;
-  if (selectedIndex < currentScroll) {
-    mvpList.setScroll(Math.max(0, selectedIndex - 2));
-  }
+  mvpList.setScroll(Math.max(0, selectedIndex - 5));
   render();
 });
 screen.key(['pagedown'], function () {
   var total = active.length + wait.length + pending.length;
   selectedIndex = Math.min(total - 1, selectedIndex + 10);
-  var currentScroll = mvpList.getScroll() || 0;
-  var maxVisible = 20;
-  if (selectedIndex > currentScroll + maxVisible - 3) {
-    mvpList.setScroll(selectedIndex - maxVisible + 3);
-  }
+  mvpList.setScroll(Math.max(0, selectedIndex - 5));
   render();
 });
 
 screen.key(['S-up'], function () {
   selectedIndex = Math.max(0, selectedIndex - 5);
-  var currentScroll = mvpList.getScroll() || 0;
-  if (selectedIndex < currentScroll) {
-    mvpList.setScroll(Math.max(0, selectedIndex - 2));
-  }
+  mvpList.setScroll(Math.max(0, selectedIndex - 5));
   render();
 });
 screen.key(['S-down'], function () {
   var total = active.length + wait.length + pending.length;
   selectedIndex = Math.min(total - 1, selectedIndex + 5);
-  var currentScroll = mvpList.getScroll() || 0;
-  var maxVisible = 20;
-  if (selectedIndex > currentScroll + maxVisible - 3) {
-    mvpList.setScroll(selectedIndex - maxVisible + 3);
-  }
+  mvpList.setScroll(Math.max(0, selectedIndex - 5));
   render();
 });
 
