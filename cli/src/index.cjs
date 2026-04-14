@@ -196,7 +196,7 @@ function render() {
       deathStr = deathStr.padEnd(20, ' ');
       let line =
         '  [A] ' +
-        mvp.name.substring(0, 24).padEnd(24, ' ') +
+        mvp.name.trim().substring(0, 24).padEnd(24, ' ') +
         timeStr +
         ' | ' +
         deathStr +
@@ -222,7 +222,7 @@ function render() {
       if (currentIdx >= scrollOffset + termHeight - 10) return;
       let line =
         '  [W] ' +
-        mvp.name.substring(0, 24).padEnd(24, ' ') +
+        mvp.name.trim().substring(0, 24).padEnd(24, ' ') +
         'Wait kill'.padEnd(11, ' ') +
         ' | ' +
         ''.padEnd(20, ' ') +
@@ -248,7 +248,7 @@ function render() {
       if (currentIdx >= scrollOffset + termHeight - 10) return;
       let line =
         '  [ ] ' +
-        mvp.name.substring(0, 24).padEnd(24, ' ') +
+        mvp.name.trim().substring(0, 24).padEnd(24, ' ') +
         'Select    '.padEnd(11, ' ') +
         ' | ' +
         ''.padEnd(20, ' ') +
