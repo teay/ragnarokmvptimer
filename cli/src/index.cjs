@@ -241,17 +241,12 @@ function render() {
   mvpList.setContent(listContent);
 
   var selectedMvp = getMvpAtIndex(selectedIndex);
-  var lastMvp = pending[pending.length - 1];
-
   if (selectedMvp) {
     var statusLabel = selectedMvp.deathTime
       ? 'Active'
       : selectedMvp.isPinned
         ? 'Wait for kill'
         : 'Select to kill';
-    var lastInfo = lastMvp
-      ? ' | Last: ' + lastMvp.name + ' ' + (lastMvp.mapname || '')
-      : '';
     footer.setContent(
       ' ' +
         statusLabel +
