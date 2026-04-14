@@ -313,9 +313,7 @@ screen.key(['down'], function () {
 
 screen.key(['pageup'], function () {
   var jump = 10;
-  var maxScroll = mvpList.getMaxScroll() || 50;
   selectedIndex = Math.max(0, selectedIndex - jump);
-  mvpList.setScroll(Math.max(0, mvpList.getScroll() - jump));
   render();
 });
 
@@ -323,7 +321,6 @@ screen.key(['pagedown'], function () {
   var total = active.length + wait.length + pending.length;
   var jump = 10;
   selectedIndex = Math.min(total - 1, selectedIndex + jump);
-  mvpList.setScroll(jump);
   render();
 });
 
