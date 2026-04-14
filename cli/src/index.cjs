@@ -308,12 +308,14 @@ screen.key(['up'], function () {
 screen.key(['down'], function () {
   var total = active.length + wait.length + pending.length;
   selectedIndex = Math.min(total - 1, selectedIndex + 1);
+  if (selectedIndex > 30) mvpList.setScroll(selectedIndex - 20);
   render();
 });
 
 screen.key(['pageup'], function () {
   var jump = 15;
   selectedIndex = Math.max(0, selectedIndex - jump);
+  mvpList.setScroll(Math.max(0, selectedIndex - 20));
   render();
 });
 
@@ -321,6 +323,7 @@ screen.key(['pagedown'], function () {
   var total = active.length + wait.length + pending.length;
   var jump = 15;
   selectedIndex = Math.min(total - 1, selectedIndex + jump);
+  mvpList.setScroll(selectedIndex - 20);
   render();
 });
 
@@ -328,12 +331,14 @@ screen.key(['S-down'], function () {
   var total = active.length + wait.length + pending.length;
   var jump = 10;
   selectedIndex = Math.min(total - 1, selectedIndex + jump);
+  mvpList.setScroll(selectedIndex - 20);
   render();
 });
 
 screen.key(['S-up'], function () {
   var jump = 10;
   selectedIndex = Math.max(0, selectedIndex - jump);
+  mvpList.setScroll(Math.max(0, selectedIndex - 20));
   render();
 });
 
