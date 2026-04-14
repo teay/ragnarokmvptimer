@@ -381,6 +381,18 @@ term.on('key', function (keyName, matches, data) {
 
   let total = active.length + wait.length + pending.length;
 
+  if (keyName === 'HOME') {
+    selectedIndex = 0;
+    render();
+    return;
+  }
+
+  if (keyName === 'END') {
+    selectedIndex = total - 1;
+    render();
+    return;
+  }
+
   if (keyName === 'UP') {
     selectedIndex = Math.max(0, selectedIndex - 1);
     render();
