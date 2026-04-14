@@ -301,8 +301,16 @@ screen.key(['right'], function () {
 });
 
 screen.key(['up'], function () {
+  var jump = 1;
+  selectedIndex = Math.max(0, selectedIndex - jump);
+  if (selectedIndex > 20) mvpList.setScroll(selectedIndex - 15);
+  render();
+});
+screen.key(['down'], function () {
   var total = active.length + wait.length + pending.length;
-  selectedIndex = Math.max(0, selectedIndex - 1);
+  var jump = 1;
+  selectedIndex = Math.min(total - 1, selectedIndex + jump);
+  if (selectedIndex > 20) mvpList.setScroll(selectedIndex - 15);
   render();
 });
 screen.key(['down'], function () {
