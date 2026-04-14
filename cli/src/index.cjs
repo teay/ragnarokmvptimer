@@ -33,7 +33,7 @@ let originalAllMvps = loadMvpData(currentServer);
 let activeMvps = [];
 
 function expandMvpsBySpawn(rawData) {
-  var expanded = [];
+  let expanded = [];
   rawData.forEach(function (mvp) {
     if (mvp.spawn) {
       mvp.spawn.forEach(function (spawn) {
@@ -53,7 +53,7 @@ function expandMvpsBySpawn(rawData) {
 }
 
 function getAllMvps() {
-  var activeKeys = {};
+  let activeKeys = {};
   activeMvps.forEach(function (m) {
     if (m && m.id) activeKeys[m.id + '-' + (m.deathMap || m.mapname)] = true;
   });
@@ -62,7 +62,7 @@ function getAllMvps() {
   });
 }
 
-var active = [],
+let active = [],
   wait = [],
   pending = [];
 let selectedIndex = 0,
@@ -79,7 +79,7 @@ function updateLists() {
   pending = getAllMvps();
 
   active.sort(function (a, b) {
-    var tA = getRespawnTime(a) || 0,
+    let tA = getRespawnTime(a) || 0,
       tB = getRespawnTime(b) || 0;
     return tA - tB;
   });
@@ -97,13 +97,13 @@ function updateLists() {
       return a.mapname.localeCompare(b.mapname);
     });
 
-  var totalItems = active.length + wait.length + pending.length;
+  let totalItems = active.length + wait.length + pending.length;
   if (selectedIndex >= totalItems) selectedIndex = Math.max(0, totalItems - 1);
 }
 
 function formatTime(ms) {
   if (ms <= 0) return 'READY!';
-  var s = Math.floor(ms / 1000),
+  let s = Math.floor(ms / 1000),
     h = Math.floor(s / 3600),
     m = Math.floor((s % 3600) / 60),
     sec = s % 60;
@@ -112,6 +112,18 @@ function formatTime(ms) {
     : m > 0
       ? m + 'm ' + sec + 's'
       : sec + 's';
+}
+
+function formatDeathTime(timestamp) {
+  if (!timestamp) return '';
+  let d = new Date(timestamp);
+  let y = d.getFullYear();
+  let mon = String(d.getMonth() + 1).padStart(2, '0');
+  let day = String(d.getDate()).padStart(2, '0');
+  let h = String(d.getHours()).padStart(2, '0');
+  let min = String(d.getMinutes()).padStart(2, '0');
+  let s = String(d.getSeconds()).padStart(2, '0');
+  return y + '-' + mon + '-' + day + ' ' + h + ':' + min + ':' + s;
 }
 
 function getRespawnTime(mvp) {
@@ -129,22 +141,22 @@ function getMvpAtIndex(idx) {
 function render() {
   updateLists();
 
-  var termWidth = term.width;
-  var termHeight = term.height;
-  var totalItems = active.length + wait.length + pending.length;
+  let termWidth = term.width;
+  let termHeight = term.height;
+  let totalItems = active.length + wait.length + pending.length;
 
-  var scrollOffset = 0;
+  let scrollOffset = 0;
   if (totalItems > termHeight - 10) {
-    var visibleItems = termHeight - 10;
+    let visibleItems = termHeight - 10;
     scrollOffset = Math.max(0, selectedIndex - Math.floor(visibleItems / 2));
-    var maxScroll = totalItems - visibleItems;
+    let maxScroll = totalItems - visibleItems;
     scrollOffset = Math.min(scrollOffset, maxScroll);
   }
 
   term.clear();
   term.moveTo(1, 1);
 
-  var modeLabel =
+  let modeLabel =
     'All (A:' +
     active.length +
     ' W:' +
@@ -162,7 +174,7 @@ function render() {
     ' | Up/Down:1 PgUp/Dn:10 Shift+Up/Dn:5 | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
-  var currentIdx = 0;
+  let currentIdx = 0;
 
   if (active.length > 0) {
     term.bold.blue('=== ACTIVE (Respawning) ===\n');
@@ -172,14 +184,19 @@ function render() {
         return;
       }
       if (currentIdx >= scrollOffset + termHeight - 10) return;
-      var respawnTime = getRespawnTime(mvp);
-      var timeStr = respawnTime !== null ? formatTime(respawnTime) : 'READY!';
-      var line =
+      let respawnTime = getRespawnTime(mvp);
+      let timeStr = respawnTime !== null ? formatTime(respawnTime) : 'READY!';
+      let deathStr = mvp.deathTime ? formatDeathTime(mvp.deathTime) : '';
+      timeStr = timeStr.padEnd(10, ' ');
+      deathStr = deathStr.padEnd(19, ' ');
+      let line =
         '  [A] ' +
         mvp.name +
-        ' '.repeat(Math.max(1, 26 - mvp.name.length)) +
+        ' '.repeat(Math.max(1, 24 - mvp.name.length)) +
         timeStr +
-        ' ' +
+        ' | ' +
+        deathStr +
+        ' | ' +
         (mvp.mapname || '');
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
@@ -199,11 +216,14 @@ function render() {
         return;
       }
       if (currentIdx >= scrollOffset + termHeight - 10) return;
-      var line =
+      let line =
         '  [W] ' +
         mvp.name +
-        ' '.repeat(Math.max(1, 26 - mvp.name.length)) +
-        'Wait kill  ' +
+        ' '.repeat(Math.max(1, 24 - mvp.name.length)) +
+        'Wait kill'.padEnd(10, ' ') +
+        ' | ' +
+        ''.padEnd(19, ' ') +
+        ' | ' +
         (mvp.mapname || '');
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
@@ -223,11 +243,14 @@ function render() {
         return;
       }
       if (currentIdx >= scrollOffset + termHeight - 10) return;
-      var line =
+      let line =
         '  [ ] ' +
         mvp.name +
-        ' '.repeat(Math.max(1, 26 - mvp.name.length)) +
-        'Select    ' +
+        ' '.repeat(Math.max(1, 24 - mvp.name.length)) +
+        'Select    '.padEnd(10, ' ') +
+        '| ' +
+        ''.padEnd(19, ' ') +
+        '| ' +
         (mvp.mapname || '');
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
@@ -238,9 +261,9 @@ function render() {
     });
   }
 
-  var selectedMvp = getMvpAtIndex(selectedIndex);
+  let selectedMvp = getMvpAtIndex(selectedIndex);
   if (selectedMvp) {
-    var statusLabel = selectedMvp.deathTime
+    let statusLabel = selectedMvp.deathTime
       ? 'Active'
       : selectedMvp.isPinned
         ? 'Wait for kill'
@@ -266,10 +289,10 @@ function render() {
 
 setInterval(function () {
   if (!pauseMode) {
-    var changed = false;
+    let changed = false;
     activeMvps.forEach(function (m) {
       if (m && m.deathTime) {
-        var remaining = m.deathTime + m.respawnTime - Date.now();
+        let remaining = m.deathTime + m.respawnTime - Date.now();
         if (remaining <= 0) changed = true;
       }
     });
@@ -321,7 +344,7 @@ term.on('key', function (keyName, matches, data) {
 
   updateLists();
 
-  var total = active.length + wait.length + pending.length;
+  let total = active.length + wait.length + pending.length;
 
   if (keyName === 'UP') {
     selectedIndex = Math.max(0, selectedIndex - 1);
@@ -360,9 +383,9 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'ENTER' || keyName === 'd' || keyName === 'D') {
-    var mvp = getMvpAtIndex(selectedIndex);
+    let mvp = getMvpAtIndex(selectedIndex);
     if (!mvp) return;
-    var existing = activeMvps.find(function (a) {
+    let existing = activeMvps.find(function (a) {
       return a && a.id === mvp.id && (a.deathMap || a.mapname) === mvp.mapname;
     });
 
@@ -418,7 +441,7 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'c' || keyName === 'C') {
-    var mvp = getMvpAtIndex(selectedIndex);
+    let mvp = getMvpAtIndex(selectedIndex);
     if (!mvp) return;
     activeMvps = activeMvps.filter(function (a) {
       return !(
