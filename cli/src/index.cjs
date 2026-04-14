@@ -87,6 +87,7 @@ const mvpList = blessed.box({
   style: { fg: 'white' },
   content: '',
   scrollable: true,
+  alwaysScroll: true,
   mouse: true,
   tags: true,
 });
