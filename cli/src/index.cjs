@@ -312,15 +312,28 @@ screen.key(['down'], function () {
 });
 
 screen.key(['pageup'], function () {
-  var jump = 10;
+  var jump = 15;
   selectedIndex = Math.max(0, selectedIndex - jump);
   render();
 });
 
 screen.key(['pagedown'], function () {
   var total = active.length + wait.length + pending.length;
+  var jump = 15;
+  selectedIndex = Math.min(total - 1, selectedIndex + jump);
+  render();
+});
+
+screen.key(['S-down'], function () {
+  var total = active.length + wait.length + pending.length;
   var jump = 10;
   selectedIndex = Math.min(total - 1, selectedIndex + jump);
+  render();
+});
+
+screen.key(['S-up'], function () {
+  var jump = 10;
+  selectedIndex = Math.max(0, selectedIndex - jump);
   render();
 });
 
