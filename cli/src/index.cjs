@@ -200,7 +200,7 @@ function render() {
   term.blue(' | ');
   term(modeLabel);
   term.blue(
-    ' | Up/Down:1 PgUp/Dn:10 Shift+Up/Dn:5 Home/End | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+    ' | Up/Down:1 PgUp/Dn:10 Ctrl+Up/Dn:5 Home/End | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
   term.bold.cyan(
@@ -417,13 +417,13 @@ term.on('key', function (keyName, matches, data) {
     return;
   }
 
-  if (keyName === 'S-UP') {
+  if (keyName === 'CTRL_UP') {
     selectedIndex = Math.max(0, selectedIndex - 5);
     render();
     return;
   }
 
-  if (keyName === 'S-DOWN') {
+  if (keyName === 'CTRL_DOWN') {
     selectedIndex = Math.min(total - 1, selectedIndex + 5);
     render();
     return;
