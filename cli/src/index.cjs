@@ -301,37 +301,55 @@ screen.key(['right'], function () {
 
 screen.key(['up'], function () {
   selectedIndex = Math.max(0, selectedIndex - 1);
-  mvpList.setScroll(Math.max(0, selectedIndex - 8));
+  var maxVisible = 20;
+  mvpList.setScroll(Math.max(0, selectedIndex - maxVisible));
   render();
 });
 screen.key(['down'], function () {
   var total = active.length + wait.length + pending.length;
   selectedIndex = Math.min(total - 1, selectedIndex + 1);
-  mvpList.setScroll(Math.max(0, selectedIndex - 8));
+  var maxVisible = 20;
+  if (selectedIndex > maxVisible) {
+    mvpList.setScroll(selectedIndex - maxVisible);
+  } else {
+    mvpList.setScroll(0);
+  }
   render();
 });
 
 screen.key(['pageup'], function () {
   selectedIndex = Math.max(0, selectedIndex - 10);
-  mvpList.setScroll(Math.max(0, selectedIndex - 8));
+  var maxVisible = 20;
+  mvpList.setScroll(Math.max(0, selectedIndex - maxVisible));
   render();
 });
 screen.key(['pagedown'], function () {
   var total = active.length + wait.length + pending.length;
   selectedIndex = Math.min(total - 1, selectedIndex + 10);
-  mvpList.setScroll(Math.max(0, selectedIndex - 8));
+  var maxVisible = 20;
+  if (selectedIndex > maxVisible) {
+    mvpList.setScroll(selectedIndex - maxVisible);
+  } else {
+    mvpList.setScroll(0);
+  }
   render();
 });
 
 screen.key(['S-up'], function () {
   selectedIndex = Math.max(0, selectedIndex - 5);
-  mvpList.setScroll(selectedIndex);
+  var maxVisible = 20;
+  mvpList.setScroll(Math.max(0, selectedIndex - maxVisible));
   render();
 });
 screen.key(['S-down'], function () {
   var total = active.length + wait.length + pending.length;
   selectedIndex = Math.min(total - 1, selectedIndex + 5);
-  mvpList.setScroll(selectedIndex);
+  var maxVisible = 20;
+  if (selectedIndex > maxVisible) {
+    mvpList.setScroll(selectedIndex - maxVisible);
+  } else {
+    mvpList.setScroll(0);
+  }
   render();
 });
 
