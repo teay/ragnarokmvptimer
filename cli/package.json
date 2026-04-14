@@ -1,0 +1,14 @@
+{
+  "name": "ragnarok-mvp-timer-cli",
+  "version": "1.0.0",
+  "description": "Terminal CLI for tracking Ragnarok MVP respawn",
+  "main": "src/index.cjs",
+  "scripts": {
+    "start": "node src/index.cjs"
+  },
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "firebase": "^12.10.0",
+    "dayjs": "^1.11.20"
+  }
+}
