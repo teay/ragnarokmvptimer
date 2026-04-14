@@ -87,7 +87,8 @@ const mvpList = blessed.box({
   style: { fg: 'white' },
   content: '',
   scrollable: true,
-  alwaysScroll: true,
+  alwaysScroll: false,
+  mouse: true,
   tags: true,
 });
 const footer = blessed.box({
@@ -307,6 +308,32 @@ screen.key(['up'], function () {
 screen.key(['down'], function () {
   var total = active.length + wait.length + pending.length;
   selectedIndex = Math.min(total - 1, selectedIndex + 1);
+  render();
+});
+
+screen.key(['pageup'], function () {
+  var jump = 10;
+  var maxScroll = mvpList.getMaxScroll() || 50;
+  selectedIndex = Math.max(0, selectedIndex - jump);
+  mvpList.setScroll(Math.max(0, mvpList.getScroll() - jump));
+  render();
+});
+
+screen.key(['pagedown'], function () {
+  var total = active.length + wait.length + pending.length;
+  var jump = 10;
+  selectedIndex = Math.min(total - 1, selectedIndex + jump);
+  mvpList.setScroll(jump);
+  render();
+});
+
+screen.key(['pagedown'], function () {
+  var total = active.length + wait.length + pending.length;
+  var jump = 10;
+  selectedIndex = Math.min(total - 1, selectedIndex + jump);
+  mvpList.setScrollPerc(
+    Math.min(100, Math.max(0, (selectedIndex * 100) / total))
+  );
   render();
 });
 
