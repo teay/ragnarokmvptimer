@@ -114,6 +114,33 @@ function formatTime(ms) {
       : sec + 's';
 }
 
+function getWidth(str) {
+  if (!str) return 0;
+  let width = 0;
+  for (let i = 0; i < str.length; i++) {
+    let code = str.charCodeAt(i);
+    if (code >= 0x1100 && code <= 0x115f) width += 2;
+    else if (code >= 0x2329 && code <= 0x232a) width += 2;
+    else if (code >= 0x2e80 && code <= 0x303f) width += 2;
+    else if (code >= 0x3040 && code <= 0xa4cf) width += 2;
+    else if (code >= 0xac00 && code <= 0xd7a3) width += 2;
+    else if (code >= 0xf900 && code <= 0xfaff) width += 2;
+    else if (code >= 0xfe10 && code <= 0xfe19) width += 2;
+    else if (code >= 0xfe30 && code <= 0xfe6f) width += 2;
+    else if (code >= 0xff00 && code <= 0xff60) width += 2;
+    else if (code >= 0xffe0 && code <= 0xffe6) width += 2;
+    else width += 1;
+  }
+  return width;
+}
+
+function padCol(str, len) {
+  if (!str) str = '';
+  let w = getWidth(str);
+  if (w >= len) return str.substring(0, len);
+  return str + ' '.repeat(len - w);
+}
+
 function formatDeathTime(timestamp) {
   if (!timestamp) return '';
   let d = new Date(timestamp);
@@ -175,7 +202,7 @@ function render() {
   );
 
   term.bold.cyan(
-    '  #  Boss Name                Respawn     | Died At              | Map\n'
+    '#  Boss Name              Respawn     | Died At              | Map\n'
   );
   term.gray('-'.repeat(85) + '\n');
 
@@ -192,15 +219,14 @@ function render() {
       let respawnTime = getRespawnTime(mvp);
       let timeStr = respawnTime !== null ? formatTime(respawnTime) : 'READY!';
       let deathStr = mvp.deathTime ? formatDeathTime(mvp.deathTime) : '';
-      timeStr = timeStr.padEnd(11, ' ');
-      deathStr = deathStr.padEnd(20, ' ');
       let line =
-        '  [A] ' +
-        mvp.name.trim().substring(0, 24).padEnd(24, ' ') +
-        timeStr +
-        ' | ' +
-        deathStr +
-        ' | ' +
+        '[A] ' +
+        padCol(mvp.name.trim(), 24) +
+        ' ' +
+        padCol(timeStr, 11) +
+        '| ' +
+        padCol(deathStr, 20) +
+        '| ' +
         (mvp.mapname || '');
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
@@ -221,12 +247,13 @@ function render() {
       }
       if (currentIdx >= scrollOffset + termHeight - 10) return;
       let line =
-        '  [W] ' +
-        mvp.name.trim().substring(0, 24).padEnd(24, ' ') +
-        'Wait kill'.padEnd(11, ' ') +
-        ' | ' +
-        ''.padEnd(20, ' ') +
-        ' | ' +
+        '[W] ' +
+        padCol(mvp.name.trim(), 24) +
+        ' ' +
+        padCol('Wait kill', 11) +
+        '| ' +
+        padCol('', 20) +
+        '| ' +
         (mvp.mapname || '');
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
@@ -247,12 +274,13 @@ function render() {
       }
       if (currentIdx >= scrollOffset + termHeight - 10) return;
       let line =
-        '  [ ] ' +
-        mvp.name.trim().substring(0, 24).padEnd(24, ' ') +
-        'Select    '.padEnd(11, ' ') +
-        ' | ' +
-        ''.padEnd(20, ' ') +
-        ' | ' +
+        '[ ] ' +
+        padCol(mvp.name.trim(), 24) +
+        ' ' +
+        padCol('Select', 11) +
+        '| ' +
+        padCol('', 20) +
+        '| ' +
         (mvp.mapname || '');
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
