@@ -119,21 +119,19 @@ function getWidth(str) {
   let width = 0;
   for (let i = 0; i < str.length; i++) {
     let code = str.charCodeAt(i);
-    if (code >= 0x1100 && code <= 0x115F) width += 2;
-    else if (code >= 0x2329 && code <= 0x232A) width += 2;
-    else if (code >= 0x2E80 && code <= 0x303F) width += 2;
-    else if (code >= 0x3040 && code <= 0xA4CF) width += 2;
-    else if (code >= 0xAC00 && code <= 0xD7A3) width += 2;
-    else if (code >= 0xF900 && code <= 0xFAFF) width += 2;
-    else if (code >= 0xFE10 && code <= 0xFE19) width += 2;
-    else if (code >= 0xFE30 && code <= 0xFE6F) width += 2;
-    else if (code >= 0xFF00 && code <= 0xFF60) width += 2;
-    else if (code >= 0xFFE0 && code <= 0xFFE6) width += 2;
-    else if (code >= 0x0E01 && code <= 0x0E5B) width += 2;
+    if (code >= 0x1100 && code <= 0x115f) width += 2;
+    else if (code >= 0x2329 && code <= 0x232a) width += 2;
+    else if (code >= 0x2e80 && code <= 0x303f) width += 2;
+    else if (code >= 0x3040 && code <= 0xa4cf) width += 2;
+    else if (code >= 0xac00 && code <= 0xd7a3) width += 2;
+    else if (code >= 0xf900 && code <= 0xfaff) width += 2;
+    else if (code >= 0xfe10 && code <= 0xfe19) width += 2;
+    else if (code >= 0xfe30 && code <= 0xfe6f) width += 2;
+    else if (code >= 0xff00 && code <= 0xff60) width += 2;
+    else if (code >= 0xffe0 && code <= 0xffe6) width += 2;
+    else if (code >= 0x0e01 && code <= 0x0e5b) width += 2;
     else width += 1;
   }
-  return width;
-}
   return width;
 }
 
