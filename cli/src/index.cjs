@@ -29,7 +29,8 @@ function loadMvpData(server) {
   return JSON.parse(readFileSync(dataPath, 'utf-8'));
 }
 
-let originalAllMvps = loadMvpData(currentServer);
+let serverFile = SERVERS[currentServer];
+let originalAllMvps = loadMvpData(serverFile);
 let activeMvps = [];
 
 function expandMvpsBySpawn(rawData) {
@@ -357,7 +358,8 @@ term.on('key', function (keyName, matches, data) {
     currentServerIndex =
       (currentServerIndex - 1 + serverKeys.length) % serverKeys.length;
     currentServer = serverKeys[currentServerIndex];
-    originalAllMvps = loadMvpData(currentServer);
+    let serverFile = SERVERS[currentServer];
+    originalAllMvps = loadMvpData(serverFile);
     activeMvps = [];
     selectedIndex = 0;
     render();
@@ -367,7 +369,8 @@ term.on('key', function (keyName, matches, data) {
   if (keyName === 'RIGHT') {
     currentServerIndex = (currentServerIndex + 1) % serverKeys.length;
     currentServer = serverKeys[currentServerIndex];
-    originalAllMvps = loadMvpData(currentServer);
+    let serverFile = SERVERS[currentServer];
+    originalAllMvps = loadMvpData(serverFile);
     activeMvps = [];
     selectedIndex = 0;
     render();
