@@ -313,12 +313,6 @@ screen.key(['down'], function () {
   mvpList.setScroll(selectedIndex);
   render();
 });
-screen.key(['down'], function () {
-  var total = active.length + wait.length + pending.length;
-  selectedIndex = Math.min(total - 1, selectedIndex + 1);
-  if (selectedIndex > 30) mvpList.setScroll(selectedIndex - 20);
-  render();
-});
 
 screen.key(['pageup'], function () {
   var jump = 15;
