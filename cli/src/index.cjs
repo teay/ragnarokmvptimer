@@ -200,7 +200,7 @@ function render() {
   term.blue(' | ');
   term(modeLabel);
   term.blue(
-    ' | Up/Down:1 PgUp/Dn:10 Ctrl+Up/Dn:5 Home/End | Enter: Toggle | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+    ' | Up/Down:1 PgUp/Dn:10 Ctrl+Up/Dn:5 Home/End | Enter: Toggle | E: Edit Time | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
   term.bold.cyan(
@@ -500,6 +500,31 @@ term.on('key', function (keyName, matches, data) {
     render();
     return;
   }
-});
 
-render();
+  if (keyName === 'e' || keyName === 'E') {
+    let mvp = getMvpAtIndex(selectedIndex);
+    if (!mvp) return;
+    let existing = activeMvps.find(function (a) {
+      return a && a.id === mvp.id && (a.deathMap || a.mapname) === mvp.mapname;
+    });
+    if (!existing || !existing.deathTime) return;
+    console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
+    console.log('New (YYYY-MM-DD HH:MM) or Enter=now: ');
+    term.grabInput(false);
+    process.stdin.once('data', function(data) {
+      let input = data.toString().trim();
+      let newTime;
+      if (!input) {
+        newTime = Date.now();
+      } else {
+        newTime = new Date(input);
+        if (isNaN(newTime.getTime())) newTime = Date.now();
+      }
+      existing.deathTime = newTime;
+      term.grabInput(true);
+      render();
+    });
+    return;
+  }
+
+  if (keyName === 'c' || keyName === 'C') {
