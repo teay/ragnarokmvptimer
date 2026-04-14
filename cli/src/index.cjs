@@ -268,6 +268,7 @@ function render() {
 
   let selectedMvp = getMvpAtIndex(selectedIndex);
   if (selectedMvp) {
+    term('\n');
     let statusLabel = selectedMvp.deathTime
       ? 'Active'
       : selectedMvp.isPinned
