@@ -413,7 +413,6 @@ term.on('key', function (keyName, matches, data) {
         });
       }
     }
-    selectedIndex = 0;
     render();
     return;
   }
