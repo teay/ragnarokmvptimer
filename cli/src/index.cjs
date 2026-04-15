@@ -6,6 +6,9 @@ const readline = require('readline');
 let firebaseApp = null;
 let firebaseDb = null;
 
+let firebaseReady = false;
+let firebaseConfig = {};
+
 function initFirebase() {
   let envPath = path.join(__dirname, '..', '..', '.env');
   let envContent = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';
@@ -29,27 +32,15 @@ function initFirebase() {
     }
   });
   if (config.api_key && config.database_url) {
-    try {
-      const firebase = require('firebase/database');
-      firebaseApp = firebase.initializeApp({
-        apiKey: config.api_key,
-        authDomain:
-          config.auth_domain || config.project_id + '.firebaseapp.com',
-        databaseURL: config.database_url,
-        projectId: config.project_id,
-        storageBucket: config.storage_bucket,
-        messagingSenderId: config.messaging_sender_id,
-        appId: config.app_id,
-      });
-      firebaseDb = firebase.getDatabase(firebaseApp);
-    } catch (err) {
-      // Firebase init failed silently
-    }
+    firebaseConfig = config;
+    firebaseReady = true;
+    console.log('Firebase configured for: ' + config.project_id);
+    return true;
   }
   return false;
 }
 
-let firebaseReady = initFirebase();
+initFirebase();
 
 const SERVERS = {
   iRO: 'iRO',
@@ -306,7 +297,7 @@ function render() {
   term.blue(' | ');
   term(modeLabel);
   term.cyan(
-    '\n  [Nav] Up/Down:1 | PgUp/Dn:10 | Ctrl+Up/Dn:5 | Home/End\n  [MVP] Enter/D: Toggle | C: Cancel | E: Edit | B: Back\n  [File] F: Export | I: Import | L: Save | R: Load\n  [Sync] W: Sync to FB | Y: Sync from FB\n  [Other] Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+    '\n  [Nav] Up/Down:1 | PgUp/Dn:10 | Ctrl+Up/Dn:5 | Home/End\n  [MVP] Enter/D: Toggle | C: Cancel | E: Edit | B: Back\n  [File] F: Export | I: Import | L: Save | R: Load\n  [Sync] U: Upload FB | N: Download FB\n  [Other] Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
   term.bold.cyan(
@@ -828,47 +819,91 @@ term.on('key', function (keyName, matches, data) {
     return;
   }
 
-  if ((keyName === 'w' || keyName === 'W') && firebaseReady) {
-    const firebase = require('firebase/database');
-    let syncRef = firebase.ref(firebaseDb, 'mvps/' + currentServer);
-    firebase
-      .set(syncRef, {
-        server: currentServer,
-        activeMvps: activeMvps,
-        syncTime: Date.now(),
-      })
-      .then(function () {
+  if (keyName === 'u' || keyName === 'U') {
+    if (!firebaseReady) {
+      console.log('\nFirebase not configured');
+      render();
+      return;
+    }
+    const https = require('https');
+    let dbUrl = firebaseConfig.database_url;
+    let host = dbUrl.replace('https://', '').replace('.firebaseio.com', '');
+    let path = '/mvps/' + currentServer + '.json';
+    let data = JSON.stringify({
+      server: currentServer,
+      activeMvps: activeMvps,
+      syncTime: Date.now(),
+    });
+    let options = {
+      hostname: host,
+      port: 443,
+      path: path,
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data),
+      },
+    };
+    let req = https.request(options, function (res) {
+      if (res.statusCode === 200) {
         console.log('\nSynced to Firebase!');
-      })
-      .catch(function (err) {
-        console.log('\nFirebase sync failed: ' + err.message);
-      });
-    render();
+      } else {
+        console.log('\nSync failed: ' + res.statusCode);
+      }
+      render();
+    });
+    req.on('error', function (err) {
+      console.log('\nFirebase error: ' + err.message);
+      render();
+    });
+    req.write(data);
+    req.end();
     return;
   }
 
-  if ((keyName === 'y' || keyName === 'Y') && firebaseReady) {
-    const firebase = require('firebase/database');
-    let syncRef = firebase.ref(firebaseDb, 'mvps/' + currentServer);
-    firebase
-      .get(syncRef)
-      .then(function (snapshot) {
-        if (snapshot.exists()) {
-          let data = snapshot.val();
-          if (data.activeMvps) {
+  if (keyName === 'n' || keyName === 'N') {
+    if (!firebaseReady) {
+      console.log('\nFirebase not configured');
+      render();
+      return;
+    }
+    const https = require('https');
+    let dbUrl = firebaseConfig.database_url;
+    let host = dbUrl.replace('https://', '').replace('.firebaseio.com', '');
+    let path = '/mvps/' + currentServer + '.json';
+    let options = {
+      hostname: host,
+      port: 443,
+      path: path,
+      method: 'GET',
+    };
+    let req = https.request(options, function (res) {
+      let body = '';
+      res.on('data', function (chunk) {
+        body += chunk;
+      });
+      res.on('end', function () {
+        try {
+          let data = JSON.parse(body);
+          if (data && data.activeMvps) {
             activeMvps = data.activeMvps;
             console.log(
               '\nSynced from Firebase: ' + activeMvps.length + ' MVPs'
             );
+          } else {
+            console.log('\nNo data on Firebase for ' + currentServer);
           }
-        } else {
-          console.log('\nNo data on Firebase for ' + currentServer);
+        } catch (err) {
+          console.log('\nParse error: ' + err.message);
         }
-      })
-      .catch(function (err) {
-        console.log('\nFirebase fetch failed: ' + err.message);
+        render();
       });
-    render();
+    });
+    req.on('error', function (err) {
+      console.log('\nFirebase error: ' + err.message);
+      render();
+    });
+    req.end();
     return;
   }
 });
