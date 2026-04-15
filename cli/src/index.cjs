@@ -261,22 +261,23 @@ function render() {
         return;
       }
       if (currentIdx >= scrollOffset + termHeight - 10) return;
-let respawnTime = getRespawnTime(mvp);
+      let respawnTime = getRespawnTime(mvp);
       let windowTime = getWindowTime(mvp);
       let timeStr;
       let statusLabel;
       if (respawnTime === null || respawnTime <= 0) {
         if (windowTime === null || windowTime <= 0) {
-          timeStr = '-' + formatTime(Date.now() - (mvp.deathTime + mvp.respawnTime + (mvp.window || 600000)));
+          timeStr =
+            '-' +
+            formatTime(
+              Date.now() -
+                (mvp.deathTime + mvp.respawnTime + (mvp.window || 600000))
+            );
           statusLabel = 'Already Respawned';
         } else {
           timeStr = formatTime(windowTime);
           statusLabel = 'Respawning';
         }
-      } else {
-        timeStr = formatTime(respawnTime);
-        statusLabel = 'Respawn in';
-      }
       } else {
         timeStr = formatTime(respawnTime);
         statusLabel = 'Respawn in';
