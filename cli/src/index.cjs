@@ -197,7 +197,7 @@ const SERVERS = {
   jRO: 'jRO',
   twRO: 'twRO',
   GGH: 'GGH',
-  thRO: 'thROG',
+  thROG: 'thROG',
   idRO: 'idRO',
 };
 
