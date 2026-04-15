@@ -107,7 +107,7 @@ let active = [],
   wait = [],
   pending = [];
 let selectedIndex = 0,
-  pauseMode = true,
+  pauseMode = false,
   sortMode = 'name';
 let linePositions = [];
 
@@ -300,12 +300,12 @@ function render() {
     ' | All:' + (active.length + wait.length + pending.length) + ' MVPs\n'
   );
   term.green(
-    '  [Arrows/PgUp/Dn]Nav [Enter/D]Toggle [C]Cancel [E]Edit [B]Back [Space]Pause [S]Sort [F/I/L/R]File [Left/Right]Server [Q]Quit\n'
+    '  [Arrows]1 [PgUp/Dn]10 [Ctrl+Up/Dn]5 [Enter/D]Toggle [C]Cancel [E]Edit [B]Back [Space]Pause [S]Sort [F/I/L/R]File [Left/Right]Server [Q]Quit\n'
   );
   lineY = 3;
 
   term.bold.white(
-    '# Boss Name                 | Time      | Status        | DeathTime          | Map\n'
+    '# Boss Name               | Time            | Status        | DeathTime             | Map\n'
   );
   term.gray('-'.repeat(termWidth) + '\n');
 
@@ -348,11 +348,11 @@ function render() {
         '[A] ' +
         getWidthPad(mvp.name.trim(), 24) +
         '| ' +
-        padCol(timeStr, 10) +
+        padCol(timeStr, 14) +
         ' | ' +
         padCol(statusLabel, 12) +
         '| ' +
-        padCol(deathStr, 18) +
+        padCol(deathStr, 20) +
         '| ' +
         (mvp.mapname || '');
       linePositions.push({ y: lineY, x: 31, mvp: mvp, timeStr: timeStr });
@@ -383,11 +383,11 @@ function render() {
         '[W] ' +
         getWidthPad(mvp.name.trim(), 24) +
         '| ' +
-        padCol('', 10) +
+        padCol('', 14) +
         ' | ' +
         padCol('Wait kill', 12) +
         '| ' +
-        padCol('', 18) +
+        padCol('', 20) +
         '| ' +
         (mvp.mapname || '');
       lineY++;
@@ -418,11 +418,11 @@ function render() {
         '[ ] ' +
         getWidthPad(mvp.name.trim(), 24) +
         '| ' +
-        padCol('', 10) +
+        padCol('', 14) +
         ' | ' +
         padCol('Select', 12) +
         '| ' +
-        padCol('', 18) +
+        padCol('', 20) +
         '| ' +
         (mvp.mapname || '');
       lineY++;
@@ -567,13 +567,13 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'CTRL_UP' || keyName === 'ctrl up') {
-    selectedIndex = Math.max(0, selectedIndex - 10);
+    selectedIndex = Math.max(0, selectedIndex - 5);
     render();
     return;
   }
 
   if (keyName === 'CTRL_DOWN' || keyName === 'ctrl down') {
-    selectedIndex = Math.min(total - 1, selectedIndex + 10);
+    selectedIndex = Math.min(total - 1, selectedIndex + 5);
     render();
     return;
   }
