@@ -759,6 +759,7 @@ term.on('key', function (keyName, matches, data) {
           isPinned: true,
           deathTime: Date.now(),
           deathMap: mvp.mapname,
+          deathPosition: null, // No position from CLI
         });
       }
     } else {
@@ -766,8 +767,10 @@ term.on('key', function (keyName, matches, data) {
         if (existing.deathTime) {
           existing.deathTime = null;
           existing.isPinned = true;
+          existing.deathPosition = null;
         } else if (existing.isPinned) {
           existing.deathTime = Date.now();
+          existing.deathPosition = null;
         } else {
           activeMvps = activeMvps.filter(function (a) {
             return !(
@@ -787,6 +790,7 @@ term.on('key', function (keyName, matches, data) {
           respawnTime: mvp.respawnTime,
           stats: mvp.stats,
           isPinned: true,
+          deathPosition: null,
         });
       }
     }
@@ -860,6 +864,7 @@ term.on('key', function (keyName, matches, data) {
       }
       if (existing) {
         existing.deathTime = newTime;
+        existing.deathPosition = null; // No position from CLI
       } else {
         let spawnInfo =
           mvp.spawn &&
@@ -878,6 +883,7 @@ term.on('key', function (keyName, matches, data) {
           isPinned: true,
           deathTime: newTime,
           deathMap: mvp.mapname,
+          deathPosition: null, // No position from CLI
         });
       }
       autoSaveToFirebase();
@@ -896,6 +902,7 @@ term.on('key', function (keyName, matches, data) {
         (a.deathMap || a.mapname) === mvp.mapname
       );
     });
+    autoSaveToFirebase();
     render();
     return;
   }
@@ -993,19 +1000,6 @@ term.on('key', function (keyName, matches, data) {
       }
     } catch (err) {}
     pauseMode = wasPaused;
-    render();
-    return;
-  }
-
-  if (keyName === 'r' || keyName === 'R') {
-    let fs = require('fs');
-    let loadPath = path.join(__dirname, '..', 'data', 'mvp-save.json');
-    try {
-      let data = JSON.parse(fs.readFileSync(loadPath, 'utf-8'));
-      if (data.activeMvps) {
-        activeMvps = data.activeMvps;
-      }
-    } catch (err) {}
     render();
     return;
   }
