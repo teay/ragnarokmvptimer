@@ -381,7 +381,7 @@ function updateTimeOnly() {
 
 setInterval(function () {
   if (!pauseMode) {
-    updateTimeOnly();
+    render();
   }
 }, 1000);
 
