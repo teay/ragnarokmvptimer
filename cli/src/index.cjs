@@ -613,9 +613,12 @@ term.on('key', function (keyName, matches, data) {
     let existing = activeMvps.find(function (a) {
       return a && a.id === mvp.id && (a.deathMap || a.mapname) === mvp.mapname;
     });
-    if (!existing || !existing.deathTime) return;
-    console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
-    console.log('Time (7.30 or 730) or Enter=now: ');
+    if (existing && existing.deathTime) {
+      console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
+      console.log('Time (7.30 or 730) or Enter=now: ');
+    } else {
+      console.log('\nEnter death time (7.30 or 730) or Enter=now: ');
+    }
     let wasPaused = pauseMode;
     pauseMode = true;
     term.grabInput(false);
@@ -634,7 +637,28 @@ term.on('key', function (keyName, matches, data) {
       } else {
         newTime = Date.now();
       }
-      existing.deathTime = newTime;
+      if (existing) {
+        existing.deathTime = newTime;
+      } else {
+        let spawnInfo =
+          mvp.spawn &&
+          mvp.spawn.find(function (s) {
+            return s.mapname === mvp.mapname;
+          });
+        activeMvps.push({
+          id: mvp.id,
+          name: mvp.name,
+          dbname: mvp.dbname,
+          spawn: mvp.spawn,
+          mapname: mvp.mapname,
+          respawnTime: spawnInfo ? spawnInfo.respawnTime : mvp.respawnTime,
+          window: spawnInfo ? spawnInfo.window : 600000,
+          stats: mvp.stats,
+          isPinned: true,
+          deathTime: newTime,
+          deathMap: mvp.mapname,
+        });
+      }
       render();
     });
     return;
