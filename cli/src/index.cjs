@@ -70,6 +70,7 @@ let active = [],
 let selectedIndex = 0,
   pauseMode = false,
   sortMode = 'name';
+let linePositions = [];
 
 function updateLists() {
   active = activeMvps.filter(function (m) {
@@ -211,8 +212,12 @@ function render() {
     scrollOffset = Math.min(scrollOffset, maxScroll);
   }
 
+  linePositions = [];
+  let lineY = 1;
+
   term.clear();
   term.moveTo(1, 1);
+  lineY++;
 
   let modeLabel =
     'All (A:' +
@@ -236,11 +241,13 @@ function render() {
     '# Boss Name               Respawn       | Died At              | Map\n'
   );
   term.gray('-'.repeat(85) + '\n');
+  lineY = 5;
 
   let currentIdx = 0;
 
   if (active.length > 0) {
     term.bold.blue('=== ACTIVE (Respawning) ===\n');
+    lineY++;
     active.forEach(function (mvp) {
       if (currentIdx < scrollOffset) {
         currentIdx++;
@@ -259,6 +266,8 @@ function render() {
         padCol(deathStr, 20) +
         '| ' +
         (mvp.mapname || '');
+      linePositions.push({ y: lineY, x: 31, mvp: mvp, timeStr: timeStr });
+      lineY++;
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
       } else {
@@ -270,7 +279,9 @@ function render() {
 
   if (wait.length > 0) {
     if (active.length > 0) term('\n');
+    lineY++;
     term.bold.blue('=== WAIT FOR KILL ===\n');
+    lineY++;
     wait.forEach(function (mvp) {
       if (currentIdx < scrollOffset) {
         currentIdx++;
@@ -286,6 +297,7 @@ function render() {
         padCol('', 20) +
         '| ' +
         (mvp.mapname || '');
+      lineY++;
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
       } else {
@@ -297,7 +309,9 @@ function render() {
 
   if (pending.length > 0) {
     if (active.length + wait.length > 0) term('\n');
+    lineY++;
     term.bold.blue('=== SELECT TO KILL ===\n');
+    lineY++;
     pending.forEach(function (mvp) {
       if (currentIdx < scrollOffset) {
         currentIdx++;
@@ -313,6 +327,7 @@ function render() {
         padCol('', 20) +
         '| ' +
         (mvp.mapname || '');
+      lineY++;
       if (currentIdx === selectedIndex) {
         term.inverse(line + '\n');
       } else {
@@ -349,9 +364,21 @@ function render() {
   }
 }
 
+function updateTimeOnly() {
+  linePositions.forEach(function (pos) {
+    let respawnTime = getRespawnTime(pos.mvp);
+    let newTimeStr = respawnTime !== null ? formatTime(respawnTime) : 'READY!';
+    if (newTimeStr !== pos.timeStr) {
+      term.moveTo(pos.x, pos.y);
+      term(padCol(newTimeStr, 12));
+      pos.timeStr = newTimeStr;
+    }
+  });
+}
+
 setInterval(function () {
   if (!pauseMode) {
-    render();
+    updateTimeOnly();
   }
 }, 1000);
 
