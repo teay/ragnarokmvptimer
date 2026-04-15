@@ -262,9 +262,9 @@ function render() {
   );
 
   term.bold.cyan(
-    '# Boss Name               | Time      | Status        | DeathTime          | Map\n'
+    '# Boss Name                 | Time      | Status        | DeathTime          | Map\n'
   );
-  term.gray('-'.repeat(93) + '\n');
+  term.gray('-'.repeat(95) + '\n');
   lineY = 5;
 
   let currentIdx = 0;
