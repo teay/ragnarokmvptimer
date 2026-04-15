@@ -268,7 +268,7 @@ function render() {
       if (respawnTime === null || respawnTime <= 0) {
         if (windowTime === null || windowTime <= 0) {
           timeStr = 'READY!';
-          statusLabel = 'Respawned';
+          statusLabel = 'Already Respawned';
         } else {
           timeStr = formatTime(windowTime);
           statusLabel = 'Respawning';
