@@ -351,14 +351,7 @@ function render() {
 
 setInterval(function () {
   if (!pauseMode) {
-    let changed = false;
-    activeMvps.forEach(function (m) {
-      if (m && m.deathTime) {
-        let remaining = m.deathTime + m.respawnTime - Date.now();
-        if (remaining <= 0) changed = true;
-      }
-    });
-    if (changed) render();
+    render();
   }
 }, 1000);
 
