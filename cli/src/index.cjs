@@ -187,6 +187,7 @@ function parseSmartTime(input) {
 function formatDeathTime(timestamp) {
   if (!timestamp) return '';
   let d = new Date(timestamp);
+  let y = d.getFullYear();
   let mon = String(d.getMonth() + 1).padStart(2, '0');
   let day = String(d.getDate()).padStart(2, '0');
   let h = String(d.getHours()).padStart(2, '0');
