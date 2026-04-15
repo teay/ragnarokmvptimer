@@ -5,44 +5,41 @@
 ### Done ✅ (Completed Tasks)
 
 **Core & Web App:**
-- [x] Cloud-first data flow (Firebase is primary source of truth)
+- [x] Cloud-first data flow (Firebase primary source of truth)
 - [x] Solo/Party mode implementation
 - [x] Firebase path structure: `hunting/solo/` and `hunting/party/`
-- [x] Removed legacy backup system
 - [x] Fixed MVP Sorting Logic (Soonest respawn always first)
 - [x] Improved `rehydrateMvps` to support CLI-to-Web data consistency
-- [x] Interactive Modal for killing and editing MVPs
-- [x] Export/Import JSON functionality
-- [x] Party members display (Web version)
+- [x] Web: Sorted Active/Pinned lists to prioritize soonest respawn
 
 **CLI Version (Terminal UI):**
-- [x] Correct Firebase hostname parsing (support region-specific URLs)
 - [x] Real-time data synchronization via Firebase SDK (`onValue`)
 - [x] Auto-save to Firebase on every update (Toggling, Killing, Editing)
-- [x] Smart Merge: Preserve web metadata (coordinates, etc.) during CLI updates
+- [x] Smart Merge: Preserve web metadata & avoid data duplication
 - [x] Support for Multi-spawn MVPs (Shown as separate entries)
 - [x] Interactive Startup Wizard (Ask for Name/Party if missing)
-- [x] CLI Header showing current Sync Mode (Solo/Party)
 - [x] Enforced Nickname requirement for Party mode
-- [x] Fix: Use `null` for deathPosition when killing from CLI
+- [x] Fix: Removed misleading deathPosition (-1, -1) from CLI updates
+- [x] Fix: Server mapping (thROG) correctly aligned with Firebase
+- [x] Fix: Duplicate entry cleanup via Map-based rehydration
 
-### Doing 🚧 (In Progress / Need Decision)
+### Doing 🚧 (In Progress)
 
-- [ ] **Security Refactoring:** Moving away from hardcoded API keys in CLI and implementing Firebase Rules.
-- [ ] **Deployment Strategy:** Setting up a reliable way to deploy the web version (fixing `npm install` dependency conflicts).
-- [ ] **CLI Standalone:** Preparing the CLI for distribution (e.g., `.exe` packaging).
+- [ ] **Distribution:** Packaging the CLI into a portable `.exe` (or simplified runner).
+- [ ] **UI Polish:** Re-implementing status color-coding (Red/Yellow/Green) in a way that doesn't conflict with current stability.
 
 ### TODO 📋 (Future Ideas)
 
 **High Priority:**
-- [ ] **Offline Mode:** Fallback to localStorage (Web) or local JSON (CLI) when Firebase is down.
+- [ ] **Offline Mode:** Fallback to local JSON when Firebase is down.
 - [ ] **CLI Party Members:** Show online members in the CLI header.
-- [ ] **Notification System:** Global notifications across devices when an MVP is killed.
+- [ ] **Notification System:** Global alerts across devices when an MVP is killed.
 
 **Medium Priority:**
-- [ ] **Import Party → Solo:** Ability to copy a specific server's timer data from Party to personal Solo mode.
+- [ ] **Smart Navigation:** Copy `/navi` command to clipboard for quick in-game navigation.
+- [ ] **Search:** Implement type-to-search for Unselected MVPs.
 - [ ] **Firebase Analytics:** Track usage statistics.
-- [ ] **Custom Sounds:** Allow users to upload their own notification sounds.
+- [ ] **Custom Sounds:** Support for custom notification sounds.
 
 ---
 
