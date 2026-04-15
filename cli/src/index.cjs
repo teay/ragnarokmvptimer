@@ -42,10 +42,8 @@ function initFirebase() {
         appId: config.app_id,
       });
       firebaseDb = firebase.getDatabase(firebaseApp);
-      console.log('\nFirebase connected!');
-      return true;
     } catch (err) {
-      console.log('\nFirebase init failed: ' + err.message);
+      // Firebase init failed silently
     }
   }
   return false;
@@ -436,31 +434,31 @@ function render() {
     });
   }
 
-  let selectedMvp = getMvpAtIndex(selectedIndex);
-  if (selectedMvp) {
-    term('\n');
-    let statusLabel = selectedMvp.deathTime
-      ? 'Active'
-      : selectedMvp.isPinned
-        ? 'Wait for kill'
-        : 'Select to kill';
-    term.moveTo(1, termHeight);
-    term.bgWhite.black(' ');
-    term(statusLabel);
-    term(': ');
-    term(selectedMvp.name);
-    term(' | Map: ');
-    term(selectedMvp.mapname || '?');
-    term(' | Level: ');
-    term((selectedMvp.stats && selectedMvp.stats.level) || '?');
-    term(' | HP: ');
-    term(
-      selectedMvp.stats && selectedMvp.stats.health
-        ? selectedMvp.stats.health.toLocaleString()
-        : '?'
-    );
-    term(' ');
-  }
+  // let selectedMvp = getMvpAtIndex(selectedIndex);
+  // if (selectedMvp) {
+  //   term('\n');
+  //   let statusLabel = selectedMvp.deathTime
+  //     ? 'Active'
+  //     : selectedMvp.isPinned
+  //       ? 'Wait for kill'
+  //       : 'Select to kill';
+  //   term.moveTo(1, termHeight);
+  //   term.bgWhite.black(' ');
+  //   term(statusLabel);
+  //   term(': ');
+  //   term(selectedMvp.name);
+  //   term(' | Map: ');
+  //   term(selectedMvp.mapname || '?');
+  //   term(' | Level: ');
+  //   term((selectedMvp.stats && selectedMvp.stats.level) || '?');
+  //   term(' | HP: ');
+  //   term(
+  //     selectedMvp.stats && selectedMvp.stats.health
+  //       ? selectedMvp.stats.health.toLocaleString()
+  //       : '?'
+  //   );
+  //   term(' ');
+  // }
 }
 
 function updateTimeOnly() {
