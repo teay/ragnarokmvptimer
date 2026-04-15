@@ -148,7 +148,6 @@ function parseSmartTime(input) {
 
   let now = new Date();
   let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let parsed = null;
 
   input = input.trim();
 
@@ -157,28 +156,13 @@ function parseSmartTime(input) {
     let h = parseInt(timeOnly[1]);
     let m = parseInt(timeOnly[2]);
     if (h < 24 && m < 60) {
-      parsed = new Date(today);
+      let parsed = new Date(today);
       parsed.setHours(h, m, 0, 0);
       if (parsed < now) {
         parsed.setDate(parsed.getDate() + 1);
       }
+      return parsed;
     }
-    return parsed;
-  }
-
-  let dateOnly = input.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-  if (dateOnly) {
-    parsed = new Date(
-      parseInt(dateOnly[1]),
-      parseInt(dateOnly[2]) - 1,
-      parseInt(dateOnly[3])
-    );
-    return parsed;
-  }
-
-  parsed = new Date(input);
-  if (!isNaN(parsed.getTime())) {
-    return parsed;
   }
 
   return null;
@@ -550,7 +534,7 @@ term.on('key', function (keyName, matches, data) {
     });
     if (!existing || !existing.deathTime) return;
     console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
-    console.log('Examples: 7.30 | 23.00 | 2026-04-15 | Enter=now: ');
+    console.log('Time (7.30 or 23.00) or Enter=now: ');
     term.grabInput(false);
     process.stdin.once('data', function (data) {
       let input = data.toString();
