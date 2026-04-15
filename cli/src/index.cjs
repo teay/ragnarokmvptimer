@@ -262,7 +262,7 @@ function render() {
   );
 
   term.bold.cyan(
-    '# Boss Name                 | Time      | Status        | Died At            | Map\n'
+    '# Boss Name                 | Time      | Status        | Died Time          | Map\n'
   );
   term.gray('-'.repeat(92) + '\n');
   lineY = 5;
