@@ -125,18 +125,23 @@ function autoSaveToFirebase() {
     ? 'hunting/party/' + partyRoom + '/' + currentServer + '/mvps'
     : 'hunting/solo/' + cliNickname + '/' + currentServer + '/mvps';
 
-  const minimalMvps = activeMvps.map((m) => ({
-    id: m.id,
-    deathTime: m.deathTime ? new Date(m.deathTime).toISOString() : null,
-    deathMap: m.deathMap || null,
-    deathPosition: m.deathPosition || null,
-    isPinned: m.isPinned || false,
-    updatedBy: cliNickname,
-  }));
+  const minimalMvps = activeMvps.map((m) => {
+    // Start with the full object to preserve unknown fields
+    let saveObj = JSON.parse(JSON.stringify(m)); 
+    
+    // Ensure critical fields are in the format the Web App expects
+    saveObj.deathTime = m.deathTime ? new Date(m.deathTime).toISOString() : null;
+    saveObj.updatedBy = cliNickname;
+    
+    // Clean up CLI-only display properties before saving (optional but cleaner)
+    // delete saveObj.spawn; 
+    
+    return saveObj;
+  });
   
   const mvpsRef = ref(firebaseDb, dbPath);
   set(mvpsRef, minimalMvps).catch((err) => {
-    // Silent error in background auto-save
+    // Silent error
   });
 }
 
@@ -199,6 +204,8 @@ function rehydrateMvps(remoteMvps) {
   let allPossibleMvps = expandMvpsBySpawn(originalAllMvps);
   let result = [];
   remoteMvps.forEach(function (remote) {
+    if (!remote) return;
+    
     // Find matching MVP by ID and mapname (deathMap in remote)
     let base = allPossibleMvps.find(function (m) {
       return (
@@ -207,23 +214,23 @@ function rehydrateMvps(remoteMvps) {
       );
     });
 
-    // Fallback search by ID only if not found
-    if (!base) {
-      base = allPossibleMvps.find(function (m) {
-        return m.id === remote.id;
-      });
-    }
-
     if (base) {
-      // Create a copy of base data and add dynamic properties from remote
-      let hydrated = JSON.parse(JSON.stringify(base));
+      // SMART MERGE: Start with all fields from remote to preserve unknown data
+      let hydrated = JSON.parse(JSON.stringify(remote));
+      
+      // Overlay static base data from local JSON to ensure display consistency
+      hydrated.name = base.name;
+      hydrated.dbname = base.dbname;
+      hydrated.stats = base.stats;
+      hydrated.spawn = base.spawn;
+      hydrated.mapname = base.mapname;
+      hydrated.respawnTime = base.respawnTime;
+      
+      // Ensure time is in number format for CLI's internal timers
       hydrated.deathTime = remote.deathTime
         ? new Date(remote.deathTime).getTime()
         : null;
-      hydrated.deathMap = remote.deathMap || base.mapname;
-      hydrated.deathPosition = remote.deathPosition || null;
-      hydrated.isPinned = remote.isPinned || false;
-      hydrated.updatedBy = remote.updatedBy || 'CLI';
+        
       result.push(hydrated);
     }
   });
