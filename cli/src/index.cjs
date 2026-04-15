@@ -233,9 +233,9 @@ function render() {
   );
 
   term.bold.cyan(
-    ' #  Boss Name             Respawn      | Died At              | Map\n'
+    ' #  Boss Name             Respawn       | Died At              | Map\n'
   );
-  term.gray('-'.repeat(85) + '\n');
+  term.gray('-'.repeat(86) + '\n');
 
   let currentIdx = 0;
 
@@ -254,7 +254,7 @@ function render() {
         '[A] ' +
         padCol(mvp.name.trim(), 24) +
         '  ' +
-        padCol(timeStr, 11) +
+        padCol(timeStr, 12) +
         '| ' +
         padCol(deathStr, 20) +
         '| ' +
@@ -280,8 +280,8 @@ function render() {
       let line =
         '[W] ' +
         padCol(mvp.name.trim(), 24) +
-        ' ' +
-        padCol('Wait kill', 11) +
+        '  ' +
+        padCol('Wait kill', 12) +
         '| ' +
         padCol('', 20) +
         '| ' +
@@ -307,8 +307,8 @@ function render() {
       let line =
         '[ ] ' +
         padCol(mvp.name.trim(), 24) +
-        ' ' +
-        padCol('Select', 11) +
+        '  ' +
+        padCol('Select', 12) +
         '| ' +
         padCol('', 20) +
         '| ' +
