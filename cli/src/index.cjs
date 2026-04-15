@@ -272,8 +272,9 @@ function render() {
   let totalItems = active.length + wait.length + pending.length;
 
   let scrollOffset = 0;
+  let pageSize = 25;
   if (totalItems > 15) {
-    scrollOffset = Math.floor(selectedIndex / 15) * 15;
+    scrollOffset = Math.floor(selectedIndex / pageSize) * pageSize;
   }
 
   linePositions = [];
@@ -412,7 +413,7 @@ function render() {
         currentIdx++;
         return;
       }
-      if (currentIdx >= scrollOffset + 15) return;
+      if (currentIdx >= scrollOffset + 25) return;
       let line =
         '[ ] ' +
         getWidthPad(mvp.name.trim(), 24) +
@@ -560,20 +561,19 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'PAGE_DOWN' || keyName === 'page down') {
-    console.error('DEBUG: PageDown pressed');
-    selectedIndex = Math.min(total - 1, selectedIndex + 15);
+    selectedIndex = Math.min(total - 1, selectedIndex + 10);
     render();
     return;
   }
 
   if (keyName === 'CTRL_UP' || keyName === 'ctrl up') {
-    selectedIndex = Math.max(0, selectedIndex - 15);
+    selectedIndex = Math.max(0, selectedIndex - 10);
     render();
     return;
   }
 
   if (keyName === 'CTRL_DOWN' || keyName === 'ctrl down') {
-    selectedIndex = Math.min(total - 1, selectedIndex + 15);
+    selectedIndex = Math.min(total - 1, selectedIndex + 10);
     render();
     return;
   }
