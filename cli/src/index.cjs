@@ -878,17 +878,25 @@ term.on('key', function (keyName, matches, data) {
         'Content-Length': Buffer.byteLength(data),
       },
     };
+    let wasPaused = pauseMode;
+    pauseMode = true;
     let req = https.request(options, function (res) {
       if (res.statusCode === 200) {
         console.log('\nSynced to Firebase!');
       } else {
         console.log('\nSync failed: ' + res.statusCode);
       }
-      render();
+      setTimeout(() => {
+        pauseMode = wasPaused;
+        render();
+      }, 1500);
     });
     req.on('error', function (err) {
       console.log('\nFirebase error: ' + err.message);
-      render();
+      setTimeout(() => {
+        pauseMode = wasPaused;
+        render();
+      }, 1500);
     });
     req.write(data);
     req.end();
@@ -911,6 +919,8 @@ term.on('key', function (keyName, matches, data) {
       path: path,
       method: 'GET',
     };
+    let wasPaused = pauseMode;
+    pauseMode = true;
     let req = https.request(options, function (res) {
       let body = '';
       res.on('data', function (chunk) {
@@ -930,12 +940,18 @@ term.on('key', function (keyName, matches, data) {
         } catch (err) {
           console.log('\nParse error: ' + err.message);
         }
-        render();
+        setTimeout(() => {
+          pauseMode = wasPaused;
+          render();
+        }, 1500);
       });
     });
     req.on('error', function (err) {
       console.log('\nFirebase error: ' + err.message);
-      render();
+      setTimeout(() => {
+        pauseMode = wasPaused;
+        render();
+      }, 1500);
     });
     req.end();
     return;
