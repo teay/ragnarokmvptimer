@@ -151,11 +151,11 @@ function parseSmartTime(input) {
 
   input = input.trim();
 
-  let timeOnly = input.match(/^(\d{1,2})[.:](\d{2})$/);
+  let timeOnly = input.match(/^(\d{2,4})(\d{2})$/);
   if (timeOnly) {
     let h = parseInt(timeOnly[1]);
     let m = parseInt(timeOnly[2]);
-    if (h >= 0 && h < 24 && m < 60) {
+    if (h < 24 && m < 60) {
       let parsed = new Date(today);
       parsed.setHours(h, m, 0, 0);
       if (parsed.getTime() <= now.getTime()) {
@@ -534,7 +534,7 @@ term.on('key', function (keyName, matches, data) {
     });
     if (!existing || !existing.deathTime) return;
     console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
-    console.log('Time (7.30 or 23.00) or Enter=now: ');
+    console.log('Time (730 or 2359) or Enter=now: ');
     term.grabInput(false);
     process.stdin.once('data', function (data) {
       let input = data.toString();
