@@ -53,6 +53,14 @@ function initFirebase() {
     }
   }
 
+  // 3. Validation
+  if (partyRoom && (!cliNickname || cliNickname === 'CLI')) {
+    console.error('\nError: Nickname is REQUIRED for Party Mode.');
+    console.log('Please set VITE_NICKNAME in .env or use --name argument.');
+    console.log('Example: node src/index.cjs --party ' + partyRoom + ' --name MyName\n');
+    process.exit(1);
+  }
+
   if (config.api_key && config.database_url) {
     firebaseConfig = config;
     firebaseReady = true;
