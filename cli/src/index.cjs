@@ -265,50 +265,54 @@ function render() {
 
   let termWidth = term.width;
   let termHeight = term.height;
+  if (typeof termWidth !== 'number' || !isFinite(termWidth) || termWidth < 10)
+    termWidth = 80;
+  if (typeof termHeight !== 'number' || !isFinite(termHeight) || termHeight < 5)
+    termHeight = 24;
   let totalItems = active.length + wait.length + pending.length;
 
   let scrollOffset = 0;
-  if (totalItems > termHeight - 10) {
-    let visibleItems = termHeight - 10;
-    scrollOffset = Math.max(0, selectedIndex - Math.floor(visibleItems / 2));
-    let maxScroll = totalItems - visibleItems;
-    scrollOffset = Math.min(scrollOffset, maxScroll);
-  }
 
   linePositions = [];
   let lineY = 1;
 
   term.clear();
-  term.moveTo(1, 1);
+  term.gray('-'.repeat(termWidth) + '\n');
   lineY++;
-
   let modeLabel =
-    'All (A:' +
+    'Active:' +
     active.length +
-    ' W:' +
+    ' | Wait:' +
     wait.length +
-    ' P:' +
-    pending.length +
-    ')';
+    ' | Unselected:' +
+    pending.length;
   term.bold.cyan(' [');
   term(serverFile);
-  term.blue('] MVP Timer | ');
-  term(pauseMode ? '{red}PAUSED{/red}' : '{green}RUNNING{/green}');
-  term.blue(' | ');
+  term.yellow('] MVP: ');
+  term(pauseMode ? '(⏸ PAUSED)' : '(▶ RUNNING)');
+  term.yellow(' | ');
   term(modeLabel);
-  term.cyan(
-    '\n  [Arrows/PgUp/Dn]Nav [Enter/D]Toggle [C]Cancel [E]Edit [B]Back [Space]Pause [S]Sort [F/I/L/R]File [Left/Right]Server [Q]Quit\n'
+  term.yellow(
+    ' | All:' + (active.length + wait.length + pending.length) + ' MVPs\n'
   );
+  term.green(
+    '  [Arrows/PgUp/Dn]Nav  [Enter/D]Toggle  [C]Cancel  [E]Edit  [B]Back\n'
+  );
+  term.green(
+    '  [Space]Pause  [S]Sort  [F/I/L/R]File  [Left/Right]Server  [Q]Quit\n'
+  );
+  lineY = 4;
 
-  term.bold.cyan(
+  term.bold.white(
     '# Boss Name                 | Time      | Status        | DeathTime          | Map\n'
   );
-  term.gray('-'.repeat(95) + '\n');
-  lineY = 3;
+  term.gray('-'.repeat(termWidth) + '\n');
 
   let currentIdx = 0;
 
   if (active.length > 0) {
+    term.gray('-'.repeat(termWidth) + '\n');
+    lineY++;
     term.bold.cyan('=== ACTIVE (Respawning) ===\n');
     lineY++;
     active.forEach(function (mvp) {
@@ -362,8 +366,10 @@ function render() {
   }
 
   if (wait.length > 0) {
-    if (active.length > 0) term('\n');
-    lineY++;
+    if (active.length > 0) {
+      term.gray('-'.repeat(termWidth) + '\n');
+      lineY++;
+    }
     term.bold.cyan('=== WAIT FOR KILL ===\n');
     lineY++;
     wait.forEach(function (mvp) {
@@ -394,8 +400,10 @@ function render() {
   }
 
   if (pending.length > 0) {
-    if (active.length + wait.length > 0) term('\n');
-    lineY++;
+    if (active.length + wait.length > 0) {
+      term.gray('-'.repeat(termWidth) + '\n');
+      lineY++;
+    }
     term.bold.cyan('=== SELECT TO KILL ===\n');
     lineY++;
     pending.forEach(function (mvp) {
@@ -424,6 +432,8 @@ function render() {
       currentIdx++;
     });
   }
+
+  term.gray('-'.repeat(termWidth) + '\n');
 
   // let selectedMvp = getMvpAtIndex(selectedIndex);
   // if (selectedMvp) {
@@ -481,7 +491,7 @@ term.on('key', function (keyName, matches, data) {
     process.exit(0);
   }
 
-  if (keyName === 'space') {
+  if (keyName === 'space' || keyName === 'SPACE' || keyName === ' ') {
     pauseMode = !pauseMode;
     render();
     return;
@@ -530,37 +540,37 @@ term.on('key', function (keyName, matches, data) {
     return;
   }
 
-  if (keyName === 'UP') {
+  if (keyName === 'UP' || keyName === 'up') {
     selectedIndex = Math.max(0, selectedIndex - 1);
     render();
     return;
   }
 
-  if (keyName === 'DOWN') {
+  if (keyName === 'DOWN' || keyName === 'down') {
     selectedIndex = Math.min(total - 1, selectedIndex + 1);
     render();
     return;
   }
 
-  if (keyName === 'PAGE_UP') {
+  if (keyName === 'PAGE_UP' || keyName === 'page up') {
     selectedIndex = Math.max(0, selectedIndex - 10);
     render();
     return;
   }
 
-  if (keyName === 'PAGE_DOWN') {
+  if (keyName === 'PAGE_DOWN' || keyName === 'page down') {
     selectedIndex = Math.min(total - 1, selectedIndex + 10);
     render();
     return;
   }
 
-  if (keyName === 'CTRL_UP') {
+  if (keyName === 'CTRL_UP' || keyName === 'ctrl up') {
     selectedIndex = Math.max(0, selectedIndex - 5);
     render();
     return;
   }
 
-  if (keyName === 'CTRL_DOWN') {
+  if (keyName === 'CTRL_DOWN' || keyName === 'ctrl down') {
     selectedIndex = Math.min(total - 1, selectedIndex + 5);
     render();
     return;
@@ -805,10 +815,7 @@ term.on('key', function (keyName, matches, data) {
     };
     try {
       fs.writeFileSync(savePath, JSON.stringify(saveData, null, 2));
-      console.log('\nSaved to: ' + savePath);
-    } catch (err) {
-      console.log('\nSave failed: ' + err.message);
-    }
+    } catch (err) {}
     pauseMode = wasPaused;
     render();
     return;
@@ -823,11 +830,9 @@ term.on('key', function (keyName, matches, data) {
       let data = JSON.parse(fs.readFileSync(loadPath, 'utf-8'));
       if (data.activeMvps) {
         activeMvps = data.activeMvps;
-        console.log('\nLoaded ' + activeMvps.length + ' MVPs from save');
+        selectedIndex = 0;
       }
-    } catch (err) {
-      console.log('\nLoad failed: ' + err.message);
-    }
+    } catch (err) {}
     pauseMode = wasPaused;
     render();
     return;
@@ -840,11 +845,8 @@ term.on('key', function (keyName, matches, data) {
       let data = JSON.parse(fs.readFileSync(loadPath, 'utf-8'));
       if (data.activeMvps) {
         activeMvps = data.activeMvps;
-        console.log('\nLoaded ' + activeMvps.length + ' MVPs from save');
       }
-    } catch (err) {
-      console.log('\nLoad failed: ' + err.message);
-    }
+    } catch (err) {}
     render();
     return;
   }
