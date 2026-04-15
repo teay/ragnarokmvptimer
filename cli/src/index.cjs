@@ -1,6 +1,7 @@
 const term = require('terminal-kit').terminal;
 const { readFileSync, existsSync } = require('fs');
 const path = require('path');
+const readline = require('readline');
 
 const SERVERS = {
   iRO: 'iRO',
@@ -150,11 +151,17 @@ function parseSmartTime(input) {
   let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   input = input.trim();
+  let digits = input.replace(/\D/g, '');
 
-  let timeOnly = input.match(/^(\d{2,4})(\d{2})$/);
-  if (timeOnly) {
-    let h = parseInt(timeOnly[1]);
-    let m = parseInt(timeOnly[2]);
+  if (digits.length >= 3 && digits.length <= 4) {
+    let h, m;
+    if (digits.length === 4) {
+      h = parseInt(digits.substring(0, 2));
+      m = parseInt(digits.substring(2, 4));
+    } else {
+      h = parseInt(digits.substring(0, 1));
+      m = parseInt(digits.substring(1, 3));
+    }
     if (h < 24 && m < 60) {
       let parsed = new Date(today);
       parsed.setHours(h, m, 0, 0);
@@ -536,17 +543,21 @@ term.on('key', function (keyName, matches, data) {
     console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
     console.log('Time (730 or 2359) or Enter=now: ');
     term.grabInput(false);
-    process.stdin.once('data', function (data) {
-      let input = data.toString();
+    let rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question('', function (ans) {
+      rl.close();
+      term.grabInput(true);
       let newTime;
-      let parsed = parseSmartTime(input);
+      let parsed = parseSmartTime(ans);
       if (parsed) {
         newTime = parsed.getTime();
       } else {
         newTime = Date.now();
       }
       existing.deathTime = newTime;
-      term.grabInput(true);
       render();
     });
     return;
