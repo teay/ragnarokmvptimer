@@ -155,10 +155,10 @@ function parseSmartTime(input) {
   if (timeOnly) {
     let h = parseInt(timeOnly[1]);
     let m = parseInt(timeOnly[2]);
-    if (h < 24 && m < 60) {
+    if (h >= 0 && h < 24 && m < 60) {
       let parsed = new Date(today);
       parsed.setHours(h, m, 0, 0);
-      if (parsed < now) {
+      if (parsed.getTime() <= now.getTime()) {
         parsed.setDate(parsed.getDate() + 1);
       }
       return parsed;
