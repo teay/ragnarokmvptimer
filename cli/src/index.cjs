@@ -370,7 +370,9 @@ function updateTimeOnly() {
     let newTimeStr = respawnTime !== null ? formatTime(respawnTime) : 'READY!';
     if (newTimeStr !== pos.timeStr) {
       term.moveTo(pos.x, pos.y);
-      term(padCol(newTimeStr, 12));
+      term('            ');
+      term.moveTo(pos.x, pos.y);
+      term(newTimeStr);
       pos.timeStr = newTimeStr;
     }
   });
