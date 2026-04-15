@@ -149,8 +149,6 @@ function parseSmartTime(input) {
 
   let now = new Date();
   let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
 
   input = input.trim();
   let digits = input.replace(/\D/g, '');
@@ -167,12 +165,7 @@ function parseSmartTime(input) {
     if (h >= 0 && h < 24 && m < 60) {
       let parsed = new Date(today);
       parsed.setHours(h, m, 0, 0);
-      if (parsed.getTime() > now.getTime()) {
-        return parsed;
-      }
-      let yParsed = new Date(yesterday);
-      yParsed.setHours(h, m, 0, 0);
-      return yParsed;
+      return parsed;
     }
   }
 
