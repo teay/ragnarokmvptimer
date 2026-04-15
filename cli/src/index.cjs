@@ -510,7 +510,6 @@ term.on('key', function (keyName, matches, data) {
     currentServer = serverKeys[currentServerIndex];
     let serverFile = SERVERS[currentServer];
     originalAllMvps = loadMvpData(serverFile);
-    activeMvps = [];
     selectedIndex = 0;
     render();
     return;
@@ -521,7 +520,6 @@ term.on('key', function (keyName, matches, data) {
     currentServer = serverKeys[currentServerIndex];
     let serverFile = SERVERS[currentServer];
     originalAllMvps = loadMvpData(serverFile);
-    activeMvps = [];
     selectedIndex = 0;
     render();
     return;
