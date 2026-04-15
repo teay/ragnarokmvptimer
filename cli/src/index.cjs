@@ -143,10 +143,50 @@ function padCol(str, len) {
   return str + ' '.repeat(len - w);
 }
 
+function parseSmartTime(input) {
+  if (!input) return null;
+
+  let now = new Date();
+  let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let parsed = null;
+
+  input = input.trim();
+
+  let timeOnly = input.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?$/);
+  if (timeOnly) {
+    let h = parseInt(timeOnly[1]);
+    let m = parseInt(timeOnly[2]);
+    if (h < 24 && m < 60) {
+      parsed = new Date(today);
+      parsed.setHours(h, m, 0, 0);
+      if (parsed < now) {
+        parsed.setDate(parsed.getDate() + 1);
+      }
+    }
+    return parsed;
+  }
+
+  let dateOnly = input.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (dateOnly) {
+    parsed = new Date(
+      parseInt(dateOnly[1]),
+      parseInt(dateOnly[2]) - 1,
+      parseInt(dateOnly[3])
+    );
+    return parsed;
+  }
+
+  parsed = new Date(input);
+  if (!isNaN(parsed.getTime())) {
+    return parsed;
+  }
+
+  return null;
+}
+
 function formatDeathTime(timestamp) {
   if (!timestamp) return '';
   let d = new Date(timestamp);
-  let y = d.getFullYear();
   let mon = String(d.getMonth() + 1).padStart(2, '0');
   let day = String(d.getDate()).padStart(2, '0');
   let h = String(d.getHours()).padStart(2, '0');
@@ -509,16 +549,18 @@ term.on('key', function (keyName, matches, data) {
     });
     if (!existing || !existing.deathTime) return;
     console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
-    console.log('New (YYYY-MM-DD HH:MM) or Enter=now: ');
+    console.log(
+      'Examples: 23:00 | 2026-04-15 | 2026-04-15 07:30 | Enter=now: '
+    );
     term.grabInput(false);
     process.stdin.once('data', function (data) {
-      let input = data.toString().trim();
+      let input = data.toString();
       let newTime;
-      if (!input) {
-        newTime = Date.now();
+      let parsed = parseSmartTime(input);
+      if (parsed) {
+        newTime = parsed.getTime();
       } else {
-        newTime = new Date(input);
-        if (isNaN(newTime.getTime())) newTime = Date.now();
+        newTime = Date.now();
       }
       existing.deathTime = newTime;
       term.grabInput(true);
