@@ -531,7 +531,7 @@ term.on('key', function (keyName, matches, data) {
     });
     if (!existing || !existing.deathTime) return;
     console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
-    console.log('Time (730 or 2359) or Enter=now: ');
+    console.log('Time (7.30 or 730) or Enter=now: ');
     let wasPaused = pauseMode;
     pauseMode = true;
     term.grabInput(false);
