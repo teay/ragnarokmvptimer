@@ -532,6 +532,8 @@ term.on('key', function (keyName, matches, data) {
     if (!existing || !existing.deathTime) return;
     console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
     console.log('Time (730 or 2359) or Enter=now: ');
+    let wasPaused = pauseMode;
+    pauseMode = true;
     term.grabInput(false);
     let rl = readline.createInterface({
       input: process.stdin,
@@ -539,6 +541,7 @@ term.on('key', function (keyName, matches, data) {
     });
     rl.question('', function (ans) {
       rl.close();
+      pauseMode = wasPaused;
       term.grabInput(true);
       let newTime;
       let parsed = parseSmartTime(ans);
