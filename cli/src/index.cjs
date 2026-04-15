@@ -262,9 +262,9 @@ function render() {
   );
 
   term.bold.cyan(
-    '# Boss Name               | Time      | Status        | Died At            | Map\n'
+    '# Boss Name                 | Time      | Status        | Died At            | Map\n'
   );
-  term.gray('-'.repeat(90) + '\n');
+  term.gray('-'.repeat(92) + '\n');
   lineY = 5;
 
   let currentIdx = 0;
@@ -302,7 +302,7 @@ function render() {
       let deathStr = mvp.deathTime ? formatDeathTime(mvp.deathTime) : '';
       let line =
         '[A] ' +
-        getWidthPad(mvp.name.trim(), 20) +
+        getWidthPad(mvp.name.trim(), 22) +
         '| ' +
         padCol(timeStr, 10) +
         ' | ' +
@@ -335,7 +335,7 @@ function render() {
       if (currentIdx >= scrollOffset + termHeight - 10) return;
       let line =
         '[W] ' +
-        getWidthPad(mvp.name.trim(), 20) +
+        getWidthPad(mvp.name.trim(), 22) +
         '| ' +
         padCol('', 10) +
         ' | ' +
@@ -367,7 +367,7 @@ function render() {
       if (currentIdx >= scrollOffset + termHeight - 10) return;
       let line =
         '[ ] ' +
-        getWidthPad(mvp.name.trim(), 20) +
+        getWidthPad(mvp.name.trim(), 22) +
         '| ' +
         padCol('', 10) +
         ' | ' +
