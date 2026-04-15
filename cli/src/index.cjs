@@ -302,7 +302,7 @@ function render() {
     pending.length +
     ')';
   term.bold.cyan(' [');
-  term(currentServer);
+  term(serverFile);
   term.blue('] MVP Timer | ');
   term(pauseMode ? '{red}PAUSED{/red}' : '{green}RUNNING{/green}');
   term.blue(' | ');
