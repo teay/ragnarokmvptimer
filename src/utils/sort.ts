@@ -8,8 +8,11 @@ function getFastestRespawn(mvp: IMvp) {
 
 function getActualRespawnTime(mvp: IMvp) {
   if (mvp.deathTime) {
-    return dayjs(mvp.deathTime).add(getMvpRespawnTime(mvp), 'ms').valueOf();
+    // Priority 1: Use specific respawnTime if available (from rehydrated data)
+    const respawnMs = mvp.respawnTime || getMvpRespawnTime(mvp) || 0;
+    return dayjs(mvp.deathTime).add(respawnMs, 'ms').valueOf();
   }
+  // Priority 2: Use fastest spawn for unkilled bosses
   return getFastestRespawn(mvp);
 }
 

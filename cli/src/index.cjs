@@ -2,45 +2,143 @@ const term = require('terminal-kit').terminal;
 const { readFileSync, existsSync, writeFileSync } = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { initializeApp } = require('firebase/app');
+const { getDatabase, ref, onValue, set } = require('firebase/database');
 
 let firebaseApp = null;
 let firebaseDb = null;
+let firebaseUnsubscribe = null;
 
 let firebaseReady = false;
 let firebaseConfig = {};
+let cliNickname = 'CLI';
+let partyRoom = ''; // Add partyRoom support
 
 function initFirebase() {
+  // 1. Parse .env first
   let envPath = path.join(__dirname, '..', '..', '.env');
   let envContent = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';
   let config = {};
   envContent.split('\n').forEach(function (line) {
     let parts = line.split('=');
     if (parts.length >= 2) {
-      let key = parts[0]
-        .trim()
+      let rawKey = parts[0].trim();
+      let key = rawKey
         .replace('VITE_', '')
         .replace('FIREBASE_', '')
         .toLowerCase();
       let value = parts.slice(1).join('=').trim();
-      if (
-        value &&
-        value !== 'YOUR_' + key.toUpperCase() + '_' &&
-        value !== 'YOUR_' + key.replace('_', '_')
-      ) {
+      if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+      if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+      
+      if (value && !value.startsWith('YOUR_')) {
         config[key] = value;
+      }
+      if (rawKey === 'VITE_NICKNAME' || rawKey === 'CLI_NICKNAME') {
+        cliNickname = value;
       }
     }
   });
+
+  // 2. Override with Command Line Arguments
+  // Usage: node src/index.cjs --name MyName --party MyParty
+  const args = process.argv.slice(2);
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--name' && args[i+1]) {
+      cliNickname = args[i+1];
+      i++;
+    } else if (args[i] === '--party' && args[i+1]) {
+      partyRoom = args[i+1];
+      i++;
+    }
+  }
+
   if (config.api_key && config.database_url) {
     firebaseConfig = config;
     firebaseReady = true;
-    console.log('Firebase configured for: ' + config.project_id);
+    
+    let dbUrl = config.database_url;
+    if (!dbUrl.startsWith('http')) dbUrl = 'https://' + dbUrl;
+    try {
+      let urlObj = new URL(dbUrl);
+      firebaseConfig.host = urlObj.hostname;
+    } catch (e) {
+      firebaseConfig.host = dbUrl.replace('https://', '').split('/')[0];
+    }
+    
+    let modeInfo = partyRoom ? 'Party: ' + partyRoom : 'Nickname: ' + cliNickname;
+    
+    // Initialize SDK
+    const fbConfig = {
+      apiKey: config.api_key,
+      authDomain: config.auth_domain,
+      databaseURL: config.database_url,
+      projectId: config.project_id,
+      storageBucket: config.storage_bucket,
+      messagingSenderId: config.messaging_sender_id,
+      appId: config.app_id
+    };
+    
+    try {
+      firebaseApp = initializeApp(fbConfig);
+      firebaseDb = getDatabase(firebaseApp);
+      console.log('Firebase SDK Initialized (' + modeInfo + ')');
+      setupRealtimeSync();
+    } catch (e) {
+      console.log('Firebase SDK Init Error: ' + e.message);
+    }
+    
     return true;
   }
   return false;
 }
 
-initFirebase();
+function setupRealtimeSync() {
+  if (!firebaseDb) return;
+  
+  if (firebaseUnsubscribe) {
+    firebaseUnsubscribe();
+  }
+
+  let dbPath = partyRoom 
+    ? 'hunting/party/' + partyRoom + '/' + currentServer + '/mvps'
+    : 'hunting/solo/' + cliNickname + '/' + currentServer + '/mvps';
+
+  const mvpsRef = ref(firebaseDb, dbPath);
+  
+  firebaseUnsubscribe = onValue(mvpsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      let remoteMvps = Array.isArray(data) ? data : Object.values(data);
+      activeMvps = rehydrateMvps(remoteMvps);
+    } else {
+      activeMvps = [];
+    }
+    render(); // Force UI update when data changes in Firebase
+  });
+}
+
+function autoSaveToFirebase() {
+  if (!firebaseDb) return;
+  
+  let dbPath = partyRoom 
+    ? 'hunting/party/' + partyRoom + '/' + currentServer + '/mvps'
+    : 'hunting/solo/' + cliNickname + '/' + currentServer + '/mvps';
+
+  const minimalMvps = activeMvps.map((m) => ({
+    id: m.id,
+    deathTime: m.deathTime ? new Date(m.deathTime).toISOString() : null,
+    deathMap: m.deathMap || null,
+    deathPosition: m.deathPosition || null,
+    isPinned: m.isPinned || false,
+    updatedBy: cliNickname,
+  }));
+  
+  const mvpsRef = ref(firebaseDb, dbPath);
+  set(mvpsRef, minimalMvps).catch((err) => {
+    // Silent error in background auto-save
+  });
+}
 
 const SERVERS = {
   iRO: 'iRO',
@@ -73,6 +171,9 @@ let serverFile = SERVERS[currentServer];
 let originalAllMvps = loadMvpData(serverFile);
 let activeMvps = [];
 
+// Initialize Firebase AFTER servers are defined
+initFirebase();
+
 function expandMvpsBySpawn(rawData) {
   let expanded = [];
   rawData.forEach(function (mvp) {
@@ -91,6 +192,42 @@ function expandMvpsBySpawn(rawData) {
     }
   });
   return expanded;
+}
+
+function rehydrateMvps(remoteMvps) {
+  if (!Array.isArray(remoteMvps)) return [];
+  let allPossibleMvps = expandMvpsBySpawn(originalAllMvps);
+  let result = [];
+  remoteMvps.forEach(function (remote) {
+    // Find matching MVP by ID and mapname (deathMap in remote)
+    let base = allPossibleMvps.find(function (m) {
+      return (
+        m.id === remote.id &&
+        (m.mapname === remote.deathMap || m.mapname === remote.mapname)
+      );
+    });
+
+    // Fallback search by ID only if not found
+    if (!base) {
+      base = allPossibleMvps.find(function (m) {
+        return m.id === remote.id;
+      });
+    }
+
+    if (base) {
+      // Create a copy of base data and add dynamic properties from remote
+      let hydrated = JSON.parse(JSON.stringify(base));
+      hydrated.deathTime = remote.deathTime
+        ? new Date(remote.deathTime).getTime()
+        : null;
+      hydrated.deathMap = remote.deathMap || base.mapname;
+      hydrated.deathPosition = remote.deathPosition || null;
+      hydrated.isPinned = remote.isPinned || false;
+      hydrated.updatedBy = remote.updatedBy || 'CLI';
+      result.push(hydrated);
+    }
+  });
+  return result;
 }
 
 function getAllMvps() {
@@ -290,9 +427,13 @@ function render() {
     wait.length +
     ' | Unselected:' +
     pending.length;
+  let syncInfo = partyRoom ? 'Party: ' + partyRoom : 'Solo: ' + cliNickname;
+  
   term.bold.cyan(' [');
   term(serverFile);
-  term.yellow('] MVP: ');
+  term.yellow('] ');
+  term.magenta(syncInfo);
+  term.yellow(' | ');
   term(pauseMode ? '(⏸ PAUSED)' : '(▶ RUNNING)');
   term.yellow(' | ');
   term(modeLabel);
@@ -512,6 +653,8 @@ term.on('key', function (keyName, matches, data) {
     serverFile = SERVERS[currentServer];
     originalAllMvps = loadMvpData(serverFile);
     selectedIndex = 0;
+    activeMvps = [];
+    setupRealtimeSync(); // Refresh listener for new server
     render();
     return;
   }
@@ -522,6 +665,8 @@ term.on('key', function (keyName, matches, data) {
     serverFile = SERVERS[currentServer];
     originalAllMvps = loadMvpData(serverFile);
     selectedIndex = 0;
+    activeMvps = [];
+    setupRealtimeSync(); // Refresh listener for new server
     render();
     return;
   }
@@ -638,6 +783,8 @@ term.on('key', function (keyName, matches, data) {
         });
       }
     }
+    // Auto-save after update
+    autoSaveToFirebase();
     render();
     return;
   }
@@ -652,6 +799,7 @@ term.on('key', function (keyName, matches, data) {
         (a.deathMap || a.mapname) === mvp.mapname
       );
     });
+    autoSaveToFirebase();
     render();
     return;
   }
@@ -665,6 +813,7 @@ term.on('key', function (keyName, matches, data) {
     if (existing && existing.deathTime) {
       existing.deathTime = null;
       existing.isPinned = true;
+      autoSaveToFirebase();
       render();
     }
     return;
@@ -724,6 +873,7 @@ term.on('key', function (keyName, matches, data) {
           deathMap: mvp.mapname,
         });
       }
+      autoSaveToFirebase();
       render();
     });
     return;
@@ -854,106 +1004,53 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'u' || keyName === 'U') {
-    if (!firebaseReady) {
-      console.log('\nFirebase not configured');
+    if (!firebaseDb) {
+      console.log('\nFirebase not ready');
       render();
       return;
     }
-    const https = require('https');
-    let dbUrl = firebaseConfig.database_url;
-    let host = dbUrl.replace('https://', '').replace('.firebaseio.com', '');
-    let path = '/mvps/' + currentServer + '.json';
-    let data = JSON.stringify({
-      server: currentServer,
-      activeMvps: activeMvps,
-      syncTime: Date.now(),
-    });
-    let options = {
-      hostname: host,
-      port: 443,
-      path: path,
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data),
-      },
-    };
-    let wasPaused = pauseMode;
-    pauseMode = true;
-    let req = https.request(options, function (res) {
-      if (res.statusCode === 200) {
-        console.log('\nSynced to Firebase!');
-      } else {
-        console.log('\nSync failed: ' + res.statusCode);
-      }
-      setTimeout(() => {
-        pauseMode = wasPaused;
-        render();
-      }, 1500);
-    });
-    req.on('error', function (err) {
-      console.log('\nFirebase error: ' + err.message);
-      setTimeout(() => {
-        pauseMode = wasPaused;
-        render();
-      }, 1500);
-    });
-    req.write(data);
-    req.end();
-    return;
-  }
+    
+    let dbPath = partyRoom 
+      ? 'hunting/party/' + partyRoom + '/' + currentServer + '/mvps'
+      : 'hunting/solo/' + cliNickname + '/' + currentServer + '/mvps';
 
-  if (keyName === 'y' || keyName === 'Y') {
-    if (!firebaseReady) {
-      console.log('\nFirebase not configured');
-      render();
-      return;
-    }
-    const https = require('https');
-    let dbUrl = firebaseConfig.database_url;
-    let host = dbUrl.replace('https://', '').replace('.firebaseio.com', '');
-    let path = '/mvps/' + currentServer + '.json';
-    let options = {
-      hostname: host,
-      port: 443,
-      path: path,
-      method: 'GET',
-    };
+    // Convert to web app compatible minimal format
+    const minimalMvps = activeMvps.map((m) => ({
+      id: m.id,
+      deathTime: m.deathTime ? new Date(m.deathTime).toISOString() : null,
+      deathMap: m.deathMap || null,
+      deathPosition: m.deathPosition || null,
+      isPinned: m.isPinned || false,
+      updatedBy: cliNickname,
+    }));
+    
+    const mvpsRef = ref(firebaseDb, dbPath);
     let wasPaused = pauseMode;
     pauseMode = true;
-    let req = https.request(options, function (res) {
-      let body = '';
-      res.on('data', function (chunk) {
-        body += chunk;
-      });
-      res.on('end', function () {
-        try {
-          let data = JSON.parse(body);
-          if (data && data.activeMvps) {
-            activeMvps = data.activeMvps;
-            console.log(
-              '\nSynced from Firebase: ' + activeMvps.length + ' MVPs'
-            );
-          } else {
-            console.log('\nNo data on Firebase for ' + currentServer);
-          }
-        } catch (err) {
-          console.log('\nParse error: ' + err.message);
-        }
+    
+    set(mvpsRef, minimalMvps)
+      .then(() => {
+        console.log('\nSynced to Firebase!');
+        setTimeout(() => {
+          pauseMode = wasPaused;
+          render();
+        }, 1500);
+      })
+      .catch((err) => {
+        console.log('\nFirebase error: ' + err.message);
         setTimeout(() => {
           pauseMode = wasPaused;
           render();
         }, 1500);
       });
-    });
-    req.on('error', function (err) {
-      console.log('\nFirebase error: ' + err.message);
-      setTimeout(() => {
-        pauseMode = wasPaused;
-        render();
-      }, 1500);
-    });
-    req.end();
+    return;
+  }
+
+  if (keyName === 'y' || keyName === 'Y') {
+    console.log('\nReal-time sync is already active!');
+    setTimeout(() => {
+      render();
+    }, 1500);
     return;
   }
 });

@@ -1,0 +1,219 @@
+{
+  "version": 1,
+  "server": "iRO",
+  "activeMvps": [
+    {
+      "id": 2483,
+      "name": "Baphomet (Nightmare)",
+      "dbname": "NG_BAPHOMET",
+      "spawn": [
+        {
+          "mapname": "gl_cas02_",
+          "respawnTime": 7200000
+        }
+      ],
+      "mapname": "gl_cas02_",
+      "respawnTime": 7200000,
+      "stats": {
+        "level": 154,
+        "health": 4008000,
+        "baseExperience": 1308534,
+        "jobExperience": 1102549
+      },
+      "isPinned": true,
+      "deathTime": null
+    },
+    {
+      "id": 1039,
+      "name": "Baphomet",
+      "dbname": "BAPHOMET",
+      "spawn": [
+        {
+          "mapname": "prt_maze03",
+          "respawnTime": 7200000
+        }
+      ],
+      "mapname": "prt_maze03",
+      "respawnTime": 7200000,
+      "stats": {
+        "level": 81,
+        "health": 668000,
+        "baseExperience": 218089,
+        "jobExperience": 167053
+      },
+      "isPinned": true,
+      "deathTime": null
+    },
+    {
+      "id": 1785,
+      "name": "Atroce",
+      "dbname": "ATROCE",
+      "spawn": [
+        {
+          "mapname": "ve_fild02",
+          "respawnTime": 21600000
+        }
+      ],
+      "mapname": "ve_fild02",
+      "respawnTime": 21600000,
+      "stats": {
+        "level": 113,
+        "health": 1502000,
+        "baseExperience": 702000,
+        "jobExperience": 470250
+      },
+      "isPinned": true,
+      "deathTime": 1776263425184
+    },
+    {
+      "id": 1785,
+      "name": "Atroce",
+      "dbname": "ATROCE",
+      "spawn": [
+        {
+          "mapname": "ve_fild01",
+          "respawnTime": 10800000
+        }
+      ],
+      "mapname": "ve_fild01",
+      "respawnTime": 10800000,
+      "stats": {
+        "level": 113,
+        "health": 1502000,
+        "baseExperience": 702000,
+        "jobExperience": 470250
+      },
+      "isPinned": true,
+      "deathTime": null
+    },
+    {
+      "id": 1785,
+      "name": "Atroce",
+      "dbname": "ATROCE",
+      "spawn": [
+        {
+          "mapname": "ra_fild04",
+          "respawnTime": 18000000
+        }
+      ],
+      "mapname": "ra_fild04",
+      "respawnTime": 18000000,
+      "stats": {
+        "level": 113,
+        "health": 1502000,
+        "baseExperience": 702000,
+        "jobExperience": 470250
+      },
+      "isPinned": true,
+      "deathTime": null
+    },
+    {
+      "id": 1785,
+      "name": "Atroce",
+      "dbname": "ATROCE",
+      "spawn": [
+        {
+          "mapname": "ra_fild03",
+          "respawnTime": 10800000
+        }
+      ],
+      "mapname": "ra_fild03",
+      "respawnTime": 10800000,
+      "stats": {
+        "level": 113,
+        "health": 1502000,
+        "baseExperience": 702000,
+        "jobExperience": 470250
+      },
+      "isPinned": true,
+      "deathTime": null
+    },
+    {
+      "id": 2362,
+      "name": "Amon Ra (Nightmare)",
+      "dbname": "N_AMON_RA",
+      "spawn": [
+        {
+          "mapname": "moc_prydn2",
+          "respawnTime": 3600000
+        }
+      ],
+      "mapname": "moc_prydn2",
+      "respawnTime": 3600000,
+      "stats": {
+        "level": 145,
+        "health": 2515784,
+        "baseExperience": 1626487,
+        "jobExperience": 1432295
+      },
+      "isPinned": true,
+      "deathTime": 1776263423335
+    },
+    {
+      "id": 1511,
+      "name": "Amon Ra",
+      "dbname": "AMON_RA",
+      "spawn": [
+        {
+          "mapname": "moc_pryd06",
+          "respawnTime": 3600000
+        }
+      ],
+      "mapname": "moc_pryd06",
+      "respawnTime": 3600000,
+      "stats": {
+        "level": 69,
+        "health": 1009000,
+        "baseExperience": 120060,
+        "jobExperience": 93960
+      },
+      "isPinned": true,
+      "deathTime": 1776263244734
+    },
+    {
+      "id": 20648,
+      "name": "Boss Meow",
+      "dbname": "EP17_2_PITAYA_BOSS",
+      "spawn": [
+        {
+          "mapname": "ba_lost",
+          "respawnTime": 21600000
+        }
+      ],
+      "mapname": "ba_lost",
+      "respawnTime": 21600000,
+      "stats": {
+        "level": 168,
+        "health": 19298694,
+        "baseExperience": 1608224,
+        "jobExperience": 1125757
+      },
+      "isPinned": true,
+      "deathTime": 1776263424431,
+      "deathMap": "ba_lost"
+    },
+    {
+      "id": 1272,
+      "name": "Dark Lord",
+      "dbname": "DARK_LORD",
+      "spawn": [
+        {
+          "mapname": "gl_chyard_",
+          "respawnTime": 3600000
+        }
+      ],
+      "mapname": "gl_chyard_",
+      "respawnTime": 3600000,
+      "stats": {
+        "level": 96,
+        "health": 1190900,
+        "baseExperience": 428544,
+        "jobExperience": 279000
+      },
+      "isPinned": true,
+      "deathTime": 1776263427863,
+      "deathMap": "gl_chyard_"
+    }
+  ],
+  "exportTime": 1776267438639
+}

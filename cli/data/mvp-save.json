@@ -1,6 +1,163 @@
 {
   "version": 1,
-  "server": "thRO",
-  "activeMvps": [],
-  "saveTime": 1776257644404
+  "server": "iRO",
+  "activeMvps": [
+    {
+      "id": 1039,
+      "name": "Baphomet",
+      "dbname": "BAPHOMET",
+      "spawn": [
+        {
+          "mapname": "prt_maze03",
+          "respawnTime": 7200000
+        }
+      ],
+      "mapname": "prt_maze03",
+      "respawnTime": 7200000,
+      "stats": {
+        "level": 81,
+        "health": 668000,
+        "baseExperience": 218089,
+        "jobExperience": 167053
+      },
+      "deathTime": 1776283125649,
+      "deathMap": "prt_maze03",
+      "deathPosition": {
+        "x": -1,
+        "y": -1
+      },
+      "isPinned": true,
+      "updatedBy": "CLI"
+    },
+    {
+      "id": 20419,
+      "name": "Rigid Muspellskoll",
+      "dbname": "MUSPELLSKOLL_H",
+      "spawn": [
+        {
+          "mapname": "mag_dun03",
+          "respawnTime": 7200000
+        }
+      ],
+      "mapname": "mag_dun03",
+      "respawnTime": 7200000,
+      "stats": {
+        "level": 188,
+        "health": 48530254,
+        "baseExperience": 9706050,
+        "jobExperience": 6794235
+      },
+      "deathTime": 1776283051072,
+      "deathMap": "mag_dun03",
+      "deathPosition": {
+        "x": -1,
+        "y": -1
+      },
+      "isPinned": true,
+      "updatedBy": "CLI"
+    },
+    {
+      "id": 1112,
+      "name": "Drake",
+      "dbname": "DRAKE",
+      "spawn": [
+        {
+          "mapname": "treasure02",
+          "respawnTime": 7200000
+        }
+      ],
+      "mapname": "treasure02",
+      "respawnTime": 7200000,
+      "stats": {
+        "level": 91,
+        "health": 804500,
+        "baseExperience": 309096,
+        "jobExperience": 208980
+      },
+      "deathTime": 1776283047601,
+      "deathMap": "treasure02",
+      "deathPosition": {
+        "x": -1,
+        "y": -1
+      },
+      "isPinned": true,
+      "updatedBy": "CLI"
+    },
+    {
+      "id": 1719,
+      "name": "Detardeurus",
+      "dbname": "DETALE",
+      "spawn": [
+        {
+          "mapname": "abyss_03",
+          "respawnTime": 10800000
+        }
+      ],
+      "mapname": "abyss_03",
+      "respawnTime": 10800000,
+      "stats": {
+        "level": 135,
+        "health": 6005000,
+        "baseExperience": 2808000,
+        "jobExperience": 1881000
+      },
+      "deathTime": 1776282619117,
+      "deathMap": "abyss_03",
+      "deathPosition": {
+        "x": -1,
+        "y": -1
+      },
+      "isPinned": true,
+      "updatedBy": "CLI"
+    },
+    {
+      "id": 1252,
+      "name": "Hatii",
+      "dbname": "GARM",
+      "spawn": [
+        {
+          "mapname": "xmas_fild01",
+          "respawnTime": 7200000
+        }
+      ],
+      "mapname": "xmas_fild01",
+      "respawnTime": 7200000,
+      "stats": {
+        "level": 98,
+        "health": 1275500,
+        "baseExperience": 455328,
+        "jobExperience": 306900
+      },
+      "deathTime": null,
+      "deathMap": "xmas_fild01",
+      "deathPosition": null,
+      "isPinned": true,
+      "updatedBy": "CLI"
+    },
+    {
+      "id": 20421,
+      "name": "Corrupted Spider Queen",
+      "dbname": "BRINARANEA_H",
+      "spawn": [
+        {
+          "mapname": "gl_cas01_",
+          "respawnTime": 7200000
+        }
+      ],
+      "mapname": "gl_cas01_",
+      "respawnTime": 7200000,
+      "stats": {
+        "level": 195,
+        "health": 74623473,
+        "baseExperience": 14924695,
+        "jobExperience": 10447286
+      },
+      "deathTime": null,
+      "deathMap": "gl_cas01_",
+      "deathPosition": null,
+      "isPinned": true,
+      "updatedBy": "CLI"
+    }
+  ],
+  "saveTime": 1776283393533
 }

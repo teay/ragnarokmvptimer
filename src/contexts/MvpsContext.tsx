@@ -61,13 +61,19 @@ function sortMvpsByRespawnTime(mvps: IMvp[]): IMvp[] {
     const hasDeathTimeA = !!a.deathTime;
     const hasDeathTimeB = !!b.deathTime;
 
+    // Both without deathTime (Wait list), sort by name
+    if (!hasDeathTimeA && !hasDeathTimeB) {
+      return (a.name || '').localeCompare(b.name || '');
+    }
+
+    // One without deathTime, pinned items go to bottom of active list or top of wait list
     if (!hasDeathTimeA && hasDeathTimeB) return 1;
     if (hasDeathTimeA && !hasDeathTimeB) return -1;
-    if (!hasDeathTimeA && !hasDeathTimeB) return a.id - b.id;
 
     try {
       const respawnA = getMvpRespawnTime(a) || 0;
       const respawnB = getMvpRespawnTime(b) || 0;
+      
       const timeA = dayjs(a.deathTime).add(respawnA, 'ms').valueOf();
       const timeB = dayjs(b.deathTime).add(respawnB, 'ms').valueOf();
 
@@ -143,8 +149,10 @@ export function MvpProvider({ children }: MvpProviderProps) {
             ...original,
             ...mvp,
             deathTime,
+            // Ensure spawn only contains the relevant map if deathMap is provided
+            // This is crucial for getMvpRespawnTime to work correctly
             spawn:
-              (specificSpawn.length > 0 ? specificSpawn : original.spawn) || [],
+              specificSpawn.length > 0 ? specificSpawn : (original.spawn || []),
           } as IMvp;
         }
         return {

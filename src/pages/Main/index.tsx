@@ -35,21 +35,18 @@ export function Main() {
     sessionStorage.getItem('reverse') === 'true'
   );
 
-  const activeSort = sortBy(currentSort);
+  const activeSort = sortBy('respawnTime'); // Active MVPs should always sort by respawn time
+  const pinnedSort = sortBy('name'); // Pinned items without deathTime sort by name
+  const generalSort = sortBy(currentSort); // Only "All" list follows user selected sort
 
   const filteredActive = activeMvps.filter((m) => m.deathTime);
   const filteredPinned = activeMvps.filter((m) => m.isPinned && !m.deathTime);
 
   const sortedActive = [...filteredActive].sort(activeSort);
-  const sortedPinned = [...filteredPinned].sort(activeSort);
+  const sortedPinned = [...filteredPinned].sort(pinnedSort);
 
-  const normalActiveMvps = reverseSort
-    ? sortedActive.reverse()
-    : sortedActive;
-
-  const pinnedMvps = reverseSort
-    ? sortedPinned.reverse()
-    : sortedPinned;
+  const normalActiveMvps = sortedActive; // Active always ascending (soonest first)
+  const pinnedMvps = sortedPinned; // Pinned always alphabetical
 
   const allMvpsFilteredAndSorted = (
     searchQuery
