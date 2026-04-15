@@ -1,7 +1,57 @@
 const term = require('terminal-kit').terminal;
-const { readFileSync, existsSync } = require('fs');
+const { readFileSync, existsSync, writeFileSync } = require('fs');
 const path = require('path');
 const readline = require('readline');
+
+let firebaseApp = null;
+let firebaseDb = null;
+
+function initFirebase() {
+  let envPath = path.join(__dirname, '..', '..', '.env');
+  let envContent = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';
+  let config = {};
+  envContent.split('\n').forEach(function (line) {
+    let parts = line.split('=');
+    if (parts.length >= 2) {
+      let key = parts[0]
+        .trim()
+        .replace('VITE_', '')
+        .replace('FIREBASE_', '')
+        .toLowerCase();
+      let value = parts.slice(1).join('=').trim();
+      if (
+        value &&
+        value !== 'YOUR_' + key.toUpperCase() + '_' &&
+        value !== 'YOUR_' + key.replace('_', '_')
+      ) {
+        config[key] = value;
+      }
+    }
+  });
+  if (config.api_key && config.database_url) {
+    try {
+      const firebase = require('firebase/database');
+      firebaseApp = firebase.initializeApp({
+        apiKey: config.api_key,
+        authDomain:
+          config.auth_domain || config.project_id + '.firebaseapp.com',
+        databaseURL: config.database_url,
+        projectId: config.project_id,
+        storageBucket: config.storage_bucket,
+        messagingSenderId: config.messaging_sender_id,
+        appId: config.app_id,
+      });
+      firebaseDb = firebase.getDatabase(firebaseApp);
+      console.log('\nFirebase connected!');
+      return true;
+    } catch (err) {
+      console.log('\nFirebase init failed: ' + err.message);
+    }
+  }
+  return false;
+}
+
+let firebaseReady = initFirebase();
 
 const SERVERS = {
   iRO: 'iRO',
@@ -258,7 +308,7 @@ function render() {
   term.blue(' | ');
   term(modeLabel);
   term.cyan(
-    '\n  [Nav] Up/Down:1 | PgUp/Dn:10 | Ctrl+Up/Dn:5 | Home/End\n  [MVP] Enter/D: Toggle | C: Cancel | E: Edit | B: Back\n  [Other] Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+    '\n  [Nav] Up/Down:1 | PgUp/Dn:10 | Ctrl+Up/Dn:5 | Home/End\n  [MVP] Enter/D: Toggle | C: Cancel | E: Edit | B: Back\n  [File] F: Export | I: Import | L: Save | R: Load\n  [Sync] W: Sync to FB | Y: Sync from FB\n  [Other] Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
   term.bold.cyan(
@@ -688,6 +738,140 @@ term.on('key', function (keyName, matches, data) {
         (a.deathMap || a.mapname) === mvp.mapname
       );
     });
+    render();
+    return;
+  }
+
+  if (keyName === 'f' || keyName === 'F') {
+    term.grabInput(false);
+    console.log('\nExport to file (e.g., mvp-backup.json): ');
+    let rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question('', function (filename) {
+      rl.close();
+      term.grabInput(true);
+      let fs = require('fs');
+      let exportData = {
+        version: 1,
+        server: currentServer,
+        activeMvps: activeMvps,
+        exportTime: Date.now(),
+      };
+      let filePath = path.join(__dirname, '..', filename || 'mvp-export.json');
+      try {
+        fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2));
+        console.log('Exported to: ' + filePath);
+      } catch (err) {
+        console.log('Export failed: ' + err.message);
+      }
+      render();
+    });
+    return;
+  }
+
+  if (keyName === 'i' || keyName === 'I') {
+    term.grabInput(false);
+    console.log('\nImport from file (e.g., mvp-export.json): ');
+    let rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question('', function (filename) {
+      rl.close();
+      term.grabInput(true);
+      let fs = require('fs');
+      let filePath = path.join(__dirname, '..', filename || 'mvp-export.json');
+      try {
+        let data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        if (data.activeMvps) {
+          activeMvps = data.activeMvps;
+          console.log('Imported ' + activeMvps.length + ' MVPs');
+        }
+      } catch (err) {
+        console.log('Import failed: ' + err.message);
+      }
+      render();
+    });
+    return;
+  }
+
+  if (keyName === 'l' || keyName === 'L') {
+    let fs = require('fs');
+    let savePath = path.join(__dirname, '..', 'data', 'mvp-save.json');
+    let saveData = {
+      version: 1,
+      server: currentServer,
+      activeMvps: activeMvps,
+      saveTime: Date.now(),
+    };
+    try {
+      fs.writeFileSync(savePath, JSON.stringify(saveData, null, 2));
+      console.log('\nAuto-saved to: ' + savePath);
+    } catch (err) {
+      console.log('\nSave failed: ' + err.message);
+    }
+    render();
+    return;
+  }
+
+  if (keyName === 'r' || keyName === 'R') {
+    let fs = require('fs');
+    let loadPath = path.join(__dirname, '..', 'data', 'mvp-save.json');
+    try {
+      let data = JSON.parse(fs.readFileSync(loadPath, 'utf-8'));
+      if (data.activeMvps) {
+        activeMvps = data.activeMvps;
+        console.log('\nLoaded ' + activeMvps.length + ' MVPs from save');
+      }
+    } catch (err) {
+      console.log('\nLoad failed: ' + err.message);
+    }
+    render();
+    return;
+  }
+
+  if ((keyName === 'w' || keyName === 'W') && firebaseReady) {
+    const firebase = require('firebase/database');
+    let syncRef = firebase.ref(firebaseDb, 'mvps/' + currentServer);
+    firebase
+      .set(syncRef, {
+        server: currentServer,
+        activeMvps: activeMvps,
+        syncTime: Date.now(),
+      })
+      .then(function () {
+        console.log('\nSynced to Firebase!');
+      })
+      .catch(function (err) {
+        console.log('\nFirebase sync failed: ' + err.message);
+      });
+    render();
+    return;
+  }
+
+  if ((keyName === 'y' || keyName === 'Y') && firebaseReady) {
+    const firebase = require('firebase/database');
+    let syncRef = firebase.ref(firebaseDb, 'mvps/' + currentServer);
+    firebase
+      .get(syncRef)
+      .then(function (snapshot) {
+        if (snapshot.exists()) {
+          let data = snapshot.val();
+          if (data.activeMvps) {
+            activeMvps = data.activeMvps;
+            console.log(
+              '\nSynced from Firebase: ' + activeMvps.length + ' MVPs'
+            );
+          }
+        } else {
+          console.log('\nNo data on Firebase for ' + currentServer);
+        }
+      })
+      .catch(function (err) {
+        console.log('\nFirebase fetch failed: ' + err.message);
+      });
     render();
     return;
   }
