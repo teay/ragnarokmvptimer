@@ -233,7 +233,7 @@ function render() {
   );
 
   term.bold.cyan(
-    '#  Boss Name              Respawn     | Died At              | Map\n'
+    '#  Boss Name              Respawn      | Died At              | Map\n'
   );
   term.gray('-'.repeat(85) + '\n');
 
@@ -253,7 +253,7 @@ function render() {
       let line =
         '[A] ' +
         padCol(mvp.name.trim(), 24) +
-        ' ' +
+        '  ' +
         padCol(timeStr, 11) +
         '| ' +
         padCol(deathStr, 20) +
