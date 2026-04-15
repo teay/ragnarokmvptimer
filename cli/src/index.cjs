@@ -233,7 +233,7 @@ function render() {
   );
 
   term.bold.cyan(
-    '#  Boss Name              Respawn      | Died At              | Map\n'
+    ' #  Boss Name             Respawn      | Died At              | Map\n'
   );
   term.gray('-'.repeat(85) + '\n');
 
