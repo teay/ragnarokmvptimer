@@ -258,7 +258,7 @@ function render() {
   term.blue(' | ');
   term(modeLabel);
   term.cyan(
-    '\n  Nav: Up/Down | PgUp/Dn | Ctrl+Up/Dn | Home/End  |  Act: Enter/D: Toggle | C: Cancel | E: Edit | B: Back  |  Other: Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+    '\n  [Nav] Up/Down:1 | PgUp/Dn:10 | Ctrl+Up/Dn:5 | Home/End\n  [MVP] Enter/D: Toggle | C: Cancel | E: Edit | B: Back\n  [Other] Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
   term.bold.cyan(
