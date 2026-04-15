@@ -358,9 +358,6 @@ setInterval(function () {
 term.grabInput(true);
 
 term.on('key', function (keyName, matches, data) {
-    'Shift:',
-    data && data.shift
-  );
   if (keyName === 'q' || keyName === 'Q' || keyName === 'ESCAPE') {
     term.grabInput(false);
     term.processExit();
