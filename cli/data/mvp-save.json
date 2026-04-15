@@ -20,7 +20,7 @@
         "baseExperience": 218089,
         "jobExperience": 167053
       },
-      "deathTime": 1776283125649,
+      "deathTime": 1776286759552,
       "deathMap": "prt_maze03",
       "deathPosition": {
         "x": -1,
@@ -30,25 +30,25 @@
       "updatedBy": "CLI"
     },
     {
-      "id": 20419,
-      "name": "Rigid Muspellskoll",
-      "dbname": "MUSPELLSKOLL_H",
+      "id": 2483,
+      "name": "Baphomet (Nightmare)",
+      "dbname": "NG_BAPHOMET",
       "spawn": [
         {
-          "mapname": "mag_dun03",
+          "mapname": "gl_cas02_",
           "respawnTime": 7200000
         }
       ],
-      "mapname": "mag_dun03",
+      "mapname": "gl_cas02_",
       "respawnTime": 7200000,
       "stats": {
-        "level": 188,
-        "health": 48530254,
-        "baseExperience": 9706050,
-        "jobExperience": 6794235
+        "level": 154,
+        "health": 4008000,
+        "baseExperience": 1308534,
+        "jobExperience": 1102549
       },
-      "deathTime": 1776283051072,
-      "deathMap": "mag_dun03",
+      "deathTime": null,
+      "deathMap": "gl_cas02_",
       "deathPosition": {
         "x": -1,
         "y": -1
@@ -57,25 +57,52 @@
       "updatedBy": "CLI"
     },
     {
-      "id": 1112,
-      "name": "Drake",
-      "dbname": "DRAKE",
+      "id": 1039,
+      "name": "Baphomet",
+      "dbname": "BAPHOMET",
       "spawn": [
         {
-          "mapname": "treasure02",
+          "mapname": "gld_dun03",
+          "respawnTime": 28800000
+        }
+      ],
+      "mapname": "gld_dun03",
+      "respawnTime": 28800000,
+      "stats": {
+        "level": 81,
+        "health": 668000,
+        "baseExperience": 218089,
+        "jobExperience": 167053
+      },
+      "deathTime": 1776286761746,
+      "deathMap": "gld_dun03",
+      "deathPosition": {
+        "x": -1,
+        "y": -1
+      },
+      "isPinned": true,
+      "updatedBy": "CLI"
+    },
+    {
+      "id": 20421,
+      "name": "Corrupted Spider Queen",
+      "dbname": "BRINARANEA_H",
+      "spawn": [
+        {
+          "mapname": "gl_cas01_",
           "respawnTime": 7200000
         }
       ],
-      "mapname": "treasure02",
+      "mapname": "gl_cas01_",
       "respawnTime": 7200000,
       "stats": {
-        "level": 91,
-        "health": 804500,
-        "baseExperience": 309096,
-        "jobExperience": 208980
+        "level": 195,
+        "health": 74623473,
+        "baseExperience": 14924695,
+        "jobExperience": 10447286
       },
-      "deathTime": 1776283047601,
-      "deathMap": "treasure02",
+      "deathTime": null,
+      "deathMap": "gl_cas01_",
       "deathPosition": {
         "x": -1,
         "y": -1
@@ -101,8 +128,35 @@
         "baseExperience": 2808000,
         "jobExperience": 1881000
       },
-      "deathTime": 1776282619117,
+      "deathTime": 1776286770549,
       "deathMap": "abyss_03",
+      "deathPosition": {
+        "x": -1,
+        "y": -1
+      },
+      "isPinned": true,
+      "updatedBy": "CLI"
+    },
+    {
+      "id": 1112,
+      "name": "Drake",
+      "dbname": "DRAKE",
+      "spawn": [
+        {
+          "mapname": "treasure02",
+          "respawnTime": 7200000
+        }
+      ],
+      "mapname": "treasure02",
+      "respawnTime": 7200000,
+      "stats": {
+        "level": 91,
+        "health": 804500,
+        "baseExperience": 309096,
+        "jobExperience": 208980
+      },
+      "deathTime": 1776286769969,
+      "deathMap": "treasure02",
       "deathPosition": {
         "x": -1,
         "y": -1
@@ -130,34 +184,40 @@
       },
       "deathTime": null,
       "deathMap": "xmas_fild01",
-      "deathPosition": null,
+      "deathPosition": {
+        "x": -1,
+        "y": -1
+      },
       "isPinned": true,
       "updatedBy": "CLI"
     },
     {
-      "id": 20421,
-      "name": "Corrupted Spider Queen",
-      "dbname": "BRINARANEA_H",
+      "id": 20419,
+      "name": "Rigid Muspellskoll",
+      "dbname": "MUSPELLSKOLL_H",
       "spawn": [
         {
-          "mapname": "gl_cas01_",
+          "mapname": "mag_dun03",
           "respawnTime": 7200000
         }
       ],
-      "mapname": "gl_cas01_",
+      "mapname": "mag_dun03",
       "respawnTime": 7200000,
       "stats": {
-        "level": 195,
-        "health": 74623473,
-        "baseExperience": 14924695,
-        "jobExperience": 10447286
+        "level": 188,
+        "health": 48530254,
+        "baseExperience": 9706050,
+        "jobExperience": 6794235
       },
-      "deathTime": null,
-      "deathMap": "gl_cas01_",
-      "deathPosition": null,
+      "deathTime": 1776286768388,
+      "deathMap": "mag_dun03",
+      "deathPosition": {
+        "x": -1,
+        "y": -1
+      },
       "isPinned": true,
       "updatedBy": "CLI"
     }
   ],
-  "saveTime": 1776283393533
+  "saveTime": 1776286996333
 }
