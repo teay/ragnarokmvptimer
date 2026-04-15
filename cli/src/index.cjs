@@ -297,14 +297,14 @@ function render() {
   term.blue(' | ');
   term(modeLabel);
   term.cyan(
-    '\n  [Nav] Up/Down:1 | PgUp/Dn:10 | Ctrl+Up/Dn:5 | Home/End\n  [MVP] Enter/D: Toggle | C: Cancel | E: Edit | B: Back\n  [File] F: Export | I: Import | L: Save | R: Load\n  [Sync] U: Upload FB | Y: Download FB\n  [Other] Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+    '\n  [Arrows/PgUp/Dn]Nav [Enter/D]Toggle [C]Cancel [E]Edit [B]Back [Space]Pause [S]Sort [F/I/L/R]File [Left/Right]Server [Q]Quit\n'
   );
 
   term.bold.cyan(
     '# Boss Name                 | Time      | Status        | DeathTime          | Map\n'
   );
   term.gray('-'.repeat(95) + '\n');
-  lineY = 5;
+  lineY = 3;
 
   let currentIdx = 0;
 
@@ -664,12 +664,9 @@ term.on('key', function (keyName, matches, data) {
     let existing = activeMvps.find(function (a) {
       return a && a.id === mvp.id && (a.deathMap || a.mapname) === mvp.mapname;
     });
-    if (existing && existing.deathTime) {
-      console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
-      console.log('Time (7.30 or 730) or Enter=now: ');
-    } else {
-      console.log('\nEnter death time (7.30 or 730) or Enter=now: ');
-    }
+    console.log(
+      '\nEdit time - type time + Enter, or just Enter for now, ESC does not work'
+    );
     let wasPaused = pauseMode;
     pauseMode = true;
     term.grabInput(false);
@@ -679,8 +676,13 @@ term.on('key', function (keyName, matches, data) {
     });
     rl.question('', function (ans) {
       rl.close();
-      pauseMode = wasPaused;
       term.grabInput(true);
+      pauseMode = wasPaused;
+      if (!ans || ans.trim() === '') {
+        console.log('\nCancelled - using current time');
+        render();
+        return;
+      }
       let newTime;
       let parsed = parseSmartTime(ans);
       if (parsed) {
@@ -730,6 +732,8 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'f' || keyName === 'F') {
+    let wasPaused = pauseMode;
+    pauseMode = true;
     term.grabInput(false);
     console.log('\nExport to file (e.g., mvp-backup.json): ');
     let rl = readline.createInterface({
@@ -739,6 +743,7 @@ term.on('key', function (keyName, matches, data) {
     rl.question('', function (filename) {
       rl.close();
       term.grabInput(true);
+      pauseMode = wasPaused;
       let fs = require('fs');
       let exportData = {
         version: 1,
@@ -759,6 +764,8 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'i' || keyName === 'I') {
+    let wasPaused = pauseMode;
+    pauseMode = true;
     term.grabInput(false);
     console.log('\nImport from file (e.g., mvp-export.json): ');
     let rl = readline.createInterface({
@@ -768,6 +775,7 @@ term.on('key', function (keyName, matches, data) {
     rl.question('', function (filename) {
       rl.close();
       term.grabInput(true);
+      pauseMode = wasPaused;
       let fs = require('fs');
       let filePath = path.join(__dirname, '..', filename || 'mvp-export.json');
       try {
@@ -785,6 +793,8 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'l' || keyName === 'L') {
+    let wasPaused = pauseMode;
+    pauseMode = true;
     let fs = require('fs');
     let savePath = path.join(__dirname, '..', 'data', 'mvp-save.json');
     let saveData = {
@@ -795,10 +805,30 @@ term.on('key', function (keyName, matches, data) {
     };
     try {
       fs.writeFileSync(savePath, JSON.stringify(saveData, null, 2));
-      console.log('\nAuto-saved to: ' + savePath);
+      console.log('\nSaved to: ' + savePath);
     } catch (err) {
       console.log('\nSave failed: ' + err.message);
     }
+    pauseMode = wasPaused;
+    render();
+    return;
+  }
+
+  if (keyName === 'r' || keyName === 'R') {
+    let wasPaused = pauseMode;
+    pauseMode = true;
+    let fs = require('fs');
+    let loadPath = path.join(__dirname, '..', 'data', 'mvp-save.json');
+    try {
+      let data = JSON.parse(fs.readFileSync(loadPath, 'utf-8'));
+      if (data.activeMvps) {
+        activeMvps = data.activeMvps;
+        console.log('\nLoaded ' + activeMvps.length + ' MVPs from save');
+      }
+    } catch (err) {
+      console.log('\nLoad failed: ' + err.message);
+    }
+    pauseMode = wasPaused;
     render();
     return;
   }
