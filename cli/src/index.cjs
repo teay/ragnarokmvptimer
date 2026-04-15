@@ -190,6 +190,14 @@ function getRespawnTime(mvp) {
   return mvp.deathTime + mvp.respawnTime - Date.now();
 }
 
+function getWindowTime(mvp) {
+  if (!mvp.deathTime || !mvp.respawnTime) return null;
+  let windowTime = mvp.window || 600000;
+  let minTime = mvp.deathTime + mvp.respawnTime;
+  let maxTime = minTime + windowTime;
+  return maxTime - Date.now();
+}
+
 function getMvpAtIndex(idx) {
   if (idx < active.length) return active[idx];
   if (idx < active.length + wait.length) return wait[idx - active.length];
@@ -237,7 +245,7 @@ function render() {
   );
 
   term.bold.cyan(
-    '# Boss Name               Respawn       | Died At              | Map\n'
+    '# Boss Name          Time        Status       | Died At              | Map\n'
   );
   term.gray('-'.repeat(85) + '\n');
   lineY = 5;
@@ -254,13 +262,29 @@ function render() {
       }
       if (currentIdx >= scrollOffset + termHeight - 10) return;
       let respawnTime = getRespawnTime(mvp);
-      let timeStr = respawnTime !== null ? formatTime(respawnTime) : 'READY!';
+      let windowTime = getWindowTime(mvp);
+      let timeStr;
+      let statusLabel;
+      if (respawnTime === null || respawnTime <= 0) {
+        if (windowTime === null || windowTime <= 0) {
+          timeStr = 'READY!';
+          statusLabel = 'Respawned';
+        } else {
+          timeStr = formatTime(windowTime);
+          statusLabel = 'Respawning';
+        }
+      } else {
+        timeStr = formatTime(respawnTime);
+        statusLabel = 'Respawn in';
+      }
       let deathStr = mvp.deathTime ? formatDeathTime(mvp.deathTime) : '';
       let line =
         '[A] ' +
-        padCol(mvp.name.trim(), 24) +
+        padCol(mvp.name.trim(), 20) +
         '  ' +
         padCol(timeStr, 12) +
+        ' ' +
+        padCol(statusLabel, 12) +
         '| ' +
         padCol(deathStr, 20) +
         '| ' +
