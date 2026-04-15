@@ -72,7 +72,6 @@ function loadMvpData(server) {
 let serverFile = SERVERS[currentServer];
 let originalAllMvps = loadMvpData(serverFile);
 let activeMvps = [];
-let pauseMode = true;
 
 function expandMvpsBySpawn(rawData) {
   let expanded = [];
@@ -108,6 +107,7 @@ let active = [],
   wait = [],
   pending = [];
 let selectedIndex = 0,
+  pauseMode = false,
   sortMode = 'name';
 let linePositions = [];
 
