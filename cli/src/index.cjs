@@ -267,7 +267,10 @@ function render() {
       let statusLabel;
       if (respawnTime === null || respawnTime <= 0) {
         if (windowTime === null || windowTime <= 0) {
-          timeStr = 'READY!';
+          timeStr = formatTime(
+            Date.now() -
+              (mvp.deathTime + mvp.respawnTime + (mvp.window || 600000))
+          );
           statusLabel = 'Already Respawned';
         } else {
           timeStr = formatTime(windowTime);
