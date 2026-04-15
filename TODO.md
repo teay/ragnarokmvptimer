@@ -1,32 +1,49 @@
 # TODO - Ragnarok MVP Timer
 
-## Features
+## Status Overview 📊
 
-### High Priority
+### Done ✅ (Completed Tasks)
 
-- [ ] **Fallback/Offline Mode** - สำรองข้อมูลเวลา Firebase ล่ม (ใช้ localStorage)
-- [ ] **Firebase Analytics** - ติดตามว่าใครใช้งาน, ดู statistics
+**Core & Web App:**
+- [x] Cloud-first data flow (Firebase is primary source of truth)
+- [x] Solo/Party mode implementation
+- [x] Firebase path structure: `hunting/solo/` and `hunting/party/`
+- [x] Removed legacy backup system
+- [x] Fixed MVP Sorting Logic (Soonest respawn always first)
+- [x] Improved `rehydrateMvps` to support CLI-to-Web data consistency
+- [x] Interactive Modal for killing and editing MVPs
+- [x] Export/Import JSON functionality
+- [x] Party members display (Web version)
 
-### Medium Priority
+**CLI Version (Terminal UI):**
+- [x] Correct Firebase hostname parsing (support region-specific URLs)
+- [x] Real-time data synchronization via Firebase SDK (`onValue`)
+- [x] Auto-save to Firebase on every update (Toggling, Killing, Editing)
+- [x] Smart Merge: Preserve web metadata (coordinates, etc.) during CLI updates
+- [x] Support for Multi-spawn MVPs (Shown as separate entries)
+- [x] Interactive Startup Wizard (Ask for Name/Party if missing)
+- [x] CLI Header showing current Sync Mode (Solo/Party)
+- [x] Enforced Nickname requirement for Party mode
+- [x] Fix: Use `null` for deathPosition when killing from CLI
 
-- [ ] **Import data จาก Party → Solo** - Copy MVP data ข้าม mode
+### Doing 🚧 (In Progress / Need Decision)
 
-## Ideas
+- [ ] **Security Refactoring:** Moving away from hardcoded API keys in CLI and implementing Firebase Rules.
+- [ ] **Deployment Strategy:** Setting up a reliable way to deploy the web version (fixing `npm install` dependency conflicts).
+- [ ] **CLI Standalone:** Preparing the CLI for distribution (e.g., `.exe` packaging).
 
-- [ ] Notification หลายเครื่อง - ถ้าฆ่าบอสใน party ให้แจ้งทุกเครื่อง
-- [ ] ปรับปรุง UI/UX
+### TODO 📋 (Future Ideas)
 
-## Completed ✅
+**High Priority:**
+- [ ] **Offline Mode:** Fallback to localStorage (Web) or local JSON (CLI) when Firebase is down.
+- [ ] **CLI Party Members:** Show online members in the CLI header.
+- [ ] **Notification System:** Global notifications across devices when an MVP is killed.
 
-- [x] Cloud-first data flow (Firebase เป็น source of truth)
-- [x] Solo/Party mode
-- [x] Firebase path: hunting/solo/ และ hunting/party/
-- [x] ลบ backup system
-- [x] ลบ CI/CD ที่ไม่ใช้
-- [x] Firebase rules อัปเดต
-- [x] Export/Import JSON buttons
-- [x] Remember nickname/party checkbox
-- [x] ลบปุ่มสุ่มชื่อ
-- [x] Party members display (show online members)
-- [x] Auto-join party members
-- [x] Export มีชื่อบอสด้วย
+**Medium Priority:**
+- [ ] **Import Party → Solo:** Ability to copy a specific server's timer data from Party to personal Solo mode.
+- [ ] **Firebase Analytics:** Track usage statistics.
+- [ ] **Custom Sounds:** Allow users to upload their own notification sounds.
+
+---
+
+*Last Updated: April 16, 2026*
