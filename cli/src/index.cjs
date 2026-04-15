@@ -272,6 +272,9 @@ function render() {
   let totalItems = active.length + wait.length + pending.length;
 
   let scrollOffset = 0;
+  if (totalItems > 15) {
+    scrollOffset = Math.floor(selectedIndex / 15) * 15;
+  }
 
   linePositions = [];
   let lineY = 1;
@@ -296,12 +299,9 @@ function render() {
     ' | All:' + (active.length + wait.length + pending.length) + ' MVPs\n'
   );
   term.green(
-    '  [Arrows/PgUp/Dn]Nav  [Enter/D]Toggle  [C]Cancel  [E]Edit  [B]Back\n'
+    '  [Arrows/PgUp/Dn]Nav [Enter/D]Toggle [C]Cancel [E]Edit [B]Back [Space]Pause [S]Sort [F/I/L/R]File [Left/Right]Server [Q]Quit\n'
   );
-  term.green(
-    '  [Space]Pause  [S]Sort  [F/I/L/R]File  [Left/Right]Server  [Q]Quit\n'
-  );
-  lineY = 4;
+  lineY = 3;
 
   term.bold.white(
     '# Boss Name                 | Time      | Status        | DeathTime          | Map\n'
@@ -404,14 +404,15 @@ function render() {
       term.gray('-'.repeat(termWidth) + '\n');
       lineY++;
     }
-    term.bold.cyan('=== SELECT TO KILL ===\n');
+    term.bold.cyan('=== SELECT TO KILL === (' + pending.length + ' items)\n');
     lineY++;
+    let pendingStartIdx = active.length + wait.length;
     pending.forEach(function (mvp) {
       if (currentIdx < scrollOffset) {
         currentIdx++;
         return;
       }
-      if (currentIdx >= scrollOffset + termHeight - 10) return;
+      if (currentIdx >= scrollOffset + 15) return;
       let line =
         '[ ] ' +
         getWidthPad(mvp.name.trim(), 24) +
@@ -559,19 +560,20 @@ term.on('key', function (keyName, matches, data) {
   }
 
   if (keyName === 'PAGE_DOWN' || keyName === 'page down') {
-    selectedIndex = Math.min(total - 1, selectedIndex + 10);
+    console.error('DEBUG: PageDown pressed');
+    selectedIndex = Math.min(total - 1, selectedIndex + 15);
     render();
     return;
   }
 
   if (keyName === 'CTRL_UP' || keyName === 'ctrl up') {
-    selectedIndex = Math.max(0, selectedIndex - 5);
+    selectedIndex = Math.max(0, selectedIndex - 15);
     render();
     return;
   }
 
   if (keyName === 'CTRL_DOWN' || keyName === 'ctrl down') {
-    selectedIndex = Math.min(total - 1, selectedIndex + 5);
+    selectedIndex = Math.min(total - 1, selectedIndex + 15);
     render();
     return;
   }
