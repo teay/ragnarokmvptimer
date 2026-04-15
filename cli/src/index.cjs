@@ -187,9 +187,7 @@ function formatDeathTime(timestamp) {
 
 function getRespawnTime(mvp) {
   if (!mvp.deathTime || !mvp.respawnTime) return null;
-  let windowTime = mvp.window || 600000;
-  let maxRespawn = mvp.deathTime + mvp.respawnTime + windowTime - Date.now();
-  return maxRespawn;
+  return mvp.deathTime + mvp.respawnTime - Date.now();
 }
 
 function getMvpAtIndex(idx) {
