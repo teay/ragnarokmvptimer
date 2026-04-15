@@ -14,31 +14,45 @@ let firebaseConfig = {};
 let cliNickname = 'CLI';
 let partyRoom = ''; // Add partyRoom support
 
+// --- FOR FRIENDS: You can hardcode your config here to make it zero-config ---
+const HARDCODED_CONFIG = {
+  // apiKey: "YOUR_API_KEY",
+  // databaseURL: "YOUR_DATABASE_URL",
+  // projectId: "YOUR_PROJECT_ID",
+  // ... and so on
+};
+
 async function initFirebase() {
-  // 1. Parse .env first
+  // 1. Try to Parse .env first
   let envPath = path.join(__dirname, '..', '..', '.env');
   let envContent = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';
   let config = {};
-  envContent.split('\n').forEach(function (line) {
-    let parts = line.split('=');
-    if (parts.length >= 2) {
-      let rawKey = parts[0].trim();
-      let key = rawKey
-        .replace('VITE_', '')
-        .replace('FIREBASE_', '')
-        .toLowerCase();
-      let value = parts.slice(1).join('=').trim();
-      if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
-      if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
-      
-      if (value && !value.startsWith('YOUR_')) {
-        config[key] = value;
+  
+  // Apply hardcoded config as baseline
+  Object.assign(config, HARDCODED_CONFIG);
+  
+  if (envContent) {
+    envContent.split('\n').forEach(function (line) {
+      let parts = line.split('=');
+      if (parts.length >= 2) {
+        let rawKey = parts[0].trim();
+        let key = rawKey
+          .replace('VITE_', '')
+          .replace('FIREBASE_', '')
+          .toLowerCase();
+        let value = parts.slice(1).join('=').trim();
+        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+        if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+        
+        if (value && !value.startsWith('YOUR_')) {
+          config[key] = value;
+        }
+        if (rawKey === 'VITE_NICKNAME' || rawKey === 'CLI_NICKNAME') {
+          cliNickname = value;
+        }
       }
-      if (rawKey === 'VITE_NICKNAME' || rawKey === 'CLI_NICKNAME') {
-        cliNickname = value;
-      }
-    }
-  });
+    });
+  }
 
   // 2. Override with Command Line Arguments
   const args = process.argv.slice(2);
