@@ -258,7 +258,7 @@ function render() {
   term.blue(' | ');
   term(modeLabel);
   term.blue(
-    ' | Up/Down:1 PgUp/Dn:10 Ctrl+Up/Dn:5 Home/End | Enter: Toggle | E: Edit Time | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+    ' | Up/Down:1 PgUp/Dn:10 Ctrl+Up/Dn:5 Home/End | Enter: Toggle | E: Edit Time | B: Back to Wait | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
   term.bold.cyan(
@@ -604,6 +604,20 @@ term.on('key', function (keyName, matches, data) {
       );
     });
     render();
+    return;
+  }
+
+  if (keyName === 'b' || keyName === 'B') {
+    let mvp = getMvpAtIndex(selectedIndex);
+    if (!mvp) return;
+    let existing = activeMvps.find(function (a) {
+      return a && a.id === mvp.id && (a.deathMap || a.mapname) === mvp.mapname;
+    });
+    if (existing && existing.deathTime) {
+      existing.deathTime = null;
+      existing.isPinned = true;
+      render();
+    }
     return;
   }
 
