@@ -14,7 +14,7 @@ let firebaseConfig = {};
 let cliNickname = 'CLI';
 let partyRoom = ''; // Add partyRoom support
 
-function initFirebase() {
+async function initFirebase() {
   // 1. Parse .env first
   let envPath = path.join(__dirname, '..', '..', '.env');
   let envContent = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';
@@ -41,7 +41,6 @@ function initFirebase() {
   });
 
   // 2. Override with Command Line Arguments
-  // Usage: node src/index.cjs --name MyName --party MyParty
   const args = process.argv.slice(2);
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--name' && args[i+1]) {
@@ -53,11 +52,28 @@ function initFirebase() {
     }
   }
 
-  // 3. Validation
+  // 3. Interactive Wizard if missing (for friends)
+  if (!partyRoom || cliNickname === 'CLI') {
+    const rl = require('readline').createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
+
+    console.log('\n--- Ragnarok MVP Timer Setup ---');
+    if (cliNickname === 'CLI') {
+      cliNickname = await ask('Enter your Nickname: ') || 'CLI';
+    }
+    if (!partyRoom) {
+      partyRoom = await ask('Enter Party Room ID (leave empty for Solo): ');
+    }
+    rl.close();
+    console.log('--------------------------------\n');
+  }
+
   if (partyRoom && (!cliNickname || cliNickname === 'CLI')) {
-    console.error('\nError: Nickname is REQUIRED for Party Mode.');
-    console.log('Please set VITE_NICKNAME in .env or use --name argument.');
-    console.log('Example: node src/index.cjs --party ' + partyRoom + ' --name MyName\n');
+    console.error('\nError: Nickname is REQUIRED for Party Mode.\n');
     process.exit(1);
   }
 
@@ -90,8 +106,9 @@ function initFirebase() {
     try {
       firebaseApp = initializeApp(fbConfig);
       firebaseDb = getDatabase(firebaseApp);
-      console.log('Firebase SDK Initialized (' + modeInfo + ')');
       setupRealtimeSync();
+      // Initial render after setup
+      render();
     } catch (e) {
       console.log('Firebase SDK Init Error: ' + e.message);
     }
