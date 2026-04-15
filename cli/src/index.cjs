@@ -229,7 +229,7 @@ function render() {
   term.blue(' | ');
   term(modeLabel);
   term.blue(
-    ' | Up/Down:1 PgUp/Dn:10 Ctrl+Up/Dn:5 Home/End | Enter: Toggle | E: Edit Time | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+    ' | Up/Down:1 PgUp/Dn:10 Ctrl+Up/Dn:5 Home/End | Enter: Toggle | Alt+E: Edit Time | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
   term.bold.cyan(
@@ -358,6 +358,9 @@ setInterval(function () {
 term.grabInput(true);
 
 term.on('key', function (keyName, matches, data) {
+    'Shift:',
+    data && data.shift
+  );
   if (keyName === 'q' || keyName === 'Q' || keyName === 'ESCAPE') {
     term.grabInput(false);
     term.processExit();
@@ -523,7 +526,7 @@ term.on('key', function (keyName, matches, data) {
     return;
   }
 
-  if (keyName === 'e' || keyName === 'E') {
+  if (keyName === 'e' || keyName === 'E' || keyName === 'ALT_E') {
     let mvp = getMvpAtIndex(selectedIndex);
     if (!mvp) return;
     let existing = activeMvps.find(function (a) {
