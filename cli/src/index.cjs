@@ -506,7 +506,7 @@ term.on('key', function (keyName, matches, data) {
     currentServerIndex =
       (currentServerIndex - 1 + serverKeys.length) % serverKeys.length;
     currentServer = serverKeys[currentServerIndex];
-    let serverFile = SERVERS[currentServer];
+    serverFile = SERVERS[currentServer];
     originalAllMvps = loadMvpData(serverFile);
     selectedIndex = 0;
     render();
@@ -516,7 +516,7 @@ term.on('key', function (keyName, matches, data) {
   if (keyName === 'RIGHT') {
     currentServerIndex = (currentServerIndex + 1) % serverKeys.length;
     currentServer = serverKeys[currentServerIndex];
-    let serverFile = SERVERS[currentServer];
+    serverFile = SERVERS[currentServer];
     originalAllMvps = loadMvpData(serverFile);
     selectedIndex = 0;
     render();
