@@ -145,6 +145,23 @@ function padCol(str, len) {
   return str + ' '.repeat(len - w);
 }
 
+function getWidthPad(str, maxWidth) {
+  if (!str) return ' '.repeat(maxWidth);
+  let w = getWidth(str);
+  if (w > maxWidth) {
+    let result = '';
+    let currentWidth = 0;
+    for (let i = 0; i < str.length && currentWidth < maxWidth; i++) {
+      let charWidth = getWidth(str[i]);
+      if (currentWidth + charWidth > maxWidth) break;
+      result += str[i];
+      currentWidth += charWidth;
+    }
+    return result + ' '.repeat(maxWidth - currentWidth);
+  }
+  return str + ' '.repeat(maxWidth - w);
+}
+
 function parseSmartTime(input) {
   if (!input) return null;
 
@@ -245,7 +262,7 @@ function render() {
   );
 
   term.bold.cyan(
-    '# Boss Name          Time        Status       | Died At              | Map\n'
+    '# Boss Name          Time      Status        | Died At              | Map\n'
   );
   term.gray('-'.repeat(85) + '\n');
   lineY = 5;
@@ -285,9 +302,8 @@ function render() {
       let deathStr = mvp.deathTime ? formatDeathTime(mvp.deathTime) : '';
       let line =
         '[A] ' +
-        padCol(mvp.name.trim(), 20) +
-        '  ' +
-        padCol(timeStr, 12) +
+        getWidthPad(mvp.name.trim(), 18) +
+        padCol(timeStr, 11) +
         ' ' +
         padCol(statusLabel, 12) +
         '| ' +
@@ -318,8 +334,9 @@ function render() {
       if (currentIdx >= scrollOffset + termHeight - 10) return;
       let line =
         '[W] ' +
-        padCol(mvp.name.trim(), 24) +
-        '  ' +
+        getWidthPad(mvp.name.trim(), 18) +
+        padCol('', 11) +
+        ' ' +
         padCol('Wait kill', 12) +
         '| ' +
         padCol('', 20) +
@@ -348,8 +365,9 @@ function render() {
       if (currentIdx >= scrollOffset + termHeight - 10) return;
       let line =
         '[ ] ' +
-        padCol(mvp.name.trim(), 24) +
-        '  ' +
+        getWidthPad(mvp.name.trim(), 18) +
+        padCol('', 11) +
+        ' ' +
         padCol('Select', 12) +
         '| ' +
         padCol('', 20) +
