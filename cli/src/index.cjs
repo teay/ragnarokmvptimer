@@ -107,7 +107,7 @@ let active = [],
   wait = [],
   pending = [];
 let selectedIndex = 0,
-  pauseMode = false,
+  pauseMode = true,
   sortMode = 'name';
 let linePositions = [];
 
