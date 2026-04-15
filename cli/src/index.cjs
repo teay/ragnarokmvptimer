@@ -186,9 +186,10 @@ function formatDeathTime(timestamp) {
 }
 
 function getRespawnTime(mvp) {
-  return mvp.deathTime && mvp.respawnTime
-    ? mvp.deathTime + mvp.respawnTime - Date.now()
-    : null;
+  if (!mvp.deathTime || !mvp.respawnTime) return null;
+  let windowTime = mvp.window || 600000;
+  let maxRespawn = mvp.deathTime + mvp.respawnTime + windowTime - Date.now();
+  return maxRespawn;
 }
 
 function getMvpAtIndex(idx) {
@@ -492,13 +493,19 @@ term.on('key', function (keyName, matches, data) {
         existing.deathTime = Date.now();
         existing.isPinned = true;
       } else {
+        let spawnInfo =
+          mvp.spawn &&
+          mvp.spawn.find(function (s) {
+            return s.mapname === mvp.mapname;
+          });
         activeMvps.push({
           id: mvp.id,
           name: mvp.name,
           dbname: mvp.dbname,
           spawn: mvp.spawn,
           mapname: mvp.mapname,
-          respawnTime: mvp.respawnTime,
+          respawnTime: spawnInfo ? spawnInfo.respawnTime : mvp.respawnTime,
+          window: spawnInfo ? spawnInfo.window : 600000,
           stats: mvp.stats,
           isPinned: true,
           deathTime: Date.now(),
