@@ -251,14 +251,14 @@ function render() {
     ' P:' +
     pending.length +
     ')';
-  term.bold.blue(' [');
+  term.bold.cyan(' [');
   term(currentServer);
   term.blue('] MVP Timer | ');
   term(pauseMode ? '{red}PAUSED{/red}' : '{green}RUNNING{/green}');
   term.blue(' | ');
   term(modeLabel);
-  term.blue(
-    ' | Up/Down:1 PgUp/Dn:10 Ctrl+Up/Dn:5 Home/End | Enter: Toggle | E: Edit Time | B: Back to Wait | Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
+  term.cyan(
+    '\n  Nav: Up/Down | PgUp/Dn | Ctrl+Up/Dn | Home/End  |  Act: Enter/D: Toggle | C: Cancel | E: Edit | B: Back  |  Other: Space: Pause | S: Sort | Left/Right: Server | Q: Quit\n'
   );
 
   term.bold.cyan(
@@ -270,7 +270,7 @@ function render() {
   let currentIdx = 0;
 
   if (active.length > 0) {
-    term.bold.blue('=== ACTIVE (Respawning) ===\n');
+    term.bold.cyan('=== ACTIVE (Respawning) ===\n');
     lineY++;
     active.forEach(function (mvp) {
       if (currentIdx < scrollOffset) {
@@ -325,7 +325,7 @@ function render() {
   if (wait.length > 0) {
     if (active.length > 0) term('\n');
     lineY++;
-    term.bold.blue('=== WAIT FOR KILL ===\n');
+    term.bold.cyan('=== WAIT FOR KILL ===\n');
     lineY++;
     wait.forEach(function (mvp) {
       if (currentIdx < scrollOffset) {
@@ -357,7 +357,7 @@ function render() {
   if (pending.length > 0) {
     if (active.length + wait.length > 0) term('\n');
     lineY++;
-    term.bold.blue('=== SELECT TO KILL ===\n');
+    term.bold.cyan('=== SELECT TO KILL ===\n');
     lineY++;
     pending.forEach(function (mvp) {
       if (currentIdx < scrollOffset) {
