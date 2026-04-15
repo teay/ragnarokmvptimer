@@ -152,7 +152,7 @@ function parseSmartTime(input) {
 
   input = input.trim();
 
-  let timeOnly = input.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?$/);
+  let timeOnly = input.match(/^(\d{1,2})[.:](\d{2})$/);
   if (timeOnly) {
     let h = parseInt(timeOnly[1]);
     let m = parseInt(timeOnly[2]);
@@ -549,9 +549,7 @@ term.on('key', function (keyName, matches, data) {
     });
     if (!existing || !existing.deathTime) return;
     console.log('\nCurrent: ' + formatDeathTime(existing.deathTime));
-    console.log(
-      'Examples: 23:00 | 2026-04-15 | 2026-04-15 07:30 | Enter=now: '
-    );
+    console.log('Examples: 7.30 | 23.00 | 2026-04-15 | Enter=now: ');
     term.grabInput(false);
     process.stdin.once('data', function (data) {
       let input = data.toString();
