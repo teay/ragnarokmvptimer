@@ -6,6 +6,7 @@
 #include <time.h>
 #include "mvp.h"
 
+// เรียงลำดับ
 int compare_mvps(const void *a, const void *b) {
     MVP *mvpA = (MVP *)a;
     MVP *mvpB = (MVP *)b;
@@ -70,7 +71,6 @@ int main(int argc, char *argv[]) {
         else if (selected >= offset + max_display) offset = selected - max_display + 1;
 
         erase();
-        // Header พร้อม Tab
         mvprintw(0, 0, "=== MVP TRACKER [%s] ===", server);
         char *zone_names[] = {"ALL", "WAIT", "ACTIVE"};
         for(int i=0; i<3; i++) {
@@ -92,12 +92,14 @@ int main(int argc, char *argv[]) {
                 mvprintw(i + 3, 50, "| Status: ALIVE");
             else {
                 long remain = (m.death_time + m.respawn_time) - time(NULL);
-                if (remain <= 0) mvprintw(i + 3, 50, "| Status: READY!");
-                else mvprintw(i + 3, 50, "| Respawn: %02ld:%02ld:%02ld", remain/3600, (remain%3600)/60, remain%60);
+                if (remain <= 0) 
+                    mvprintw(i + 3, 50, "| Status: READY!");
+                else 
+                    mvprintw(i + 3, 50, "| Respawn: %02ld:%02ld:%02ld", remain/3600, (remain%3600)/60, remain%60);
             }
             if (i + offset == selected) attroff(A_REVERSE);
         }
-        mvprintw(LINES - 1, 0, "Move: Arrows/PgUp,Dn/Home,End | Kill: k | Quit: q");
+        mvprintw(LINES - 1, 0, "Arr/Pg/Home/End:Move | k:Kill/Cycle | q:Quit");
         refresh();
     }
     endwin();
