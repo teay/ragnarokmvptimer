@@ -6,22 +6,15 @@
 #include <time.h>
 #include "mvp.h"
 
-// เรียงลำดับเหมือน Web App
 int compare_mvps(const void *a, const void *b) {
     MVP *mvpA = (MVP *)a;
     MVP *mvpB = (MVP *)b;
-    
-    // 1. เรียงตาม Zone
     if (mvpA->zone != mvpB->zone) return mvpA->zone - mvpB->zone;
-    
-    // 2. ถ้าเป็น ACTIVE เรียงตามเวลาเกิด
     if (mvpA->zone == ZONE_ACTIVE) {
         long timeA = mvpA->death_time + mvpA->respawn_time;
         long timeB = mvpB->death_time + mvpB->respawn_time;
         return (int)(timeA - timeB);
     }
-    
-    // 3. ถ้าเป็น ALL หรือ WAIT เรียงตามชื่อ (A-Z)
     return strcmp(mvpA->name, mvpB->name);
 }
 
@@ -51,7 +44,7 @@ int main(int argc, char *argv[]) {
     int offset = 0, selected = 0, ch;
     
     while((ch = getch()) != 'q') {
-        int max_display = LINES - 4;
+        int max_display = LINES - 5;
         
         if (ch == KEY_LEFT || ch == KEY_RIGHT) {
             current_zone = (ch == KEY_LEFT) ? (current_zone == 0 ? 2 : current_zone - 1) : (current_zone + 1) % 3;
@@ -77,31 +70,34 @@ int main(int argc, char *argv[]) {
         else if (selected >= offset + max_display) offset = selected - max_display + 1;
 
         erase();
+        // Header พร้อม Tab
+        mvprintw(0, 0, "=== MVP TRACKER [%s] ===", server);
         char *zone_names[] = {"ALL", "WAIT", "ACTIVE"};
-        mvprintw(0, 0, "=== MVP TRACKER [%s] | Zone: %s | Move: Arr/PgUp,Dn/Home,End | Kill: k | Quit: q ===", server, zone_names[current_zone]);
-        mvprintw(1, 2, "%-20s | %-15s | %s", "Name", "Map", "Status/Respawn");
+        for(int i=0; i<3; i++) {
+            if(i == current_zone) attron(A_REVERSE);
+            mvprintw(1, 2 + (i*12), " %s ", zone_names[i]);
+            attroff(A_REVERSE);
+        }
+        mvprintw(2, 2, "%-20s | %-15s | Status/Respawn", "Name", "Map");
         
         for(int i = 0; i < max_display && (i + offset) < filtered_count; i++) {
             int idx = filtered[i + offset];
             if (i + offset == selected) attron(A_REVERSE);
             
             MVP m = mvp_list[idx];
-            // ระบุพิกัด X ตายตัวเพื่อแก้ปัญหาภาษาไทย/เกาหลี
             mvprintw(i + 3, 2, "%s", m.name);
-            mvprintw(i + 3, 30, "| Map: %s", m.map_name);
+            mvprintw(i + 3, 30, "| %s", m.map_name);
             
-            if (m.death_time == 0) {
+            if (m.death_time == 0) 
                 mvprintw(i + 3, 50, "| Status: ALIVE");
-            } else {
+            else {
                 long remain = (m.death_time + m.respawn_time) - time(NULL);
-                if (remain <= 0) 
-                    mvprintw(i + 3, 50, "| Status: READY!");
-                else 
-                    mvprintw(i + 3, 50, "| Respawn: %02ld:%02ld:%02ld", remain/3600, (remain%3600)/60, remain%60);
+                if (remain <= 0) mvprintw(i + 3, 50, "| Status: READY!");
+                else mvprintw(i + 3, 50, "| Respawn: %02ld:%02ld:%02ld", remain/3600, (remain%3600)/60, remain%60);
             }
-            
             if (i + offset == selected) attroff(A_REVERSE);
         }
+        mvprintw(LINES - 1, 0, "Move: Arrows/PgUp,Dn/Home,End | Kill: k | Quit: q");
         refresh();
     }
     endwin();
