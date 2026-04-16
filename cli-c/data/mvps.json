@@ -1,0 +1,6 @@
+{
+  "mvps": [
+    {"id": 1001, "name": "Baphomet", "respawn_time": 7200, "map_name": "gef_dun02"},
+    {"id": 1002, "name": "Maya", "respawn_time": 5400, "map_name": "pr_fild01"}
+  ]
+}

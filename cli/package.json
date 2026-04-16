@@ -9,7 +9,9 @@
   "dependencies": {
     "blessed": "^0.1.81",
     "dayjs": "^1.11.20",
-    "firebase": "^12.10.0",
+    "firebase": "^12.10.0"
+  },
+  "devDependencies": {
     "terminal-kit": "^3.1.2"
   }
 }
