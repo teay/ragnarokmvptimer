@@ -16,7 +16,7 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
-    "@chenglou/pretext": "^0.0.4",
+    "@chenglou/pretext": "^0.0.5",
     "@linaria/core": "^6.1.0",
     "@linaria/react": "^6.1.0",
     "@styled-icons/feather": "^10.34.0",
@@ -34,7 +34,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/body-scroll-lock": "^3.1.0",
-    "@types/node": "^18.19.130",
+    "@types/node": "^20.11.33",
     "@types/react": "^18.0.5",
     "@types/react-dom": "^18.0.1",
     "@types/styled-components": "^5.1.36",
@@ -56,7 +56,6 @@
     "typescript": "^4.6.3",
     "vite": "^6.2.2",
     "vite-imagetools": "^5.0.9",
-    "vite-plugin-pwa": "^0.21.1",
     "vitest": "^4.1.2"
   },
   "engines": {
