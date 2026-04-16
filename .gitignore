@@ -33,3 +33,7 @@ yarn-error.log*
 
 # Misc
 vite
+
+# CLI-C Build artifacts
+cli-c/mvp_tui
+cli-c/src/*.o
