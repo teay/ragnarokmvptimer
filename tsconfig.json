@@ -4,7 +4,7 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",
     "skipLibCheck": true,
-    "types": ["vite/client", "vite-plugin-pwa/client"],
+    "types": ["vite/client"],
     "baseUrl": "./",
     "paths": {
       "@/*": ["./src/*"]
@@ -13,7 +13,7 @@
     "resolveJsonModule": true,
     "isolatedModules": false,
     "noEmit": true,
-    "jsx": "react-jsx",
+    "jsx": "reactjsx",
 
     "strict": false,
     "noFallthroughCasesInSwitch": true,
