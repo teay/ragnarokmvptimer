@@ -1,74 +1,70 @@
-{
-  "server": "thROG",
-  "updatedAt": "2026-04-17T21:38:28.888Z",
-  "activeMvps": [
-    {
-      "id": 20419,
-      "name": "Rigid Muspellskoll",
-      "deathTime": 1776456540,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "mag_dun03",
-          "respawnTime": 7200000
-        }
-      ],
-      "deathPosition": null
-    },
-    {
-      "id": 1112,
-      "name": "Drake",
-      "deathTime": 1776456600,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "treasure02",
-          "respawnTime": 7200000
-        }
-      ],
-      "deathPosition": null
-    },
-    {
-      "id": 1039,
-      "name": "Baphomet",
-      "deathTime": 1776458640,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "prt_maze03",
-          "respawnTime": 7200000
-        }
-      ],
-      "deathPosition": null
-    },
-    {
-      "id": 1252,
-      "name": "Hatii",
-      "deathTime": 1776460980,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "xmas_fild01",
-          "respawnTime": 7200000
-        }
-      ],
-      "deathPosition": null
-    },
-    {
-      "id": 1719,
-      "name": "Detardeurus",
-      "deathTime": 1776457920,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "abyss_03",
-          "respawnTime": 10800000
-        }
-      ],
-      "deathPosition": {
-        "x": 50,
-        "y": 180
-      }
-    }
-  ]
-}
+[{
+		"id":	20419,
+		"name":	"Rigid Muspellskoll",
+		"deathTime":	1776456540,
+		"zone":	2,
+		"deathPosition":	null,
+		"spawn":	[{
+				"mapname":	"mag_dun03",
+				"respawnTime":	7200000
+			}]
+	}, {
+		"id":	1112,
+		"name":	"Drake",
+		"deathTime":	1776456600,
+		"zone":	2,
+		"deathPosition":	null,
+		"spawn":	[{
+				"mapname":	"treasure02",
+				"respawnTime":	7200000
+			}]
+	}, {
+		"id":	1039,
+		"name":	"Baphomet",
+		"deathTime":	1776458640,
+		"zone":	2,
+		"deathPosition":	null,
+		"spawn":	[{
+				"mapname":	"prt_maze03",
+				"respawnTime":	7200000
+			}]
+	}, {
+		"id":	1252,
+		"name":	"Hatii",
+		"deathTime":	1776460980,
+		"zone":	2,
+		"deathPosition":	{
+			"x":	72,
+			"y":	59
+		},
+		"spawn":	[{
+				"mapname":	"xmas_fild01",
+				"respawnTime":	7200000
+			}]
+	}, {
+		"id":	1719,
+		"name":	"Detardeurus",
+		"deathTime":	1776457920,
+		"zone":	2,
+		"deathPosition":	{
+			"x":	50,
+			"y":	180
+		},
+		"spawn":	[{
+				"mapname":	"abyss_03",
+				"respawnTime":	10800000
+			}]
+	}, {
+		"id":	21563,
+		"name":	"화염의 디타르데우르스",
+		"deathTime":	1776463106,
+		"zone":	2,
+		"deathPosition":	{
+			"x":	125,
+			"y":	125
+		},
+		"spawn":	[{
+				"mapname":	"bl_lava",
+				"respawnTime":	21600000
+			}]
+	}]
