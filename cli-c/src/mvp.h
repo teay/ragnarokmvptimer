@@ -1,7 +1,7 @@
 #ifndef MVP_H
 #define MVP_H
 
-typedef enum { ZONE_ALL, ZONE_WAIT, ZONE_ACTIVE } MvpZone;
+typedef enum { ZONE_UNSELECTED, ZONE_WAIT, ZONE_ACTIVE } MvpZone;
 
 typedef struct {
     int id;
@@ -15,5 +15,6 @@ typedef struct {
 } MVP;
 
 int load_mvps_from_file(const char* filename, MVP* list, int max_size);
+int save_mvps_to_file(const char* filename, MVP* list, int count);
 long get_respawn_time(MVP* m);
 #endif

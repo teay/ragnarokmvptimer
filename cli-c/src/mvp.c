@@ -35,12 +35,31 @@ int load_mvps_from_file(const char* filename, MVP* list, int max_size) {
                 strncpy(list[count].name, name->valuestring, 49);
                 
                 cJSON *rt = cJSON_GetObjectItem(spawn_item, "respawnTime");
-                list[count].respawn_time = rt ? rt->valueint / 1000 : 0; // เก็บเป็นวินาที
+                list[count].respawn_time = rt ? (int)(rt->valuedouble / 1000.0) : 0; 
+                
+                cJSON *win = cJSON_GetObjectItem(spawn_item, "window");
+                list[count].window = win ? (int)(win->valuedouble / 1000.0) : 600; 
                 
                 cJSON *map = cJSON_GetObjectItem(spawn_item, "mapname");
                 strncpy(list[count].map_name, map ? map->valuestring : "Unknown", 29);
                 
-                list[count].death_time = 0; // บังคับเป็น 0 เพื่อเริ่ม ALIVE
+                // อ่านค่าสถานะเพิ่มเติมถ้ามี (เพื่อรองรับการ Sync)
+                cJSON *dt = cJSON_GetObjectItem(item, "deathTime");
+                if (dt) {
+                    double val = dt->valuedouble;
+                    if (val > 10000000000.0) list[count].death_time = (long)(val / 1000.0);
+                    else list[count].death_time = (long)val;
+                } else {
+                    list[count].death_time = 0;
+                }
+
+                cJSON *zn = cJSON_GetObjectItem(item, "zone");
+                if (zn) {
+                    list[count].zone = (MvpZone)zn->valueint;
+                } else {
+                    list[count].zone = (list[count].death_time > 0) ? ZONE_ACTIVE : ZONE_WAIT;
+                }
+
                 count++;
             }
         }
@@ -48,6 +67,36 @@ int load_mvps_from_file(const char* filename, MVP* list, int max_size) {
     cJSON_Delete(json);
     free(data);
     return count;
+}
+
+int save_mvps_to_file(const char* filename, MVP* list, int count) {
+    cJSON *json = cJSON_CreateArray();
+    for (int i = 0; i < count; i++) {
+        cJSON *item = cJSON_CreateObject();
+        cJSON_AddNumberToObject(item, "id", list[i].id);
+        cJSON_AddStringToObject(item, "name", list[i].name);
+        cJSON_AddNumberToObject(item, "deathTime", (double)list[i].death_time);
+        cJSON_AddNumberToObject(item, "zone", (int)list[i].zone);
+        
+        cJSON *spawn_arr = cJSON_CreateArray();
+        cJSON *spawn_item = cJSON_CreateObject();
+        cJSON_AddStringToObject(spawn_item, "mapname", list[i].map_name);
+        cJSON_AddNumberToObject(spawn_item, "respawnTime", (double)list[i].respawn_time * 1000);
+        cJSON_AddItemToArray(spawn_arr, spawn_item);
+        cJSON_AddItemToObject(item, "spawn", spawn_arr);
+        
+        cJSON_AddItemToArray(json, item);
+    }
+
+    char *out = cJSON_Print(json);
+    FILE *fp = fopen(filename, "w");
+    if (fp) {
+        fputs(out, fp);
+        fclose(fp);
+    }
+    free(out);
+    cJSON_Delete(json);
+    return 1;
 }
 
 long get_respawn_time(MVP* m) {
