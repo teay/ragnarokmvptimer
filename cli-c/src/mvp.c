@@ -19,9 +19,15 @@ int load_mvps_from_file(const char* filename, MVP* list, int max_size) {
     cJSON *json = cJSON_Parse(data);
     if (!json) { free(data); return 0; }
 
+    cJSON *mvp_array = json;
+    if (!cJSON_IsArray(json)) {
+        mvp_array = cJSON_GetObjectItem(json, "activeMvps");
+        if (!mvp_array) { cJSON_Delete(json); free(data); return 0; }
+    }
+
     int count = 0;
     cJSON *item = NULL;
-    cJSON_ArrayForEach(item, json) {
+    cJSON_ArrayForEach(item, mvp_array) {
         cJSON *id = cJSON_GetObjectItem(item, "id");
         cJSON *name = cJSON_GetObjectItem(item, "name");
         cJSON *spawn_arr = cJSON_GetObjectItem(item, "spawn");

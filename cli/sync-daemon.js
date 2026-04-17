@@ -67,26 +67,29 @@ function setupFirebaseListener() {
         }
 
         const remoteMvps = Array.isArray(data) ? data : Object.values(data);
-        const localFormat = remoteMvps.map(remote => {
-            const master = masterMvps.find(m => m.id === remote.id);
-            if (!master) return null;
-            
-            // หาแผนที่ให้ตรงกับที่ใน Firebase บอก (สำคัญมากสำหรับการ Sync กลับ)
-            const mapName = remote.deathMap || remote.mapname || master.spawn[0].mapname;
-            const spawnInfo = master.spawn.find(s => s.mapname === mapName) || master.spawn[0];
+        const localFormat = {
+            server: currentServer,
+            updatedAt: new Date().toISOString(),
+            activeMvps: remoteMvps.map(remote => {
+                const master = masterMvps.find(m => m.id === remote.id);
+                if (!master) return null;
+                
+                const mapName = remote.deathMap || remote.mapname || master.spawn[0].mapname;
+                const spawnInfo = master.spawn.find(s => s.mapname === mapName) || master.spawn[0];
 
-            let zone = 0; 
-            if (remote.deathTime) zone = 2; // ACTIVE
-            else if (remote.isPinned || remote.id) zone = 1; // WAIT
-            
-            return {
-                id: remote.id,
-                name: master.name,
-                deathTime: remote.deathTime ? new Date(remote.deathTime).getTime() / 1000 : 0,
-                zone: zone,
-                spawn: [spawnInfo] // ส่งเฉพาะตัวที่เลือก
-            };
-        }).filter(Boolean);
+                let zone = 0; 
+                if (remote.deathTime) zone = 2; // ACTIVE
+                else if (remote.isPinned || remote.id) zone = 1; // WAIT
+                
+                return {
+                    id: remote.id,
+                    name: master.name,
+                    deathTime: remote.deathTime ? new Date(remote.deathTime).getTime() / 1000 : 0,
+                    zone: zone,
+                    spawn: [spawnInfo]
+                };
+            }).filter(Boolean)
+        };
 
         writeFileSync(SAVE_FILE, JSON.stringify(localFormat, null, 2));
         console.log(`[Firebase -> C] Updated ${localFormat.length} MVPs`);
@@ -114,7 +117,8 @@ function uploadToFirebase() {
             updateFirebase([]);
             return;
         }
-        const localMvps = JSON.parse(content);
+        const data = JSON.parse(content);
+        const localMvps = Array.isArray(data) ? data : (data.activeMvps || []);
         
         const webFormat = localMvps.map(m => ({
             id: m.id,
