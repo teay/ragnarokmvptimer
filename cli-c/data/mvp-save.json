@@ -50,8 +50,8 @@
   {
     "id": 1511,
     "name": "Amon Ra",
-    "deathTime": 0,
-    "zone": 1,
+    "deathTime": 1776435989.061,
+    "zone": 2,
     "spawn": [
       {
         "mapname": "moc_pryd06",
