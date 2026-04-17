@@ -66,6 +66,17 @@ int load_mvps_from_file(const char* filename, MVP* list, int max_size) {
                     list[count].zone = (list[count].death_time > 0) ? ZONE_ACTIVE : ZONE_WAIT;
                 }
 
+                cJSON *pos = cJSON_GetObjectItem(item, "deathPosition");
+                if (pos && cJSON_IsObject(pos)) {
+                    cJSON *px = cJSON_GetObjectItem(pos, "x");
+                    cJSON *py = cJSON_GetObjectItem(pos, "y");
+                    list[count].x = px && cJSON_IsNumber(px) ? px->valuedouble : -1.0;
+                    list[count].y = py && cJSON_IsNumber(py) ? py->valuedouble : -1.0;
+                } else {
+                    list[count].x = -1.0;
+                    list[count].y = -1.0;
+                }
+
                 count++;
             }
         }
@@ -112,6 +123,15 @@ int save_mvps_to_file(const char* filename, MVP* list, int count) {
         cJSON_AddNumberToObject(item, "deathTime", (double)list[i].death_time);
         cJSON_AddNumberToObject(item, "zone", (int)list[i].zone);
         
+        if (list[i].x >= 0 && list[i].y >= 0) {
+            cJSON *pos = cJSON_CreateObject();
+            cJSON_AddNumberToObject(pos, "x", list[i].x);
+            cJSON_AddNumberToObject(pos, "y", list[i].y);
+            cJSON_AddItemToObject(item, "deathPosition", pos);
+        } else {
+            cJSON_AddNullToObject(item, "deathPosition");
+        }
+
         cJSON *spawn_arr = cJSON_CreateArray();
         cJSON *spawn_item = cJSON_CreateObject();
         cJSON_AddStringToObject(spawn_item, "mapname", list[i].map_name);

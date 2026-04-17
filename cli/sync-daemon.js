@@ -92,7 +92,8 @@ function setupFirebaseListener() {
                     name: master.name,
                     deathTime: remote.deathTime ? new Date(remote.deathTime).getTime() / 1000 : 0,
                     zone: zone,
-                    spawn: [spawnInfo]
+                    spawn: [spawnInfo],
+                    deathPosition: remote.deathPosition || null
                 };
             }).filter(Boolean)
         };
@@ -129,6 +130,7 @@ function uploadToFirebase() {
             id: m.id,
             deathTime: m.deathTime > 0 ? new Date(m.deathTime * 1000).toISOString() : null,
             deathMap: m.spawn && m.spawn.length > 0 ? m.spawn[0].mapname : 'unknown',
+            deathPosition: m.deathPosition || null,
             isPinned: true,
             updatedBy: cliNickname
         }));

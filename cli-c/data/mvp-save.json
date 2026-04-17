@@ -1,43 +1,7 @@
 {
   "server": "thROG",
-  "updatedAt": "2026-04-17T20:44:47.587Z",
+  "updatedAt": "2026-04-17T21:38:28.888Z",
   "activeMvps": [
-    {
-      "id": 1252,
-      "name": "Hatii",
-      "deathTime": 1776450120,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "xmas_fild01",
-          "respawnTime": 7200000
-        }
-      ]
-    },
-    {
-      "id": 1039,
-      "name": "Baphomet",
-      "deathTime": 1776458640,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "prt_maze03",
-          "respawnTime": 7200000
-        }
-      ]
-    },
-    {
-      "id": 1719,
-      "name": "Detardeurus",
-      "deathTime": 1776447000,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "abyss_03",
-          "respawnTime": 10800000
-        }
-      ]
-    },
     {
       "id": 20419,
       "name": "Rigid Muspellskoll",
@@ -48,7 +12,8 @@
           "mapname": "mag_dun03",
           "respawnTime": 7200000
         }
-      ]
+      ],
+      "deathPosition": null
     },
     {
       "id": 1112,
@@ -60,7 +25,50 @@
           "mapname": "treasure02",
           "respawnTime": 7200000
         }
-      ]
+      ],
+      "deathPosition": null
+    },
+    {
+      "id": 1039,
+      "name": "Baphomet",
+      "deathTime": 1776458640,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "prt_maze03",
+          "respawnTime": 7200000
+        }
+      ],
+      "deathPosition": null
+    },
+    {
+      "id": 1252,
+      "name": "Hatii",
+      "deathTime": 1776460980,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "xmas_fild01",
+          "respawnTime": 7200000
+        }
+      ],
+      "deathPosition": null
+    },
+    {
+      "id": 1719,
+      "name": "Detardeurus",
+      "deathTime": 1776457920,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "abyss_03",
+          "respawnTime": 10800000
+        }
+      ],
+      "deathPosition": {
+        "x": 50,
+        "y": 180
+      }
     }
   ]
 }

@@ -12,6 +12,8 @@ typedef struct {
     long death_time;
     char display_time[20];
     MvpZone zone;
+    double x;
+    double y;
 } MVP;
 
 int load_mvps_from_file(const char* filename, MVP* list, int max_size);

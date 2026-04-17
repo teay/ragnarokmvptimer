@@ -120,6 +120,8 @@ void sync_with_save_file(const char* savepath, MVP* list, int count) {
             if (list[j].id == updates[i].id && strcmp(list[j].map_name, updates[i].map_name) == 0) {
                 list[j].death_time = updates[i].death_time;
                 list[j].zone = updates[i].zone;
+                list[j].x = updates[i].x;
+                list[j].y = updates[i].y;
                 break;
             }
         }
