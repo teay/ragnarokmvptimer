@@ -207,6 +207,45 @@ int main(int argc, char *argv[]) {
                 edit_time(&mvp_list[idx]);
                 need_save = 1;
             }
+        } else if (ch == 'm' && filtered_count > 0) {
+            int idx = filtered[selected];
+            if (mvp_list[idx].x >= 0 && mvp_list[idx].y >= 0) {
+                int map_h = 15;
+                int map_w = 30;
+                int start_y = (LINES - map_h) / 2;
+                int start_x = (COLS - map_w) / 2;
+                WINDOW *map_win = newwin(map_h, map_w, start_y, start_x);
+                box(map_win, 0, 0);
+                mvwprintw(map_win, 0, 2, " Map: %s ", mvp_list[idx].map_name);
+                
+                // วาดจุด . เป็นพื้นหลัง
+                for (int py = 1; py < map_h - 1; py++) {
+                    for (int px = 1; px < map_w - 1; px++) {
+                        mvwaddch(map_win, py, px, '.');
+                    }
+                }
+
+                // คำนวณจุดปักหมุด (สมมติแมพพื้นฐานคือ 256x256)
+                // พิกัด x, y จาก Web App
+                int plot_x = 1 + (int)((mvp_list[idx].x / 256.0) * (map_w - 3));
+                int plot_y = 1 + (int)((mvp_list[idx].y / 256.0) * (map_h - 3));
+                
+                // ตรวจสอบขอบเขต
+                if (plot_x < 1) plot_x = 1; if (plot_x > map_w - 2) plot_x = map_w - 2;
+                if (plot_y < 1) plot_y = 1; if (plot_y > map_h - 2) plot_y = map_h - 2;
+
+                wattron(map_win, COLOR_PAIR(3) | A_BOLD | A_BLINK);
+                mvwaddch(map_win, plot_y, plot_x, 'X');
+                wattroff(map_win, COLOR_PAIR(3) | A_BOLD | A_BLINK);
+                
+                mvwprintw(map_win, map_h - 1, 2, " [X]: %.0f,%.0f ", mvp_list[idx].x, mvp_list[idx].y);
+                wrefresh(map_win);
+                
+                timeout(-1);
+                wgetch(map_win); // รอการกดปุ่มเพื่อปิด
+                delwin(map_win);
+                timeout(500);
+            }
         } else if (ch == 'k' && filtered_count > 0) { 
             int idx = filtered[selected];
             mvp_list[idx].zone = ZONE_ACTIVE;
@@ -344,7 +383,7 @@ int main(int argc, char *argv[]) {
             if (i + offset == selected) attroff(A_REVERSE);
         }
         mvprintw(LINES - 2, 0, "----------------------------------------------------------------------------------");
-        mvprintw(LINES - 1, 0, " [Enter]Next  [Bksp]Back  [k]Kill  [e]Edit  [r]Remove  [Home/End]  [q]Quit ");
+        mvprintw(LINES - 1, 0, " [Enter]Next [Bksp]Back [k]Kill [e]Edit [m]Map [r]Remove [Home/End] [q]Quit ");
         refresh();
     }
     endwin();
