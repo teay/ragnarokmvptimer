@@ -1,23 +1,11 @@
 {
   "server": "thROG",
-  "updatedAt": "2026-04-17T16:23:56.548Z",
+  "updatedAt": "2026-04-17T18:58:10.264Z",
   "activeMvps": [
-    {
-      "id": 1252,
-      "name": "Hatii",
-      "deathTime": 1776433320,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "xmas_fild01",
-          "respawnTime": 7200000
-        }
-      ]
-    },
     {
       "id": 1719,
       "name": "Detardeurus",
-      "deathTime": 1776435960,
+      "deathTime": 1776447000,
       "zone": 2,
       "spawn": [
         {
@@ -29,7 +17,7 @@
     {
       "id": 1112,
       "name": "Drake",
-      "deathTime": 1776439920,
+      "deathTime": 1776448380,
       "zone": 2,
       "spawn": [
         {
@@ -41,7 +29,7 @@
     {
       "id": 20419,
       "name": "Rigid Muspellskoll",
-      "deathTime": 1776440340,
+      "deathTime": 1776448440,
       "zone": 2,
       "spawn": [
         {
@@ -51,9 +39,21 @@
       ]
     },
     {
+      "id": 1252,
+      "name": "Hatii",
+      "deathTime": 1776450120,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "xmas_fild01",
+          "respawnTime": 7200000
+        }
+      ]
+    },
+    {
       "id": 1039,
       "name": "Baphomet",
-      "deathTime": 1776442477.918,
+      "deathTime": 1776450600,
       "zone": 2,
       "spawn": [
         {
