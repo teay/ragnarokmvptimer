@@ -69,6 +69,34 @@ int load_mvps_from_file(const char* filename, MVP* list, int max_size) {
     return count;
 }
 
+int get_server_from_file(const char* filename, char* server_out) {
+    FILE *fp = fopen(filename, "r");
+    if (!fp) return 0;
+
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    char *data = malloc(size + 1);
+    fread(data, 1, size, fp);
+    data[size] = '\0';
+    fclose(fp);
+
+    cJSON *json = cJSON_Parse(data);
+    if (!json) { free(data); return 0; }
+
+    cJSON *server = cJSON_GetObjectItem(json, "server");
+    if (server && server->valuestring) {
+        strcpy(server_out, server->valuestring);
+        cJSON_Delete(json);
+        free(data);
+        return 1;
+    }
+
+    cJSON_Delete(json);
+    free(data);
+    return 0;
+}
+
 int save_mvps_to_file(const char* filename, MVP* list, int count) {
     cJSON *json = cJSON_CreateArray();
     for (int i = 0; i < count; i++) {

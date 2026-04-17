@@ -16,5 +16,6 @@ typedef struct {
 
 int load_mvps_from_file(const char* filename, MVP* list, int max_size);
 int save_mvps_to_file(const char* filename, MVP* list, int count);
+int get_server_from_file(const char* filename, char* server_out);
 long get_respawn_time(MVP* m);
 #endif

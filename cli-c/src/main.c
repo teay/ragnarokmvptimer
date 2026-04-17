@@ -60,7 +60,11 @@ int main(int argc, char *argv[]) {
     setlocale(LC_ALL, ""); 
     char server[50] = "iRO";
     char filepath[100], savepath[100] = "data/mvp-save.json";
+    char exportpath[100] = "../cli/mvp-export.json";
     
+    // Try to get current server from sync-daemon's export
+    get_server_from_file(exportpath, server);
+
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--server") == 0 && i + 1 < argc) strcpy(server, argv[++i]);
     }
@@ -96,10 +100,26 @@ int main(int argc, char *argv[]) {
 
     int offset = 0, selected = 0, ch;
     time_t last_mtime = get_file_mtime(savepath);
+    time_t last_export_mtime = get_file_mtime(exportpath);
     
     while((ch = getch()) != 'q') {
         int max_display = LINES - 5;
         int need_save = 0;
+
+        // Check if server or data changed in export file
+        time_t current_export_mtime = get_file_mtime(exportpath);
+        if (current_export_mtime > last_export_mtime) {
+            last_export_mtime = current_export_mtime;
+            char new_server[50];
+            if (get_server_from_file(exportpath, new_server) && strcmp(new_server, server) != 0) {
+                strcpy(server, new_server);
+                sprintf(filepath, "data/%s.json", server);
+                count = load_mvps_from_file(filepath, mvp_list, 500);
+            }
+            sync_with_save_file(savepath, mvp_list, count);
+            qsort(mvp_list, count, sizeof(MVP), compare_mvps);
+            update_filter(mvp_list, count, current_tab, filtered, &filtered_count);
+        }
 
         time_t current_mtime = get_file_mtime(savepath);
         if (current_mtime > last_mtime) {
