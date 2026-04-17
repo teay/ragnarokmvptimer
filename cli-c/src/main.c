@@ -61,7 +61,7 @@ void update_filter(MVP* list, int count, int tab, int* filtered, int* f_count) {
 
 int main(int argc, char *argv[]) {
     setlocale(LC_ALL, ""); 
-    char server[50] = "iRO";
+    char server[50] = "thROG";
     char filepath[100], savepath[100] = "data/mvp-save.json";
     get_server_from_file(savepath, server);
 

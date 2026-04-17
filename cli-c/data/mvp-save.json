@@ -1,19 +1,7 @@
 {
   "server": "thROG",
-  "updatedAt": "2026-04-17T15:42:14.998Z",
+  "updatedAt": "2026-04-17T16:23:56.548Z",
   "activeMvps": [
-    {
-      "id": 1112,
-      "name": "Drake",
-      "deathTime": 1776439920,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "treasure02",
-          "respawnTime": 7200000
-        }
-      ]
-    },
     {
       "id": 1252,
       "name": "Hatii",
@@ -22,18 +10,6 @@
       "spawn": [
         {
           "mapname": "xmas_fild01",
-          "respawnTime": 7200000
-        }
-      ]
-    },
-    {
-      "id": 1039,
-      "name": "Baphomet",
-      "deathTime": 1776434580,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "prt_maze03",
           "respawnTime": 7200000
         }
       ]
@@ -51,6 +27,18 @@
       ]
     },
     {
+      "id": 1112,
+      "name": "Drake",
+      "deathTime": 1776439920,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "treasure02",
+          "respawnTime": 7200000
+        }
+      ]
+    },
+    {
       "id": 20419,
       "name": "Rigid Muspellskoll",
       "deathTime": 1776440340,
@@ -58,6 +46,18 @@
       "spawn": [
         {
           "mapname": "mag_dun03",
+          "respawnTime": 7200000
+        }
+      ]
+    },
+    {
+      "id": 1039,
+      "name": "Baphomet",
+      "deathTime": 1776442477.918,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "prt_maze03",
           "respawnTime": 7200000
         }
       ]
