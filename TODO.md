@@ -31,6 +31,7 @@
 ### TODO 📋 (Future Ideas)
 
 **High Priority:**
+- [ ] **CLI-C Firebase Direct:** Refactor `cli-c` to interact directly with Firebase REST API (using libcurl/openssl) to eliminate `sync-daemon` dependency and local JSON latency.
 - [ ] **Offline Mode:** Fallback to local JSON when Firebase is down.
 - [ ] **CLI Party Members:** Show online members in the CLI header.
 - [ ] **Notification System:** Global alerts across devices when an MVP is killed.
