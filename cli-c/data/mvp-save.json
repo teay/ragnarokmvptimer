@@ -1,98 +1,66 @@
-[
-  {
-    "id": 1039,
-    "name": "Baphomet",
-    "deathTime": 1776427080,
-    "zone": 2,
-    "spawn": [
-      {
-        "mapname": "prt_maze03",
-        "respawnTime": 7200000
-      }
-    ]
-  },
-  {
-    "id": 1112,
-    "name": "Drake",
-    "deathTime": 1776433687,
-    "zone": 2,
-    "spawn": [
-      {
-        "mapname": "treasure02",
-        "respawnTime": 7200000
-      }
-    ]
-  },
-  {
-    "id": 20419,
-    "name": "Rigid Muspellskoll",
-    "deathTime": 1776433689,
-    "zone": 2,
-    "spawn": [
-      {
-        "mapname": "mag_dun03",
-        "respawnTime": 7200000
-      }
-    ]
-  },
-  {
-    "id": 1719,
-    "name": "Detardeurus",
-    "deathTime": 1776430783,
-    "zone": 2,
-    "spawn": [
-      {
-        "mapname": "abyss_03",
-        "respawnTime": 10800000
-      }
-    ]
-  },
-  {
-    "id": 1511,
-    "name": "Amon Ra",
-    "deathTime": 1776435989.061,
-    "zone": 2,
-    "spawn": [
-      {
-        "mapname": "moc_pryd06",
-        "respawnTime": 3600000
-      }
-    ]
-  },
-  {
-    "id": 2362,
-    "name": "Amon Ra (Nightmare)",
-    "deathTime": 0,
-    "zone": 1,
-    "spawn": [
-      {
-        "mapname": "moc_prydn2",
-        "respawnTime": 3600000
-      }
-    ]
-  },
-  {
-    "id": 20421,
-    "name": "Corrupted Spider Queen",
-    "deathTime": 0,
-    "zone": 1,
-    "spawn": [
-      {
-        "mapname": "gl_cas01_",
-        "respawnTime": 7200000
-      }
-    ]
-  },
-  {
-    "id": 1252,
-    "name": "Hatii",
-    "deathTime": 0,
-    "zone": 1,
-    "spawn": [
-      {
-        "mapname": "xmas_fild01",
-        "respawnTime": 7200000
-      }
-    ]
-  }
-]
+{
+  "server": "thROG",
+  "updatedAt": "2026-04-17T15:42:14.998Z",
+  "activeMvps": [
+    {
+      "id": 1112,
+      "name": "Drake",
+      "deathTime": 1776439920,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "treasure02",
+          "respawnTime": 7200000
+        }
+      ]
+    },
+    {
+      "id": 1252,
+      "name": "Hatii",
+      "deathTime": 1776433320,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "xmas_fild01",
+          "respawnTime": 7200000
+        }
+      ]
+    },
+    {
+      "id": 1039,
+      "name": "Baphomet",
+      "deathTime": 1776434580,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "prt_maze03",
+          "respawnTime": 7200000
+        }
+      ]
+    },
+    {
+      "id": 1719,
+      "name": "Detardeurus",
+      "deathTime": 1776435960,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "abyss_03",
+          "respawnTime": 10800000
+        }
+      ]
+    },
+    {
+      "id": 20419,
+      "name": "Rigid Muspellskoll",
+      "deathTime": 1776440340,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "mag_dun03",
+          "respawnTime": 7200000
+        }
+      ]
+    }
+  ]
+}
