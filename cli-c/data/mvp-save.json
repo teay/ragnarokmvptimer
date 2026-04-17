@@ -1,43 +1,7 @@
 {
   "server": "thROG",
-  "updatedAt": "2026-04-17T18:58:10.264Z",
+  "updatedAt": "2026-04-17T20:44:47.587Z",
   "activeMvps": [
-    {
-      "id": 1719,
-      "name": "Detardeurus",
-      "deathTime": 1776447000,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "abyss_03",
-          "respawnTime": 10800000
-        }
-      ]
-    },
-    {
-      "id": 1112,
-      "name": "Drake",
-      "deathTime": 1776448380,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "treasure02",
-          "respawnTime": 7200000
-        }
-      ]
-    },
-    {
-      "id": 20419,
-      "name": "Rigid Muspellskoll",
-      "deathTime": 1776448440,
-      "zone": 2,
-      "spawn": [
-        {
-          "mapname": "mag_dun03",
-          "respawnTime": 7200000
-        }
-      ]
-    },
     {
       "id": 1252,
       "name": "Hatii",
@@ -53,11 +17,47 @@
     {
       "id": 1039,
       "name": "Baphomet",
-      "deathTime": 1776450600,
+      "deathTime": 1776458640,
       "zone": 2,
       "spawn": [
         {
           "mapname": "prt_maze03",
+          "respawnTime": 7200000
+        }
+      ]
+    },
+    {
+      "id": 1719,
+      "name": "Detardeurus",
+      "deathTime": 1776447000,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "abyss_03",
+          "respawnTime": 10800000
+        }
+      ]
+    },
+    {
+      "id": 20419,
+      "name": "Rigid Muspellskoll",
+      "deathTime": 1776456540,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "mag_dun03",
+          "respawnTime": 7200000
+        }
+      ]
+    },
+    {
+      "id": 1112,
+      "name": "Drake",
+      "deathTime": 1776456600,
+      "zone": 2,
+      "spawn": [
+        {
+          "mapname": "treasure02",
           "respawnTime": 7200000
         }
       ]

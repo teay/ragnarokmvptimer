@@ -59,14 +59,20 @@ function setupFirebaseListener() {
         
         const data = snapshot.val();
         
-        // FIX: ถ้าไม่มีข้อมูล (null) ต้องส่ง [] ไปให้ C เพื่อล้างสถานะ
-        if (!data) {
-            writeFileSync(SAVE_FILE, JSON.stringify([], null, 2));
-            console.log(`[Firebase -> C] Cleared all MVPs`);
-            return;
+        let remoteMvps = []; 
+        if (data) {
+            if (Array.isArray(data)) {
+                remoteMvps = data; 
+            } else if (typeof data === 'object' && data !== null) {
+                if (data.activeMvps && Array.isArray(data.activeMvps)) {
+                    remoteMvps = data.activeMvps;
+                } else {
+                    const potentialMvps = Object.values(data);
+                    remoteMvps = potentialMvps.filter(item => typeof item === 'object' && item !== null && item.id !== undefined);
+                }
+            }
         }
 
-        const remoteMvps = Array.isArray(data) ? data : Object.values(data);
         const localFormat = {
             server: currentServer,
             updatedAt: new Date().toISOString(),
@@ -92,7 +98,7 @@ function setupFirebaseListener() {
         };
 
         writeFileSync(SAVE_FILE, JSON.stringify(localFormat, null, 2));
-        console.log(`[Firebase -> C] Updated ${localFormat.length} MVPs`);
+        console.log(`[Firebase -> C] Updated ${localFormat.activeMvps.length} MVPs`);
     });
 }
 
@@ -113,7 +119,6 @@ function uploadToFirebase() {
     try {
         const content = readFileSync(SAVE_FILE, 'utf-8');
         if (!content || content === '[]') {
-            // ถ้าไฟล์ว่างเปล่า ให้ลบใน Firebase ด้วย
             updateFirebase([]);
             return;
         }
@@ -123,7 +128,7 @@ function uploadToFirebase() {
         const webFormat = localMvps.map(m => ({
             id: m.id,
             deathTime: m.deathTime > 0 ? new Date(m.deathTime * 1000).toISOString() : null,
-            deathMap: m.spawn[0].mapname,
+            deathMap: m.spawn && m.spawn.length > 0 ? m.spawn[0].mapname : 'unknown',
             isPinned: true,
             updatedBy: cliNickname
         }));
