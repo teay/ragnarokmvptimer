@@ -247,6 +247,17 @@ int main(int argc, char *argv[]) {
             box(map_win, 0, 0);
             mvwprintw(map_win, 0, 2, " Map: %s ", mvp_list[idx].map_name);
             
+            // เพิ่มตัวเลขบอกพิกัดบนแกน X (ด้านบน)
+            mvwprintw(map_win, 0, 6, "0");
+            mvwprintw(map_win, 0, (map_w/2)-2, "128");
+            mvwprintw(map_win, 0, map_w-6, "255");
+
+            // เพิ่มตัวเลขบอกพิกัดบนแกน Y (ด้านข้าง)
+            mvwprintw(map_win, 1, 0, "0");
+            mvwprintw(map_win, (map_h/2), 0, "12");
+            mvwprintw(map_win, (map_h/2)+1, 0, "8"); // เขียน 128 แนวตั้ง 
+            mvwprintw(map_win, map_h-2, 0, "255");
+            
             if (mvp_list[idx].x >= 0 && mvp_list[idx].y >= 0) {
                 // วาดจุด . เป็นพื้นหลัง
                 for (int py = 1; py < map_h - 1; py++) {
