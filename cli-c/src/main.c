@@ -5,7 +5,83 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <ctype.h>
 #include "mvp.h"
+
+// --- ฟังก์ชันเสริม: ดึงเฉพาะตัวเลขออกจากข้อความ ---
+void extract_digits(const char *src, char *dest) {
+    while (*src) {
+        if (isdigit(*src)) *dest++ = *src;
+        src++;
+    }
+    *dest = '\0';
+}
+
+// --- ฟังก์ชันแก้ไขเวลา: เน้นกรอกวันเดือนชั่วโมงนาทีเพื่อความแม่นยำ ---
+void edit_time(MVP *m) {
+    timeout(-1);
+    echo();
+    curs_set(1);
+    char buffer[64];
+    char digits[64];
+    
+    time_t now = time(NULL);
+    struct tm *now_tm = localtime(&now);
+    
+    move(LINES - 1, 0);
+    clrtoeol();
+    attron(COLOR_PAIR(4) | A_BOLD);
+    mvprintw(LINES - 1, 0, "EDIT [%s]: ", m->name);
+    attroff(COLOR_PAIR(4) | A_BOLD);
+    
+    attron(COLOR_PAIR(5));
+    printw("Format: [DDMM HHMM] (Ex: 1804 0155) : ");
+    attroff(COLOR_PAIR(5));
+    
+    if (getnstr(buffer, 63) == OK && strlen(buffer) > 0) {
+        extract_digits(buffer, digits); 
+        
+        int d = 0, mon = 0, h = 0, min = 0;
+        int len = strlen(digits);
+        int valid = 0;
+
+        if (len == 8) {
+            sscanf(digits, "%2d%2d%2d%2d", &d, &mon, &h, &min);
+            valid = 1;
+        }
+        else if (len == 7) {
+            sscanf(digits, "%1d%2d%2d%2d", &d, &mon, &h, &min);
+            valid = 1;
+        }
+        else if (len == 4 || len == 3) {
+            d = now_tm->tm_mday;
+            mon = now_tm->tm_mon + 1;
+            if (len == 4) sscanf(digits, "%2d%2d", &h, &min);
+            else sscanf(digits, "%1d%2d", &h, &min);
+            valid = 1;
+        }
+
+        if (valid && d >= 1 && d <= 31 && mon >= 1 && mon <= 12) {
+            struct tm tm_val = {0};
+            tm_val.tm_year = now_tm->tm_year;
+            tm_val.tm_mday = d;
+            tm_val.tm_mon = mon - 1;
+            tm_val.tm_hour = h;
+            tm_val.tm_min = min;
+            tm_val.tm_isdst = -1; 
+
+            time_t new_t = mktime(&tm_val);
+            if (new_t != -1) {
+                m->death_time = new_t;
+                m->zone = ZONE_ACTIVE; 
+            }
+        }
+    }
+    
+    noecho();
+    curs_set(0);
+    timeout(500);
+}
 
 int compare_mvps(const void *a, const void *b) {
     MVP *mvpA = (MVP *)a;
@@ -75,7 +151,9 @@ int main(int argc, char *argv[]) {
     sync_with_save_file(savepath, mvp_list, count);
     qsort(mvp_list, count, sizeof(MVP), compare_mvps);
 
-    initscr(); cbreak(); noecho(); curs_set(0); keypad(stdscr, TRUE); timeout(500);
+    initscr(); cbreak(); noecho(); curs_set(0); keypad(stdscr, TRUE); 
+    timeout(500);
+
     if (has_colors()) {
         start_color();
         init_pair(1, COLOR_GREEN, COLOR_BLACK); 
@@ -121,7 +199,13 @@ int main(int argc, char *argv[]) {
         else if (ch == KEY_HOME) { selected = 0; offset = 0; }
         else if (ch == KEY_END) { selected = (filtered_count > 0) ? filtered_count - 1 : 0; }
         
-        if (ch == 'k' && filtered_count > 0) { 
+        if (ch == 'e' && filtered_count > 0) { 
+            int idx = filtered[selected];
+            if (mvp_list[idx].zone != ZONE_UNSELECTED) {
+                edit_time(&mvp_list[idx]);
+                need_save = 1;
+            }
+        } else if (ch == 'k' && filtered_count > 0) { 
             int idx = filtered[selected];
             mvp_list[idx].zone = ZONE_ACTIVE;
             mvp_list[idx].death_time = time(NULL);
@@ -159,6 +243,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (need_save) {
+            int saved_id = mvp_list[filtered[selected]].id;
             MVP selected_mvps[500];
             int sel_count = 0;
             for(int i=0; i<count; i++) {
@@ -168,6 +253,12 @@ int main(int argc, char *argv[]) {
             last_mtime = get_file_mtime(savepath);
             qsort(mvp_list, count, sizeof(MVP), compare_mvps);
             update_filter(mvp_list, count, current_tab, filtered, &filtered_count);
+            for (int i = 0; i < filtered_count; i++) {
+                if (mvp_list[filtered[i]].id == saved_id) {
+                    selected = i;
+                    break;
+                }
+            }
         }
 
         if (selected < offset) offset = selected;
@@ -200,11 +291,9 @@ int main(int argc, char *argv[]) {
         for(int i = 0; i < max_display && (i + offset) < filtered_count; i++) {
             int idx = filtered[i + offset];
             if (i + offset == selected) attron(A_REVERSE);
-            
             MVP m = mvp_list[idx];
             mvprintw(i + 4, 2, "%-20.20s", m.name);
             mvprintw(i + 4, 23, "| %-15.15s", m.map_name);
-            
             int death_x = 41;
             if (m.death_time == 0) {
                 mvprintw(i + 4, death_x, "| --:--:--     ");
@@ -214,11 +303,8 @@ int main(int argc, char *argv[]) {
                 strftime(dt_str, sizeof(dt_str), "%d/%m %H:%M", lt); 
                 mvprintw(i + 4, death_x, "| %-12s ", dt_str);
             }
-
             int status_x = 56;
             int max_w = COLS - status_x - 2; 
-            if (max_w < 1) max_w = 1;
-
             if (m.zone == ZONE_UNSELECTED) {
                 mvprintw(i + 4, status_x, "| -");
             } else if (m.death_time == 0) {
@@ -226,36 +312,37 @@ int main(int argc, char *argv[]) {
                 mvprintw(i + 4, status_x, "| ALIVE");
                 attroff(COLOR_PAIR(1));
             } else {
-                long now = time(NULL);
+                long now_sec = time(NULL);
                 long t_min = m.death_time + m.respawn_time;
                 long t_max = t_min + m.window;
                 char sb[64];
-
-                if (now < t_min) {
-                    long rem = t_min - now;
+                if (now_sec < t_min) {
+                    long rem = t_min - now_sec;
                     attron(COLOR_PAIR(4));
+                    // แยก ชั่วโมง:นาที:วินาที สำหรับส่วนนับถอยหลัง
                     snprintf(sb, sizeof(sb), "%02ld:%02ld:%02ld", rem/3600, (rem%3600)/60, rem%60);
                     mvprintw(i + 4, status_x, "| %.*s", max_w, sb);
                     attroff(COLOR_PAIR(4));
-                } else if (now >= t_min && now < t_max) {
-                    long win = t_max - now;
+                } else if (now_sec >= t_min && now_sec < t_max) {
+                    long win = t_max - now_sec;
                     attron(COLOR_PAIR(2) | A_BOLD);
+                    // สำหรับช่วง Window เกิด (สุ่ม) แสดงแค่นาทีวินาทีก็พอ หรือจะใส่ชั่วโมงด้วยก็ได้ครับ
                     snprintf(sb, sizeof(sb), "Respawning %02ld:%02ld", win/60, win%60);
                     mvprintw(i + 4, status_x, "| %.*s", max_w, sb);
                     attroff(COLOR_PAIR(2) | A_BOLD);
                 } else {
-                    long ovr = now - t_max;
+                    long ovr = now_sec - t_max;
                     attron(COLOR_PAIR(3) | A_BOLD);
-                    snprintf(sb, sizeof(sb), "Already Respawned %02ld:%02ld", ovr/60, ovr%60);
+                    // แก้ไขจุดนี้: แยก ชั่วโมง:นาที:วินาที สำหรับส่วนที่เลยเวลาเกิดมาแล้ว
+                    snprintf(sb, sizeof(sb), "Already Respawned %02ld:%02ld:%02ld", ovr/3600, (ovr%3600)/60, ovr%60);
                     mvprintw(i + 4, status_x, "| %.*s", max_w, sb);
                     attroff(COLOR_PAIR(3) | A_BOLD);
                 }
             }
             if (i + offset == selected) attroff(A_REVERSE);
         }
-        
         mvprintw(LINES - 2, 0, "----------------------------------------------------------------------------------");
-        mvprintw(LINES - 1, 0, " [Enter]Next  [Bksp]Back  [k]Kill  [r]Remove  [q]Quit ");
+        mvprintw(LINES - 1, 0, " [Enter]Next  [Bksp]Back  [k]Kill  [e]Edit  [r]Remove  [Home/End]  [q]Quit ");
         refresh();
     }
     endwin();
