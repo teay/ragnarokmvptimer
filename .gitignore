@@ -37,3 +37,4 @@ vite
 # CLI-C Build artifacts
 cli-c/mvp_tui
 cli-c/src/*.o
+cli-c/data/mvp-save.json
