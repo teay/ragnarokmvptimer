@@ -46,7 +46,7 @@ export function ModalSelectMap({ spawnMaps, onSelect, onClose }: MapProps) {
               isSelected={mapname === selectedMap}
               onClick={() => setSelectedMap(mapname)}
             >
-              <Map mapName={mapname} />
+              <Map mapName={mapname} isLarge />
 
               <MapDetails>
                 <MapName>{mapname}</MapName>

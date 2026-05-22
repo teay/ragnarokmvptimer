@@ -75,6 +75,7 @@ export function ModalMvpMap({ mvp, close }: MvpMapModalProps) {
           mapName={selectedMap}
           onChange={setMarkCoordinates}
           coordinates={markCoordinates}
+          isLarge
         />
 
         <Footer>

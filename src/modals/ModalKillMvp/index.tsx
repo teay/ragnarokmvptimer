@@ -192,6 +192,7 @@ export function ModalKillMvp() {
               mapName={selectedMap}
               onChange={setMarkCoordinates}
               coordinates={markCoordinates}
+              containerHeight="45rem"
             />
             <Hint>
               <kbd>ENTER</kbd> <FormattedMessage id='press_enter_to_confirm' />{' '}

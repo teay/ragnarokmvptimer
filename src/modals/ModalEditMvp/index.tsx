@@ -176,6 +176,7 @@ export function ModalEditMvp() {
               mapName={selectedMap}
               onChange={setMarkCoordinates}
               coordinates={markCoordinates}
+              isLarge
             />
           </>
         )}
