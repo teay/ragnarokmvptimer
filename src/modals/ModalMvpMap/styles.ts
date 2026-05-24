@@ -2,12 +2,12 @@ import { styled } from '@linaria/react';
 
 export const Modal = styled.div`
   width: 100%;
-  max-width: 500px;
+  max-width: 550px;
   height: auto;
   max-height: 95vh;
   overflow-y: auto;
   padding: 2rem;
-  gap: 8px;
+  gap: 8px; /* Changed from default to match KillMvp */
   border-radius: 6px;
   display: flex;
   align-items: center;
