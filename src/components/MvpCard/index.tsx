@@ -65,8 +65,9 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
 
   // Pretext: Calculate optimal font size for MVP name
   const optimalFontSize = useMemo(() => {
-    const fontFamily =
-      document.documentElement.getAttribute('data-font') || 'Jost';
+    const font = document.documentElement.getAttribute('data-font') || 'Jost';
+    const fallbackStack = ", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'Yu Gothic', 'Leelawadee UI', 'Leelawadee', 'Tahoma', sans-serif";
+    const fontFamily = font.includes(',') ? font : `'${font}'${fallbackStack}`;
     // Max width is container (280px) minus padding (20px) and some margin
     return getOptimalFontSize(mvp.name, 22, 12, 220, fontFamily);
   }, [mvp.name]);

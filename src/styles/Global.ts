@@ -16,15 +16,15 @@ export const globals = css`
     }
 
     html[data-font='Jost'] {
-      font-family: 'Jost', sans-serif;
+      font-family: 'Jost', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'Yu Gothic', 'Leelawadee UI', 'Leelawadee', 'Tahoma', sans-serif;
     }
 
     html[data-font='Orbitron'] {
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Orbitron', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'Yu Gothic', 'Leelawadee UI', 'Leelawadee', 'Tahoma', sans-serif;
     }
 
     html[data-font='Exo 2'] {
-      font-family: 'Exo 2', sans-serif;
+      font-family: 'Exo 2', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'Yu Gothic', 'Leelawadee UI', 'Leelawadee', 'Tahoma', sans-serif;
     }
 
     #root {
