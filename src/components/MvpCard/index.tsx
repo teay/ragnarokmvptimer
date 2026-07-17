@@ -13,11 +13,11 @@ import { useNotification } from '@/hooks';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { getMvpRespawnTime, formatTimeOfDay } from '@/utils';
-import { getOptimalFontSize } from '@/utils/textMeasurement';
 
 import {
   Container,
   Header,
+  HeaderTop,
   ID,
   Name,
   MapName,
@@ -28,6 +28,7 @@ import {
   EditButton,
   Tombstone,
   ControlText,
+  TopSection,
   BottomControls,
   MapWrapper,
   ButtonGroup,
@@ -63,15 +64,6 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
   const inWait = mvp.isPinned === true && !inActive;
   const isEditing = editingMvp?.id === mvp.id;
 
-  // Pretext: Calculate optimal font size for MVP name
-  const optimalFontSize = useMemo(() => {
-    const font = document.documentElement.getAttribute('data-font') || 'Jost';
-    const fallbackStack = ", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'Yu Gothic', 'Leelawadee UI', 'Leelawadee', 'Tahoma', sans-serif";
-    const fontFamily = font.includes(',') ? font : `'${font}'${fallbackStack}`;
-    // Max width is container (280px) minus padding (20px) and some margin
-    return getOptimalFontSize(mvp.name, 22, 12, 220, fontFamily);
-  }, [mvp.name]);
-
   const nextRespawn = useMemo(
     () => dayjs(mvp.deathTime).add(getMvpRespawnTime(mvp), 'ms'),
     [mvp]
@@ -84,47 +76,51 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
   return (
     <>
       <Container isEditing={isEditing} zone={zone}>
-        <Header>
-          <ID>{`((${mvp.id}))`}</ID>
-          <Name fontSize={optimalFontSize}>{mvp.name}</Name>
-          {inActive && mvp.deathTime && (
-            <KillTime
-              onClick={() => setEditingTimeMvp(mvp)}
-              title='Click to edit time'
-            >
-              {dayjs(mvp.deathTime).format('DD/MM') + ' ' + formatTimeOfDay(dayjs(mvp.deathTime).format('HH:mm'), use24HourFormat)}
-            </KillTime>
-          )}
-        </Header>
+        <TopSection>
+          <Header>
+            <HeaderTop>
+              <ID>{`((${mvp.id}))`}</ID>
+              {inActive && mvp.deathTime && (
+                <KillTime
+                  onClick={() => setEditingTimeMvp(mvp)}
+                  title='Click to edit time'
+                >
+                  {dayjs(mvp.deathTime).format('DD/MM') + ' ' + formatTimeOfDay(dayjs(mvp.deathTime).format('HH:mm'), use24HourFormat)}
+                </KillTime>
+              )}
+            </HeaderTop>
+            <Name>{mvp.name}</Name>
+          </Header>
 
-        <MvpSprite id={mvp.id} name={mvp.name} animated={animatedSprites} />
+          <MvpSprite id={mvp.id} name={mvp.name} animated={animatedSprites} />
 
-        {(inActive || inWait) && (
-          <>
-            {inActive && (
-              <MvpCardCountdown
-                mvp={mvp}
-                respawnAsCountdown={respawnAsCountdown}
-                onTriggerNotification={() =>
-                  respawnNotification(
-                    mvp.id,
-                    `${mvp.name} ${intl.formatMessage({ id: 'will_respawn' })}`,
-                    `${mvp.deathMap} - ${formatTimeOfDay(nextRespawn.format('HH:mm'), use24HourFormat)}`
-                  )
-                }
-              />
-            )}
-            {inWait && (
-              <Tombstone>
-                <Star
-                  size={18}
-                  style={{ marginRight: 4, verticalAlign: 'middle' }}
+          {(inActive || inWait) && (
+            <>
+              {inActive && (
+                <MvpCardCountdown
+                  mvp={mvp}
+                  respawnAsCountdown={respawnAsCountdown}
+                  onTriggerNotification={() =>
+                    respawnNotification(
+                      mvp.id,
+                      `${mvp.name} ${intl.formatMessage({ id: 'will_respawn' })}`,
+                      `${mvp.deathMap} - ${formatTimeOfDay(nextRespawn.format('HH:mm'), use24HourFormat)}`
+                    )
+                  }
                 />
-                <FormattedMessage id='pinned' />
-              </Tombstone>
-            )}
-          </>
-        )}
+              )}
+              {inWait && (
+                <Tombstone>
+                  <Star
+                    size={18}
+                    style={{ marginRight: 4, verticalAlign: 'middle' }}
+                  />
+                  <FormattedMessage id='pinned' />
+                </Tombstone>
+              )}
+            </>
+          )}
+        </TopSection>
 
         <BottomControls>
           <MapName onClick={toggleShowMvpMap}>

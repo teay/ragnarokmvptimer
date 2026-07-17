@@ -52,12 +52,20 @@ export const Container = styled.div<{
       : ''}
 `;
 
+export const TopSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  width: 100%;
+`;
+
 export const BottomControls = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin-top: auto; /* This will push it to the bottom */
   width: 100%;
   padding: 0;
 
@@ -93,11 +101,18 @@ export const KillTime = styled.span`
 
 export const Header = styled.div`
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0 10px;
+`;
+
+export const HeaderTop = styled.div`
+  display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 0 10px;
 `;
 
 export const ID = styled.span`
@@ -109,7 +124,9 @@ export const ID = styled.span`
 export const Name = styled.span<{ fontSize?: number }>`
   font-weight: bold;
   color: var(--mvpCard_name);
-  font-size: ${({ fontSize }) => (fontSize ? `${fontSize}px` : '2.2rem')};
+  font-size: ${({ fontSize }) => (fontSize ? `${fontSize}px` : '2.0rem')};
+  text-align: center;
+  width: 100%;
 `;
 
 export const MapName = styled.span`
