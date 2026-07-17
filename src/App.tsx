@@ -5,10 +5,17 @@ import { IntlProvider } from 'react-intl';
 
 import dayjs from 'dayjs';
 import 'dayjs/locale/pt-br';
+import 'dayjs/locale/th';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
+
+const DAYJS_LOCALE_MAP: Record<string, string> = {
+  en: 'en',
+  'pt-BR': 'pt-br',
+  th: 'th',
+};
 
 import { Main } from './pages/Main';
 import { WelcomeScreen } from './components/WelcomeScreen';
@@ -162,7 +169,7 @@ function AppContent() {
   */
 
   useEffect(() => {
-    dayjs.locale(language);
+    dayjs.locale(DAYJS_LOCALE_MAP[language] || 'en');
   }, [language]);
 
   useEffect(() => {

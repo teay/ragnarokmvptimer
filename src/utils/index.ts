@@ -50,6 +50,7 @@ export async function getServerData(server: string): Promise<IMvp[]> {
 
 /**
  * Format the time to ALWAYS be HH:mm:ss (e.g. 00:09:02)
+ * For countdown durations, 24h/12h format doesn't apply.
  */
 export function formatTime(duration: number): string {
   const absDuration = Math.abs(duration);
@@ -62,6 +63,24 @@ export function formatTime(duration: number): string {
   const secondsStr = String(seconds).padStart(2, '0');
 
   return `${hoursStr}:${minutesStr}:${secondsStr}`;
+}
+
+/**
+ * Format a time-of-day value respecting use24HourFormat setting.
+ * Input must be HH:mm only (no date prefix).
+ */
+export function formatTimeOfDay(
+  timeStr24: string,
+  use24HourFormat: boolean
+): string {
+  if (use24HourFormat) return timeStr24;
+
+  const [hStr, rest] = timeStr24.split(':');
+  let hours = parseInt(hStr, 10);
+  if (isNaN(hours)) return timeStr24;
+  const suffix = hours >= 12 ? ' PM' : ' AM';
+  hours = hours % 12 || 12;
+  return `${hours}:${rest}${suffix}`;
 }
 
 /**

@@ -12,7 +12,7 @@ import { useNotification } from '@/hooks';
 
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useSettings } from '@/contexts/SettingsContext';
-import { getMvpRespawnTime } from '@/utils';
+import { getMvpRespawnTime, formatTimeOfDay } from '@/utils';
 import { getOptimalFontSize } from '@/utils/textMeasurement';
 
 import {
@@ -53,7 +53,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
     editingMvp,
     setKillingMvp,
   } = useMvpsContext();
-  const { respawnAsCountdown, animatedSprites, showMvpMap, toggleShowMvpMap } =
+  const { respawnAsCountdown, animatedSprites, showMvpMap, toggleShowMvpMap, use24HourFormat } =
     useSettings();
   const { respawnNotification } = useNotification();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -92,7 +92,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
               onClick={() => setEditingTimeMvp(mvp)}
               title='Click to edit time'
             >
-              {dayjs(mvp.deathTime).format('DD/MM HH:mm')}
+              {dayjs(mvp.deathTime).format('DD/MM') + ' ' + formatTimeOfDay(dayjs(mvp.deathTime).format('HH:mm'), use24HourFormat)}
             </KillTime>
           )}
         </Header>
@@ -109,7 +109,7 @@ export function MvpCard({ mvp, zone = 'all' }: MvpCardProps) {
                   respawnNotification(
                     mvp.id,
                     `${mvp.name} ${intl.formatMessage({ id: 'will_respawn' })}`,
-                    `${mvp.deathMap} - ${nextRespawn.format('HH:mm')}`
+                    `${mvp.deathMap} - ${formatTimeOfDay(nextRespawn.format('HH:mm'), use24HourFormat)}`
                   )
                 }
               />

@@ -14,6 +14,7 @@ vi.mock('@/utils/textMeasurement', () => ({
 vi.mock('@/utils', () => ({
   getMvpRespawnTime: vi.fn().mockReturnValue(10000),
   formatTime: vi.fn((ms) => `Formatted(${ms}ms)`),
+  formatTimeOfDay: vi.fn((timeStr) => timeStr),
   getMvpRespawnWindow: vi.fn().mockReturnValue(10000),
   getMvpIcon: vi.fn().mockReturnValue('mock-icon.png'),
   getMapImage: vi.fn().mockReturnValue('mock-map.png'),

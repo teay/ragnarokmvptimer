@@ -235,13 +235,18 @@ export function ModalSettings({ onClose }: Props) {
               />
             </Setting>
 
-            {/* <Setting>
+            <Setting>
               <SettingName>
                 <FormattedMessage id='use_24_hour_format' />
               </SettingName>
 
-              <Switch onChange={toggle24HourFormat} checked={use24HourFormat} />
-            </Setting> */}
+              <Switch
+                id='use24HourFormat'
+                name='use24HourFormat'
+                onChange={toggle24HourFormat}
+                checked={use24HourFormat}
+              />
+            </Setting>
 
             <Setting>
               <SettingName>

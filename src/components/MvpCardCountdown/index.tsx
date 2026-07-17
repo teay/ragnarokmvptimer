@@ -4,8 +4,9 @@ import dayjs, { type Dayjs } from 'dayjs';
 import type { Duration } from 'dayjs/plugin/duration';
 
 import { useCountdown } from '@/hooks';
-import { formatTime } from '@/utils';
+import { formatTime, formatTimeOfDay } from '@/utils';
 import { getMvpRespawnWindow } from '@/utils';
+import { useSettings } from '@/contexts/SettingsContext';
 
 import { Container, RespawnTimeText } from './styles';
 
@@ -21,7 +22,8 @@ function getTimeString(
   durationMin: Duration,
   respawnAsCountdown?: boolean,
   isWithinWindow?: boolean,
-  missedRespawn?: boolean
+  missedRespawn?: boolean,
+  use24HourFormat?: boolean
 ) {
   if (respawnAsCountdown) {
     if (missedRespawn) {
@@ -50,7 +52,9 @@ function getTimeString(
   }
 
   // Standard mode: Show Range
-  return `${nextRespawnMin.format('HH:mm')} ~ ${nextRespawnMax.format('HH:mm')}`;
+  const minTime = formatTimeOfDay(nextRespawnMin.format('HH:mm'), use24HourFormat);
+  const maxTime = formatTimeOfDay(nextRespawnMax.format('HH:mm'), use24HourFormat);
+  return `${minTime} ~ ${maxTime}`;
 }
 
 export function MvpCardCountdown({
@@ -58,6 +62,7 @@ export function MvpCardCountdown({
   respawnAsCountdown,
   onTriggerNotification,
 }: MvpCardCountdownProps) {
+  const { use24HourFormat } = useSettings();
   const nextRespawnMin = useMemo(
     () => dayjs(mvp.deathTime).add(mvp.spawn?.find(s => s.mapname === mvp.deathMap)?.respawnTime || 0, 'ms'),
     [mvp]
@@ -94,7 +99,8 @@ export function MvpCardCountdown({
     durationMin,
     respawnAsCountdown,
     isWithinWindow,
-    missedRespawn
+    missedRespawn,
+    use24HourFormat
   );
 
   return (

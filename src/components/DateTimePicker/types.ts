@@ -6,6 +6,7 @@ export interface SegmentedDateTimePickerProps {
   value: Date | null;
   onChange: (date: Date | null) => void;
   autoFocus?: boolean;
+  use24HourFormat?: boolean;
 }
 
 export interface DateSegment {
