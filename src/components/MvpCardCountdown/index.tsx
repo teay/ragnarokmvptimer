@@ -38,7 +38,7 @@ function getTimeString(
       const hours = Math.floor(minutes / 60);
       const remainingMinutes = minutes % 60;
       
-      return `Already Respawned ${hours}:${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+      return `${hours}:${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
     
     if (isWithinWindow) {
