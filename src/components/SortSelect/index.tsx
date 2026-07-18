@@ -2,6 +2,8 @@ import { FormattedMessage } from 'react-intl';
 import { Option, Select } from './styles';
 
 interface SortSwitchProps {
+  id?: string;
+  name?: string;
   value?: string;
   onChange: (id: string) => void;
 }
@@ -16,9 +18,11 @@ const OPTIONS = [
   { id: 'jobExperience', name: 'Job EXP' },
 ];
 
-export function SortSelect({ value = 'id', onChange }: SortSwitchProps) {
+export function SortSelect({ id, name, value = 'id', onChange }: SortSwitchProps) {
   return (
     <Select
+      id={id}
+      name={name}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       aria-label='Sort mvps by his properties'

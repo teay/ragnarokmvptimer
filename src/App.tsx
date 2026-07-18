@@ -473,8 +473,6 @@ function NicknamePrompt() {
       >
         <input
           type='text'
-          id='sound-nickname'
-          name='sound-nickname'
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder='Your Nickname'
