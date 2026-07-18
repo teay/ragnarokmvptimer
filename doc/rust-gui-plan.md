@@ -233,3 +233,47 @@ dirs = "6"                # Config/data directory paths
 ## สรุป
 
 **ควรทำ Phase 1 ก่อน** (Core ไม่ต้องมี Firebase) ใช้เวลา ~2-3 วัน ถ้าได้ result ที่น่าพอใจค่อยต่อ Phase 2-4
+
+---
+
+## Rust GUI จะได้อะไรจาก version นี้?
+
+### ใช้งานจริงได้
+
+- **MVP Tracking ครบ** — kill, edit death time, pin/unpin, countdown, respawn window
+- **15 servers** — เลือก server ได้เหมือน webapp
+- **Map images จริง** — แสดงแผนที่ + ตำแหน่งที่ kill ล่าสุด (marker)
+- **Sprite images จริง** — แสดงรูป MVP ไม่ใช่แค่ชื่อ
+- **Firebase sync** — solo + party mode, sync กับ webapp real-time
+- **Notification** — เสียง/notification ตรงจาก OS (ไม่ต้องเปิด browser)
+- **Offline** — ใช้ได้ 100% ไม่มีเน็ต, sync กลับเมื่อมีเน็ต
+- **Search/filter/sort** — หา MVP ได้เร็ว
+
+### Performance
+
+| ตัว | ค่า |
+|-----|-----|
+| Startup | <0.5s (vs webapp 2.0s) |
+| Memory | 20-50MB (vs browser 50-100MB) |
+| Binary | ~10-15MB |
+| CPU idle | ~0% (vs browser 1-3%) |
+
+### Distribution
+
+- **Single binary** — ส่งไฟล์เดียวให้เพื่อนใช้ได้เลย
+- **Cross-platform** — build ได้ทั้ง Windows, macOS, Linux
+- **ไม่ต้องติดตั้ง Node/Browser** — แค่ double-click แล้วใช้ได้
+
+### สิ่งที่จะไม่ได้ (เทียบกับ Webapp)
+
+| Feature | ได้ไหม | หมายเหตุ |
+|---------|--------|---------|
+| Animated particles | ❌ | egui ไม่รองรับ |
+| Glass UI / backdrop-filter | ❌ | ไม่มี CSS |
+| Animated sprites | ⚠️ บางส่วน | GIF แสดงได้แต่ไม่ลื่นเท่า browser |
+| ใช้ผ่าน SSH/remote | ❌ | ต้องมี GUI display |
+| ไม่ต้อง download | ❌ | ต้อง download binary |
+
+### สรุป
+
+ได้ native app ที่ทำ MVP tracking ได้ครบ + ภาพจริง + sync real-time + เร็วกว่า + เบากว่า แต่ไม่มี visual effects สวยๆ ของ webapp เป็น "working tool" มากกว่า "pretty app" — เหมาะกับคนที่ต้องการ **ใช้งานจริง** มากกว่า **ดูสวย**
