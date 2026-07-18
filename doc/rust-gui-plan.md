@@ -277,3 +277,57 @@ dirs = "6"                # Config/data directory paths
 ### สรุป
 
 ได้ native app ที่ทำ MVP tracking ได้ครบ + ภาพจริง + sync real-time + เร็วกว่า + เบากว่า แต่ไม่มี visual effects สวยๆ ของ webapp เป็น "working tool" มากกว่า "pretty app" — เหมาะกับคนที่ต้องการ **ใช้งานจริง** มากกว่า **ดูสวย**
+
+---
+
+## Rust GUI ทดแทน branches เก่าๆ ได้ไหม?
+
+### Branches เก่าทั้งหมดใน repo
+
+| Branch | สิ่งที่ทำ |
+|--------|----------|
+| `feature/cli-ncurses` | C TUI (ncurses) |
+| `terminal-cli` | Terminal CLI 早期 |
+| `terminal-kit` | Node.js CLI ด้วย terminal-kit |
+| `terminal-text-based` | Text-based terminal |
+| `text-mode-ui` | Text mode UI |
+| `pwa-idea-only` | PWA idea |
+| `sync-local-data` | Local data sync |
+| `cloud-first-data-flow` | Cloud-first data flow |
+| `feature/mvp-table-view` | Table view |
+| `wait-to-kill` | Wait-to-kill feature |
+| `fix/type-safety-audit` | Type safety |
+
+### ทดแทนได้ ✅
+
+| Branch | ทดแทนได้ไหม | เหตุผล |
+|--------|-------------|--------|
+| `feature/cli-ncurses` (C TUI) | ✅ ได้เลย | Rust GUI ทำทุกอย่างที่ C TUI ทำ + ดีกว่ามาก (Firebase ตรง, ภาพจริง, notification) |
+| `terminal-cli` | ✅ ได้เลย | เป็น early prototype ของ CLI |
+| `terminal-kit` (Node.js CLI) | ✅ ได้เลย | Rust GUI เบาที่สุด + feature ครบกว่า |
+| `terminal-text-based` | ✅ ได้เลย | Text-based ไม่มีวันเทียบ GUI ได้ |
+| `text-mode-ui` | ✅ ได้เลย | เหมือนกัน |
+| `pwa-idea-only` | ✅ ได้เลย | PWA ไม่เหมาะกับ app ประเภทนี้ |
+| `sync-local-data` | ✅ ได้เลย | Rust GUI มี offline-first + sync ในตัว |
+| `cloud-first-data-flow` | ✅ ได้เลย | Rust GUI sync Firebase ตรง |
+| `feature/mvp-table-view` | ✅ ได้เลย | Rust GUI แสดง data ได้ทุกรูปแบบ |
+| `wait-to-kill` | ✅ ได้เลย | feature นี้รวมอยู่ใน Rust GUI แล้ว |
+| `fix/type-safety-audit` | ✅ ได้เลย | Rust มี type safety ในตัว |
+
+### ทดแทนไม่ได้ ❌
+
+| Branch/Version | ทดแทนได้ไหม | เหตุผล |
+|----------------|-------------|--------|
+| **Webapp Full** (main) | ❌ | Rust GUI ไม่มี visual effects (particles, sparkle, glass UI) |
+| **Webapp Lite** (main) | ⚠️ บางส่วน | ยังต้องการแบบเปิดเว็บไม่ต้องติดตั้ง |
+| **Tauri Desktop** (src-tauri/) | ❌ | Tauri wrap webapp ได้ full effects ครบ |
+
+### สรุป
+
+Rust GUI จะเป็น **"ตัวสุดท้าย" ของ native app** ที่รวมทุก branch เก่าเข้าด้วยกัน — ทุก branch เก่าพยายามทำสิ่งเดียวกันคือ "native app สำหรับ MVP tracking" แต่ technology จำกัด (C ncurses, Node.js terminal-kit, text-mode) Rust GUI มาแก้ปัญหาทั้งหมดนี้ด้วย egui + Firebase REST
+
+**แต่ webapp ยังต้องอยู่คู่กันไป** เพราะ:
+1. ไม่ต้องติดตั้ง (เปิดเว็บได้เลย)
+2. Visual effects สวยๆ (full build)
+3. ใช้ผ่าน browser ได้ทุกที่
+4. Party mode ที่ share URL ได้
