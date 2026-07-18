@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react';
-import LuminousParticlesBackground from './components/LuminousParticlesBackground';
-import { SparkleEffect } from './components/SparkleEffect';
+import React, { useEffect, useState } from 'react';
 import { IntlProvider } from 'react-intl';
 
 import dayjs from 'dayjs';
-import 'dayjs/locale/pt-br';
-import 'dayjs/locale/th';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
+
+// Only load dayjs locales in full mode
+declare const __LITE_MODE__: boolean;
+if (!__LITE_MODE__) {
+  import('dayjs/locale/pt-br');
+  import('dayjs/locale/th');
+}
 
 const DAYJS_LOCALE_MAP: Record<string, string> = {
   en: 'en',
@@ -32,6 +35,15 @@ import { useTheme } from './hooks';
 import { LOCALES } from './locales';
 import { messages } from './locales/messages';
 import { LOCAL_STORAGE_ACTIVE_MVPS_KEY } from './constants';
+
+
+// Lazy load visual effects only in full mode
+const LuminousParticlesBackground = __LITE_MODE__
+  ? null
+  : React.lazy(() => import('./components/LuminousParticlesBackground'));
+const SparkleEffect = __LITE_MODE__
+  ? null
+  : React.lazy(() => import('./components/SparkleEffect').then(m => ({ default: m.SparkleEffect })));
 
 const APP_VERSION = '2'; // Define the current version of the application
 
@@ -180,6 +192,10 @@ function AppContent() {
       } else {
         html.classList.remove('ultra-lite');
       }
+      // Always add lite class in lite build mode
+      if (__LITE_MODE__) {
+        html.classList.add('lite-build');
+      }
     }
   }, [ultraLite]);
 
@@ -231,10 +247,27 @@ function AppContent() {
     }
   }, [font]);
 
+  // Maps loaded on-demand via loading="lazy" on img tags
+
+  // In lite mode, auto-set nickname if not set (WelcomeScreen is skipped)
+  useEffect(() => {
+    if (__LITE_MODE__ && !nickname) {
+      changeNickname('PLAYER');
+    }
+  }, []);
+
   return (
     <>
-      {isAnimatedBackgroundEnabled && <LuminousParticlesBackground />}
-      {isSparkleEffectEnabled && <SparkleEffect count={sparkleDensity} />}
+      {!__LITE_MODE__ && isAnimatedBackgroundEnabled && LuminousParticlesBackground && (
+        <React.Suspense fallback={null}>
+          <LuminousParticlesBackground />
+        </React.Suspense>
+      )}
+      {!__LITE_MODE__ && isSparkleEffectEnabled && SparkleEffect && (
+        <React.Suspense fallback={null}>
+          <SparkleEffect count={sparkleDensity} />
+        </React.Suspense>
+      )}
       <IntlProvider
         messages={messages[language]}
         locale={language}
@@ -256,7 +289,13 @@ function AppContent() {
               />
         )}
 
-            <WelcomeScreen />
+            {!__LITE_MODE__ && <WelcomeScreen />}
+            {__LITE_MODE__ && (
+              <>
+                <Header />
+                <Main />
+              </>
+            )}
           </>
         )}
       </IntlProvider>

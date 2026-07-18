@@ -5,7 +5,7 @@ import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
-import { database, ref, get } from '@/services/firebase';
+import { getFirebase } from '@/services/firebaseLazy';
 import {
   useScrollBlock,
   useClickOutside,
@@ -44,6 +44,7 @@ export function ModalPartySharing({ onClose }: Props) {
   const [partyNameInput, setPartyNameInput] = useState(currentPartyRoom || '');
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   const [rememberNickname, setRememberNickname] = usePersistedState(
     'rememberNickname',
@@ -59,6 +60,7 @@ export function ModalPartySharing({ onClose }: Props) {
 
   const handleExport = useCallback(async () => {
     try {
+      const { database, ref, get } = await getFirebase();
       let path: string;
       if (currentPartyRoom) {
         path = `hunting/party/${currentPartyRoom}/${server}/mvps`;
@@ -141,11 +143,9 @@ export function ModalPartySharing({ onClose }: Props) {
   };
 
   const handleLogout = () => {
-    if (confirm('ต้องการออกจากระบบหรือไม่?')) {
-      changeNickname('');
-      changePartyRoom(null);
-      onClose();
-    }
+    changeNickname('');
+    changePartyRoom(null);
+    onClose();
   };
 
   return (
@@ -165,7 +165,7 @@ export function ModalPartySharing({ onClose }: Props) {
               borderRadius: '10px',
               textAlign: 'center',
               color: currentPartyRoom ? '#2196F3' : '#4CAF50',
-              fontSize: '1.5rem',
+              fontSize: '2.4rem',
               fontWeight: 'bold',
               marginBottom: '20px',
             }}
@@ -182,7 +182,7 @@ export function ModalPartySharing({ onClose }: Props) {
               <Input
                 placeholder='e.g. BOY'
                 value={nicknameInput}
-                onChange={(e) => setNicknameInput(e.target.value.toUpperCase())}
+                onChange={(e) => setNicknameInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                 maxLength={12}
               />
               <label
@@ -191,6 +191,7 @@ export function ModalPartySharing({ onClose }: Props) {
                   alignItems: 'center',
                   gap: '4px',
                   color: '#aaa',
+                  fontSize: '2.4rem',
                 }}
               >
                 <input
@@ -211,7 +212,7 @@ export function ModalPartySharing({ onClose }: Props) {
                 placeholder='ใส่ชื่อ Party เพื่อเข้าร่วม'
                 value={partyNameInput}
                 onChange={(e) =>
-                  setPartyNameInput(e.target.value.toUpperCase())
+                  setPartyNameInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))
                 }
                 maxLength={20}
               />
@@ -223,7 +224,7 @@ export function ModalPartySharing({ onClose }: Props) {
                 width: '100%',
                 marginTop: '10px',
                 padding: '12px',
-                fontSize: '1rem',
+                fontSize: '2.4rem',
                 borderRadius: '8px',
                 border: 'none',
                 background: partyNameInput.trim() ? '#2196F3' : '#555',
@@ -240,7 +241,7 @@ export function ModalPartySharing({ onClose }: Props) {
                   width: '100%',
                   marginTop: '10px',
                   padding: '12px',
-                  fontSize: '1rem',
+                  fontSize: '2.4rem',
                   borderRadius: '8px',
                   border: '1px solid #f44336',
                   background: 'transparent',
@@ -260,6 +261,7 @@ export function ModalPartySharing({ onClose }: Props) {
               style={{
                 flex: 1,
                 padding: '12px',
+                fontSize: '2.4rem',
                 background: 'rgba(255,255,255,0.1)',
                 border: '1px solid rgba(255,255,255,0.2)',
                 borderRadius: '8px',
@@ -278,6 +280,7 @@ export function ModalPartySharing({ onClose }: Props) {
               style={{
                 flex: 1,
                 padding: '12px',
+                fontSize: '2.4rem',
                 background: 'rgba(255,255,255,0.1)',
                 border: '1px solid rgba(255,255,255,0.2)',
                 borderRadius: '8px',
@@ -301,24 +304,66 @@ export function ModalPartySharing({ onClose }: Props) {
           </div>
 
           {/* Logout */}
-          <button
-            onClick={handleLogout}
-            style={{
-              width: '100%',
-              padding: '12px',
-              background: 'rgba(244, 67, 54, 0.2)',
-              border: '1px solid #f44336',
-              borderRadius: '8px',
-              color: '#f44336',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-            }}
-          >
-            <LogOut size={16} /> ออกจากระบบ
-          </button>
+          {confirmLogout ? (
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ textAlign: 'center', color: '#f44336', fontSize: '2.4rem', marginBottom: '5px' }}>
+                ต้องการออกจากระบบจริงหรือไม่?
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    fontSize: '2.4rem',
+                    background: 'rgba(244, 67, 54, 0.3)',
+                    border: '1px solid #f44336',
+                    borderRadius: '8px',
+                    color: '#f44336',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  ออกจากระบบ
+                </button>
+                <button
+                  onClick={() => setConfirmLogout(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    fontSize: '2.4rem',
+                    background: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '8px',
+                    color: '#aaa',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmLogout(true)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '2.4rem',
+                background: 'rgba(244, 67, 54, 0.2)',
+                border: '1px solid #f44336',
+                borderRadius: '8px',
+                color: '#f44336',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <LogOut size={16} /> ออกจากระบบ
+            </button>
+          )}
         </SettingsContainer>
       </Modal>
     </ModalBase>
