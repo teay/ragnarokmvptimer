@@ -13,63 +13,66 @@ DEST_ICONS="$PROJECT_DIR/public/icons"
 
 echo "Preparing lite build assets..."
 
-# Create destination directories
-mkdir -p "$DEST_MAPS"
-mkdir -p "$DEST_ICONS"
+# Clean old public assets
+rm -rf "$DEST_MAPS" "$DEST_ICONS"
+mkdir -p "$DEST_MAPS" "$DEST_ICONS" "$DEST_ICONS/anim"
 
 # Copy all map PNGs
 cp "$SRC_MAPS"/*.png "$DEST_MAPS/" 2>/dev/null || true
 echo "Copied $(ls "$DEST_MAPS"/*.png 2>/dev/null | wc -l) map images to public/maps/"
 
-# Copy all MVP icon PNGs
+# Copy all static MVP icon PNGs
 cp "$SRC_ICONS"/*.png "$DEST_ICONS/" 2>/dev/null || true
-echo "Copied $(ls "$DEST_ICONS"/*.png 2>/dev/null | wc -l) MVP icons to public/icons/"
+echo "Copied $(ls "$DEST_ICONS"/*.png 2>/dev/null | wc -l) static MVP icons to public/icons/"
 
-# Overlay animated icons (APNG + GIF) on top of static icons
+# Copy animated icons
 SRC_ANIMATED="$PROJECT_DIR/src/assets/mvp_icons_animated"
-cp "$SRC_ANIMATED"/*.png "$DEST_ICONS/" 2>/dev/null || true
+# GIFs: different extension, no conflict with static PNGs
 cp "$SRC_ANIMATED"/*.gif "$DEST_ICONS/" 2>/dev/null || true
+# APNGs: same extension as static, put in anim/ subdirectory
+cp "$SRC_ANIMATED"/*.png "$DEST_ICONS/anim/" 2>/dev/null || true
 echo "Overlaid $(ls "$SRC_ANIMATED"/*.png "$SRC_ANIMATED"/*.gif 2>/dev/null | wc -l) animated icons"
 
-# Compress images with Python/PIL
-DEST_MAPS="$DEST_MAPS" DEST_ICONS="$DEST_ICONS" python3 << 'PYEOF'
-import os
+# Compress only STATIC images (maps + static PNGs)
+# Do NOT compress animated APNGs or GIFs - they have transparency and animation
+python3 - "$DEST_MAPS" "$DEST_ICONS" << 'PYEOF'
+import os, sys
 from PIL import Image
 
-maps_dir = os.environ.get("DEST_MAPS", "")
-icons_dir = os.environ.get("DEST_ICONS", "")
+maps_dir = sys.argv[1]
+icons_dir = sys.argv[2]
 
-def compress_dir(directory, ext, colors):
-    count = 0
-    for f in sorted(os.listdir(directory)):
-        if not f.endswith(ext):
-            continue
-        path = os.path.join(directory, f)
-        try:
-            if ext == '.gif':
-                img = Image.open(path)
-                frames = []
-                for i in range(getattr(img, 'n_frames', 1)):
-                    img.seek(i)
-                    frames.append(img.convert('RGBA').quantize(colors=colors, method=Image.Quantize.FASTOCTREE))
-                frames[0].save(path, save_all=True, append_images=frames[1:],
-                               duration=img.info.get('duration', 100), loop=0, optimize=True)
-            else:
-                img = Image.open(path)
-                img = img.quantize(colors=colors, method=Image.Quantize.FASTOCTREE)
-                img.save(path, optimize=True)
-            count += 1
-        except:
-            pass
-    return count
+# Compress map PNGs (lossy, no transparency)
+count = 0
+for f in sorted(os.listdir(maps_dir)):
+    if not f.endswith('.png'):
+        continue
+    path = os.path.join(maps_dir, f)
+    try:
+        img = Image.open(path)
+        img = img.quantize(colors=128, method=Image.Quantize.FASTOCTREE)
+        img.save(path, optimize=True)
+        count += 1
+    except:
+        pass
+print(f"Compressed {count} map images")
 
-if maps_dir:
-    n = compress_dir(maps_dir, '.png', 128)
-    print(f"Compressed {n} map images")
-if icons_dir:
-    n1 = compress_dir(icons_dir, '.png', 64)
-    n2 = compress_dir(icons_dir, '.gif', 64)
-    print(f"Compressed {n1} icon PNGs + {n2} GIFs")
+# Compress static icon PNGs only (skip anim/ subdirectory and .gif files)
+count = 0
+for f in sorted(os.listdir(icons_dir)):
+    if not f.endswith('.png'):
+        continue
+    path = os.path.join(icons_dir, f)
+    try:
+        img = Image.open(path)
+        img = img.quantize(colors=64, method=Image.Quantize.FASTOCTREE)
+        img.save(path, optimize=True)
+        count += 1
+    except:
+        pass
+print(f"Compressed {count} static icon PNGs")
+print(f"Skipped animated icons in anim/ (APNG preserved)")
+print(f"Skipped animated icons *.gif (GIF preserved)")
 PYEOF
 
 echo "Assets ready for lite build!"
