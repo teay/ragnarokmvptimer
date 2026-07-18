@@ -9,11 +9,7 @@ export function PartyButton() {
   const [isPartyModalOpen, setIsPartyModalOpen] = useState(false);
 
   const handleClick = () => {
-    if (__LITE_MODE__) {
-      setIsPartyModalOpen(true);
-    } else {
-      window.dispatchEvent(new CustomEvent('showWelcomeScreen'));
-    }
+    setIsPartyModalOpen(true);
   };
 
   return (
@@ -21,7 +17,7 @@ export function PartyButton() {
       <Container>
         <Users onClick={handleClick} />
       </Container>
-      {__LITE_MODE__ && isPartyModalOpen && (
+      {isPartyModalOpen && (
         <ModalPartySharing onClose={() => setIsPartyModalOpen(false)} />
       )}
     </>

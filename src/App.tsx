@@ -21,7 +21,6 @@ const DAYJS_LOCALE_MAP: Record<string, string> = {
 };
 
 import { Main } from './pages/Main';
-import { WelcomeScreen } from './components/WelcomeScreen';
 
 import { Header } from './components/Header';
 import { WarningHeader } from './components/WarningHeader';
@@ -284,12 +283,13 @@ function AppContent() {
               />
         )}
 
-            {!__LITE_MODE__ && <WelcomeScreen />}
-            {__LITE_MODE__ && !hasJoined && <NicknamePrompt />}
-            {__LITE_MODE__ && hasJoined && (
+            {!hasJoined && <NicknamePrompt />}
+            {hasJoined && (
               <>
                 <Header />
                 <Main />
+                <Footer />
+                <WarningHeader text={messages[language]['under_development']} />
               </>
             )}
           </>
