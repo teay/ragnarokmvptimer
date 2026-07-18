@@ -422,6 +422,8 @@ function NicknamePrompt() {
   const [nickname, setNickname] = useState('');
   const [partyName, setPartyName] = useState('');
 
+  const sanitize = (v: string) => v.replace(/[^a-zA-Z0-9]/g, '');
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (nickname.trim()) {
@@ -476,7 +478,8 @@ function NicknamePrompt() {
           id='nickname'
           name='nickname'
           value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
+          onChange={(e) => setNickname(sanitize(e.target.value))}
+          pattern='[a-zA-Z0-9]*'
           placeholder='Your Nickname'
           autoFocus
           style={{
@@ -493,7 +496,8 @@ function NicknamePrompt() {
           id='party-name'
           name='party-name'
           value={partyName}
-          onChange={(e) => setPartyName(e.target.value)}
+          onChange={(e) => setPartyName(sanitize(e.target.value))}
+          pattern='[a-zA-Z0-9]*'
           placeholder='Party Name (optional)'
           style={{
             padding: '15px 25px',
