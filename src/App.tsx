@@ -418,14 +418,18 @@ function SoundChoiceModal({ onChoice }: { onChoice: (enabled: boolean) => void }
 }
 
 function NicknamePrompt() {
-  const { setJoinState, setJoinNickname, changeNickname } = useSettings();
-  const [value, setValue] = useState('');
+  const { setJoinState, setJoinNickname, changeNickname, changePartyRoom } = useSettings();
+  const [nickname, setNickname] = useState('');
+  const [partyName, setPartyName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (value.trim()) {
-      changeNickname(value.trim());
-      setJoinNickname(value.trim());
+    if (nickname.trim()) {
+      changeNickname(nickname.trim());
+      setJoinNickname(nickname.trim());
+      if (partyName.trim()) {
+        changePartyRoom(partyName.trim());
+      }
       setJoinState('joining');
     }
   };
@@ -455,24 +459,42 @@ function NicknamePrompt() {
         Welcome to the Hunt!
       </h1>
       <p style={{ fontSize: '1.5rem', marginBottom: '30px', opacity: 0.9 }}>
-        Please enter a nickname to join the room:
+        Please enter your nickname to get started:
       </p>
       <form
         onSubmit={handleSubmit}
         style={{
           marginTop: '20px',
           display: 'flex',
+          flexDirection: 'column',
           gap: '15px',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         <input
           type='text'
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
+          id='nickname'
+          name='nickname'
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
           placeholder='Your Nickname'
           autoFocus
+          style={{
+            padding: '15px 25px',
+            fontSize: '1.2rem',
+            borderRadius: '10px',
+            border: 'none',
+            minWidth: '250px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+          }}
+        />
+        <input
+          type='text'
+          id='party-name'
+          name='party-name'
+          value={partyName}
+          onChange={(e) => setPartyName(e.target.value)}
+          placeholder='Party Name (optional)'
           style={{
             padding: '15px 25px',
             fontSize: '1.2rem',
