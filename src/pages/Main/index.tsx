@@ -134,9 +134,7 @@ export function Main() {
             onReverse={() => setReverseSort((s) => !s)}
           />
 
-          {isLoading && __LITE_MODE__ && null}
-
-          {!isLoading && nonActiveMvps.length === 0 && allMvps.length === 0 && (
+          {isLoading && __LITE_MODE__ && (
             <MvpsContainer>
               {[...Array(8)].map((_, index) => (
                 <MvpCardSkeleton key={`skeleton-${index}`} />

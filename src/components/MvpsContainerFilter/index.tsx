@@ -39,6 +39,8 @@ export function MvpsContainerFilter({
       <SearchContainer>
         <SearchIcon />
         <SearchInput
+          id='mvp-search'
+          name='mvp-search'
           value={searchQuery}
           onChange={(e) => handleQuery(e.target.value)}
           title='Search mvps by his name or id'
@@ -52,6 +54,8 @@ export function MvpsContainerFilter({
 
       <SortContainer>
         <SortSelect
+          id='mvp-sort'
+          name='mvp-sort'
           value={currentSort}
           onChange={(type) => {
             sessionStorage.setItem('sort', type);

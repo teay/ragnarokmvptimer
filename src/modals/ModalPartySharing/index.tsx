@@ -196,6 +196,8 @@ export function ModalPartySharing({ onClose }: Props) {
               >
                 <input
                   type='checkbox'
+                  id='remember-nickname'
+                  name='remember-nickname'
                   checked={rememberNickname}
                   onChange={(e) => setRememberNickname(e.target.checked)}
                 />
@@ -296,6 +298,8 @@ export function ModalPartySharing({ onClose }: Props) {
             </button>
             <input
               type='file'
+              id='import-data'
+              name='import-data'
               accept='.json'
               ref={fileInputRef}
               style={{ display: 'none' }}

@@ -19,18 +19,18 @@ const animatedApngIds = new Set([1038,1039,1046,1059,1086,1087,1112,1115,1147,11
 const allAnimatedIds = new Set([...animatedGifIds, ...animatedApngIds]);
 
 export function getMapImage(mapName: string): string {
-  return `/maps/${mapName}.png`;
+  return `./maps/${mapName}.png`;
 }
 
 export function getMvpIcon(mvpId: number, animated?: boolean): string {
   if (animated && allAnimatedIds.has(mvpId)) {
     if (animatedGifIds.has(mvpId)) {
-      return `/icons/${mvpId}.gif`;
+      return `./icons/${mvpId}.gif`;
     }
     // APNG: stored in /icons/anim/ to avoid conflict with static PNG
-    return `/icons/anim/${mvpId}.png`;
+    return `./icons/anim/${mvpId}.png`;
   }
-  return `/icons/${mvpId}.png`;
+  return `./icons/${mvpId}.png`;
 }
 
 export async function getServerData(server: string): Promise<IMvp[]> {
