@@ -6,8 +6,7 @@ import {
   ReactNode,
 } from 'react';
 import dayjs from 'dayjs';
-import { ref, onValue } from '@/services/firebase';
-import { database, DB_ROOT_PATH } from '@/services/firebase';
+import { getFirebase, DB_ROOT_PATH } from '@/services/firebaseLazy';
 import { useSettings } from '@/contexts/SettingsContext';
 
 interface PartyMember {
@@ -49,36 +48,44 @@ export function TimerProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const membersRef = ref(
-      database,
-      `${DB_ROOT_PATH}/party/${partyRoom}/members`
-    );
+    let unsubscribe: (() => void) | undefined;
 
-    const unsubscribe = onValue(membersRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const membersData = snapshot.val();
-        const now = dayjs();
+    async function setup() {
+      const { database, ref, onValue } = await getFirebase();
 
-        const membersList: PartyMember[] = Object.keys(membersData).map(
-          (key) => {
-            const data = membersData[key];
-            const lastSeen = data.lastSeen ? dayjs(data.lastSeen) : dayjs(0);
-            const isOnline = now.diff(lastSeen) < ONLINE_THRESHOLD_MS;
+      const membersRef = ref(
+        database,
+        `${DB_ROOT_PATH}/party/${partyRoom}/members`
+      );
 
-            return {
-              name: data.name || key,
-              lastSeen: data.lastSeen || '',
-              isOnline,
-            };
-          }
-        );
-        setPartyMembers(membersList);
-      } else {
-        setPartyMembers([]);
-      }
-    });
+      unsubscribe = onValue(membersRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const membersData = snapshot.val();
+          const now = dayjs();
 
-    return () => unsubscribe();
+          const membersList: PartyMember[] = Object.keys(membersData).map(
+            (key) => {
+              const data = membersData[key];
+              const lastSeen = data.lastSeen ? dayjs(data.lastSeen) : dayjs(0);
+              const isOnline = now.diff(lastSeen) < ONLINE_THRESHOLD_MS;
+
+              return {
+                name: data.name || key,
+                lastSeen: data.lastSeen || '',
+                isOnline,
+              };
+            }
+          );
+          setPartyMembers(membersList);
+        } else {
+          setPartyMembers([]);
+        }
+      });
+    }
+
+    setup();
+
+    return () => unsubscribe?.();
   }, [partyRoom]);
 
   return (

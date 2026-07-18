@@ -82,7 +82,7 @@ export function Main() {
 
   return (
     <>
-      {isLoading && <LoadingOverlay />}
+      {!__LITE_MODE__ && isLoading && <LoadingOverlay />}
       <Container>
         {normalActiveMvps.length > 0 && (
           <Section>
@@ -134,7 +134,17 @@ export function Main() {
             onReverse={() => setReverseSort((s) => !s)}
           />
 
-          {isLoading && (
+          {isLoading && __LITE_MODE__ && null}
+
+          {!isLoading && nonActiveMvps.length === 0 && allMvps.length === 0 && (
+            <MvpsContainer>
+              {[...Array(8)].map((_, index) => (
+                <MvpCardSkeleton key={`skeleton-${index}`} />
+              ))}
+            </MvpsContainer>
+          )}
+
+          {!__LITE_MODE__ && isLoading && (
             <MvpsContainer>
               {[...Array(64)].map((_, index) => (
                 <MvpCardSkeleton key={`skeleton-${index}`} />

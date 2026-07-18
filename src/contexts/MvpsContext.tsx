@@ -11,8 +11,8 @@ import dayjs from 'dayjs';
 
 import { useSettings } from './SettingsContext';
 
-import { database, ref, set, onValue, DB_ROOT_PATH } from '@/services/firebase';
-import { getMvpRespawnTime, getServerData } from '../utils';
+import { getFirebase, DB_ROOT_PATH } from '@/services/firebaseLazy';
+import { getMvpRespawnTime, getServerData } from '@/utils';
 
 interface MvpProviderProps {
   children: ReactNode;
@@ -103,28 +103,31 @@ export function MvpProvider({ children }: MvpProviderProps) {
   useEffect(() => {
     if (!partyRoom || !nickname) return;
 
-    const membersRef = ref(
-      database,
-      `${DB_ROOT_PATH}/party/${partyRoom}/members/${nickname}`
-    );
+    let interval: ReturnType<typeof setInterval> | undefined;
 
-    const updateHeartbeat = () => {
-      set(membersRef, {
-        name: nickname,
-        lastSeen: dayjs().toISOString(),
-      }).catch(console.error);
-    };
+    async function setup() {
+      const { database, ref, set } = await getFirebase();
 
-    updateHeartbeat();
-    const interval = setInterval(updateHeartbeat, 30000);
-
-    return () => {
-      clearInterval(interval);
-      const selfRef = ref(
+      const membersRef = ref(
         database,
         `${DB_ROOT_PATH}/party/${partyRoom}/members/${nickname}`
       );
-      set(selfRef, null).catch(console.error);
+
+      const updateHeartbeat = () => {
+        set(membersRef, {
+          name: nickname,
+          lastSeen: dayjs().toISOString(),
+        }).catch(console.error);
+      };
+
+      updateHeartbeat();
+      interval = setInterval(updateHeartbeat, 30000);
+    }
+
+    setup();
+
+    return () => {
+      clearInterval(interval);
     };
   }, [partyRoom, nickname]);
 
@@ -190,46 +193,54 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
     setIsLoading(true);
 
-    let mvpsRef;
-    if (isSoloMode) {
-      mvpsRef = ref(
-        database,
-        `${DB_ROOT_PATH}/solo/${nickname}/${server}/mvps`
-      );
-    } else {
-      mvpsRef = ref(
-        database,
-        `${DB_ROOT_PATH}/party/${partyRoom}/${server}/mvps`
+    let unsubscribe: (() => void) | undefined;
+
+    async function setup() {
+      const { database, ref, onValue } = await getFirebase();
+
+      let mvpsRef;
+      if (isSoloMode) {
+        mvpsRef = ref(
+          database,
+          `${DB_ROOT_PATH}/solo/${nickname}/${server}/mvps`
+        );
+      } else {
+        mvpsRef = ref(
+          database,
+          `${DB_ROOT_PATH}/party/${partyRoom}/${server}/mvps`
+        );
+      }
+
+      unsubscribe = onValue(
+        mvpsRef,
+        (snapshot) => {
+          const data = snapshot.val();
+          if (!data) {
+            setActiveMvps([]);
+            setIsLoading(false);
+            return;
+          }
+
+          const remoteMvpsRaw: IMvp[] = Array.isArray(data)
+            ? data
+            : Object.values(data);
+
+          const rehydrated = rehydrateMvps(remoteMvpsRaw);
+          const sorted = sortMvpsByRespawnTime(rehydrated);
+
+          setActiveMvps(sorted);
+          setIsLoading(false);
+        },
+        (error) => {
+          console.error(error);
+          setIsLoading(false);
+        }
       );
     }
 
-    const unsubscribe = onValue(
-      mvpsRef,
-      (snapshot) => {
-        const data = snapshot.val();
-        if (!data) {
-          setActiveMvps([]);
-          setIsLoading(false);
-          return;
-        }
+    setup();
 
-        const remoteMvpsRaw: IMvp[] = Array.isArray(data)
-          ? data
-          : Object.values(data);
-
-        const rehydrated = rehydrateMvps(remoteMvpsRaw);
-        const sorted = sortMvpsByRespawnTime(rehydrated);
-
-        setActiveMvps(sorted);
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error(error);
-        setIsLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
+    return () => unsubscribe?.();
   }, [partyRoom, server, originalAllMvps, rehydrateMvps, nickname]);
 
   const saveMvpsToTarget = useCallback(
@@ -249,19 +260,21 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
       const isSoloMode = !partyRoom && !!nickname;
 
-      if (isSoloMode) {
-        const serverRef = ref(
-          database,
-          `${DB_ROOT_PATH}/solo/${nickname}/${server}/mvps`
-        );
-        set(serverRef, minimalMvps).catch((err) => console.error(err));
-      } else if (partyRoom) {
-        const serverRef = ref(
-          database,
-          `${DB_ROOT_PATH}/party/${partyRoom}/${server}/mvps`
-        );
-        set(serverRef, minimalMvps).catch((err) => console.error(err));
-      }
+      getFirebase().then(({ database, ref, set }) => {
+        if (isSoloMode) {
+          const serverRef = ref(
+            database,
+            `${DB_ROOT_PATH}/solo/${nickname}/${server}/mvps`
+          );
+          set(serverRef, minimalMvps).catch((err) => console.error(err));
+        } else if (partyRoom) {
+          const serverRef = ref(
+            database,
+            `${DB_ROOT_PATH}/party/${partyRoom}/${server}/mvps`
+          );
+          set(serverRef, minimalMvps).catch((err) => console.error(err));
+        }
+      });
     },
     [partyRoom, server, nickname]
   );

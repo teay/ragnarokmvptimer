@@ -1,5 +1,3 @@
-import { prepare, layout } from '@chenglou/pretext';
-
 let canvas: HTMLCanvasElement | null = null;
 
 function getCanvasContext() {
@@ -40,9 +38,7 @@ export function measureTextCanvas(
 }
 
 /**
- * Measures text using Pretext.
- * NOTE: Pretext is currently falling back to DOM/Canvas in this environment 
- * due to an internal string parser issue in the library.
+ * Measures text using Canvas API (Extremely fast, stable, and widely supported).
  */
 export function measureTextPretext(
   text: string,
@@ -50,22 +46,7 @@ export function measureTextPretext(
   fontFamily: string,
   maxWidth: number = Infinity
 ) {
-  if (!text) return { width: 0, height: 0 };
-  
-  try {
-    const cleanedFont = cleanFontFamily(fontFamily);
-    const fontStr = `${fontSize}px ${cleanedFont}`;
-    const font = prepare(fontStr);
-    
-    if (font) {
-      const result = layout(font, text, maxWidth === Infinity ? 0 : maxWidth);
-      if (result) return result;
-    }
-    throw new Error('Pretext failed');
-  } catch (error) {
-    // Fallback to Canvas for speed and stability
-    return measureTextCanvas(text, fontSize, fontFamily);
-  }
+  return measureTextCanvas(text, fontSize, fontFamily);
 }
 
 /**

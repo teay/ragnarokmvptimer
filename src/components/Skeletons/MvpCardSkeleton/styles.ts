@@ -19,7 +19,7 @@ export const Container = styled.div`
   flex-direction: column;
   align-items: center;
 
-  width: 220px;
+  width: 28rem;
   height: 288px;
   padding: 10px 0;
   border-radius: 8px;

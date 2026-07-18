@@ -2,9 +2,9 @@ import { css } from '@linaria/core';
 
 export const globals = css`
   :global() {
+    /* Fonts: Load all in full mode, single font in lite mode */
     @import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;700&display=swap');
+    ${'' /* In lite mode, only Jost is loaded via build-time replacement */}
 
     *,
     *::after,
@@ -404,6 +404,39 @@ export const globals = css`
     /* Keep MVP Sprites animated as requested */
     html.ultra-lite img[alt],
     html.ultra-lite [class*='Sprite'] {
+      animation-duration: unset !important;
+      transition-duration: unset !important;
+    }
+
+    /* Lite Build Overrides - More aggressive than ultra-lite */
+    html.lite-build {
+      --header_backdrop_filter: none !important;
+      --modal_backdrop_filter: none !important;
+      --footer_backdrop_filter: none !important;
+      --filterSearch_backdrop_filter: none !important;
+      --languagePicker_backdrop_filter: none !important;
+      --header_box_shadow: none !important;
+      --footer_box_shadow: none !important;
+
+      /* Static background - no animation */
+      background: var(--secondary) !important;
+    }
+
+    html.lite-build body {
+      animation: none !important;
+      background: var(--secondary) !important;
+    }
+
+    html.lite-build *,
+    html.lite-build *::before,
+    html.lite-build *::after {
+      animation-duration: 0.001s !important;
+      transition-duration: 0s !important;
+    }
+
+    /* Keep MVP Sprites animated */
+    html.lite-build img[alt],
+    html.lite-build [class*='Sprite'] {
       animation-duration: unset !important;
       transition-duration: unset !important;
     }
