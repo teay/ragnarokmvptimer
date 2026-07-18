@@ -33,6 +33,12 @@ cp "$SRC_ANIMATED"/*.gif "$DEST_ICONS/" 2>/dev/null || true
 cp "$SRC_ANIMATED"/*.png "$DEST_ICONS/anim/" 2>/dev/null || true
 echo "Overlaid $(ls "$SRC_ANIMATED"/*.png "$SRC_ANIMATED"/*.gif 2>/dev/null | wc -l) animated icons"
 
+# Copy server data JSON files
+DEST_DATA="$PROJECT_DIR/public/data"
+mkdir -p "$DEST_DATA"
+cp "$PROJECT_DIR/src/data/"*.json "$DEST_DATA/" 2>/dev/null || true
+echo "Copied $(ls "$DEST_DATA"/*.json 2>/dev/null | wc -l) server data files to public/data/"
+
 # Compress only STATIC images (maps + static PNGs)
 # Do NOT compress animated APNGs or GIFs - they have transparency and animation
 python3 - "$DEST_MAPS" "$DEST_ICONS" << 'PYEOF'

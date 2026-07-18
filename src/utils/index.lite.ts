@@ -34,6 +34,6 @@ export function getMvpIcon(mvpId: number, animated?: boolean): string {
 }
 
 export async function getServerData(server: string): Promise<IMvp[]> {
-  const data = await import(`../data/${server}.json`);
-  return data.default;
+  const res = await fetch(`./data/${server}.json`);
+  return res.json();
 }
