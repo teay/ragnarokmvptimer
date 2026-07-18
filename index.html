@@ -116,6 +116,9 @@
         </div>
       </div>
     </div>
+    <script>
+      try { var s = JSON.parse(localStorage.getItem('settings') || '{}'); if (!s.nickname) document.getElementById('cls-placeholder').style.display = 'none'; } catch(e) {}
+    </script>
     <div id="modal-root"></div>
     <div id="initial-loading" class="initial-loading-spinner"></div>
 
