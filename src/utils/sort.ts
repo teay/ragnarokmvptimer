@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { getMvpRespawnTime } from './index';
+import { getMvpRespawnTime } from './shared';
 
 function getFastestRespawn(mvp: IMvp) {
   if (!mvp.spawn || mvp.spawn.length === 0) return 0;

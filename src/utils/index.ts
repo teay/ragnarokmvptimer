@@ -1,5 +1,14 @@
 import Question from '../assets/question.gif';
 import { IMvp } from '../types';
+import {
+  formatTime,
+  formatTimeOfDay,
+  getMvpRespawnTime,
+  getMvpRespawnWindow,
+  clearData,
+} from './shared';
+
+export { formatTime, formatTimeOfDay, getMvpRespawnTime, getMvpRespawnWindow, clearData };
 
 declare const __LITE_MODE__: boolean;
 
@@ -65,80 +74,4 @@ export function getMvpIcon(mvpId: number, animated?: boolean): string {
 export async function getServerData(server: string): Promise<IMvp[]> {
   const data = await import(`../data/${server}.json`);
   return data.default;
-}
-
-/**
- * Format the time to ALWAYS be HH:mm:ss (e.g. 00:09:02)
- * For countdown durations, 24h/12h format doesn't apply.
- */
-export function formatTime(duration: number): string {
-  const absDuration = Math.abs(duration);
-  const seconds = Math.floor((absDuration / 1000) % 60);
-  const minutes = Math.floor((absDuration / (1000 * 60)) % 60);
-  const hours = Math.floor(absDuration / (1000 * 60 * 60));
-
-  const hoursStr = String(hours).padStart(2, '0');
-  const minutesStr = String(minutes).padStart(2, '0');
-  const secondsStr = String(seconds).padStart(2, '0');
-
-  return `${hoursStr}:${minutesStr}:${secondsStr}`;
-}
-
-/**
- * Format a time-of-day value respecting use24HourFormat setting.
- * Input must be HH:mm only (no date prefix).
- */
-export function formatTimeOfDay(
-  timeStr24: string,
-  use24HourFormat: boolean
-): string {
-  if (use24HourFormat) return timeStr24;
-
-  const [hStr, rest] = timeStr24.split(':');
-  let hours = parseInt(hStr, 10);
-  if (isNaN(hours)) return timeStr24;
-  const suffix = hours >= 12 ? ' PM' : ' AM';
-  hours = hours % 12 || 12;
-  return `${hours}:${rest}${suffix}`;
-}
-
-/**
- * Returns the death map MINIMUM respawn time in milliseconds.
- */
-export function getMvpRespawnTime(mvp: IMvp): number {
-  if (!mvp || !mvp.spawn || !Array.isArray(mvp.spawn)) return 0;
-
-  // ค้นหาเฉพาะแมพที่ตรงกับ deathMap เท่านั้น
-  const deathMap = mvp.spawn.find(
-    (spawn) => spawn && spawn.mapname === mvp.deathMap
-  );
-
-  // ถ้าไม่เจอแมพที่ตรงกัน ให้คืนค่า 0 (ห้าม Fallback ไป spawn[0]) 
-  // เพื่อให้ผ่านเทส: should return 0 if no matching mapname is found
-  return deathMap?.respawnTime || 0;
-}
-
-/**
- * Returns the death map MAXIMUM respawn window in milliseconds (spread).
- * Default to 10 minutes if not specified in data.
- */
-export function getMvpRespawnWindow(mvp: IMvp): number {
-  const DEFAULT_WINDOW = 10 * 60 * 1000;
-  
-  if (!mvp || !mvp.spawn || !Array.isArray(mvp.spawn)) return DEFAULT_WINDOW;
-
-  // ค้นหาเฉพาะแมพที่ตรงกับ deathMap
-  const deathMap = mvp.spawn.find(
-    (spawn) => spawn && spawn.mapname === mvp.deathMap
-  );
-
-  // ถ้าหาแมพไม่เจอ ให้คืนค่า DEFAULT_WINDOW (600,000) ทันที
-  if (!deathMap) return DEFAULT_WINDOW;
-
-  const window = deathMap.window;
-  return typeof window === 'number' ? window : DEFAULT_WINDOW;
-}
-
-export function clearData() {
-  localStorage.removeItem('activeMvps');
 }
