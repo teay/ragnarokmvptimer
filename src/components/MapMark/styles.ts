@@ -15,5 +15,5 @@ export const Container = styled.div<Props>`
 
 export const Tomb = styled.img`
   width: 20px;
-  height: 20px;
+  height: auto;
 `;
