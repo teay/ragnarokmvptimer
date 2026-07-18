@@ -64,7 +64,39 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     
-    <div id="root"></div>
+    <div id="root">
+      <div id="cls-skeleton" style="display:flex;flex-direction:column;min-height:100vh;background:#0a0a1a">
+        <header style="height:75px;background:#16213e;position:sticky;top:0;z-index:100"></header>
+        <main style="flex:1;display:flex;flex-direction:column;align-items:center;background:#0a0a1a;padding-bottom:30px;width:100%">
+          <div style="padding:10px 0;width:100%;display:flex;flex-direction:column;align-items:center;gap:15px">
+            <div style="font-weight:bold;font-size:2.4rem;color:#ccc">All</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1.6rem;width:100%;max-width:1000px;margin:2rem auto;padding:2rem;background:rgba(255,255,255,0.05);border-radius:8px">
+              <div style="display:flex;gap:1rem;width:100%">
+                <div style="flex:1;height:42px;background:rgba(255,255,255,0.08);border-radius:4px"></div>
+                <div style="flex:1;height:42px;background:rgba(255,255,255,0.08);border-radius:4px"></div>
+                <div style="width:40px;height:42px;background:rgba(255,255,255,0.08);border-radius:4px"></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2.5rem;width:100%;max-width:130rem;padding:1rem;justify-items:center">
+              <div style="width:28rem;height:288px;background:#1a1a3e;border:1px solid rgba(248,146,0,0.2);border-radius:8px"></div>
+              <div style="width:28rem;height:288px;background:#1a1a3e;border:1px solid rgba(248,146,0,0.2);border-radius:8px"></div>
+              <div style="width:28rem;height:288px;background:#1a1a3e;border:1px solid rgba(248,146,0,0.2);border-radius:8px"></div>
+              <div style="width:28rem;height:288px;background:#1a1a3e;border:1px solid rgba(248,146,0,0.2);border-radius:8px"></div>
+              <div style="width:28rem;height:288px;background:#1a1a3e;border:1px solid rgba(248,146,0,0.2);border-radius:8px"></div>
+              <div style="width:28rem;height:288px;background:#1a1a3e;border:1px solid rgba(248,146,0,0.2);border-radius:8px"></div>
+              <div style="width:28rem;height:288px;background:#1a1a3e;border:1px solid rgba(248,146,0,0.2);border-radius:8px"></div>
+              <div style="width:28rem;height:288px;background:#1a1a3e;border:1px solid rgba(248,146,0,0.2);border-radius:8px"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+      <script>
+        try {
+          var s = JSON.parse(localStorage.getItem('settings') || '{}');
+          if (!s.nickname) document.getElementById('cls-skeleton').style.display = 'none';
+        } catch(e) {}
+      </script>
+    </div>
     <div id="modal-root"></div>
     <div id="initial-loading" class="initial-loading-spinner"></div>
 
