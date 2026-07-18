@@ -249,12 +249,7 @@ function AppContent() {
 
   // Maps loaded on-demand via loading="lazy" on img tags
 
-  // In lite mode, auto-set nickname if not set (WelcomeScreen is skipped)
-  useEffect(() => {
-    if (__LITE_MODE__ && !nickname) {
-      changeNickname('PLAYER');
-    }
-  }, []);
+  const hasJoined = !!nickname;
 
   return (
     <>
@@ -290,7 +285,8 @@ function AppContent() {
         )}
 
             {!__LITE_MODE__ && <WelcomeScreen />}
-            {__LITE_MODE__ && (
+            {__LITE_MODE__ && !hasJoined && <NicknamePrompt />}
+            {__LITE_MODE__ && hasJoined && (
               <>
                 <Header />
                 <Main />
