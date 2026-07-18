@@ -13,6 +13,13 @@ DEST_ICONS="$PROJECT_DIR/public/icons"
 
 echo "Preparing lite build assets..."
 
+# Save favicon files (they live in public/icons/ but aren't MVP icons)
+FAVICON_DIR="$PROJECT_DIR/public/_favicons"
+mkdir -p "$FAVICON_DIR"
+for f in apple-touch-icon.png favicon-32x32.png favicon-16x16.png; do
+  [ -f "$DEST_ICONS/$f" ] && cp "$DEST_ICONS/$f" "$FAVICON_DIR/" 2>/dev/null || true
+done
+
 # Clean old public assets
 rm -rf "$DEST_MAPS" "$DEST_ICONS"
 mkdir -p "$DEST_MAPS" "$DEST_ICONS" "$DEST_ICONS/anim"
@@ -82,3 +89,10 @@ print(f"Skipped animated icons *.gif (GIF preserved)")
 PYEOF
 
 echo "Assets ready for lite build!"
+
+# Restore favicon files
+if [ -d "$FAVICON_DIR" ]; then
+  cp "$FAVICON_DIR"/* "$DEST_ICONS/" 2>/dev/null || true
+  rm -rf "$FAVICON_DIR"
+  echo "Restored favicon files"
+fi

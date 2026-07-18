@@ -180,6 +180,8 @@ export function ModalPartySharing({ onClose }: Props) {
             <SettingName>ชื่อของคุณ</SettingName>
             <InputWrapper>
               <Input
+                id='nickname'
+                name='nickname'
                 placeholder='e.g. BOY'
                 value={nicknameInput}
                 onChange={(e) => setNicknameInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
@@ -211,6 +213,8 @@ export function ModalPartySharing({ onClose }: Props) {
             <SettingName>ชื่อ Party</SettingName>
             <InputWrapper>
               <Input
+                id='party-name'
+                name='party-name'
                 placeholder='ใส่ชื่อ Party เพื่อเข้าร่วม'
                 value={partyNameInput}
                 onChange={(e) =>
