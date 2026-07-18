@@ -82,7 +82,7 @@ export function Main() {
 
   return (
     <>
-      {isLoading && <LoadingOverlay />}
+      {!__LITE_MODE__ && isLoading && <LoadingOverlay />}
       <Container>
         {normalActiveMvps.length > 0 && (
           <Section>
