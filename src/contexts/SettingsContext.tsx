@@ -14,6 +14,7 @@ import {
   SERVERS,
   DEFAULT_SETTINGS,
   LOCAL_STORAGE_SETTINGS_KEY,
+  NICKNAME_TTL_DAYS,
 } from '@/constants';
 
 interface SettingsProviderProps {
@@ -158,6 +159,37 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       }));
     }
   }, [settings.server, setSettings]);
+
+  // Expire nickname after NICKNAME_TTL_DAYS days of inactivity
+  useEffect(() => {
+    if (settings.nickname) {
+      const ts = settings.nicknameTimestamp || 0;
+      // No timestamp = legacy user, treat as expired
+      if (!ts) {
+        console.warn(
+          `Nickname "${settings.nickname}" has no timestamp (legacy). Clearing.`
+        );
+        setSettings((prev) => ({
+          ...prev,
+          nickname: '',
+          nicknameTimestamp: 0,
+        }));
+        return;
+      }
+      const elapsed = Date.now() - ts;
+      const ttlMs = NICKNAME_TTL_DAYS * 24 * 60 * 60 * 1000;
+      if (elapsed > ttlMs) {
+        console.warn(
+          `Nickname "${settings.nickname}" expired after ${NICKNAME_TTL_DAYS} days. Clearing.`
+        );
+        setSettings((prev) => ({
+          ...prev,
+          nickname: '',
+          nicknameTimestamp: 0,
+        }));
+      }
+    }
+  }, []); // Run once on mount
 
   const toggleUltraLite = useCallback(() => {
     setSettings((prev) => {
@@ -570,6 +602,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       setSettings((prev) => ({
         ...prev,
         nickname,
+        nicknameTimestamp: nickname ? Date.now() : 0,
       }));
     },
     [setSettings]

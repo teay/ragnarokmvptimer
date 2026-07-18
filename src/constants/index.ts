@@ -60,9 +60,11 @@ export const DEFAULT_SETTINGS = {
   localSaveEnabled: true,
   cloudSyncEnabled: true,
   nickname: '',
+  nicknameTimestamp: 0,
 };
 
 export const LOCAL_STORAGE_THEME_KEY = 'theme';
 export const LOCAL_STORAGE_SETTINGS_KEY = 'settings';
 export const LOCAL_STORAGE_ACTIVE_MVPS_KEY = 'activeMvps';
 export const RESPAWN_TIMER_SOON_THRESHOLD_MS = 1000 * 60 * 10; // 10 minutes
+export const NICKNAME_TTL_DAYS = 1;
