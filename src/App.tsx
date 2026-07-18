@@ -422,7 +422,7 @@ function NicknamePrompt() {
   const [nickname, setNickname] = useState('');
   const [partyName, setPartyName] = useState('');
 
-  const sanitize = (v: string) => v.replace(/[^a-zA-Z0-9]/g, '');
+  const sanitize = (v: string) => v.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
