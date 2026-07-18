@@ -143,9 +143,12 @@ export function ModalPartySharing({ onClose }: Props) {
   };
 
   const handleLogout = () => {
-    changeNickname('');
-    changePartyRoom(null);
-    onClose();
+    localStorage.removeItem('settings');
+    localStorage.removeItem('joinState');
+    localStorage.removeItem('joinRoomId');
+    localStorage.removeItem('joinServer');
+    localStorage.removeItem('joinNickname');
+    window.location.reload();
   };
 
   return (
