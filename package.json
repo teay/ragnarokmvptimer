@@ -9,7 +9,7 @@
     "dev": "vite --open",
     "dev:lite": "bash scripts/prepare-lite-maps.sh && LITE=true vite --open",
     "build": "vite build",
-    "build:lite": "bash scripts/prepare-lite-maps.sh && LITE=true vite build",
+    "build:lite": "bash scripts/prepare-lite-maps.sh && LITE=true vite build && bash scripts/postbuild-lite.sh",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",

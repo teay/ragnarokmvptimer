@@ -14,6 +14,8 @@ export function MvpSprite({ id, name, animated }: MvpSpriteProps) {
       alt={name}
       isAnimated={animated}
       loading='lazy'
+      width={100}
+      height={100}
     />
   );
 }

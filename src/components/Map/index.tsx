@@ -39,6 +39,8 @@ export function Map({ mapName, onChange, coordinates }: MapProps) {
       <MapImg
         src={getMapImage(mapName)}
         alt={mapName}
+        width={512}
+        height={512}
         onClick={mapMark}
         clickable={!!onChange}
         isSelected={safeCoords.x !== -1 || safeCoords.y !== -1}
