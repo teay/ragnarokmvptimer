@@ -2,9 +2,12 @@
 
 ---
 
-## สถานะ: รอทำ (Plan Phase)
+## สถานะ: Phase 1 เสร็จแล้ว ✅
 
-> บันทึกไว้ทำทีหลัง — วันที่ 19 กรกฎาคม 2026
+> Phase 1 เสร็จ — 19 กรกฎาคม 2026
+> - Binary: 9.6MB (release build)
+> - ไฟล์ทั้งหมด: `ragnarok-mvp-gui/`
+> - Build สำเร็จทั้ง debug และ release
 
 ---
 
@@ -150,16 +153,16 @@ dirs = "6"                # Config/data directory paths
 
 ---
 
-## Phase 1: Core (ไม่ต้องมี Firebase) — ~2-3 วัน
+## Phase 1: Core (ไม่ต้องมี Firebase) — ✅ เสร็จแล้ว
 
-- [ ] สร้างโปรเจค + Cargo.toml
-- [ ] แปลง data structures (IMvp, ISpawn, IMapMark) → Rust structs
-- [ ] เขียน core logic (formatTime, getMvpRespawnTime, sort)
-- [ ] โหลด JSON data ได้ (serde)
-- [ ] egui UI: แสดง MVP list แบบ card (ชื่อ, countdown, zone)
-- [ ] egui UI: แสดง map image (ไม่มี marker ยัง)
-- [ ] Kill/Edit MVP (เปลี่ยน deathTime)
-- [ ] Local save/load (JSON file)
+- [x] สร้างโปรเจค + Cargo.toml
+- [x] แปลง data structures (IMvp, ISpawn, IMapMark) → Rust structs
+- [x] เขียน core logic (formatTime, getMvpRespawnTime, sort)
+- [x] โหลด JSON data ได้ (serde)
+- [x] egui UI: แสดง MVP list แบบ card (ชื่อ, countdown, zone)
+- [x] egui UI: แสดง map image (ไม่มี marker ยัง)
+- [x] Kill/Edit MVP (เปลี่ยน deathTime)
+- [x] Local save/load (JSON file)
 
 **สิ่งที่ได้:** Desktop app ที่ทำ MVP tracking ได้ครบ + แสดงภาพจริง แต่ไม่มี sync
 

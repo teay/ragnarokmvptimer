@@ -1,0 +1,27 @@
+[package]
+name = "ragnarok_mvp_gui"
+version = "0.1.0"
+edition = "2021"
+description = "Ragnarok Online MVP Respawn Timer - Desktop GUI"
+authors = ["teay"]
+
+[dependencies]
+eframe = "0.31"
+egui = "0.31"
+egui_extras = { version = "0.31", features = ["image"] }
+image = { version = "0.25", features = ["png", "gif"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+chrono = { version = "0.4", features = ["serde"] }
+notify-rust = "4"
+dirs = "6"
+log = "0.4"
+env_logger = "0.11"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
