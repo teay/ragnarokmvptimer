@@ -1422,13 +1422,31 @@ impl MvpTimerApp {
 
                 // Nickname
                 ui.label("ชื่อของคุณ:");
-                ui.text_edit_singleline(&mut self.profile_nickname);
+                let nick_resp = ui.add(
+                    egui::TextEdit::singleline(&mut self.profile_nickname)
+                        .char_limit(16)
+                        .id(egui::Id::new("profile_nickname")),
+                );
+                self.profile_nickname = self.profile_nickname
+                    .chars()
+                    .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-')
+                    .collect::<String>()
+                    .to_uppercase();
 
                 ui.add_space(8.0);
 
                 // Party
                 ui.label("ชื่อ Party:");
-                ui.text_edit_singleline(&mut self.profile_party);
+                let party_resp = ui.add(
+                    egui::TextEdit::singleline(&mut self.profile_party)
+                        .char_limit(16)
+                        .id(egui::Id::new("profile_party")),
+                );
+                self.profile_party = self.profile_party
+                    .chars()
+                    .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-')
+                    .collect::<String>()
+                    .to_uppercase();
 
                 ui.add_space(4.0);
                 if ui.button("🎮 เข้า Party").clicked() {
