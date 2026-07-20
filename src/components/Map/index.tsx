@@ -24,10 +24,33 @@ export function Map({ mapName, onChange, coordinates }: MapProps) {
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       if (!onChange) return;
 
-      const { offsetX, offsetY } = e.nativeEvent;
+      const img = e.target as HTMLImageElement;
+      const rect = img.getBoundingClientRect();
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+
+      // Compute rendered image content area within the element
+      // (accounts for object-fit: contain centering)
+      let displayW: number, displayH: number, offsetX: number, offsetY: number;
+      if (nw / nh > rect.width / rect.height) {
+        displayW = rect.width;
+        displayH = rect.width * (nh / nw);
+        offsetX = 0;
+        offsetY = (rect.height - displayH) / 2;
+      } else {
+        displayW = rect.height * (nw / nh);
+        displayH = rect.height;
+        offsetX = (rect.width - displayW) / 2;
+        offsetY = 0;
+      }
+
+      const px = e.clientX - rect.left - offsetX;
+      const py = e.clientY - rect.top - offsetY;
+
+      // Normalize to 512x512 canonical space (matching Rust app)
       const newCoords = {
-        x: offsetX,
-        y: offsetY,
+        x: Math.round((px / displayW) * 512),
+        y: Math.round((py / displayH) * 512),
       };
       onChange(newCoords);
     },
@@ -35,7 +58,7 @@ export function Map({ mapName, onChange, coordinates }: MapProps) {
   );
 
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
       <MapImg
         src={getMapImage(mapName)}
         alt={mapName}
