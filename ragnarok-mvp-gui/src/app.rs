@@ -790,7 +790,11 @@ fn render_active_card_inner(
     };
 
     let card_w = CARD_WIDTH - 20.0;
-    let card_resp = ui.vertical(|ui| {
+    egui::Frame::none()
+        .fill(bg)
+        .stroke(egui::Stroke::new(1.5, border))
+        .rounding(egui::Rounding::same(6))
+        .show(ui, |ui| {
                 ui.set_min_height(CARD_HEIGHT);
                 ui.add_space(15.0);
                 // Header: ID (left) + Kill Time (right, clickable)
@@ -996,12 +1000,8 @@ fn render_active_card_inner(
                     });
                 }
                 });
-                ui.painter().rect_stroke(action_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::CYAN), egui::StrokeKind::Middle);
         ui.add_space(15.0);
         });
-    let card_r = card_resp.response.rect;
-    ui.painter().rect_filled(card_r, egui::CornerRadius::same(6), bg);
-    ui.painter().rect_stroke(card_r, egui::CornerRadius::same(6), egui::Stroke::new(1.5, border), egui::StrokeKind::Middle);
 }
 
 
@@ -1049,7 +1049,11 @@ fn render_available_card_inner(
         Color32::from_rgba_premultiplied(40, 40, 50, 220),
         Color32::from_rgb(80, 100, 140),
     );
-    let card_resp = ui.vertical(|ui| {
+    egui::Frame::none()
+        .fill(bg)
+        .stroke(egui::Stroke::new(1.5, border))
+        .rounding(egui::Rounding::same(6))
+        .show(ui, |ui| {
                 ui.set_min_height(CARD_HEIGHT);
                 ui.add_space(15.0);
                 // ID
@@ -1070,7 +1074,7 @@ fn render_available_card_inner(
                 });
 
                 // Sprite centered
-                let icon_resp = ui.vertical_centered(|ui| {
+                ui.vertical_centered(|ui| {
                     let key = format!("icon_{}", mvp.id);
                     let path = exe_dir().join(format!("assets/icons/{}.png", mvp.id));
                     if let Some(tex) =
@@ -1081,7 +1085,6 @@ fn render_available_card_inner(
                         ui.label(RichText::new("⚔").size(28.0));
                     }
                 });
-                ui.painter().rect_stroke(icon_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
 
                 ui.add_space(4.0);
 
@@ -1129,9 +1132,6 @@ fn render_available_card_inner(
                 });
         ui.add_space(15.0);
         });
-    let card_r = card_resp.response.rect;
-    ui.painter().rect_filled(card_r, egui::CornerRadius::same(6), bg);
-    ui.painter().rect_stroke(card_r, egui::CornerRadius::same(6), egui::Stroke::new(1.5, border), egui::StrokeKind::Middle);
 }
 
 impl MvpTimerApp {
