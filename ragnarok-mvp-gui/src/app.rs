@@ -768,13 +768,13 @@ fn render_active_card_inner(
     let respawned = has_death && has_respawned_m(mvp, now_epoch_ms);
 
     let card_bg = if respawned {
-        Color32::from_rgba_premultiplied(30, 80, 30, 35)
+        Color32::from_rgba_premultiplied(35, 55, 35, 28)
     } else if has_death {
-        Color32::from_rgba_premultiplied(80, 30, 30, 35)
+        Color32::from_rgba_premultiplied(55, 35, 35, 28)
     } else if zone == MvpZone::Wait {
-        Color32::from_rgba_premultiplied(80, 80, 20, 35)
+        Color32::from_rgba_premultiplied(55, 55, 35, 28)
     } else {
-        Color32::from_rgba_premultiplied(30, 30, 40, 35)
+        Color32::from_rgba_premultiplied(38, 38, 48, 25)
     };
 
     let card_w = CARD_WIDTH - 20.0;
@@ -1034,7 +1034,7 @@ fn render_available_card_inner(
     show_map: bool,
     pending: &mut Option<CardAction>,
 ) {
-    let card_bg = Color32::from_rgba_premultiplied(40, 40, 50, 30);
+    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, 25);
     let card_resp = ui.vertical(|ui| {
                 ui.add_space(15.0);
                 // ID
