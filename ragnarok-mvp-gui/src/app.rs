@@ -771,6 +771,7 @@ fn render_active_card_inner(
 
     let card_w = CARD_WIDTH - 20.0;
     ui.vertical(|ui| {
+                ui.set_min_height(CARD_HEIGHT);
                 // Header: ID (left) + Kill Time (right, clickable)
                 ui.horizontal(|ui| {
                     ui.label(
@@ -1006,6 +1007,7 @@ fn render_available_card_inner(
     pending: &mut Option<CardAction>,
 ) {
     ui.vertical(|ui| {
+                ui.set_min_height(CARD_HEIGHT);
                 // ID
                 ui.label(
                     RichText::new(format!("({})", mvp.id))
