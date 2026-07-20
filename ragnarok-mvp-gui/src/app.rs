@@ -1044,7 +1044,6 @@ fn render_available_card_inner(
     pending: &mut Option<CardAction>,
 ) {
     let card_resp = ui.vertical(|ui| {
-                ui.set_min_height(CARD_HEIGHT);
                 ui.add_space(15.0);
                 // ID
                 ui.label(
