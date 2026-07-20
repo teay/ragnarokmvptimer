@@ -9,6 +9,7 @@ use crate::core::sort::sort_mvps_by_respawn_time;
 use crate::core::timer::{format_time, get_mvp_respawn_window};
 use crate::data::mvp::{Mvp, Spawn, Stats, MvpZone, MapMark};
 use crate::data::settings::{Settings, SERVERS};
+use crate::firebase;
 use crate::storage::local;
 
 use chrono::{Datelike, Timelike, NaiveDateTime};
@@ -157,6 +158,9 @@ pub struct MvpTimerApp {
 
     map_textures: HashMap<String, TextureHandle>,
     icon_textures: HashMap<String, TextureHandle>,
+
+    fb_sync: Option<firebase::sync::FirebaseSync>,
+    tokio_runtime: Option<tokio::runtime::Runtime>,
 }
 
 impl Default for MvpTimerApp {
@@ -208,6 +212,8 @@ impl Default for MvpTimerApp {
             scroll_offset: 0.0,
             map_textures: HashMap::new(),
             icon_textures: HashMap::new(),
+            fb_sync: None,
+            tokio_runtime: tokio::runtime::Runtime::new().ok(),
         }
     }
 }
@@ -1218,6 +1224,7 @@ impl MvpTimerApp {
                                 self.settings.party_room = None;
                             }
                             local::save_settings(&self.settings);
+                            self.init_firebase();
                         }
                     });
                 });
@@ -1253,6 +1260,69 @@ impl MvpTimerApp {
     fn persist(&self) {
         let mvps: Vec<Mvp> = self.active_mvps.iter().map(|em| em.to_mvp()).collect();
         local::save_mvps(&self.settings.server, &mvps);
+        self.push_to_firebase();
+    }
+
+    fn init_firebase(&mut self) {
+        let database_url = "https://ragnarokmvptimer-ace0a-default-rtdb.asia-southeast1.firebasedatabase.app";
+        let api_key = "AIzaSyB5dlmAu0_yThhHr8_qNHDlfe1o40rQ69U";
+        let mut fb = firebase::sync::FirebaseSync::new(
+            database_url,
+            api_key,
+            &self.settings.nickname,
+            &self.settings.server,
+            self.settings.party_room.as_deref(),
+        );
+        if let Some(rt) = &self.tokio_runtime {
+            let result = rt.block_on(async {
+                fb.sign_in().await.ok()?;
+                fb.pull().await.ok()
+            });
+            if let Some(remote_mvps) = result {
+                if !remote_mvps.is_empty() {
+                    let active = rehydrate_saved(&remote_mvps, &self.all_server_mvps);
+                    log::warn!("Firebase init: pulled {} MVPs", remote_mvps.len());
+                    self.active_mvps = active;
+                }
+            }
+        }
+        self.fb_sync = Some(fb);
+    }
+
+    fn push_to_firebase(&self) {
+        let fb_sync = match &self.fb_sync {
+            Some(s) => s,
+            None => return,
+        };
+        if self.settings.nickname.is_empty() {
+            return;
+        }
+        let mvps: Vec<Mvp> = self.active_mvps.iter().map(|em| em.to_mvp()).collect();
+        let path = fb_sync.path.clone();
+        let database_url = fb_sync.client.database_url.clone();
+        let api_key = fb_sync.client.api_key.clone();
+        let nickname = self.settings.nickname.clone();
+        let server = self.settings.server.clone();
+        let party_room = self.settings.party_room.clone();
+
+        if let Some(rt) = &self.tokio_runtime {
+            rt.spawn(async move {
+                let mut fb = firebase::sync::FirebaseSync::new(
+                    &database_url, &api_key,
+                    &nickname, &server,
+                    party_room.as_deref(),
+                );
+                if fb.sign_in().await.is_err() {
+                    log::warn!("Firebase push: sign-in failed");
+                    return;
+                }
+                if let Err(e) = fb.push(&mvps).await {
+                    log::warn!("Firebase push failed: {}", e);
+                } else {
+                    log::warn!("Firebase push OK: {} MVPs", mvps.len());
+                }
+            });
+        }
     }
 
     fn load_icon(&mut self, ctx: &egui::Context, id: u32, size: u32) -> Option<TextureHandle> {
@@ -1276,6 +1346,7 @@ impl MvpTimerApp {
                         let is_sel = self.settings.server == server;
                         if ui.selectable_label(is_sel, RichText::new(server).size(11.0)).clicked() {
                             self.settings.server = server.to_string();
+                            self.init_firebase();
                         }
                     }
                 });
@@ -1365,6 +1436,7 @@ impl MvpTimerApp {
                     if !p.is_empty() {
                         self.settings.party_room = Some(p);
                         local::save_settings(&self.settings);
+                        self.init_firebase();
                         close_request = true;
                     }
                 }
@@ -1375,6 +1447,7 @@ impl MvpTimerApp {
                     if ui.button(RichText::new("🚪 ออกจาก Party").color(Color32::from_rgb(244, 67, 54))).clicked() {
                         self.settings.party_room = None;
                         local::save_settings(&self.settings);
+                        self.init_firebase();
                         close_request = true;
                     }
                 }
@@ -1389,6 +1462,7 @@ impl MvpTimerApp {
                     if !nn.is_empty() {
                         self.settings.nickname = nn;
                         local::save_settings(&self.settings);
+                        self.init_firebase();
                         close_request = true;
                     }
                 }
@@ -1406,6 +1480,7 @@ impl MvpTimerApp {
                             self.settings.party_room = None;
                             local::save_settings(&self.settings);
                             self.active_mvps.clear();
+                            self.fb_sync = None;
                             self.confirm_logout = false;
                             close_request = true;
                         }
