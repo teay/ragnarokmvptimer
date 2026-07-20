@@ -59,7 +59,7 @@ fn main() -> eframe::Result<()> {
         "Ragnarok MVP Timer",
         options,
         Box::new(|cc| {
-            // Setup Thai font support
+            // Font setup: Thai + Korean + Japanese
             let mut fonts = egui::FontDefinitions::default();
             fonts.font_data.insert(
                 "noto_sans_thai".to_owned(),
@@ -67,11 +67,25 @@ fn main() -> eframe::Result<()> {
                     include_bytes!("../assets/NotoSansThai.ttf"),
                 )),
             );
-            fonts
-                .families
-                .get_mut(&egui::FontFamily::Proportional)
-                .unwrap()
-                .push("noto_sans_thai".to_owned());
+            fonts.font_data.insert(
+                "noto_sans_kr".to_owned(),
+                std::sync::Arc::new(egui::FontData::from_static(
+                    include_bytes!("../assets/NotoSansKR.ttf"),
+                )),
+            );
+            fonts.font_data.insert(
+                "noto_sans_jp".to_owned(),
+                std::sync::Arc::new(egui::FontData::from_static(
+                    include_bytes!("../assets/NotoSansJP.ttf"),
+                )),
+            );
+            for name in &["noto_sans_thai", "noto_sans_kr", "noto_sans_jp"] {
+                fonts
+                    .families
+                    .get_mut(&egui::FontFamily::Proportional)
+                    .unwrap()
+                    .push(name.to_string());
+            }
             cc.egui_ctx.set_fonts(fonts);
 
             // Dark theme

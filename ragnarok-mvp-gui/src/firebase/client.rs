@@ -74,17 +74,30 @@ impl FirebaseClient {
 
     pub async fn read_mvps(&self, path: &str) -> Result<Vec<FirebaseMvp>, String> {
         let url = self.auth_url(path);
+        log::warn!("Firebase GET {}", &url[..url.len().min(120)]);
         let resp = self
             .client
             .get(&url)
             .send()
             .await
-            .map_err(|e| format!("Firebase read failed: {}", e))?;
-        let data: Option<Vec<FirebaseMvp>> = resp
-            .json()
-            .await
-            .map_err(|e| format!("Firebase read parse failed: {}", e))?;
-        Ok(data.unwrap_or_default())
+            .map_err(|e| format!("Firebase read request failed: {}", e))?;
+        let status = resp.status();
+        let body_text = resp.text().await.unwrap_or_default();
+        log::warn!("Firebase GET status={} body_len={} preview={:?}", status, body_text.len(), &body_text[..body_text.len().min(250)]);
+        if body_text.is_empty() || body_text == "null" {
+            log::warn!("Firebase GET: empty/null response");
+            return Ok(vec![]);
+        }
+        match serde_json::from_str::<Vec<FirebaseMvp>>(&body_text) {
+            Ok(data) => Ok(data),
+            Err(e) => {
+                log::warn!("Firebase parse error: {}. Trying single object...", e);
+                match serde_json::from_str::<FirebaseMvp>(&body_text) {
+                    Ok(single) => Ok(vec![single]),
+                    Err(e2) => Err(format!("Firebase parse failed: {} / {}", e, e2)),
+                }
+            }
+        }
     }
 
     pub async fn write_mvps(&self, path: &str, mvps: &[FirebaseMvp]) -> Result<(), String> {
