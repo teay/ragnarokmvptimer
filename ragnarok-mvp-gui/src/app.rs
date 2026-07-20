@@ -556,20 +556,14 @@ impl eframe::App for MvpTimerApp {
                     ra.cmp(&rb)
                 });
                 if !active.is_empty() {
-                    egui::Frame::none()
-                        .fill(Color32::from_rgba_premultiplied(70, 50, 80, 60))
-                        .rounding(egui::Rounding::same(6))
-                        .inner_margin(egui::Margin::symmetric(8, 4))
-                        .show(ui, |ui| {
-                        ui.label(
-                            RichText::new(format!("🎯 ACTIVE ({})", active.len()))
+                    ui.label(
+                        RichText::new(format!("🎯 ACTIVE ({})", active.len()))
                                 .color(Color32::from_rgb(255, 100, 100))
                                 .strong()
                                 .size(16.0),
                         );
                         ui.add_space(4.0);
                         render_card_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &active, cols, MvpZone::Active, self.now_epoch_ms, self.settings.show_mvp_map, &mut pending);
-                    });
                     ui.add_space(8.0);
                 }
 
@@ -580,49 +574,33 @@ impl eframe::App for MvpTimerApp {
                     ra.cmp(&rb)
                 });
                 if !respawned.is_empty() {
-                    egui::Frame::none()
-                        .fill(Color32::from_rgba_premultiplied(60, 55, 75, 60))
-                        .rounding(egui::Rounding::same(6))
-                        .inner_margin(egui::Margin::symmetric(8, 4))
-                        .show(ui, |ui| {
-                        ui.label(
-                            RichText::new(format!("✅ RESPAWNED ({})", respawned.len()))
+                    ui.label(
+                        RichText::new(format!("✅ RESPAWNED ({})", respawned.len()))
                                 .color(Color32::from_rgb(100, 255, 100))
                                 .strong()
                                 .size(16.0),
                         );
                         ui.add_space(4.0);
                         render_card_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &respawned, cols, MvpZone::Active, self.now_epoch_ms, self.settings.show_mvp_map, &mut pending);
-                    });
                     ui.add_space(8.0);
                 }
 
                 // Pinned — always sort by name
                 pinned.sort_by(|a, b| a.name.cmp(&b.name));
                 if !pinned.is_empty() {
-                    egui::Frame::none()
-                        .fill(Color32::from_rgba_premultiplied(80, 65, 85, 60))
-                        .rounding(egui::Rounding::same(6))
-                        .inner_margin(egui::Margin::symmetric(8, 4))
-                        .show(ui, |ui| {
-                        ui.label(
-                            RichText::new(format!("📌 PINNED ({})", pinned.len()))
+                    ui.label(
+                        RichText::new(format!("📌 PINNED ({})", pinned.len()))
                                 .color(Color32::from_rgb(255, 200, 50))
                                 .strong()
                                 .size(16.0),
                         );
                         ui.add_space(4.0);
                         render_card_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &pinned, cols, MvpZone::Wait, self.now_epoch_ms, self.settings.show_mvp_map, &mut pending);
-                    });
                     ui.add_space(8.0);
                 }
 
                 // Available — user-controlled sort + search
-                egui::Frame::none()
-                    .fill(Color32::from_rgba_premultiplied(45, 40, 55, 50))
-                    .rounding(egui::Rounding::same(6))
-                    .inner_margin(egui::Margin::symmetric(8, 4))
-                    .show(ui, |ui| {
+                ui.separator();
                 ui.horizontal(|ui| {
                     ui.label(RichText::new("📦 ALL").strong().size(16.0).color(Color32::from_gray(180)));
                     ui.separator();
@@ -647,7 +625,6 @@ impl eframe::App for MvpTimerApp {
                 ui.add_space(4.0);
                 sort_expanded(&mut available, self.sort_by, self.sort_reverse);
                 render_available_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &available, cols, self.now_epoch_ms, self.settings.show_mvp_map, &mut pending);
-                });
 
                 if let Some(action) = pending {
                     match action {
@@ -791,13 +768,13 @@ fn render_active_card_inner(
     let respawned = has_death && has_respawned_m(mvp, now_epoch_ms);
 
     let card_bg = if respawned {
-        Color32::from_rgba_premultiplied(30, 28, 40, 20)
+        Color32::from_rgba_premultiplied(30, 80, 30, 35)
     } else if has_death {
-        Color32::from_rgba_premultiplied(35, 25, 45, 20)
+        Color32::from_rgba_premultiplied(80, 30, 30, 35)
     } else if zone == MvpZone::Wait {
-        Color32::from_rgba_premultiplied(40, 32, 45, 20)
+        Color32::from_rgba_premultiplied(80, 80, 20, 35)
     } else {
-        Color32::from_rgba_premultiplied(30, 25, 35, 18)
+        Color32::from_rgba_premultiplied(30, 30, 40, 35)
     };
 
     let card_w = CARD_WIDTH - 20.0;
@@ -1057,7 +1034,7 @@ fn render_available_card_inner(
     show_map: bool,
     pending: &mut Option<CardAction>,
 ) {
-    let card_bg = Color32::from_rgba_premultiplied(25, 22, 32, 18);
+    let card_bg = Color32::from_rgba_premultiplied(40, 40, 50, 30);
     let card_resp = ui.vertical(|ui| {
                 ui.add_space(15.0);
                 // ID
