@@ -164,6 +164,9 @@ pub struct MvpTimerApp {
     tokio_runtime: Option<tokio::runtime::Runtime>,
     fb_poll_data: Arc<std::sync::Mutex<Option<Vec<Mvp>>>>,
     fb_poll_active: bool,
+    show_fb_debug: bool,
+    fb_logs: Vec<String>,
+    fb_log_shared: Arc<std::sync::Mutex<Vec<String>>>,
 }
 
 impl Default for MvpTimerApp {
@@ -219,6 +222,9 @@ impl Default for MvpTimerApp {
             tokio_runtime: tokio::runtime::Runtime::new().ok(),
             fb_poll_data: Arc::new(std::sync::Mutex::new(None)),
             fb_poll_active: false,
+            show_fb_debug: false,
+            fb_logs: Vec::new(),
+            fb_log_shared: Arc::new(std::sync::Mutex::new(Vec::new())),
         }
     }
 }
@@ -398,17 +404,16 @@ impl eframe::App for MvpTimerApp {
         }
         ctx.request_repaint();
 
+        // Drain shared Firebase logs from background tasks
+        self.drain_shared_logs();
+
         // Consume Firebase poll data (if any)
-        if let Ok(mut poll_guard) = self.fb_poll_data.lock() {
-            if let Some(remote_mvps) = poll_guard.take() {
-                log::warn!("Firebase poll data consumed: {} MVPs from background task", remote_mvps.len());
-                for m in &remote_mvps {
-                    log::warn!("  FB mvp id={} dt={:?} dm={:?}", m.id, m.death_time, m.death_map);
-                }
-                let merged = rehydrate_saved(&remote_mvps, &self.all_server_mvps);
-                log::warn!("Firebase poll: rehydrated {} active MVPs (prev had {})", merged.len(), self.active_mvps.len());
-                self.active_mvps = merged;
-            }
+        let poll_data: Option<Vec<firebase::client::FirebaseMvp>> = self.fb_poll_data.lock().ok().and_then(|mut g| g.take());
+        if let Some(remote_mvps) = poll_data {
+            self.fb_log_str(&format!("Firebase poll: consumed {} MVPs", remote_mvps.len()));
+            let merged = rehydrate_saved(&remote_mvps, &self.all_server_mvps);
+            self.fb_log_str(&format!("Firebase poll: rehydrated {} active (was {})", merged.len(), self.active_mvps.len()));
+            self.active_mvps = merged;
         }
 
         // Welcome screen gate - block everything until nickname is set
@@ -706,7 +711,11 @@ impl eframe::App for MvpTimerApp {
             let mvp = self.show_map_modal.clone().unwrap();
             self.show_map_modal(&ctx, &mvp);
         }
+        if self.show_fb_debug {
+            self.show_fb_debug_window(ctx);
+        }
     }
+
 }
 
 enum CardAction {
@@ -1275,7 +1284,26 @@ impl MvpTimerApp {
         self.persist();
     }
 
-    fn persist(&self) {
+    fn fb_log_str(&mut self, msg: &str) {
+        log::warn!("{}", msg);
+        self.fb_logs.push(msg.to_string());
+        if self.fb_logs.len() > 500 {
+            self.fb_logs.remove(0);
+        }
+    }
+
+    fn drain_shared_logs(&mut self) {
+        if let Ok(mut shared) = self.fb_log_shared.lock() {
+            for msg in shared.drain(..) {
+                self.fb_logs.push(msg);
+            }
+            if self.fb_logs.len() > 500 {
+                self.fb_logs.drain(0..self.fb_logs.len() - 500);
+            }
+        }
+    }
+
+    fn persist(&mut self) {
         let mvps: Vec<Mvp> = self.active_mvps.iter().map(|em| em.to_mvp()).collect();
         local::save_mvps(&self.settings.server, &mvps);
         self.push_to_firebase();
@@ -1284,33 +1312,36 @@ impl MvpTimerApp {
     fn init_firebase(&mut self) {
         let database_url = "https://ragnarokmvptimer-ace0a-default-rtdb.asia-southeast1.firebasedatabase.app";
         let api_key = "AIzaSyB5dlmAu0_yThhHr8_qNHDlfe1o40rQ69U";
+        let nickname = self.settings.nickname.clone();
+        let server = self.settings.server.clone();
+        let party_room = self.settings.party_room.clone();
         let mut fb = firebase::sync::FirebaseSync::new(
             database_url,
             api_key,
-            &self.settings.nickname,
-            &self.settings.server,
-            self.settings.party_room.as_deref(),
+            &nickname,
+            &server,
+            party_room.as_deref(),
         );
         if let Some(rt) = &self.tokio_runtime {
             let sign_in_ok = rt.block_on(fb.sign_in());
-            match sign_in_ok {
-                Ok(_) => log::warn!("Firebase sign-in OK"),
-                Err(e) => log::warn!("Firebase sign-in FAILED: {}", e),
+            match &sign_in_ok {
+                Ok(_) => self.fb_log_str("Firebase init: sign-in OK"),
+                Err(e) => self.fb_log_str(&format!("Firebase init: sign-in FAILED: {}", e)),
             }
             let pull_result = rt.block_on(fb.pull());
             match pull_result {
                 Ok(remote_mvps) => {
-                    log::warn!("Firebase init pull: got {} MVPs", remote_mvps.len());
+                    self.fb_log_str(&format!("Firebase init: pull got {} MVPs", remote_mvps.len()));
                     for m in &remote_mvps {
-                        log::warn!("  FB MVP id={} death_time={:?} death_map={:?}", m.id, m.death_time, m.death_map);
+                        self.fb_log_str(&format!("  FB MVP: id={} dt={:?} dm={:?}", m.id, m.death_time, m.death_map));
                     }
                     if !remote_mvps.is_empty() {
                         let active = rehydrate_saved(&remote_mvps, &self.all_server_mvps);
-                        log::warn!("Firebase init: rehydrated {} active MVPs", active.len());
+                        self.fb_log_str(&format!("Firebase init: rehydrated {} active MVPs", active.len()));
                         self.active_mvps = active;
                     }
                 }
-                Err(e) => log::warn!("Firebase init pull FAILED: {}", e),
+                Err(e) => self.fb_log_str(&format!("Firebase init: pull FAILED: {}", e)),
             }
             // Start background poller
             if !self.fb_poll_active {
@@ -1319,16 +1350,21 @@ impl MvpTimerApp {
                 let path = fb.path.clone();
                 let db_url = database_url.to_string();
                 let key = api_key.to_string();
-                let nn = self.settings.nickname.clone();
-                let sv = self.settings.server.clone();
-                let pr = self.settings.party_room.clone();
-                log::warn!("Firebase: starting background poller every 5s for path {} / {} / {:?}", sv, nn, pr);
+                let shared_log = self.fb_log_shared.clone();
                 rt.spawn(async move {
+                    let mut add_log = |msg: String| {
+                        log::warn!("{}", msg);
+                        if let Ok(mut l) = shared_log.lock() {
+                            l.push(msg);
+                            if l.len() > 500 { l.remove(0); }
+                        }
+                    };
+                    add_log(format!("Firebase poller: starting every 5s"));
                     let mut poll_fb = firebase::sync::FirebaseSync::new(&db_url, &key, &nn, &sv, pr.as_deref());
                     match poll_fb.sign_in().await {
-                        Ok(_) => log::warn!("Firebase poller: sign-in OK"),
+                        Ok(_) => add_log(format!("Firebase poller: sign-in OK")),
                         Err(e) => {
-                            log::warn!("Firebase poller: sign-in failed: {}", e);
+                            add_log(format!("Firebase poller: sign-in FAILED: {}", e));
                             return;
                         }
                     }
@@ -1336,12 +1372,12 @@ impl MvpTimerApp {
                         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                         match poll_fb.pull().await {
                             Ok(mvps) => {
-                                log::warn!("Firebase poller: got {} MVPs", mvps.len());
+                                add_log(format!("Firebase poll: got {} MVPs", mvps.len()));
                                 if let Ok(mut data) = poll_data.lock() {
                                     *data = Some(mvps);
                                 }
                             }
-                            Err(e) => log::warn!("Firebase poll error: {}", e),
+                            Err(e) => add_log(format!("Firebase poll error: {}", e)),
                         }
                     }
                 });
@@ -1350,7 +1386,7 @@ impl MvpTimerApp {
         self.fb_sync = Some(fb);
     }
 
-    fn push_to_firebase(&self) {
+    fn push_to_firebase(&mut self) {
         let fb_sync = match &self.fb_sync {
             Some(s) => s,
             None => return,
@@ -1367,24 +1403,30 @@ impl MvpTimerApp {
         let party_room = self.settings.party_room.clone();
 
         if let Some(rt) = &self.tokio_runtime {
-            let path_display = path.clone();
-            log::warn!("Firebase push: {} MVPs to path {}", mvps.len(), &path_display[..path_display.len().min(80)]);
+            let shared_log = self.fb_log_shared.clone();
             rt.spawn(async move {
+                let mut add_log = |msg: String| {
+                    log::warn!("{}", msg);
+                    if let Ok(mut l) = shared_log.lock() {
+                        l.push(msg);
+                        if l.len() > 500 { l.remove(0); }
+                    }
+                };
                 let mut fb = firebase::sync::FirebaseSync::new(
                     &database_url, &api_key,
                     &nickname, &server,
                     party_room.as_deref(),
                 );
                 match fb.sign_in().await {
-                    Ok(_) => log::warn!("Firebase push: sign-in OK"),
+                    Ok(_) => add_log(format!("Firebase push: sign-in OK")),
                     Err(e) => {
-                        log::warn!("Firebase push: sign-in failed: {}", e);
+                        add_log(format!("Firebase push: sign-in FAILED: {}", e));
                         return;
                     }
                 }
                 match fb.push(&mvps).await {
-                    Ok(_) => log::warn!("Firebase push OK: {} MVPs", mvps.len()),
-                    Err(e) => log::warn!("Firebase push failed: {}", e),
+                    Ok(_) => add_log(format!("Firebase push OK: {} MVPs", mvps.len())),
+                    Err(e) => add_log(format!("Firebase push FAILED: {}", e)),
                 }
             });
         }
@@ -1428,6 +1470,13 @@ impl MvpTimerApp {
                 let mut val = *a as f32;
                 if ui.add(egui::Slider::new(&mut val, 0.0..=255.0).show_value(false)).changed() {
                     *a = val.round() as u8;
+                }
+
+                ui.add_space(12.0);
+                ui.separator();
+                ui.add_space(4.0);
+                if ui.small_button("🔍 Firebase Debug").clicked() {
+                    self.show_fb_debug = !self.show_fb_debug;
                 }
 
                 ui.add_space(16.0);
@@ -2250,6 +2299,48 @@ impl MvpTimerApp {
 
         if close_request || !open {
             self.show_map_modal = None;
+        }
+    }
+
+    fn show_fb_debug_window(&mut self, ctx: &egui::Context) {
+        let mut open = self.show_fb_debug;
+        egui::Window::new("🔍 Firebase Debug")
+            .collapsible(false)
+            .resizable(true)
+            .default_size([500.0, 400.0])
+            .anchor(egui::Align2::RIGHT_TOP, [-10.0, 30.0])
+            .open(&mut open)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.small_button("Clear").clicked() {
+                        self.fb_logs.clear();
+                    }
+                    if ui.small_button("Refresh Now").clicked() {
+                        self.init_firebase();
+                    }
+                    ui.label(format!("{} logs", self.fb_logs.len()));
+                });
+                ui.add_space(4.0);
+                ui.separator();
+                ui.add_space(4.0);
+                egui::ScrollArea::vertical()
+                    .max_height(ui.available_height())
+                    .stick_to_bottom(true)
+                    .show(ui, |ui| {
+                        for msg in self.fb_logs.iter().rev() {
+                            let color = if msg.contains("FAILED") || msg.contains("error") || msg.contains("failed") {
+                                Color32::from_rgb(255, 100, 100)
+                            } else if msg.contains("OK") || msg.contains("pulled") {
+                                Color32::from_rgb(100, 255, 100)
+                            } else {
+                                Color32::from_gray(200)
+                            };
+                            ui.label(RichText::new(msg).color(color).size(10.0));
+                        }
+                    });
+            });
+        if !open {
+            self.show_fb_debug = false;
         }
     }
 }
