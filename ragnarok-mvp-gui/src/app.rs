@@ -1000,6 +1000,7 @@ fn render_active_card_inner(
                 });
         ui.add_space(15.0);
         });
+    ui.painter().rect_stroke(card_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::YELLOW), egui::StrokeKind::Middle);
 }
 
 
