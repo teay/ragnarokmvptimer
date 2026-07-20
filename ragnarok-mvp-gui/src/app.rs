@@ -35,7 +35,7 @@ struct ExpandedMvp {
 
 impl ExpandedMvp {
     fn key(&self) -> String {
-        self.id.to_string()
+        format!("{}-{}", self.id, self.death_map.as_deref().unwrap_or(""))
     }
 
     fn from_saved_mvp(mvp: &Mvp) -> Self {
