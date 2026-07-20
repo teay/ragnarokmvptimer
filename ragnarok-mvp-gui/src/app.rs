@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 use eframe::egui;
 use egui::{Color32, RichText, TextureHandle};
@@ -716,13 +718,19 @@ fn render_card_grid(
     if mvps.is_empty() {
         return;
     }
-    ui.columns(cols, |columns| {
-        for (i, mvp) in mvps.iter().enumerate() {
-            let col = &mut columns[i % cols];
-            render_active_card_inner(ctx, col, map_textures, icon_textures, mvp, zone, now_epoch_ms, show_map, pending);
-            col.add_space(8.0);
-        }
-    });
+    egui::Grid::new(egui::Id::new("card_grid"))
+        .spacing(egui::vec2(8.0, 8.0))
+        .min_col_width(CARD_WIDTH)
+        .max_col_width(CARD_WIDTH)
+        .striped(false)
+        .show(ui, |ui| {
+            for (i, mvp) in mvps.iter().enumerate() {
+                render_active_card_inner(ctx, ui, map_textures, icon_textures, mvp, zone, now_epoch_ms, show_map, pending);
+                if (i + 1) % cols == 0 {
+                    ui.end_row();
+                }
+            }
+        });
 }
 
 fn render_active_card_inner(
@@ -762,15 +770,7 @@ fn render_active_card_inner(
     };
 
     let card_w = CARD_WIDTH - 20.0;
-    egui::Frame::NONE
-        .fill(bg)
-        .stroke(egui::Stroke::new(1.0_f32, border))
-        .corner_radius(egui::CornerRadius::same(8_u8))
-        .inner_margin(egui::Margin::same(10_i8))
-        .show(ui, |ui| {
-            ui.set_clip_rect(ui.max_rect());
-            ui.allocate_ui(egui::vec2(CARD_WIDTH - 20.0, CARD_HEIGHT - 20.0), |ui| {
-            ui.set_clip_rect(ui.max_rect());
+    ui.vertical(|ui| {
                 // Header: ID (left) + Kill Time (right, clickable)
                 ui.horizontal(|ui| {
                     ui.label(
@@ -916,12 +916,6 @@ fn render_active_card_inner(
                     }
                 }
 
-                // Flexible spacer — push buttons to bottom
-                let remaining = ui.available_height();
-                if remaining > 0.0 {
-                    ui.add_space(remaining);
-                }
-
                 // Primary button: "Killed Now" (brown)
                 ui.vertical_centered(|ui| {
                     if ui.add(
@@ -942,13 +936,13 @@ fn render_active_card_inner(
                     // Pinned: Edit | RMV | CANCEL
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 4.0;
-                        if ui.add(egui::Button::new(RichText::new("EDIT").size(11.0)).fill(Color32::from_rgb(74, 74, 74)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
+                        if ui.add(egui::Button::new(RichText::new("EDIT").size(11.0).color(Color32::WHITE)).fill(Color32::from_rgb(100, 100, 100)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
                             *pending = Some(CardAction::Edit(mvp.clone()));
                         }
-                        if ui.add(egui::Button::new(RichText::new("RMV").size(11.0)).fill(Color32::from_rgb(179, 58, 58)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
+                        if ui.add(egui::Button::new(RichText::new("RMV").size(11.0).color(Color32::WHITE)).fill(Color32::from_rgb(200, 50, 50)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
                             *pending = Some(CardAction::Remove(mvp.key()));
                         }
-                        if ui.add(egui::Button::new(RichText::new("CANCEL").size(11.0)).fill(Color32::from_rgb(214, 90, 90)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
+                        if ui.add(egui::Button::new(RichText::new("CANCEL").size(11.0).color(Color32::WHITE)).fill(Color32::from_rgb(180, 50, 50)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
                             *pending = Some(CardAction::Remove(mvp.key()));
                         }
                     });
@@ -956,19 +950,18 @@ fn render_active_card_inner(
                     // Active/Respawned: Edit | RMV | BACK
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 4.0;
-                        if ui.add(egui::Button::new(RichText::new("EDIT").size(11.0)).fill(Color32::from_rgb(74, 74, 74)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
+                        if ui.add(egui::Button::new(RichText::new("EDIT").size(11.0).color(Color32::WHITE)).fill(Color32::from_rgb(100, 100, 100)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
                             *pending = Some(CardAction::Edit(mvp.clone()));
                         }
-                        if ui.add(egui::Button::new(RichText::new("RMV").size(11.0)).fill(Color32::from_rgb(179, 58, 58)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
+                        if ui.add(egui::Button::new(RichText::new("RMV").size(11.0).color(Color32::WHITE)).fill(Color32::from_rgb(200, 50, 50)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
                             *pending = Some(CardAction::Remove(mvp.key()));
                         }
-                        if ui.add(egui::Button::new(RichText::new("BACK").size(11.0)).fill(Color32::from_rgb(214, 90, 90)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
+                        if ui.add(egui::Button::new(RichText::new("BACK").size(11.0).color(Color32::WHITE)).fill(Color32::from_rgb(50, 120, 200)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
                             *pending = Some(CardAction::BackToWait(mvp.key()));
                         }
                     });
                 }
-            });
-            }); // close allocate_ui
+        });
 }
 
 
@@ -987,13 +980,19 @@ fn render_available_grid(
     if mvps.is_empty() {
         return;
     }
-    ui.columns(cols, |columns| {
-        for (i, mvp) in mvps.iter().enumerate() {
-            let col = &mut columns[i % cols];
-            render_available_card_inner(ctx, col, map_textures, icon_textures, mvp, now_epoch_ms, show_map, pending);
-            col.add_space(8.0);
-        }
-    });
+    egui::Grid::new(egui::Id::new("available_grid"))
+        .spacing(egui::vec2(8.0, 8.0))
+        .min_col_width(CARD_WIDTH)
+        .max_col_width(CARD_WIDTH)
+        .striped(false)
+        .show(ui, |ui| {
+            for (i, mvp) in mvps.iter().enumerate() {
+                render_available_card_inner(ctx, ui, map_textures, icon_textures, mvp, now_epoch_ms, show_map, pending);
+                if (i + 1) % cols == 0 {
+                    ui.end_row();
+                }
+            }
+        });
 }
 
 fn render_available_card_inner(
@@ -1006,16 +1005,7 @@ fn render_available_card_inner(
     show_map: bool,
     pending: &mut Option<CardAction>,
 ) {
-    ui.set_clip_rect(ui.max_rect());
-    egui::Frame::NONE
-        .fill(Color32::from_rgba_premultiplied(25, 25, 40, 220))
-        .stroke(egui::Stroke::new(1.0_f32, Color32::from_rgb(60, 60, 100)))
-        .corner_radius(egui::CornerRadius::same(8_u8))
-        .inner_margin(egui::Margin::same(10_i8))
-        .show(ui, |ui| {
-            ui.set_clip_rect(ui.max_rect());
-            ui.allocate_ui(egui::vec2(CARD_WIDTH - 20.0, CARD_HEIGHT - 20.0), |ui| {
-            ui.set_clip_rect(ui.max_rect());
+    ui.vertical(|ui| {
                 // ID
                 ui.label(
                     RichText::new(format!("({})", mvp.id))
@@ -1046,8 +1036,6 @@ fn render_available_card_inner(
                     }
                 });
 
-                // Respawn time (not shown in webapp for available cards)
-
                 ui.add_space(4.0);
 
                 // Map name
@@ -1076,11 +1064,7 @@ fn render_available_card_inner(
                     }
                 }
 
-                // Flexible spacer — push button to bottom
-                let remaining = ui.available_height();
-                if remaining > 0.0 {
-                    ui.add_space(remaining);
-                }
+                ui.add_space(4.0);
 
                 // "Select to Kill" button (brown, Star icon) — immediately pins
                 ui.vertical_centered(|ui| {
@@ -1095,8 +1079,7 @@ fn render_available_card_inner(
                         *pending = Some(CardAction::Pin(mvp.clone()));
                     }
                 });
-            });
-            }); // close allocate_ui
+        });
 }
 
 impl MvpTimerApp {
@@ -1750,6 +1733,9 @@ impl MvpTimerApp {
             });
 
         if close_request || !open {
+            if let Some(dt) = confirm_time {
+                self.do_kill(mvp, Some(dt), confirm_map.clone(), confirm_position.clone());
+            }
             self.show_kill_modal = None;
             self.kill_modal_position = None;
             self.kill_modal_selected_map = None;
