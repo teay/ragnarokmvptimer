@@ -276,6 +276,7 @@ fn rehydrate_saved(saved: &[Mvp], original_all: &[Mvp]) -> Vec<ExpandedMvp> {
 fn load_texture_cached(
     ctx: &egui::Context,
     cache: &mut HashMap<String, TextureHandle>,
+    pad: bool,
     key: &str,
     path: &std::path::Path,
     size: u32,
@@ -306,7 +307,15 @@ fn load_texture_cached(
         let w = (size as f32 * img.width() as f32 / img.height() as f32).round() as u32;
         img.resize_exact(w.max(1), h, image::imageops::FilterType::Nearest)
     };
-    let rgba = resized.to_rgba8();
+    let rgba = if pad {
+        let mut canvas = image::RgbaImage::from_pixel(size, size, image::Rgba([0, 0, 0, 0]));
+        let x = (size as i64 - resized.width() as i64) / 2;
+        let y = (size as i64 - resized.height() as i64) / 2;
+        image::imageops::overlay(&mut canvas, &resized.to_rgba8(), x, y);
+        canvas
+    } else {
+        resized.to_rgba8()
+    };
     let dims = [rgba.width() as usize, rgba.height() as usize];
     let pixels = rgba.into_raw();
     let color_image = egui::ColorImage::from_rgba_unmultiplied(dims, &pixels);
@@ -610,6 +619,7 @@ impl eframe::App for MvpTimerApp {
                         }
                     }
                 });
+
                 ui.add_space(4.0);
                 sort_expanded(&mut available, self.sort_by, self.sort_reverse);
                 render_available_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &available, cols, self.now_epoch_ms, self.settings.show_mvp_map, &mut pending);
@@ -727,7 +737,7 @@ fn render_card_grid(
         return;
     }
     egui::Grid::new(egui::Id::new("card_grid"))
-        .spacing(egui::vec2(8.0, 8.0))
+        .spacing(egui::vec2(10.0, 10.0))
         .min_col_width(CARD_WIDTH)
         .max_col_width(CARD_WIDTH)
         .striped(false)
@@ -778,7 +788,7 @@ fn render_active_card_inner(
     };
 
     let card_w = CARD_WIDTH - 20.0;
-    ui.vertical(|ui| {
+    let card_resp = ui.vertical(|ui| {
                 ui.set_min_height(CARD_HEIGHT);
                 // Header: ID (left) + Kill Time (right, clickable)
                 ui.horizontal(|ui| {
@@ -812,20 +822,21 @@ fn render_active_card_inner(
                 });
 
                 // Sprite centered
-                ui.vertical_centered(|ui| {
+                let icon_resp = ui.vertical_centered(|ui| {
                     let key = format!("icon_{}", mvp.id);
                     let path = exe_dir().join(format!("assets/icons/{}.png", mvp.id));
                     if let Some(tex) =
-                        load_texture_cached(ctx, icon_textures, &key, &path, CARD_ICON_SIZE as u32)
+                        load_texture_cached(ctx, icon_textures, true, &key, &path, CARD_ICON_SIZE as u32)
                     {
                         ui.image((tex.id(), tex.size_vec2()));
                     } else {
                         ui.label(RichText::new("⚔").size(28.0));
                     }
                 });
+                ui.painter().rect_stroke(icon_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
 
                 // Timer / Tombstone — fixed height 60px for alignment
-                ui.vertical_centered(|ui| {
+                let timer_resp = ui.vertical_centered(|ui| {
                     ui.set_min_height(60.0);
                     if has_death && !respawned {
                         if let Some(death_time) = mvp.death_time {
@@ -882,6 +893,7 @@ fn render_active_card_inner(
                         );
                     }
                 });
+                ui.painter().rect_stroke(timer_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
 
                 ui.add_space(4.0);
 
@@ -895,14 +907,14 @@ fn render_active_card_inner(
                 });
 
                 // Map thumbnail — fixed height MAP_THUMB_SIZE for alignment
-                ui.vertical_centered(|ui| {
+                let map_resp = ui.vertical_centered(|ui| {
                     ui.set_min_height(MAP_THUMB_SIZE);
                     if show_map {
                         let map_name = mvp.death_map.as_deref().unwrap_or(&mvp.spawn.mapname);
                         let key = format!("thumb_{}_{}", mvp.id, map_name);
                         let path = exe_dir().join(format!("assets/maps/{}.png", map_name));
                         if let Some(tex) =
-                            load_texture_cached(ctx, map_textures, &key, &path, MAP_THUMB_SIZE as u32)
+                            load_texture_cached(ctx, map_textures, false, &key, &path, MAP_THUMB_SIZE as u32)
                         {
                             let resp = ui.add(
                                 egui::Image::new((tex.id(), tex.size_vec2()))
@@ -927,9 +939,10 @@ fn render_active_card_inner(
                         }
                     }
                 });
+                ui.painter().rect_stroke(map_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::GREEN), egui::StrokeKind::Middle);
 
                 // Primary button: "Killed Now" (brown)
-                ui.vertical_centered(|ui| {
+                let kill_resp = ui.vertical_centered(|ui| {
                     if ui.add(
                         egui::Button::new(
                             RichText::new("💀 Killed Now").size(14.0).color(Color32::WHITE).strong()
@@ -941,13 +954,19 @@ fn render_active_card_inner(
                         *pending = Some(CardAction::Kill(mvp.clone()));
                     }
                 });
+                ui.painter().rect_stroke(kill_resp.response.rect.expand(2.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::MAGENTA), egui::StrokeKind::Middle);
+
+                ui.add_space(4.0);
 
                 // Action grid: Edit | RMV | BACK/CANCEL
+                let action_resp = ui.vertical(|ui| {
                 let btn_w = (card_w - 8.0) / 3.0;
                 if zone == MvpZone::Wait && !has_death {
                     // Pinned: Edit | RMV | CANCEL
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 4.0;
+                        let total_btn = btn_w * 3.0 + 8.0;
+                        ui.add_space(((ui.available_width() - total_btn).max(0.0)) / 2.0);
                         if ui.add(egui::Button::new(RichText::new("EDIT").size(11.0).color(Color32::WHITE)).fill(Color32::from_rgb(100, 100, 100)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
                             *pending = Some(CardAction::Edit(mvp.clone()));
                         }
@@ -962,6 +981,8 @@ fn render_active_card_inner(
                     // Active/Respawned: Edit | RMV | BACK
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 4.0;
+                        let total_btn = btn_w * 3.0 + 8.0;
+                        ui.add_space(((ui.available_width() - total_btn).max(0.0)) / 2.0);
                         if ui.add(egui::Button::new(RichText::new("EDIT").size(11.0).color(Color32::WHITE)).fill(Color32::from_rgb(100, 100, 100)).min_size(egui::vec2(btn_w, 30.0)).corner_radius(4.0)).clicked() {
                             *pending = Some(CardAction::Edit(mvp.clone()));
                         }
@@ -973,7 +994,10 @@ fn render_active_card_inner(
                         }
                     });
                 }
+                });
+                ui.painter().rect_stroke(action_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::CYAN), egui::StrokeKind::Middle);
         });
+    ui.painter().rect_stroke(card_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::YELLOW), egui::StrokeKind::Middle);
 }
 
 
@@ -993,7 +1017,7 @@ fn render_available_grid(
         return;
     }
     egui::Grid::new(egui::Id::new("available_grid"))
-        .spacing(egui::vec2(8.0, 8.0))
+        .spacing(egui::vec2(10.0, 10.0))
         .min_col_width(CARD_WIDTH)
         .max_col_width(CARD_WIDTH)
         .striped(false)
@@ -1037,17 +1061,18 @@ fn render_available_card_inner(
                 });
 
                 // Sprite centered
-                ui.vertical_centered(|ui| {
+                let icon_resp = ui.vertical_centered(|ui| {
                     let key = format!("icon_{}", mvp.id);
                     let path = exe_dir().join(format!("assets/icons/{}.png", mvp.id));
                     if let Some(tex) =
-                        load_texture_cached(ctx, icon_textures, &key, &path, CARD_ICON_SIZE as u32)
+                        load_texture_cached(ctx, icon_textures, true, &key, &path, CARD_ICON_SIZE as u32)
                     {
                         ui.image((tex.id(), tex.size_vec2()));
                     } else {
                         ui.label(RichText::new("⚔").size(28.0));
                     }
                 });
+                ui.painter().rect_stroke(icon_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
 
                 ui.add_space(4.0);
 
@@ -1068,7 +1093,7 @@ fn render_available_card_inner(
                         let key = format!("avail_map_{}_{}", mvp.id, map_name);
                         let path = exe_dir().join(format!("assets/maps/{}.png", map_name));
                         if let Some(tex) =
-                            load_texture_cached(ctx, map_textures, &key, &path, MAP_THUMB_SIZE as u32)
+                            load_texture_cached(ctx, map_textures, false, &key, &path, MAP_THUMB_SIZE as u32)
                         {
                             ui.add(
                                 egui::Image::new((tex.id(), tex.size_vec2()))
@@ -1238,7 +1263,7 @@ impl MvpTimerApp {
     fn load_icon(&mut self, ctx: &egui::Context, id: u32, size: u32) -> Option<TextureHandle> {
         let key = format!("icon_{}", id);
         let path = exe_dir().join(format!("assets/icons/{}.png", id));
-        load_texture_cached(ctx, &mut self.icon_textures, &key, &path, size)
+        load_texture_cached(ctx, &mut self.icon_textures, true, &key, &path, size)
     }
 
     fn show_settings_modal(&mut self, ctx: &egui::Context) {
@@ -1623,7 +1648,7 @@ impl MvpTimerApp {
                     ui.label(RichText::new(&mvp.name).strong().size(16.0).color(Color32::from_rgb(147, 112, 219)));
                     let key = format!("icon_{}", mvp.id);
                     let path = exe_dir().join(format!("assets/icons/{}.png", mvp.id));
-                    if let Some(tex) = load_texture_cached(ctx, &mut self.icon_textures, &key, &path, 80) {
+                    if let Some(tex) = load_texture_cached(ctx, &mut self.icon_textures, true, &key, &path, 80) {
                         ui.image((tex.id(), tex.size_vec2()));
                     }
                 });
@@ -1683,7 +1708,7 @@ impl MvpTimerApp {
                 // Clickable map image (256x256)
                 let map_key = format!("kill_map_{}_{}", mvp.id, selected_map);
                 let map_path = exe_dir().join(format!("assets/maps/{}.png", selected_map));
-                if let Some(tex) = load_texture_cached(ctx, &mut self.map_textures, &map_key, &map_path, 256) {
+                if let Some(tex) = load_texture_cached(ctx, &mut self.map_textures, false, &map_key, &map_path, 256) {
                     let resp = ui.add(
                         egui::Image::new((tex.id(), tex.size_vec2()))
                             .max_size(egui::vec2(256.0, 256.0))
@@ -1795,7 +1820,7 @@ impl MvpTimerApp {
                     ui.label(RichText::new(&mvp.name).strong().size(16.0).color(Color32::from_rgb(147, 112, 219)));
                     let key = format!("icon_{}", mvp.id);
                     let path = exe_dir().join(format!("assets/icons/{}.png", mvp.id));
-                    if let Some(tex) = load_texture_cached(ctx, &mut self.icon_textures, &key, &path, 80) {
+                    if let Some(tex) = load_texture_cached(ctx, &mut self.icon_textures, true, &key, &path, 80) {
                         ui.image((tex.id(), tex.size_vec2()));
                     }
                 });
@@ -1857,7 +1882,7 @@ impl MvpTimerApp {
                 // Clickable map image (256x256)
                 let map_key = format!("edit_map_{}_{}", mvp.id, selected_map);
                 let map_path = exe_dir().join(format!("assets/maps/{}.png", selected_map));
-                if let Some(tex) = load_texture_cached(ctx, &mut self.map_textures, &map_key, &map_path, 256) {
+                if let Some(tex) = load_texture_cached(ctx, &mut self.map_textures, false, &map_key, &map_path, 256) {
                     let resp = ui.add(
                         egui::Image::new((tex.id(), tex.size_vec2()))
                             .max_size(egui::vec2(256.0, 256.0))
@@ -1987,7 +2012,7 @@ impl MvpTimerApp {
                 // Map image (using cached texture)
                 let key = format!("modal_map_{}", current_map);
                 let path = exe_dir().join(format!("assets/maps/{}.png", current_map));
-                if let Some(tex) = load_texture_cached(ctx, &mut self.map_textures, &key, &path, 512) {
+                if let Some(tex) = load_texture_cached(ctx, &mut self.map_textures, false, &key, &path, 512) {
                     let resp = ui.add(
                         egui::Image::new((tex.id(), tex.size_vec2()))
                             .max_size(egui::vec2(512.0, 512.0))
