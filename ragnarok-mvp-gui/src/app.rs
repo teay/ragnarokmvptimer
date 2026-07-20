@@ -767,7 +767,7 @@ fn render_active_card_inner(
     let has_death = mvp.death_time.is_some();
     let respawned = has_death && has_respawned_m(mvp, now_epoch_ms);
 
-    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, 25);
+    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, 75);
     let card_border = Color32::from_rgb(100, 100, 120);
     let card_border = if respawned {
         Color32::from_rgb(80, 180, 80)
@@ -1036,7 +1036,7 @@ fn render_available_card_inner(
     show_map: bool,
     pending: &mut Option<CardAction>,
 ) {
-    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, 25);
+    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, 75);
     let card_border = Color32::from_rgb(100, 100, 120);
     let card_resp = ui.vertical(|ui| {
                 ui.add_space(15.0);
