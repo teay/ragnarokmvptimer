@@ -1345,46 +1345,28 @@ impl MvpTimerApp {
                 }
                 Err(e) => init_logs.push(format!("Firebase init: pull FAILED: {}", e)),
             }
-            // Start background poller
+            // Start background SSE subscriber (real-time sync)
             if !self.fb_poll_active {
                 self.fb_poll_active = true;
                 let poll_data = self.fb_poll_data.clone();
-                let path = fb.path.clone();
+                let shared_log = self.fb_log_shared.clone();
                 let db_url = database_url.to_string();
                 let key = api_key.to_string();
-                let shared_log = self.fb_log_shared.clone();
                 let nn = nickname.clone();
                 let sv = server.clone();
                 let pr = party_room.clone();
                 rt.spawn(async move {
-                    let mut add_log = |msg: String| {
+                    let shared_log2 = shared_log.clone();
+                    let add_log = move |msg: String| {
                         log::warn!("{}", msg);
-                        if let Ok(mut l) = shared_log.lock() {
+                        if let Ok(mut l) = shared_log2.lock() {
                             l.push(msg);
                             if l.len() > 500 { l.remove(0); }
                         }
                     };
-                    add_log(format!("Firebase poller: starting every 5s"));
-                    let mut poll_fb = firebase::sync::FirebaseSync::new(&db_url, &key, &nn, &sv, pr.as_deref());
-                    match poll_fb.sign_in().await {
-                        Ok(_) => add_log(format!("Firebase poller: sign-in OK")),
-                        Err(e) => {
-                            add_log(format!("Firebase poller: sign-in FAILED: {}", e));
-                            return;
-                        }
-                    }
-                    loop {
-                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                        match poll_fb.pull().await {
-                            Ok(mvps) => {
-                                add_log(format!("Firebase poll: got {} MVPs", mvps.len()));
-                                if let Ok(mut data) = poll_data.lock() {
-                                    *data = Some(mvps);
-                                }
-                            }
-                            Err(e) => add_log(format!("Firebase poll error: {}", e)),
-                        }
-                    }
+                    add_log(format!("Firebase SSE: starting subscriber"));
+                    let subscriber = firebase::sync::FirebaseSync::new(&db_url, &key, &nn, &sv, pr.as_deref());
+                    subscriber.subscribe(poll_data, add_log).await;
                 });
             }
         }

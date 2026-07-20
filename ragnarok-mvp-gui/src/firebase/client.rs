@@ -110,6 +110,23 @@ impl FirebaseClient {
             .map_err(|e| format!("Firebase write failed: {}", e))?;
         Ok(())
     }
+
+    /// Open an SSE streaming GET to the given path.
+    /// Returns the raw Response — caller must consume .bytes_stream().
+    pub async fn open_stream(&self, path: &str) -> Result<reqwest::Response, String> {
+        let url = format!("{}{}.json", self.database_url, path);
+        let mut req = self.client.get(&url).header("Accept", "text/event-stream");
+        if let Some(token) = &self.id_token {
+            req = req.query(&[("auth", token.as_str())]);
+        }
+        let resp = req.send().await.map_err(|e| format!("Firebase SSE request failed: {}", e))?;
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_default();
+            return Err(format!("Firebase SSE status={} body={}", status, body));
+        }
+        Ok(resp)
+    }
 }
 
 pub fn to_firebase(mvp: &Mvp, nickname: &str) -> FirebaseMvp {
