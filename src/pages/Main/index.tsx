@@ -39,13 +39,23 @@ export function Main() {
   const pinnedSort = sortBy('name'); // Pinned items without deathTime sort by name
   const generalSort = sortBy(currentSort); // Only "All" list follows user selected sort
 
-  const filteredActive = activeMvps.filter((m) => m.deathTime);
+  const hasRespawned = (mvp: IMvp) => {
+    if (!mvp.deathTime) return false;
+    const spawn = mvp.spawn?.find(s => s.mapname === mvp.deathMap);
+    if (!spawn) return false;
+    return Date.now() >= new Date(mvp.deathTime).getTime() + spawn.respawnTime;
+  };
+
+  const filteredActive = activeMvps.filter((m) => m.deathTime && !hasRespawned(m));
+  const filteredRespawned = activeMvps.filter((m) => m.deathTime && hasRespawned(m));
   const filteredPinned = activeMvps.filter((m) => m.isPinned && !m.deathTime);
 
   const sortedActive = [...filteredActive].sort(activeSort);
+  const sortedRespawned = [...filteredRespawned].sort(activeSort);
   const sortedPinned = [...filteredPinned].sort(pinnedSort);
 
   const normalActiveMvps = sortedActive; // Active always ascending (soonest first)
+  const respawnedMvps = sortedRespawned; // Respawned ascending
   const pinnedMvps = sortedPinned; // Pinned always alphabetical
 
   const allMvpsFilteredAndSorted = (
@@ -88,10 +98,30 @@ export function Main() {
           <Section>
             <SectionTitle>
               <FormattedMessage id='active' />
+              {' '}({normalActiveMvps.length})
             </SectionTitle>
 
             <MvpsContainer>
               {normalActiveMvps.map((mvp: IMvp) => (
+                <MvpCard
+                  key={`${mvp.id}-${mvp.deathMap}`}
+                  mvp={mvp}
+                  zone='active'
+                />
+              ))}
+            </MvpsContainer>
+          </Section>
+        )}
+
+        {respawnedMvps.length > 0 && (
+          <Section>
+            <SectionTitle>
+              <FormattedMessage id='respawned' />
+              {' '}({respawnedMvps.length})
+            </SectionTitle>
+
+            <MvpsContainer>
+              {respawnedMvps.map((mvp: IMvp) => (
                 <MvpCard
                   key={`${mvp.id}-${mvp.deathMap}`}
                   mvp={mvp}
