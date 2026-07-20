@@ -790,10 +790,8 @@ fn render_active_card_inner(
     };
 
     let card_w = CARD_WIDTH - 20.0;
-    let (card_rect, _) = ui.allocate_exact_size(egui::vec2(CARD_WIDTH, CARD_HEIGHT), egui::Sense::hover());
-    ui.painter().rect_filled(card_rect, egui::CornerRadius::same(6), bg);
-    ui.painter().rect_stroke(card_rect, egui::CornerRadius::same(6), egui::Stroke::new(1.5, border), egui::StrokeKind::Middle);
-    ui.allocate_ui_at_rect(card_rect, |ui| {
+    let card_resp = ui.vertical(|ui| {
+                ui.set_min_height(CARD_HEIGHT);
                 ui.add_space(15.0);
                 // Header: ID (left) + Kill Time (right, clickable)
                 ui.horizontal(|ui| {
@@ -838,6 +836,7 @@ fn render_active_card_inner(
                         ui.label(RichText::new("⚔").size(28.0));
                     }
                 });
+                ui.painter().rect_stroke(icon_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
 
                 // Timer / Tombstone — fixed height 60px for alignment
                 let timer_resp = ui.vertical_centered(|ui| {
@@ -897,6 +896,7 @@ fn render_active_card_inner(
                         );
                     }
                 });
+                ui.painter().rect_stroke(timer_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
 
                 ui.add_space(4.0);
 
@@ -1043,14 +1043,8 @@ fn render_available_card_inner(
     show_map: bool,
     pending: &mut Option<CardAction>,
 ) {
-    let (bg, border) = (
-        Color32::from_rgba_premultiplied(40, 40, 50, 220),
-        Color32::from_rgb(80, 100, 140),
-    );
-    let (card_rect, _) = ui.allocate_exact_size(egui::vec2(CARD_WIDTH, CARD_HEIGHT), egui::Sense::hover());
-    ui.painter().rect_filled(card_rect, egui::CornerRadius::same(6), bg);
-    ui.painter().rect_stroke(card_rect, egui::CornerRadius::same(6), egui::Stroke::new(1.5, border), egui::StrokeKind::Middle);
-    ui.allocate_ui_at_rect(card_rect, |ui| {
+    let card_resp = ui.vertical(|ui| {
+                ui.set_min_height(CARD_HEIGHT);
                 ui.add_space(15.0);
                 // ID
                 ui.label(
@@ -1070,7 +1064,7 @@ fn render_available_card_inner(
                 });
 
                 // Sprite centered
-                ui.vertical_centered(|ui| {
+                let icon_resp = ui.vertical_centered(|ui| {
                     let key = format!("icon_{}", mvp.id);
                     let path = exe_dir().join(format!("assets/icons/{}.png", mvp.id));
                     if let Some(tex) =
@@ -1081,6 +1075,7 @@ fn render_available_card_inner(
                         ui.label(RichText::new("⚔").size(28.0));
                     }
                 });
+                ui.painter().rect_stroke(icon_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
 
                 ui.add_space(4.0);
 
@@ -1128,6 +1123,7 @@ fn render_available_card_inner(
                 });
         ui.add_space(15.0);
         });
+    ui.painter().rect_stroke(card_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::YELLOW), egui::StrokeKind::Middle);
 }
 
 impl MvpTimerApp {
