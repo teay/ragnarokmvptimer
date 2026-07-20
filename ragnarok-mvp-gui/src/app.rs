@@ -145,6 +145,7 @@ pub struct MvpTimerApp {
     dt_minute: String,
     dt_focused: usize,
     dt_initialized: bool,
+    dt_edited: bool,
 
     // Welcome screen
     welcome_nickname: String,
@@ -200,6 +201,7 @@ impl Default for MvpTimerApp {
             dt_minute: String::new(),
             dt_focused: 0,
             dt_initialized: false,
+            dt_edited: false,
             welcome_nickname: String::new(),
             welcome_party: String::new(),
             now_epoch_ms: now,
@@ -834,7 +836,6 @@ fn render_active_card_inner(
                         ui.label(RichText::new("⚔").size(28.0));
                     }
                 });
-                ui.painter().rect_stroke(icon_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
 
                 // Timer / Tombstone — fixed height 60px for alignment
                 let timer_resp = ui.vertical_centered(|ui| {
@@ -894,7 +895,6 @@ fn render_active_card_inner(
                         );
                     }
                 });
-                ui.painter().rect_stroke(timer_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
 
                 ui.add_space(4.0);
 
@@ -999,7 +999,9 @@ fn render_active_card_inner(
                 ui.painter().rect_stroke(action_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::CYAN), egui::StrokeKind::Middle);
         ui.add_space(15.0);
         });
-    ui.painter().rect_stroke(card_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::YELLOW), egui::StrokeKind::Middle);
+    let card_r = card_resp.response.rect;
+    ui.painter().rect_filled(card_r, egui::CornerRadius::same(6), bg);
+    ui.painter().rect_stroke(card_r, egui::CornerRadius::same(6), egui::Stroke::new(1.5, border), egui::StrokeKind::Middle);
 }
 
 
@@ -1043,7 +1045,11 @@ fn render_available_card_inner(
     show_map: bool,
     pending: &mut Option<CardAction>,
 ) {
-    ui.vertical(|ui| {
+    let (bg, border) = (
+        Color32::from_rgba_premultiplied(40, 40, 50, 220),
+        Color32::from_rgb(80, 100, 140),
+    );
+    let card_resp = ui.vertical(|ui| {
                 ui.set_min_height(CARD_HEIGHT);
                 ui.add_space(15.0);
                 // ID
@@ -1123,6 +1129,9 @@ fn render_available_card_inner(
                 });
         ui.add_space(15.0);
         });
+    let card_r = card_resp.response.rect;
+    ui.painter().rect_filled(card_r, egui::CornerRadius::same(6), bg);
+    ui.painter().rect_stroke(card_r, egui::CornerRadius::same(6), egui::Stroke::new(1.5, border), egui::StrokeKind::Middle);
 }
 
 impl MvpTimerApp {
@@ -1455,6 +1464,7 @@ impl MvpTimerApp {
         self.dt_minute = String::new();
         self.dt_focused = 0;
         self.dt_initialized = false;
+        self.dt_edited = false;
     }
 
     fn dt_parse(&self) -> Option<chrono::NaiveDateTime> {
@@ -1567,6 +1577,7 @@ impl MvpTimerApp {
     }
 
     fn dt_adjust_focused(&mut self, delta: i32) {
+        self.dt_edited = true;
         let min_year = 2020i32;
         let max_year = 2035i32;
 
@@ -1666,8 +1677,7 @@ impl MvpTimerApp {
                 });
                 ui.add_space(4.0);
 
-                // Date time picker
-                self.init_dt_from_epoch(self.now_epoch_ms);
+                // Date time picker (already initialized from CardAction::Kill)
                 let dt_resp = self.show_dt_picker(ui);
 
                 if dt_resp.escape {
@@ -1762,9 +1772,16 @@ impl MvpTimerApp {
                         RichText::new("Confirm").size(14.0).color(Color32::WHITE).strong()
                     ).clicked() || do_confirm;
                     if confirm_clicked && !selected_map.is_empty() {
-                        confirm_time = Some(parsed_time
-                            .map(|naive| naive.and_local_timezone(chrono::Local).unwrap().timestamp_millis())
-                            .unwrap_or(self.now_epoch_ms));
+                        // Webapp behavior: use edited time if user changed it, otherwise "now" at confirm moment
+                        let dt = if self.dt_edited {
+                            parsed_time
+                                .and_then(|n| n.and_local_timezone(chrono::Local).single())
+                                .map(|dt| dt.timestamp_millis())
+                                .unwrap_or(self.now_epoch_ms)
+                        } else {
+                            self.now_epoch_ms
+                        };
+                        confirm_time = Some(dt);
                         confirm_map = Some(selected_map.clone());
                         confirm_position = self.kill_modal_position.clone();
                         close_request = true;
