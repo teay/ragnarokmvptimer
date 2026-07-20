@@ -790,6 +790,7 @@ fn render_active_card_inner(
     let card_w = CARD_WIDTH - 20.0;
     let card_resp = ui.vertical(|ui| {
                 ui.set_min_height(CARD_HEIGHT);
+                ui.add_space(15.0);
                 // Header: ID (left) + Kill Time (right, clickable)
                 ui.horizontal(|ui| {
                     ui.label(
@@ -996,6 +997,7 @@ fn render_active_card_inner(
                 }
                 });
                 ui.painter().rect_stroke(action_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::CYAN), egui::StrokeKind::Middle);
+        ui.add_space(15.0);
         });
     ui.painter().rect_stroke(card_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::YELLOW), egui::StrokeKind::Middle);
 }
@@ -1043,6 +1045,7 @@ fn render_available_card_inner(
 ) {
     ui.vertical(|ui| {
                 ui.set_min_height(CARD_HEIGHT);
+                ui.add_space(15.0);
                 // ID
                 ui.label(
                     RichText::new(format!("({})", mvp.id))
@@ -1118,6 +1121,7 @@ fn render_available_card_inner(
                         *pending = Some(CardAction::Pin(mvp.clone()));
                     }
                 });
+        ui.add_space(15.0);
         });
 }
 
