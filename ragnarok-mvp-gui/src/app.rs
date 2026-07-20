@@ -817,7 +817,7 @@ fn render_active_card_inner(
                 });
 
                 // Sprite centered
-                let icon_resp = ui.vertical_centered(|ui| {
+                let _ = ui.vertical_centered(|ui| {
                     let key = format!("icon_{}", mvp.id);
                     let path = exe_dir().join(format!("assets/icons/{}.png", mvp.id));
                     if let Some(tex) =
@@ -828,10 +828,8 @@ fn render_active_card_inner(
                         ui.label(RichText::new("⚔").size(28.0));
                     }
                 });
-                ui.painter().rect_stroke(icon_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
-
                 // Timer / Tombstone — fixed height 60px for alignment
-                let timer_resp = ui.vertical_centered(|ui| {
+                let _ = ui.vertical_centered(|ui| {
                     ui.set_min_height(60.0);
                     if has_death && !respawned {
                         if let Some(death_time) = mvp.death_time {
@@ -888,8 +886,6 @@ fn render_active_card_inner(
                         );
                     }
                 });
-                ui.painter().rect_stroke(timer_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
-
                 ui.add_space(4.0);
 
                 // Map name (always shown)
@@ -902,7 +898,7 @@ fn render_active_card_inner(
                 });
 
                 // Map thumbnail — fixed height MAP_THUMB_SIZE for alignment
-                let map_resp = ui.vertical_centered(|ui| {
+                let _ = ui.vertical_centered(|ui| {
                     ui.set_min_height(MAP_THUMB_SIZE);
                     if show_map {
                         let map_name = mvp.death_map.as_deref().unwrap_or(&mvp.spawn.mapname);
@@ -934,10 +930,8 @@ fn render_active_card_inner(
                         }
                     }
                 });
-                ui.painter().rect_stroke(map_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::GREEN), egui::StrokeKind::Middle);
-
                 // Primary button: "Killed Now" (brown)
-                let kill_resp = ui.vertical_centered(|ui| {
+                let _ = ui.vertical_centered(|ui| {
                     if ui.add(
                         egui::Button::new(
                             RichText::new("💀 Killed Now").size(14.0).color(Color32::WHITE).strong()
@@ -949,12 +943,10 @@ fn render_active_card_inner(
                         *pending = Some(CardAction::Kill(mvp.clone()));
                     }
                 });
-                ui.painter().rect_stroke(kill_resp.response.rect.expand(2.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::MAGENTA), egui::StrokeKind::Middle);
-
                 ui.add_space(4.0);
 
                 // Action grid: Edit | RMV | BACK/CANCEL
-                let action_resp = ui.vertical(|ui| {
+                let _ = ui.vertical(|ui| {
                 let btn_w = (card_w - 8.0) / 3.0;
                 if zone == MvpZone::Wait && !has_death {
                     // Pinned: Edit | RMV | CANCEL
@@ -1062,7 +1054,7 @@ fn render_available_card_inner(
                 });
 
                 // Sprite centered
-                let icon_resp = ui.vertical_centered(|ui| {
+                let _ = ui.vertical_centered(|ui| {
                     let key = format!("icon_{}", mvp.id);
                     let path = exe_dir().join(format!("assets/icons/{}.png", mvp.id));
                     if let Some(tex) =
@@ -1073,8 +1065,6 @@ fn render_available_card_inner(
                         ui.label(RichText::new("⚔").size(28.0));
                     }
                 });
-                ui.painter().rect_stroke(icon_resp.response.rect.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::RED), egui::StrokeKind::Middle);
-
                 ui.add_space(4.0);
 
                 // Map name
