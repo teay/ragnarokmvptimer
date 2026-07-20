@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 
 import { getMapImage } from '@/utils';
-import { MapMark } from '../MapMark';
 import mvp_tomb from '@/assets/mvp_tomb.png';
 
 import { MapImg } from './styles';
@@ -88,9 +87,8 @@ export function Map({ mapName, onChange, coordinates }: MapProps) {
       }
       const cssX = offsetL + (safeCoords.x / 512) * displayW;
       const cssY = offsetT + (safeCoords.y / 512) * displayH;
-      markStyle = { position: 'absolute', left: cssX, top: cssY,
-        transform: 'translate(-50%, -100%)', pointerEvents: 'none',
-        width: 0, height: 0 };
+      markStyle = { position: 'absolute', left: cssX - 10, top: cssY - 24,
+        pointerEvents: 'none' };
     }
   }
 
