@@ -15,6 +15,7 @@ pub struct Settings {
     pub use_24_hour_format: bool,
     pub show_mvp_map: bool,
     pub animated_sprites: bool,
+    pub card_bg_alpha: u8,
     pub notification_sound: bool,
 }
 
@@ -27,6 +28,7 @@ impl Default for Settings {
             use_24_hour_format: true,
             show_mvp_map: true,
             animated_sprites: false,
+            card_bg_alpha: 75,
             notification_sound: true,
         }
     }

@@ -563,7 +563,7 @@ impl eframe::App for MvpTimerApp {
                                 .size(16.0),
                         );
                         ui.add_space(4.0);
-                        render_card_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &active, cols, MvpZone::Active, self.now_epoch_ms, self.settings.show_mvp_map, &mut pending);
+                        render_card_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &active, cols, MvpZone::Active, self.now_epoch_ms, self.settings.show_mvp_map, self.settings.card_bg_alpha, &mut pending);
                     ui.add_space(8.0);
                 }
 
@@ -581,7 +581,7 @@ impl eframe::App for MvpTimerApp {
                                 .size(16.0),
                         );
                         ui.add_space(4.0);
-                        render_card_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &respawned, cols, MvpZone::Active, self.now_epoch_ms, self.settings.show_mvp_map, &mut pending);
+                        render_card_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &respawned, cols, MvpZone::Active, self.now_epoch_ms, self.settings.show_mvp_map, self.settings.card_bg_alpha, &mut pending);
                     ui.add_space(8.0);
                 }
 
@@ -595,7 +595,7 @@ impl eframe::App for MvpTimerApp {
                                 .size(16.0),
                         );
                         ui.add_space(4.0);
-                        render_card_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &pinned, cols, MvpZone::Wait, self.now_epoch_ms, self.settings.show_mvp_map, &mut pending);
+                        render_card_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &pinned, cols, MvpZone::Wait, self.now_epoch_ms, self.settings.show_mvp_map, self.settings.card_bg_alpha, &mut pending);
                     ui.add_space(8.0);
                 }
 
@@ -624,7 +624,7 @@ impl eframe::App for MvpTimerApp {
 
                 ui.add_space(4.0);
                 sort_expanded(&mut available, self.sort_by, self.sort_reverse);
-                render_available_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &available, cols, self.now_epoch_ms, self.settings.show_mvp_map, &mut pending);
+                render_available_grid(ctx, ui, &mut self.map_textures, &mut self.icon_textures, &available, cols, self.now_epoch_ms, self.settings.show_mvp_map, self.settings.card_bg_alpha, &mut pending);
 
                 if let Some(action) = pending {
                     match action {
@@ -733,6 +733,7 @@ fn render_card_grid(
     zone: MvpZone,
     now_epoch_ms: i64,
     show_map: bool,
+    card_bg_alpha: u8,
     pending: &mut Option<CardAction>,
 ) {
     if mvps.is_empty() {
@@ -745,7 +746,7 @@ fn render_card_grid(
         .striped(false)
         .show(ui, |ui| {
             for (i, mvp) in mvps.iter().enumerate() {
-                render_active_card_inner(ctx, ui, map_textures, icon_textures, mvp, zone, now_epoch_ms, show_map, pending);
+                render_active_card_inner(ctx, ui, map_textures, icon_textures, mvp, zone, now_epoch_ms, show_map, card_bg_alpha, pending);
                 if (i + 1) % cols == 0 {
                     ui.end_row();
                 }
@@ -762,12 +763,13 @@ fn render_active_card_inner(
     zone: MvpZone,
     now_epoch_ms: i64,
     show_map: bool,
+    card_bg_alpha: u8,
     pending: &mut Option<CardAction>,
 ) {
     let has_death = mvp.death_time.is_some();
     let respawned = has_death && has_respawned_m(mvp, now_epoch_ms);
 
-    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, 75);
+    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, card_bg_alpha);
     let card_border = Color32::from_rgb(100, 100, 120);
     let card_border = if respawned {
         Color32::from_rgb(80, 180, 80)
@@ -1006,6 +1008,7 @@ fn render_available_grid(
     cols: usize,
     now_epoch_ms: i64,
     show_map: bool,
+    card_bg_alpha: u8,
     pending: &mut Option<CardAction>,
 ) {
     if mvps.is_empty() {
@@ -1018,7 +1021,7 @@ fn render_available_grid(
         .striped(false)
         .show(ui, |ui| {
             for (i, mvp) in mvps.iter().enumerate() {
-                render_available_card_inner(ctx, ui, map_textures, icon_textures, mvp, now_epoch_ms, show_map, pending);
+                render_available_card_inner(ctx, ui, map_textures, icon_textures, mvp, now_epoch_ms, show_map, card_bg_alpha, pending);
                 if (i + 1) % cols == 0 {
                     ui.end_row();
                 }
@@ -1034,9 +1037,10 @@ fn render_available_card_inner(
     mvp: &ExpandedMvp,
     _now_epoch_ms: i64,
     show_map: bool,
+    card_bg_alpha: u8,
     pending: &mut Option<CardAction>,
 ) {
-    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, 75);
+    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, card_bg_alpha);
     let card_border = Color32::from_rgb(100, 100, 120);
     let card_resp = ui.vertical(|ui| {
                 ui.add_space(15.0);
@@ -1291,6 +1295,14 @@ impl MvpTimerApp {
                 ui.checkbox(&mut self.settings.show_mvp_map, "Show MVP map");
                 ui.checkbox(&mut self.settings.animated_sprites, "Animated sprites");
                 ui.checkbox(&mut self.settings.notification_sound, "Notification sound");
+
+                ui.add_space(8.0);
+                let a = &mut self.settings.card_bg_alpha;
+                ui.label(format!("Card BG opacity: {}%", (*a as u32 * 100 / 255)));
+                let mut val = *a as f32;
+                if ui.add(egui::Slider::new(&mut val, 0.0..=255.0).show_value(false)).changed() {
+                    *a = val.round() as u8;
+                }
 
                 ui.add_space(16.0);
                 ui.horizontal(|ui| {
