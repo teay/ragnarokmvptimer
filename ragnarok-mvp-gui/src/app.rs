@@ -767,14 +767,16 @@ fn render_active_card_inner(
     let has_death = mvp.death_time.is_some();
     let respawned = has_death && has_respawned_m(mvp, now_epoch_ms);
 
-    let card_bg = if respawned {
-        Color32::from_rgba_premultiplied(35, 55, 35, 28)
+    let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, 25);
+    let card_border = Color32::from_rgb(100, 100, 120);
+    let card_border = if respawned {
+        Color32::from_rgb(80, 180, 80)
     } else if has_death {
-        Color32::from_rgba_premultiplied(55, 35, 35, 28)
+        Color32::from_rgb(180, 80, 80)
     } else if zone == MvpZone::Wait {
-        Color32::from_rgba_premultiplied(55, 55, 35, 28)
+        Color32::from_rgb(200, 180, 60)
     } else {
-        Color32::from_rgba_premultiplied(38, 38, 48, 25)
+        Color32::from_rgb(100, 100, 120)
     };
 
     let card_w = CARD_WIDTH - 20.0;
@@ -990,7 +992,7 @@ fn render_active_card_inner(
         });
     let card_r = card_resp.response.rect;
     ui.painter().rect_filled(card_r, egui::CornerRadius::same(2), card_bg);
-    ui.painter().rect_stroke(card_r.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::YELLOW), egui::StrokeKind::Middle);
+    ui.painter().rect_stroke(card_r.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, card_border), egui::StrokeKind::Middle);
 }
 
 
@@ -1035,6 +1037,7 @@ fn render_available_card_inner(
     pending: &mut Option<CardAction>,
 ) {
     let card_bg = Color32::from_rgba_premultiplied(38, 38, 48, 25);
+    let card_border = Color32::from_rgb(100, 100, 120);
     let card_resp = ui.vertical(|ui| {
                 ui.add_space(15.0);
                 // ID
@@ -1116,7 +1119,7 @@ fn render_available_card_inner(
         });
     let card_r = card_resp.response.rect;
     ui.painter().rect_filled(card_r, egui::CornerRadius::same(2), card_bg);
-    ui.painter().rect_stroke(card_r.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, egui::Color32::YELLOW), egui::StrokeKind::Middle);
+    ui.painter().rect_stroke(card_r.expand(1.0), egui::CornerRadius::same(2), egui::Stroke::new(1.0, card_border), egui::StrokeKind::Middle);
 }
 
 impl MvpTimerApp {
