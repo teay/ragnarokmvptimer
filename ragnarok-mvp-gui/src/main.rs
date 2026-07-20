@@ -42,11 +42,16 @@ fn main() -> eframe::Result<()> {
         }
     }
 
+    let img = image::load_from_memory(include_bytes!("../assets/icon.png"))
+        .expect("failed to decode icon.png");
+    let rgba = img.to_rgba8().into_raw();
+
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([900.0, 700.0])
             .with_min_inner_size([600.0, 400.0])
-            .with_title("Ragnarok MVP Timer"),
+            .with_title("Ragnarok MVP Timer")
+            .with_icon(egui::IconData { rgba, width: img.width(), height: img.height() }),
         ..Default::default()
     };
 
