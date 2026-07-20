@@ -408,7 +408,7 @@ impl eframe::App for MvpTimerApp {
         self.drain_shared_logs();
 
         // Consume Firebase poll data (if any)
-        let poll_data: Option<Vec<firebase::client::FirebaseMvp>> = self.fb_poll_data.lock().ok().and_then(|mut g| g.take());
+        let poll_data: Option<Vec<Mvp>> = self.fb_poll_data.lock().ok().and_then(|mut g| g.take());
         if let Some(remote_mvps) = poll_data {
             self.fb_log_str(&format!("Firebase poll: consumed {} MVPs", remote_mvps.len()));
             let merged = rehydrate_saved(&remote_mvps, &self.all_server_mvps);
@@ -1322,26 +1322,28 @@ impl MvpTimerApp {
             &server,
             party_room.as_deref(),
         );
-        if let Some(rt) = &self.tokio_runtime {
+        let mut init_logs: Vec<String> = Vec::new();
+        let rt = self.tokio_runtime.as_ref();
+        if let Some(rt) = rt {
             let sign_in_ok = rt.block_on(fb.sign_in());
             match &sign_in_ok {
-                Ok(_) => self.fb_log_str("Firebase init: sign-in OK"),
-                Err(e) => self.fb_log_str(&format!("Firebase init: sign-in FAILED: {}", e)),
+                Ok(_) => init_logs.push("Firebase init: sign-in OK".to_string()),
+                Err(e) => init_logs.push(format!("Firebase init: sign-in FAILED: {}", e)),
             }
             let pull_result = rt.block_on(fb.pull());
             match pull_result {
                 Ok(remote_mvps) => {
-                    self.fb_log_str(&format!("Firebase init: pull got {} MVPs", remote_mvps.len()));
+                    init_logs.push(format!("Firebase init: pull got {} MVPs", remote_mvps.len()));
                     for m in &remote_mvps {
-                        self.fb_log_str(&format!("  FB MVP: id={} dt={:?} dm={:?}", m.id, m.death_time, m.death_map));
+                        init_logs.push(format!("  FB MVP: id={} dt={:?} dm={:?}", m.id, m.death_time, m.death_map));
                     }
                     if !remote_mvps.is_empty() {
                         let active = rehydrate_saved(&remote_mvps, &self.all_server_mvps);
-                        self.fb_log_str(&format!("Firebase init: rehydrated {} active MVPs", active.len()));
+                        init_logs.push(format!("Firebase init: rehydrated {} active MVPs", active.len()));
                         self.active_mvps = active;
                     }
                 }
-                Err(e) => self.fb_log_str(&format!("Firebase init: pull FAILED: {}", e)),
+                Err(e) => init_logs.push(format!("Firebase init: pull FAILED: {}", e)),
             }
             // Start background poller
             if !self.fb_poll_active {
@@ -1351,6 +1353,9 @@ impl MvpTimerApp {
                 let db_url = database_url.to_string();
                 let key = api_key.to_string();
                 let shared_log = self.fb_log_shared.clone();
+                let nn = nickname.clone();
+                let sv = server.clone();
+                let pr = party_room.clone();
                 rt.spawn(async move {
                     let mut add_log = |msg: String| {
                         log::warn!("{}", msg);
@@ -1382,6 +1387,9 @@ impl MvpTimerApp {
                     }
                 });
             }
+        }
+        for msg in init_logs {
+            self.fb_log_str(&msg);
         }
         self.fb_sync = Some(fb);
     }
