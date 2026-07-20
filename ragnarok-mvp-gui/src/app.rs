@@ -14,9 +14,9 @@ use crate::storage::local;
 use chrono::{Datelike, Timelike, NaiveDateTime};
 
 const CARD_WIDTH: f32 = 195.0;
-const CARD_HEIGHT: f32 = 360.0;
+const CARD_HEIGHT: f32 = 520.0;
 const CARD_ICON_SIZE: f32 = 80.0;
-const MAP_THUMB_SIZE: f32 = 160.0;
+const MAP_THUMB_SIZE: f32 = 200.0;
 const MAP_FULL_SIZE: f32 = 512.0;
 
 #[derive(Clone, Debug)]
@@ -297,7 +297,15 @@ fn load_texture_cached(
             return None;
         }
     };
-    let resized = img.resize(size, size, image::imageops::FilterType::Nearest);
+    let resized = if img.width() > img.height() {
+        let w = size;
+        let h = (size as f32 * img.height() as f32 / img.width() as f32).round() as u32;
+        img.resize_exact(w, h.max(1), image::imageops::FilterType::Nearest)
+    } else {
+        let h = size;
+        let w = (size as f32 * img.width() as f32 / img.height() as f32).round() as u32;
+        img.resize_exact(w.max(1), h, image::imageops::FilterType::Nearest)
+    };
     let rgba = resized.to_rgba8();
     let dims = [rgba.width() as usize, rgba.height() as usize];
     let pixels = rgba.into_raw();
@@ -816,8 +824,9 @@ fn render_active_card_inner(
                     }
                 });
 
-                // Timer / Tombstone
+                // Timer / Tombstone — fixed height 60px for alignment
                 ui.vertical_centered(|ui| {
+                    ui.set_min_height(60.0);
                     if has_death && !respawned {
                         if let Some(death_time) = mvp.death_time {
                             let eta = death_time + mvp.spawn.respawn_time as i64;
@@ -885,21 +894,23 @@ fn render_active_card_inner(
                     );
                 });
 
-                // Map thumbnail (clickable → ViewMap modal, only Active cards with show_map setting)
-                if show_map && has_death {
-                    if let Some(ref dm) = mvp.death_map {
-                        let key = format!("thumb_{}_{}", mvp.id, dm);
-                        let path = exe_dir().join(format!("assets/maps/{}.png", dm));
+                // Map thumbnail — fixed height MAP_THUMB_SIZE for alignment
+                ui.vertical_centered(|ui| {
+                    ui.set_min_height(MAP_THUMB_SIZE);
+                    if show_map {
+                        let map_name = mvp.death_map.as_deref().unwrap_or(&mvp.spawn.mapname);
+                        let key = format!("thumb_{}_{}", mvp.id, map_name);
+                        let path = exe_dir().join(format!("assets/maps/{}.png", map_name));
                         if let Some(tex) =
-                            load_texture_cached(ctx, map_textures, &key, &path, 128)
+                            load_texture_cached(ctx, map_textures, &key, &path, MAP_THUMB_SIZE as u32)
                         {
-                            ui.vertical_centered(|ui| {
-                                let resp = ui.add(
-                                    egui::Image::new((tex.id(), tex.size_vec2()))
-                                        .max_size(egui::vec2(MAP_THUMB_SIZE, MAP_THUMB_SIZE))
-                                        .sense(egui::Sense::click()),
-                                );
-                                if let Some(ref pos) = mvp.death_position {
+                            let resp = ui.add(
+                                egui::Image::new((tex.id(), tex.size_vec2()))
+                                    .max_size(egui::vec2(MAP_THUMB_SIZE, MAP_THUMB_SIZE))
+                                    .sense(egui::Sense::click()),
+                            );
+                            if let Some(ref pos) = mvp.death_position {
+                                if mvp.death_map.is_some() {
                                     let rect = resp.rect;
                                     let img_w = rect.width();
                                     let img_h = rect.height();
@@ -909,13 +920,13 @@ fn render_active_card_inner(
                                     painter.circle_filled(egui::pos2(sx, sy), 6.0, Color32::from_rgba_premultiplied(200, 0, 0, 200));
                                     painter.text(egui::pos2(sx, sy), egui::Align2::CENTER_CENTER, "†", egui::FontId::proportional(14.0), Color32::WHITE);
                                 }
-                                if resp.clicked() {
-                                    *pending = Some(CardAction::ViewMap(mvp.clone()));
-                                }
-                            });
+                            }
+                            if resp.clicked() {
+                                *pending = Some(CardAction::ViewMap(mvp.clone()));
+                            }
                         }
                     }
-                }
+                });
 
                 // Primary button: "Killed Now" (brown)
                 ui.vertical_centered(|ui| {
@@ -1049,22 +1060,23 @@ fn render_available_card_inner(
                     );
                 });
 
-                // Map thumbnail (only if show_map setting enabled, like webapp)
-                if show_map {
-                    let map_name = &mvp.spawn.mapname;
-                    let key = format!("avail_map_{}_{}", mvp.id, map_name);
-                    let path = exe_dir().join(format!("assets/maps/{}.png", map_name));
-                    if let Some(tex) =
-                        load_texture_cached(ctx, map_textures, &key, &path, 128)
-                    {
-                        ui.vertical_centered(|ui| {
+                // Map thumbnail — fixed height MAP_THUMB_SIZE for alignment
+                ui.vertical_centered(|ui| {
+                    ui.set_min_height(MAP_THUMB_SIZE);
+                    if show_map {
+                        let map_name = &mvp.spawn.mapname;
+                        let key = format!("avail_map_{}_{}", mvp.id, map_name);
+                        let path = exe_dir().join(format!("assets/maps/{}.png", map_name));
+                        if let Some(tex) =
+                            load_texture_cached(ctx, map_textures, &key, &path, MAP_THUMB_SIZE as u32)
+                        {
                             ui.add(
                                 egui::Image::new((tex.id(), tex.size_vec2()))
                                     .max_size(egui::vec2(MAP_THUMB_SIZE, MAP_THUMB_SIZE))
                             );
-                        });
+                        }
                     }
-                }
+                });
 
                 ui.add_space(4.0);
 
