@@ -790,12 +790,10 @@ fn render_active_card_inner(
     };
 
     let card_w = CARD_WIDTH - 20.0;
-    egui::Frame::none()
-        .fill(bg)
-        .stroke(egui::Stroke::new(1.5, border))
-        .rounding(egui::Rounding::same(6))
-        .show(ui, |ui| {
-                ui.set_min_height(CARD_HEIGHT);
+    let (card_rect, _) = ui.allocate_exact_size(egui::vec2(CARD_WIDTH, CARD_HEIGHT), egui::Sense::hover());
+    ui.painter().rect_filled(card_rect, egui::CornerRadius::same(6), bg);
+    ui.painter().rect_stroke(card_rect, egui::CornerRadius::same(6), egui::Stroke::new(1.5, border), egui::StrokeKind::Middle);
+    ui.allocate_ui_at_rect(card_rect, |ui| {
                 ui.add_space(15.0);
                 // Header: ID (left) + Kill Time (right, clickable)
                 ui.horizontal(|ui| {
@@ -1049,12 +1047,10 @@ fn render_available_card_inner(
         Color32::from_rgba_premultiplied(40, 40, 50, 220),
         Color32::from_rgb(80, 100, 140),
     );
-    egui::Frame::none()
-        .fill(bg)
-        .stroke(egui::Stroke::new(1.5, border))
-        .rounding(egui::Rounding::same(6))
-        .show(ui, |ui| {
-                ui.set_min_height(CARD_HEIGHT);
+    let (card_rect, _) = ui.allocate_exact_size(egui::vec2(CARD_WIDTH, CARD_HEIGHT), egui::Sense::hover());
+    ui.painter().rect_filled(card_rect, egui::CornerRadius::same(6), bg);
+    ui.painter().rect_stroke(card_rect, egui::CornerRadius::same(6), egui::Stroke::new(1.5, border), egui::StrokeKind::Middle);
+    ui.allocate_ui_at_rect(card_rect, |ui| {
                 ui.add_space(15.0);
                 // ID
                 ui.label(
