@@ -87,7 +87,7 @@ export function Map({ mapName, onChange, coordinates }: MapProps) {
       }
       const cssX = offsetL + (safeCoords.x / 512) * displayW;
       const cssY = offsetT + (safeCoords.y / 512) * displayH;
-      markStyle = { position: 'absolute', left: cssX - 10, top: cssY - 24,
+      markStyle = { position: 'absolute', left: cssX, top: cssY,
         pointerEvents: 'none' };
     }
   }
