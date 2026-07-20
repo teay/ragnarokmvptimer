@@ -42,8 +42,8 @@ fn main() -> eframe::Result<()> {
         }
     }
 
-    let img = image::load_from_memory(include_bytes!("../assets/icon.png"))
-        .expect("failed to decode icon.png");
+    let img = image::load_from_memory(include_bytes!("../assets/favicon.ico"))
+        .expect("failed to decode favicon.ico");
     let rgba = img.to_rgba8().into_raw();
 
     let options = eframe::NativeOptions {
