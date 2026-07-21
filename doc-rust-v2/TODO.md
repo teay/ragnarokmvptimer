@@ -4,7 +4,7 @@
 
 ### P1 — Core UX (missing features that affect daily use)
 
-- [ ] **Fonts ไทย/JP/KR** — `assets/fonts/` มีไฟล์แล้ว (`NotoSansThai.ttf`, `NotoSansJP.ttf`, `NotoSansKR.ttf`) แต่ยังไม่ได้ load เข้า egui (`ctx.fonts()`)
+- [x] **Fonts ไทย/JP/KR** — `main.rs` โหลด `NotoSansThai/JP/KR.ttf` เข้า egui ตอน start
 - [ ] **Layout polish** — จัด UI ให้สวยใช้งานง่ายแบบ v1 (card layout, spacing, colors, responsive grid)
 
 ### P2 — Real-time & Engagement

@@ -22,7 +22,7 @@
 
 | Component | Detail |
 |-----------|--------|
-| **Fonts ไทย/JP/KR** | `assets/fonts/` มีไฟล์แต่ไม่มี font loading เข้า egui (`ctx.fonts()` etc.) |
+| **Fonts ไทย/JP/KR** | `main.rs` โหลด `NotoSansThai/JP/KR.ttf` เข้า egui ตอน start |
 | **Animated sprites** | `settings.animated_sprites` มี toggle แต่แค่เปลี่ยน icon size (48→64) ไม่มี sprite sheet / animation จริง |
 | **Notification** | `settings.notification_sound` มี toggle แต่ไม่มี implementation (ไม่มีเสียง, no toast/popup) |
 | **Layout polish** | ยังไม่ได้จัด UI ให้สวยแบบ v1 (card layout, colors, spacing) |

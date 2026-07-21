@@ -298,6 +298,109 @@ impl MvpTimerApp {
             }
         }
     }
+
+    fn render_card(&mut self, ui: &mut egui::Ui, ctx: &Context, orig_idx: usize, mvp: &Mvp) {
+        let mvp_id = mvp.id;
+        let death_map = mvp.death_map.clone();
+        let name = mvp.name.clone();
+        let eta = get_respawn_eta(mvp);
+        let has_resp = has_respawned(mvp, self.now_ms);
+        let resp_window = get_mvp_respawn_window(mvp);
+        let icon = self.load_icon_texture(ctx, mvp_id);
+        let mapname = death_map.as_deref()
+            .or_else(|| mvp.spawn.first().map(|s| s.mapname.as_str()));
+        let map_tx = if self.settings.show_mvp_map {
+            mapname.and_then(|m| self.load_map_texture(ctx, m))
+        } else {
+            None
+        };
+
+        let card_frame = Frame::NONE
+            .fill(Color32::from_rgb(30, 30, 40))
+            .stroke(Stroke::new(1.0, Color32::from_rgb(60, 60, 80)))
+            .corner_radius(CornerRadius::same(6))
+            .inner_margin(Margin::same(6));
+
+        let is_compact = self.tab == ActiveTab::All;
+        let icon_size = if is_compact { 36.0 } else { 48.0 };
+
+        card_frame.show(ui, |ui| {
+            ui.set_min_width(220.0);
+            ui.horizontal(|ui| {
+                if let Some(tx) = &icon {
+                    ui.add(egui::Image::from_texture(tx).max_height(icon_size).max_width(icon_size));
+                }
+                ui.vertical(|ui| {
+                    ui.label(RichText::new(&name).size(12.0).strong().color(Color32::from_rgb(230, 230, 240)));
+                    if !is_compact {
+                        ui.label(RichText::new(format!("#{}", mvp_id)).size(9.0).color(Color32::from_rgb(140, 140, 160)));
+                        if let Some(mn) = mapname {
+                            ui.label(RichText::new(mn).size(10.0).color(Color32::from_rgb(100, 180, 255)));
+                        }
+                    }
+                });
+                if !is_compact {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        match self.tab {
+                            ActiveTab::Active => {
+                                if button_colored(ui, "E", Color32::from_rgb(74, 74, 74)).clicked() {
+                                    self.edit_mvp_index = Some(orig_idx);
+                                }
+                                if button_colored(ui, "X", Color32::from_rgb(140, 50, 50)).clicked() {
+                                    self.remove_mvp(orig_idx);
+                                }
+                                if button_colored(ui, "←", Color32::from_rgb(180, 80, 80)).clicked() {
+                                    self.move_to_wait(orig_idx);
+                                }
+                            }
+                            ActiveTab::Wait => {
+                                if button_colored(ui, "K", Color32::from_rgb(120, 80, 40)).clicked() {
+                                    self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
+                                }
+                                if button_colored(ui, "X", Color32::from_rgb(140, 50, 50)).clicked() {
+                                    self.remove_from_wait(orig_idx);
+                                }
+                            }
+                            ActiveTab::All => {}
+                        }
+                    });
+                }
+            });
+            if is_compact {
+                ui.horizontal(|ui| {
+                    if button_colored(ui, "+ Kill", Color32::from_rgb(120, 80, 40)).clicked() {
+                        self.add_to_wait(mvp);
+                    }
+                    if let Some(mn) = mapname {
+                        ui.label(RichText::new(mn).size(9.0).color(Color32::from_rgb(100, 180, 255)));
+                    }
+                });
+            }
+            match self.tab {
+                ActiveTab::Active => {
+                    if let Some(eta_val) = eta {
+                        let remaining = eta_val - self.now_ms;
+                        if remaining > 0 {
+                            ui.label(RichText::new(format!("⏳ {}", format_time(remaining))).size(14.0).strong().color(Color32::from_rgb(255, 200, 100)));
+                        } else if !has_resp {
+                            let end = eta_val + resp_window as i64;
+                            let rem = end - self.now_ms;
+                            ui.label(RichText::new(format!("⚠ Window: {}", format_time(rem))).size(11.0).color(Color32::from_rgb(255, 150, 100)));
+                        } else {
+                            ui.label(RichText::new("✅ Respawned").size(11.0).color(Color32::GREEN));
+                        }
+                    }
+                }
+                ActiveTab::Wait | ActiveTab::All => {}
+            }
+            if let Some(mtx) = &map_tx {
+                if !is_compact {
+                    ui.add_space(4.0);
+                    ui.add(egui::Image::from_texture(mtx).max_height(80.0));
+                }
+            }
+        });
+    }
 }
 
 impl eframe::App for MvpTimerApp {
@@ -473,95 +576,23 @@ impl eframe::App for MvpTimerApp {
                     return;
                 }
 
-                for (orig_idx, mvp) in &display_mvps {
-                    let name = mvp.name.clone();
-                    let mvp_id = mvp.id;
-                    let death_map = mvp.death_map.clone();
-                    let eta = get_respawn_eta(mvp);
-                    let has_resp = has_respawned(mvp, self.now_ms);
-                    let resp_window = get_mvp_respawn_window(mvp);
-
-                    // Preload icon texture
-                    let icon = self.load_icon_texture(ctx, mvp_id);
-
-                    let map_to_show = death_map.as_ref()
-                        .map(|s| s.as_str())
-                        .or_else(|| mvp.spawn.first().map(|s| s.mapname.as_str()));
-                    let map_tx = if self.settings.show_mvp_map {
-                        map_to_show.and_then(|dm| self.load_map_texture(ctx, dm))
-                    } else {
-                        None
-                    };
-
-                    let frame = Frame::NONE
-                        .fill(Color32::from_rgb(40, 40, 50))
-                        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(80, 80, 100)))
-                        .corner_radius(CornerRadius::same(6))
-                        .inner_margin(Margin::symmetric(10, 6));
-
-                    frame.show(ui, |ui| {
-                        ui.horizontal(|ui| {
-                            if let Some(tx) = &icon {
-                                let size = if self.settings.animated_sprites { 64.0 } else { 48.0 };
-                                ui.add(egui::Image::from_texture(tx).max_height(size).max_width(size));
+                let card_w = 200.0_f32;
+                let n_cols = ((ui.available_width() + 8.0) / card_w).floor().max(1.0) as usize;
+                egui::Grid::new("mvp_grid")
+                    .spacing([8.0, 8.0])
+                    .min_col_width(card_w)
+                    .max_col_width(card_w)
+                    .show(ui, |ui| {
+                        for (i, (orig_idx, mvp)) in display_mvps.iter().enumerate() {
+                            self.render_card(ui, ctx, *orig_idx, mvp);
+                            if (i + 1) % n_cols == 0 {
+                                ui.end_row();
                             }
-                            ui.vertical(|ui| {
-                                ui.label(RichText::new(&name).size(14.0).strong());
-                                match self.tab {
-                                    ActiveTab::Active => {
-                                        if let Some(eta_val) = eta {
-                                            let remaining = eta_val - self.now_ms;
-                                            if remaining > 0 {
-                                                ui.label(format!("Respawn in {}", format_time(remaining)));
-                                            } else if !has_resp {
-                                                let end = eta_val + resp_window as i64;
-                                                let remaining_window = end - self.now_ms;
-                                                ui.label(format!("Respawning (window: {})", format_time(remaining_window)));
-                                            } else {
-                                                ui.label(RichText::new("Already Respawned").color(Color32::GREEN));
-                                            }
-                                        }
-                                    }
-                                    ActiveTab::Wait => {}
-                                    ActiveTab::All => {}
-                                }
-                            });
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                match self.tab {
-                                    ActiveTab::Active => {
-                                        if ui.button("Edit").clicked() {
-                                            self.edit_mvp_index = Some(*orig_idx);
-                                        }
-                                        if ui.button("RMV").clicked() {
-                                            self.remove_mvp(*orig_idx);
-                                        }
-                                        if ui.button("Back to Wait").clicked() {
-                                            self.move_to_wait(*orig_idx);
-                                        }
-                                    }
-                                    ActiveTab::Wait => {
-                                        if ui.button("Killed Now").clicked() {
-                                            self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
-                                        }
-                                        if ui.button("CANCEL").clicked() {
-                                            self.remove_from_wait(*orig_idx);
-                                        }
-                                    }
-                                    ActiveTab::All => {
-                                        if ui.button("Select to kill").clicked() {
-                                            self.add_to_wait(mvp);
-                                        }
-                                    }
-                                }
-                            });
-                        });
-                        if let Some(mtx) = &map_tx {
-                            ui.add_space(4.0);
-                            ui.add(egui::Image::from_texture(mtx).max_height(150.0));
+                        }
+                        if display_mvps.len() % n_cols != 0 {
+                            ui.end_row();
                         }
                     });
-                    ui.add_space(4.0);
-                }
             });
         });
 
@@ -600,4 +631,12 @@ impl eframe::App for MvpTimerApp {
 
         ctx.request_repaint_after(std::time::Duration::from_millis(1000));
     }
+}
+
+fn button_colored(ui: &mut egui::Ui, text: &str, color: Color32) -> egui::Response {
+    ui.add(
+        egui::Button::new(RichText::new(text).size(11.0).color(Color32::WHITE))
+            .fill(color)
+            .min_size(egui::vec2(52.0, 22.0)),
+    )
 }
