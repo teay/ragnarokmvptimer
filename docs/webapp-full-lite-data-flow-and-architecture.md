@@ -215,3 +215,66 @@ for each remote MVP:
 | Merge logic | remote + static merge ซับซ้อน | logic ต้องตรงกันทุก platform |
 | Window/respawn calc | `deathTime + respawnTime + window` | ต้องตรงกันทุก client |
 | Map coordinate | 512-space → CSS pixel conversion | ต้องมี conversion formula |
+
+---
+
+## 9. Race Conditions (Firebase multi-client sync)
+
+ปัญหาทั้งหมดมีรากเดียว: **ใช้ `set(array)` โดยไม่อ่านจาก Firebase จริงก่อนเขียน**
+
+### 9.1 Critical — `modifyMvps` อ่านจาก React state ที่อาจ stale
+
+**File:** `MvpsContext.tsx:282-287`
+
+```typescript
+const modifyMvps = useCallback(
+  (modifier: (currentMvps: IMvp[]) => IMvp[]) => {
+    const newMvps = modifier(activeMvps);          // ◄— อ่านจาก React closure
+    saveMvpsToTarget(newMvps);                     // ◄— เขียนทับ Firebase
+  },
+  [activeMvps, saveMvpsToTarget]
+);
+```
+
+**ผล:** Client B อ่าน `activeMvps` ที่ยังไม่เห็นการเปลี่ยนแปลงของ Client A → เขียนทับ data ของ Client A เงียบ
+
+### 9.2 Critical — ใช้ `set()` แทน `update()`
+
+**File:** `MvpsContext.tsx:263-276`
+
+```typescript
+set(serverRef, minimalMvps);  // ◄— ส่ง array ทั้งก้อนไปทับของเก่า
+```
+
+**ผล:** ทุกครั้งที่เขียน = overwrite ข้อมูลทั้งหมดที่ path นั้น Concurrent writes ชนกันตัวสุดท้ายเท่านั้นที่อยู่รอด
+
+### 9.3 High — เก็บเป็น array ไม่ใช่ keyed object
+
+**File:** `MvpsContext.tsx:224-226, 248-259`
+
+```typescript
+// Firebase เก็บเป็น:
+[ { id: 1, ... }, { id: 2, ... } ]
+// ควรเป็น:
+{ "1-in_world": { id: 1, ... }, "3-gef_fild03": { id: 3, ... } }
+```
+
+**ผล:** แก้ไขทีละ MVP ไม่ได้ ต้องเขียนทั้ง array → concurrent edits ชนกันตลอด
+
+### 9.4 High — ไม่มี merge/deconflict เมื่อสอง client ฆ่าตัวเดียวกัน
+
+**File:** `MvpsContext.tsx:290-308`
+
+**Scenario:** Client A ฆ่า Baphomet 10:00:00, Client B ฆ่า Baphomet 10:00:01 (ยังไม่เห็นของ A)
+→ **B ทับ A เงียบ** death time กลายเป็น 10:00:01, respawn timer เพี้ยน
+
+### สรุป
+
+| # | ปัญหา | Severity | ผล |
+|---|--------|----------|-----|
+| 1 | `modifyMvps` อ่านจาก React closure ที่ stale | **CRITICAL** | เขียนทับ data client อื่นเงียบ |
+| 2 | ใช้ `set()` ทั้งก้อนแทน `update()` | **CRITICAL** | ทุกครั้งที่เขียน = overwrite หมด |
+| 3 | เก็บเป็น array ไม่ใช่ keyed object | **HIGH** | แก้ทีละตัวไม่ได้ |
+| 4 | ไม่มี merge/deconflict | **HIGH** | 2 client ฆ่าตัวเดียวกัน → ตัวหลังทับตัวแรก |
+
+**ทางแก้หลัก:** เปลี่ยนจาก `set(array)` → `update(keyed-object)` + อ่านจาก Firebase จริงตอนจะเขียน (ไม่ใช้ React state) — จบทั้ง 4 ข้อ
