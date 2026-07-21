@@ -379,9 +379,20 @@ impl MvpTimerApp {
                     ui.add(egui::Image::from_texture(mtx).max_height(100.0));
                 }
 
-                // Buttons
+                // Push buttons to bottom for consistent position
+                let has_btns = in_active || in_wait;
+                let btn_section_h: f32 = if has_btns {
+                    6.0 + 32.0 + 4.0 + 40.0
+                } else {
+                    6.0 + 32.0
+                };
+                let remaining = ui.available_height();
+                if remaining > btn_section_h {
+                    ui.add_space(remaining - btn_section_h);
+                }
+
                 ui.add_space(6.0);
-                if in_active || in_wait {
+                if has_btns {
                     if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43)).clicked() {
                         self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
                     }
