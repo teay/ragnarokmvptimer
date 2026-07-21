@@ -488,19 +488,12 @@ impl eframe::App for MvpTimerApp {
 
                     frame.show(ui, |ui| {
                         ui.horizontal(|ui| {
-                            // Icon
                             if let Some(tx) = &icon {
                                 let size = if self.settings.animated_sprites { 64.0 } else { 48.0 };
                                 ui.add(egui::Image::from_texture(tx).max_height(size).max_width(size));
                             }
                             ui.vertical(|ui| {
                                 ui.label(RichText::new(&name).size(14.0).strong());
-                                // Map preview
-                                if let Some(mtx) = &map_tx {
-                                    ui.add(egui::Image::from_texture(mtx).max_height(80.0).max_width(120.0));
-                                }
-                            });
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                                 match self.tab {
                                     ActiveTab::Active => {
                                         if let Some(eta_val) = eta {
@@ -515,6 +508,14 @@ impl eframe::App for MvpTimerApp {
                                                 ui.label(RichText::new("Already Respawned").color(Color32::GREEN));
                                             }
                                         }
+                                    }
+                                    ActiveTab::Wait => {}
+                                    ActiveTab::All => {}
+                                }
+                            });
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                match self.tab {
+                                    ActiveTab::Active => {
                                         if ui.button("Edit").clicked() {
                                             self.edit_mvp_index = Some(*orig_idx);
                                         }
@@ -541,6 +542,10 @@ impl eframe::App for MvpTimerApp {
                                 }
                             });
                         });
+                        if let Some(mtx) = &map_tx {
+                            ui.add_space(4.0);
+                            ui.add(egui::Image::from_texture(mtx).max_height(150.0));
+                        }
                     });
                     ui.add_space(4.0);
                 }
