@@ -131,14 +131,28 @@ impl MvpTimerApp {
         }
         let icons_dir = self.exe_dir().join("assets/icons");
 
-        if let Some(anim) = self.try_load_apng(ctx, &anim_key, &icons_dir.join("anim").join(format!("{}.png", mvp_id))) {
-            self.animations.insert(anim_key, anim);
-            return self.load_animated_icon(ctx, mvp_id);
+        let apng_path = icons_dir.join("anim").join(format!("{}.png", mvp_id));
+        if apng_path.exists() {
+            log::warn!("APNG file exists: {:?}", apng_path);
+            match self.try_load_apng(ctx, &anim_key, &apng_path) {
+                Some(anim) => {
+                    log::warn!("APNG loaded OK: {} frames", anim.frame_keys.len());
+                    self.animations.insert(anim_key, anim);
+                    return self.load_animated_icon(ctx, mvp_id);
+                }
+                None => log::warn!("APNG load FAILED for {:?}", apng_path),
+            }
         }
-        if let Some(anim) = self.try_load_gif(ctx, &anim_key, &icons_dir.join(format!("{}.gif", mvp_id))) {
-            self.animations.insert(anim_key, anim);
-            return self.load_animated_icon(ctx, mvp_id);
+        let gif_path = icons_dir.join(format!("{}.gif", mvp_id));
+        if gif_path.exists() {
+            log::warn!("GIF file exists: {:?}", gif_path);
+            if let Some(anim) = self.try_load_gif(ctx, &anim_key, &gif_path) {
+                log::warn!("GIF loaded OK: {} frames", anim.frame_keys.len());
+                self.animations.insert(anim_key, anim);
+                return self.load_animated_icon(ctx, mvp_id);
+            }
         }
+        log::warn!("No animation for MVP {}, using static PNG", mvp_id);
         self.load_icon_texture(ctx, mvp_id)
     }
 
@@ -146,6 +160,7 @@ impl MvpTimerApp {
         let file = std::fs::File::open(path).ok()?;
         let decoder = GifDecoder::new(std::io::BufReader::new(file)).ok()?;
         let frames = decoder.into_frames().collect_frames().ok()?;
+        if frames.is_empty() { return None; }
         Some(self.decode_frames_to_anim(ctx, anim_key, &frames))
     }
 
@@ -154,6 +169,7 @@ impl MvpTimerApp {
         let decoder = PngDecoder::new(std::io::BufReader::new(file)).ok()?;
         let apng = decoder.apng().ok()?;
         let frames = apng.into_frames().collect_frames().ok()?;
+        if frames.is_empty() { return None; }
         Some(self.decode_frames_to_anim(ctx, anim_key, &frames))
     }
 
