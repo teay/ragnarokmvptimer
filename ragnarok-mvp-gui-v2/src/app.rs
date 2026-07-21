@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 
-use eframe::egui::{self, Color32, Frame, Margin, CornerRadius, Stroke, RichText, Context};
+use eframe::egui::{self, Color32, Frame, Margin, CornerRadius, Stroke, RichText, Context, TextureHandle};
 
 use crate::core::rehydrate::rehydrate_mvps;
 use crate::core::sort::sort_mvps_by_respawn_time;
@@ -33,11 +34,17 @@ pub struct MvpTimerApp {
     nickname_input: String,
     party_input: String,
     edit_mvp_index: Option<usize>,
+    textures: HashMap<String, TextureHandle>,
+    asset_dir: PathBuf,
 }
 
 impl Default for MvpTimerApp {
     fn default() -> Self {
         let settings = Settings::default();
+        let asset_dir = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+            .unwrap_or_else(|| PathBuf::from("."));
         let mut app = Self {
             original_all_mvps: vec![],
             active_mvps: vec![],
@@ -54,6 +61,8 @@ impl Default for MvpTimerApp {
             nickname_input: String::new(),
             party_input: String::new(),
             edit_mvp_index: None,
+            textures: HashMap::new(),
+            asset_dir,
         };
         app.load_server_data();
         app
@@ -61,6 +70,47 @@ impl Default for MvpTimerApp {
 }
 
 impl MvpTimerApp {
+    fn exe_dir(&self) -> &PathBuf {
+        &self.asset_dir
+    }
+
+    fn load_texture(&mut self, ctx: &Context, key: &str, path: &PathBuf) -> Option<TextureHandle> {
+        if let Some(t) = self.textures.get(key) {
+            return Some(t.clone());
+        }
+        match image::load_from_memory(&std::fs::read(path).ok()?) {
+            Ok(img) => {
+                let rgba = img.to_rgba8();
+                let (w, h) = rgba.dimensions();
+                let color_image = egui::ColorImage::from_rgba_unmultiplied([w as _, h as _], &rgba);
+                let handle = ctx.load_texture(key, color_image, egui::TextureOptions::LINEAR);
+                self.textures.insert(key.to_string(), handle.clone());
+                Some(handle)
+            }
+            Err(_) => None,
+        }
+    }
+
+    fn load_icon_texture(&mut self, ctx: &Context, mvp_id: u32) -> Option<TextureHandle> {
+        let key = format!("icon/{}", mvp_id);
+        if let Some(t) = self.textures.get(&key) {
+            return Some(t.clone());
+        }
+        let icon_dir = self.exe_dir().join("assets/icons");
+        let path = icon_dir.join(format!("{}.png", mvp_id));
+        self.load_texture(ctx, &key, &path)
+    }
+
+    fn load_map_texture(&mut self, ctx: &Context, mapname: &str) -> Option<TextureHandle> {
+        let key = format!("map/{}", mapname);
+        if let Some(t) = self.textures.get(&key) {
+            return Some(t.clone());
+        }
+        let map_dir = self.exe_dir().join("assets/maps");
+        let path = map_dir.join(format!("{}.png", mapname));
+        self.load_texture(ctx, &key, &path)
+    }
+
     fn load_server_data(&mut self) {
         let server = if self.settings.server.is_empty() {
             DEFAULT_SERVER
@@ -68,7 +118,7 @@ impl MvpTimerApp {
             &self.settings.server
         };
         if !self.server_data_cache.contains_key(server) {
-            let path = format!("data/{}.json", server);
+            let path = self.exe_dir().join("data").join(format!("{}.json", server));
             if let Ok(data) = std::fs::read_to_string(&path) {
                 if let Ok(mvps) = serde_json::from_str::<Vec<Mvp>>(&data) {
                     self.server_data_cache.insert(server.to_string(), mvps);
@@ -135,14 +185,11 @@ impl MvpTimerApp {
         if let Some(idx) = self.active_mvps.iter().position(|m| m.id == id && m.death_map.as_deref() == death_map) {
             self.active_mvps[idx].death_time = Some(death_time);
             self.active_mvps[idx].is_pinned = false;
-        } else {
-            let mvp_idx = self.original_all_mvps.iter().position(|m| m.id == id);
-            if let Some(idx) = mvp_idx {
-                let mut mvp = self.original_all_mvps[idx].clone();
-                mvp.death_time = Some(death_time);
-                mvp.death_map = death_map.map(|s| s.to_string());
-                self.active_mvps.push(mvp);
-            }
+        } else if let Some(idx) = self.original_all_mvps.iter().position(|m| m.id == id) {
+            let mut mvp = self.original_all_mvps[idx].clone();
+            mvp.death_time = Some(death_time);
+            mvp.death_map = death_map.map(|s| s.to_string());
+            self.active_mvps.push(mvp);
         }
         sort_mvps_by_respawn_time(&mut self.active_mvps);
         self.rebuild_all_mvps();
@@ -418,61 +465,83 @@ impl eframe::App for MvpTimerApp {
                 for (orig_idx, mvp) in &display_mvps {
                     let name = mvp.name.clone();
                     let mvp_id = mvp.id;
-                    let mvp_death_map = mvp.death_map.clone();
+                    let death_map = mvp.death_map.clone();
                     let eta = get_respawn_eta(mvp);
                     let has_resp = has_respawned(mvp, self.now_ms);
                     let resp_window = get_mvp_respawn_window(mvp);
 
-                    Frame::NONE
+                    // Preload icon texture
+                    let icon = self.load_icon_texture(ctx, mvp_id);
+
+                    // Preload map texture
+                    let map_tx = if self.settings.show_mvp_map {
+                        death_map.as_ref().and_then(|dm| self.load_map_texture(ctx, dm))
+                    } else {
+                        None
+                    };
+
+                    let frame = Frame::NONE
                         .fill(Color32::from_rgb(40, 40, 50))
                         .stroke(Stroke::new(1.0_f32, Color32::from_rgb(80, 80, 100)))
                         .corner_radius(CornerRadius::same(6))
-                        .inner_margin(Margin::symmetric(10, 6))
-                        .show(ui, |ui| {
-                            ui.horizontal(|ui| {
+                        .inner_margin(Margin::symmetric(10, 6));
+
+                    frame.show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            // Icon
+                            if let Some(tx) = &icon {
+                                let size = if self.settings.animated_sprites { 64.0 } else { 48.0 };
+                                ui.add(egui::Image::from_texture(tx).max_height(size).max_width(size));
+                            }
+                            ui.vertical(|ui| {
                                 ui.label(RichText::new(&name).size(14.0).strong());
-                                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                    match self.tab {
-                                        ActiveTab::Active => {
-                                            if let Some(eta_val) = eta {
-                                                let remaining = eta_val - self.now_ms;
-                                                if remaining > 0 {
-                                                    ui.label(format!("Respawn in {}", format_time(remaining)));
-                                                } else if !has_resp {
-                                                    let end = eta_val + resp_window as i64;
-                                                    let remaining_window = end - self.now_ms;
-                                                    ui.label(format!("Respawning (window: {})", format_time(remaining_window)));
-                                                } else {
-                                                    ui.label(RichText::new("Already Respawned").color(Color32::GREEN));
-                                                }
-                                            }
-                                            if ui.button("Edit").clicked() {
-                                                self.edit_mvp_index = Some(*orig_idx);
-                                            }
-                                            if ui.button("RMV").clicked() {
-                                                self.remove_mvp(*orig_idx);
-                                            }
-                                            if ui.button("Back to Wait").clicked() {
-                                                self.move_to_wait(*orig_idx);
+                                // Map preview
+                                if let Some(mtx) = &map_tx {
+                                    ui.add(egui::Image::from_texture(mtx).max_height(80.0).max_width(120.0));
+                                }
+                            });
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                match self.tab {
+                                    ActiveTab::Active => {
+                                        if let Some(eta_val) = eta {
+                                            let remaining = eta_val - self.now_ms;
+                                            if remaining > 0 {
+                                                ui.label(format!("Respawn in {}", format_time(remaining)));
+                                            } else if !has_resp {
+                                                let end = eta_val + resp_window as i64;
+                                                let remaining_window = end - self.now_ms;
+                                                ui.label(format!("Respawning (window: {})", format_time(remaining_window)));
+                                            } else {
+                                                ui.label(RichText::new("Already Respawned").color(Color32::GREEN));
                                             }
                                         }
-                                        ActiveTab::Wait => {
-                                            if ui.button("Killed Now").clicked() {
-                                                self.kill_mvp(mvp_id, mvp_death_map.as_deref(), self.now_ms);
-                                            }
-                                            if ui.button("CANCEL").clicked() {
-                                                self.remove_from_wait(*orig_idx);
-                                            }
+                                        if ui.button("Edit").clicked() {
+                                            self.edit_mvp_index = Some(*orig_idx);
                                         }
-                                        ActiveTab::All => {
-                                            if ui.button("Select to kill").clicked() {
-                                                self.add_to_wait(mvp);
-                                            }
+                                        if ui.button("RMV").clicked() {
+                                            self.remove_mvp(*orig_idx);
+                                        }
+                                        if ui.button("Back to Wait").clicked() {
+                                            self.move_to_wait(*orig_idx);
                                         }
                                     }
-                                });
+                                    ActiveTab::Wait => {
+                                        if ui.button("Killed Now").clicked() {
+                                            self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
+                                        }
+                                        if ui.button("CANCEL").clicked() {
+                                            self.remove_from_wait(*orig_idx);
+                                        }
+                                    }
+                                    ActiveTab::All => {
+                                        if ui.button("Select to kill").clicked() {
+                                            self.add_to_wait(mvp);
+                                        }
+                                    }
+                                }
                             });
                         });
+                    });
                     ui.add_space(4.0);
                 }
             });
