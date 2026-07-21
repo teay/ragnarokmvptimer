@@ -321,61 +321,51 @@ impl MvpTimerApp {
             .corner_radius(CornerRadius::same(6))
             .inner_margin(Margin::same(6));
 
-        let is_compact = self.tab == ActiveTab::All;
-        let icon_size = if is_compact { 36.0 } else { 48.0 };
-
         card_frame.show(ui, |ui| {
-            ui.set_min_width(220.0);
             ui.horizontal(|ui| {
                 if let Some(tx) = &icon {
-                    ui.add(egui::Image::from_texture(tx).max_height(icon_size).max_width(icon_size));
+                    ui.add(egui::Image::from_texture(tx).max_height(48.0).max_width(48.0));
                 }
                 ui.vertical(|ui| {
                     ui.label(RichText::new(&name).size(12.0).strong().color(Color32::from_rgb(230, 230, 240)));
-                    if !is_compact {
-                        ui.label(RichText::new(format!("#{}", mvp_id)).size(9.0).color(Color32::from_rgb(140, 140, 160)));
-                        if let Some(mn) = mapname {
-                            ui.label(RichText::new(mn).size(10.0).color(Color32::from_rgb(100, 180, 255)));
-                        }
+                    ui.label(RichText::new(format!("#{}", mvp_id)).size(9.0).color(Color32::from_rgb(140, 140, 160)));
+                    if let Some(mn) = mapname {
+                        ui.label(RichText::new(mn).size(10.0).color(Color32::from_rgb(100, 180, 255)));
                     }
                 });
-                if !is_compact {
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        match self.tab {
-                            ActiveTab::Active => {
-                                if button_colored(ui, "E", Color32::from_rgb(74, 74, 74)).clicked() {
-                                    self.edit_mvp_index = Some(orig_idx);
-                                }
-                                if button_colored(ui, "X", Color32::from_rgb(140, 50, 50)).clicked() {
-                                    self.remove_mvp(orig_idx);
-                                }
-                                if button_colored(ui, "←", Color32::from_rgb(180, 80, 80)).clicked() {
-                                    self.move_to_wait(orig_idx);
-                                }
+                match self.tab {
+                    ActiveTab::Active => {
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            if button_colored(ui, "E", Color32::from_rgb(74, 74, 74)).clicked() {
+                                self.edit_mvp_index = Some(orig_idx);
                             }
-                            ActiveTab::Wait => {
-                                if button_colored(ui, "K", Color32::from_rgb(120, 80, 40)).clicked() {
-                                    self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
-                                }
-                                if button_colored(ui, "X", Color32::from_rgb(140, 50, 50)).clicked() {
-                                    self.remove_from_wait(orig_idx);
-                                }
+                            if button_colored(ui, "X", Color32::from_rgb(140, 50, 50)).clicked() {
+                                self.remove_mvp(orig_idx);
                             }
-                            ActiveTab::All => {}
-                        }
-                    });
+                            if button_colored(ui, "←", Color32::from_rgb(180, 80, 80)).clicked() {
+                                self.move_to_wait(orig_idx);
+                            }
+                        });
+                    }
+                    ActiveTab::Wait => {
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            if button_colored(ui, "K", Color32::from_rgb(120, 80, 40)).clicked() {
+                                self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
+                            }
+                            if button_colored(ui, "X", Color32::from_rgb(140, 50, 50)).clicked() {
+                                self.remove_from_wait(orig_idx);
+                            }
+                        });
+                    }
+                    ActiveTab::All => {
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            if button_colored(ui, "Select", Color32::from_rgb(120, 80, 40)).clicked() {
+                                self.add_to_wait(mvp);
+                            }
+                        });
+                    }
                 }
             });
-            if is_compact {
-                ui.horizontal(|ui| {
-                    if button_colored(ui, "+ Kill", Color32::from_rgb(120, 80, 40)).clicked() {
-                        self.add_to_wait(mvp);
-                    }
-                    if let Some(mn) = mapname {
-                        ui.label(RichText::new(mn).size(9.0).color(Color32::from_rgb(100, 180, 255)));
-                    }
-                });
-            }
             match self.tab {
                 ActiveTab::Active => {
                     if let Some(eta_val) = eta {
@@ -394,10 +384,8 @@ impl MvpTimerApp {
                 ActiveTab::Wait | ActiveTab::All => {}
             }
             if let Some(mtx) = &map_tx {
-                if !is_compact {
-                    ui.add_space(4.0);
-                    ui.add(egui::Image::from_texture(mtx).max_height(80.0));
-                }
+                ui.add_space(4.0);
+                ui.add(egui::Image::from_texture(mtx).max_height(80.0));
             }
         });
     }
@@ -577,14 +565,17 @@ impl eframe::App for MvpTimerApp {
                 }
 
                 let spacing = 8.0_f32;
-                let card_w = 220.0_f32;
-                let n_cols = ((ui.available_width() + spacing) / (card_w + spacing)).floor().max(1.0) as usize;
-                let col_w = ((ui.available_width() - (n_cols - 1) as f32 * spacing) / n_cols as f32).max(160.0);
+                let card_w = 240.0_f32;
+                let avail_w = ui.available_width();
+                let n_cols = ((avail_w + spacing) / (card_w + spacing)).floor().max(1.0) as usize;
+                let row_w = n_cols as f32 * card_w + (n_cols - 1) as f32 * spacing;
+                let offset = ((avail_w - row_w) / 2.0).max(0.0);
                 for chunk in display_mvps.chunks(n_cols) {
                     ui.horizontal(|ui| {
+                        ui.add_space(offset);
                         for (orig_idx, mvp) in chunk {
                             let _ = ui.allocate_ui_with_layout(
-                                egui::vec2(col_w, ui.available_height().max(80.0)),
+                                egui::vec2(card_w, ui.available_height().max(80.0)),
                                 egui::Layout::top_down(egui::Align::LEFT),
                                 |ui| {
                                     self.render_card(ui, ctx, *orig_idx, mvp);
