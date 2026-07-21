@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 use eframe::egui::{self, Color32, Frame, Margin, CornerRadius, Stroke, RichText, Context, TextureHandle};
@@ -680,7 +680,15 @@ impl eframe::App for MvpTimerApp {
         // ── Central panel ──
         let active_count = self.active_mvps.iter().filter(|m| m.death_time.is_some()).count();
         let wait_count = self.active_mvps.iter().filter(|m| m.is_pinned && m.death_time.is_none()).count();
-        let all_count = self.all_mvps.len();
+        let all_count = {
+            let active_keys: HashSet<String> = self.active_mvps.iter()
+                .map(|m| format!("{}-{}", m.id, m.death_map.as_deref().unwrap_or("unknown")))
+                .collect();
+            self.original_all_mvps.iter()
+                .flat_map(|mvp| mvp.spawn.iter().map(move |s| (mvp.id, s)))
+                .filter(|(id, s)| !active_keys.contains(&format!("{}-{}", id, s.mapname)))
+                .count()
+        };
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
@@ -719,10 +727,22 @@ impl eframe::App for MvpTimerApp {
                         .collect()
                 }
                 ActiveTab::All => {
-                    let mut list: Vec<(usize, Mvp)> = self.all_mvps.iter()
-                        .enumerate()
-                        .map(|(i, m)| (i, m.clone()))
+                    let active_keys: HashSet<String> = self.active_mvps.iter()
+                        .map(|m| format!("{}-{}", m.id, m.death_map.as_deref().unwrap_or("unknown")))
                         .collect();
+                    let mut list: Vec<(usize, Mvp)> = Vec::new();
+                    for (idx, mvp) in self.original_all_mvps.iter().enumerate() {
+                        for spawn in &mvp.spawn {
+                            let key = format!("{}-{}", mvp.id, spawn.mapname);
+                            if active_keys.contains(&key) {
+                                continue;
+                            }
+                            let mut clone = mvp.clone();
+                            clone.spawn = vec![spawn.clone()];
+                            clone.death_map = Some(spawn.mapname.clone());
+                            list.push((idx, clone));
+                        }
+                    }
                     if !self.search_query.is_empty() {
                         let q = self.search_query.to_lowercase();
                         list.retain(|(_, m)| m.name.to_lowercase().contains(&q));
