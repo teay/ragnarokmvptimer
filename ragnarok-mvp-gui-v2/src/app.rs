@@ -78,16 +78,27 @@ impl MvpTimerApp {
         if let Some(t) = self.textures.get(key) {
             return Some(t.clone());
         }
-        match image::load_from_memory(&std::fs::read(path).ok()?) {
+        let data = match std::fs::read(path) {
+            Ok(d) => d,
+            Err(e) => {
+                log::warn!("Failed to read texture file: {:?} error: {}", path, e);
+                return None;
+            }
+        };
+        match image::load_from_memory(&data) {
             Ok(img) => {
                 let rgba = img.to_rgba8();
                 let (w, h) = rgba.dimensions();
                 let color_image = egui::ColorImage::from_rgba_unmultiplied([w as _, h as _], &rgba);
                 let handle = ctx.load_texture(key, color_image, egui::TextureOptions::LINEAR);
                 self.textures.insert(key.to_string(), handle.clone());
+                log::warn!("Loaded texture: {:?} ({}x{})", path, w, h);
                 Some(handle)
             }
-            Err(_) => None,
+            Err(e) => {
+                log::warn!("Failed to decode image: {:?} error: {}", path, e);
+                None
+            }
         }
     }
 
