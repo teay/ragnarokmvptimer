@@ -576,23 +576,24 @@ impl eframe::App for MvpTimerApp {
                     return;
                 }
 
-                let card_w = 200.0_f32;
-                let n_cols = ((ui.available_width() + 8.0) / card_w).floor().max(1.0) as usize;
-                egui::Grid::new("mvp_grid")
-                    .spacing([8.0, 8.0])
-                    .min_col_width(card_w)
-                    .max_col_width(card_w)
-                    .show(ui, |ui| {
-                        for (i, (orig_idx, mvp)) in display_mvps.iter().enumerate() {
-                            self.render_card(ui, ctx, *orig_idx, mvp);
-                            if (i + 1) % n_cols == 0 {
-                                ui.end_row();
-                            }
-                        }
-                        if display_mvps.len() % n_cols != 0 {
-                            ui.end_row();
+                let spacing = 8.0_f32;
+                let card_w = 220.0_f32;
+                let n_cols = ((ui.available_width() + spacing) / (card_w + spacing)).floor().max(1.0) as usize;
+                let col_w = ((ui.available_width() - (n_cols - 1) as f32 * spacing) / n_cols as f32).max(160.0);
+                for chunk in display_mvps.chunks(n_cols) {
+                    ui.horizontal(|ui| {
+                        for (orig_idx, mvp) in chunk {
+                            let _ = ui.allocate_ui_with_layout(
+                                egui::vec2(col_w, ui.available_height().max(80.0)),
+                                egui::Layout::top_down(egui::Align::LEFT),
+                                |ui| {
+                                    self.render_card(ui, ctx, *orig_idx, mvp);
+                                },
+                            );
                         }
                     });
+                    ui.add_space(4.0);
+                }
             });
         });
 
