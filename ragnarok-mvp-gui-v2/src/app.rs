@@ -395,10 +395,16 @@ impl MvpTimerApp {
         } else {
             self.load_icon_texture(ctx, mvp_id)
         };
-        let mapname = death_map.as_deref()
+        let map_label = death_map.as_deref()
+            .map(|m| m.to_string())
+            .or_else(|| {
+                let maps: Vec<&str> = mvp.spawn.iter().map(|s| s.mapname.as_str()).collect();
+                if maps.is_empty() { None } else { Some(maps.join(", ")) }
+            });
+        let first_map = death_map.as_deref()
             .or_else(|| mvp.spawn.first().map(|s| s.mapname.as_str()));
         let map_tx = if self.settings.show_mvp_map {
-            mapname.and_then(|m| self.load_map_texture(ctx, m))
+            first_map.and_then(|m| self.load_map_texture(ctx, m))
         } else {
             None
         };
@@ -486,7 +492,7 @@ impl MvpTimerApp {
             }
 
             // 5. Map name (18px fixed)
-            if let Some(mn) = mapname {
+            if let Some(ref mn) = map_label {
                 ui.allocate_ui_with_layout(
                     egui::vec2(cw, 18.0),
                     egui::Layout::top_down(egui::Align::Center),
