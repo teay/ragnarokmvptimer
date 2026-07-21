@@ -14,7 +14,7 @@
 
 ### P3 — Nice to have
 
-- [ ] **Animated sprites** — `settings.animated_sprites` มี toggle แต่แค่เปลี่ยน icon size (48→64) ไม่มี sprite sheet / animation จริง (v1 มี animated sprite sheet ใช้ Cairo)
+- [x] **Animated sprites** — `settings.animated_sprites` toggle โหลด `{id}.gif` ใช้ `GifDecoder` ถอด frames + cycle ตาม delay ของ GIF (fallback เป็น PNG ถ้าไม่มี GIF)
 
 ## Done
 
