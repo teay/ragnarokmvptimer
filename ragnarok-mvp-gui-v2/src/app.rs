@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use eframe::egui::{self, Color32, Frame, Margin, CornerRadius, Stroke, RichText, Context, TextureHandle};
+use image::codecs::gif::GifDecoder;
+use image::AnimationDecoder;
 
 use crate::core::rehydrate::rehydrate_mvps;
 use crate::core::sort::sort_mvps_by_respawn_time;
@@ -16,6 +18,13 @@ enum ActiveTab {
     Active,
     Wait,
     All,
+}
+
+struct AnimatedSprite {
+    frame_keys: Vec<String>,
+    delays_ms: Vec<u32>,
+    current: usize,
+    last_switch_ms: i64,
 }
 
 pub struct MvpTimerApp {
@@ -35,6 +44,7 @@ pub struct MvpTimerApp {
     party_input: String,
     edit_mvp_index: Option<usize>,
     textures: HashMap<String, TextureHandle>,
+    animations: HashMap<String, AnimatedSprite>,
     asset_dir: PathBuf,
 }
 
@@ -62,6 +72,7 @@ impl Default for MvpTimerApp {
             party_input: String::new(),
             edit_mvp_index: None,
             textures: HashMap::new(),
+            animations: HashMap::new(),
             asset_dir,
         };
         app.load_server_data();
@@ -110,6 +121,51 @@ impl MvpTimerApp {
         let icon_dir = self.exe_dir().join("assets/icons");
         let path = icon_dir.join(format!("{}.png", mvp_id));
         self.load_texture(ctx, &key, &path)
+    }
+
+    fn load_animated_icon(&mut self, ctx: &Context, mvp_id: u32) -> Option<TextureHandle> {
+        let anim_key = format!("anim/{}", mvp_id);
+        if let Some(anim) = self.animations.get(&anim_key) {
+            return self.textures.get(&anim.frame_keys[anim.current]).cloned();
+        }
+        let icons_dir = self.exe_dir().join("assets/icons");
+        let gif_path = icons_dir.join(format!("{}.gif", mvp_id));
+        if !gif_path.exists() {
+            return self.load_icon_texture(ctx, mvp_id);
+        }
+        let file = match std::fs::File::open(&gif_path) {
+            Ok(f) => f,
+            Err(_) => return self.load_icon_texture(ctx, mvp_id),
+        };
+        let decoder = match GifDecoder::new(std::io::BufReader::new(file)) {
+            Ok(d) => d,
+            Err(_) => return self.load_icon_texture(ctx, mvp_id),
+        };
+        let frames = match decoder.into_frames().collect_frames() {
+            Ok(f) => f,
+            Err(_) => return self.load_icon_texture(ctx, mvp_id),
+        };
+        let mut anim = AnimatedSprite {
+            frame_keys: Vec::with_capacity(frames.len()),
+            delays_ms: Vec::with_capacity(frames.len()),
+            current: 0,
+            last_switch_ms: self.now_ms,
+        };
+        for (i, frame) in frames.iter().enumerate() {
+            let (num, den) = frame.delay().numer_denom_ms();
+            let delay_ms = if den > 0 { (num / den).max(1) } else { 100 };
+            anim.delays_ms.push(delay_ms);
+            let tex_key = format!("{}/{}", anim_key, i);
+            anim.frame_keys.push(tex_key.clone());
+            let buffer = frame.buffer();
+            let rgba = buffer.as_raw();
+            let (w, h) = buffer.dimensions();
+            let color_image = egui::ColorImage::from_rgba_unmultiplied([w as _, h as _], rgba);
+            let handle = ctx.load_texture(&tex_key, color_image, egui::TextureOptions::LINEAR);
+            self.textures.insert(tex_key, handle);
+        }
+        self.animations.insert(anim_key, anim);
+        self.load_animated_icon(ctx, mvp_id)
     }
 
     fn load_map_texture(&mut self, ctx: &Context, mapname: &str) -> Option<TextureHandle> {
@@ -306,7 +362,11 @@ impl MvpTimerApp {
         let eta = get_respawn_eta(mvp);
         let has_resp = has_respawned(mvp, self.now_ms);
         let resp_window = get_mvp_respawn_window(mvp);
-        let icon = self.load_icon_texture(ctx, mvp_id);
+        let icon = if self.settings.animated_sprites {
+            self.load_animated_icon(ctx, mvp_id)
+        } else {
+            self.load_icon_texture(ctx, mvp_id)
+        };
         let mapname = death_map.as_deref()
             .or_else(|| mvp.spawn.first().map(|s| s.mapname.as_str()));
         let map_tx = if self.settings.show_mvp_map {
@@ -530,8 +590,12 @@ impl eframe::App for MvpTimerApp {
                 self.settings.server = new_server;
                 self.settings.use_24_hour_format = use_24h;
                 self.settings.show_mvp_map = show_map;
+                let anim_changed = self.settings.animated_sprites != anim;
                 self.settings.animated_sprites = anim;
                 self.settings.notification_sound = sound;
+                if anim_changed {
+                    self.animations.clear();
+                }
                 self.load_server_data();
                 self.pull_from_firebase();
             }
@@ -704,7 +768,20 @@ impl eframe::App for MvpTimerApp {
             }
         }
 
-        ctx.request_repaint_after(std::time::Duration::from_millis(1000));
+        if self.settings.animated_sprites {
+            for anim in self.animations.values_mut() {
+                if anim.frame_keys.len() > 1 {
+                    let elapsed = self.now_ms - anim.last_switch_ms;
+                    if elapsed >= anim.delays_ms[anim.current] as i64 {
+                        anim.current = (anim.current + 1) % anim.frame_keys.len();
+                        anim.last_switch_ms = self.now_ms;
+                    }
+                }
+            }
+            ctx.request_repaint_after(std::time::Duration::from_millis(50));
+        } else {
+            ctx.request_repaint_after(std::time::Duration::from_millis(1000));
+        }
     }
 }
 
