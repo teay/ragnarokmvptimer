@@ -325,9 +325,13 @@ impl MvpTimerApp {
             .inner_margin(Margin::same(10));
 
         card_frame.show(ui, |ui| {
-            ui.vertical_centered(|ui| {
-                // Header: ID + kill time
-                ui.horizontal(|ui| {
+            let cw = ui.available_width();
+
+            // 1. Header (18px fixed)
+            ui.allocate_ui_with_layout(
+                egui::vec2(cw, 18.0),
+                egui::Layout::left_to_right(egui::Align::Center),
+                |ui| {
                     ui.label(RichText::new(format!("(({}))", mvp_id)).size(11.0).color(Color32::from_rgb(140, 140, 160)));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if in_active {
@@ -339,91 +343,126 @@ impl MvpTimerApp {
                             }
                         }
                     });
-                });
+                },
+            );
 
-                // Name
-                ui.label(RichText::new(&name).size(16.0).strong().color(Color32::from_rgb(230, 230, 240)));
+            // 2. Name (24px fixed)
+            ui.allocate_ui_with_layout(
+                egui::vec2(cw, 24.0),
+                egui::Layout::top_down(egui::Align::Center),
+                |ui| {
+                    ui.label(RichText::new(&name).size(16.0).strong().color(Color32::from_rgb(230, 230, 240)));
+                },
+            );
 
-                // Sprite
-                if let Some(tx) = &icon {
-                    ui.add(egui::Image::from_texture(tx).max_height(80.0).max_width(80.0));
-                }
-
-                // Timer
-                if in_active {
-                    if let Some(eta_val) = eta {
-                        let remaining = eta_val - self.now_ms;
-                        if remaining > 0 {
-                            ui.label(RichText::new(format!("⏳ {}", format_time(remaining))).size(18.0).strong().color(Color32::from_rgb(255, 200, 100)));
-                        } else if !has_resp {
-                            let end = eta_val + resp_window as i64;
-                            let rem = end - self.now_ms;
-                            ui.label(RichText::new(format!("⚡ {}", format_time(rem))).size(16.0).strong().color(Color32::from_rgb(255, 150, 100)));
-                        } else {
-                            ui.label(RichText::new("✅ Respawned").size(16.0).strong().color(Color32::GREEN));
-                        }
+            // 3. Sprite (80px fixed)
+            ui.allocate_ui_with_layout(
+                egui::vec2(cw, 80.0),
+                egui::Layout::top_down(egui::Align::Center),
+                |ui| {
+                    if let Some(tx) = &icon {
+                        ui.add(egui::Image::from_texture(tx).max_height(80.0).max_width(80.0));
                     }
-                }
-                if in_wait {
-                    ui.label(RichText::new("📌 Pinned").size(16.0).strong().color(Color32::from_rgb(200, 200, 100)));
-                }
+                },
+            );
 
-                // Map name
-                if let Some(mn) = mapname {
-                    ui.label(RichText::new(format!("Map: {}", mn)).size(13.0).color(Color32::from_rgb(100, 180, 255)));
-                }
-
-                // Map preview
-                if let Some(mtx) = &map_tx {
-                    ui.add_space(4.0);
-                    ui.add(egui::Image::from_texture(mtx).max_height(100.0));
-                }
-
-                // Push buttons to bottom for consistent position
-                let has_btns = in_active || in_wait;
-                let btn_section_h: f32 = if has_btns {
-                    6.0 + 32.0 + 4.0 + 40.0
-                } else {
-                    6.0 + 32.0
-                };
-                let remaining = ui.available_height();
-                if remaining > btn_section_h {
-                    ui.add_space(remaining - btn_section_h);
-                }
-
-                ui.add_space(6.0);
-                if has_btns {
-                    if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43)).clicked() {
-                        self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
-                    }
-                    egui::Frame::group(ui.style()).inner_margin(Margin::symmetric(0, 4)).show(ui, |ui| {
-                        ui.horizontal(|ui| {
-                            if button_colored(ui, "Edit", Color32::from_rgb(74, 74, 74)).clicked() {
-                                self.edit_mvp_index = Some(orig_idx);
-                            }
-                            if in_active {
-                                if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
-                                    self.remove_mvp(orig_idx);
-                                }
-                                if button_colored(ui, "BACK", Color32::from_rgb(214, 90, 90)).clicked() {
-                                    self.move_to_wait(orig_idx);
-                                }
+            // 4. Timer / Pinned (22px fixed)
+            if in_active {
+                ui.allocate_ui_with_layout(
+                    egui::vec2(cw, 22.0),
+                    egui::Layout::top_down(egui::Align::Center),
+                    |ui| {
+                        if let Some(eta_val) = eta {
+                            let remaining = eta_val - self.now_ms;
+                            if remaining > 0 {
+                                ui.label(RichText::new(format!("⏳ {}", format_time(remaining))).size(18.0).strong().color(Color32::from_rgb(255, 200, 100)));
+                            } else if !has_resp {
+                                let end = eta_val + resp_window as i64;
+                                let rem = end - self.now_ms;
+                                ui.label(RichText::new(format!("⚡ {}", format_time(rem))).size(16.0).strong().color(Color32::from_rgb(255, 150, 100)));
                             } else {
-                                if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
-                                    self.remove_from_wait(orig_idx);
-                                }
-                                if button_colored(ui, "CANCEL", Color32::from_rgb(214, 90, 90)).clicked() {
-                                    self.remove_from_wait(orig_idx);
-                                }
+                                ui.label(RichText::new("✅ Respawned").size(16.0).strong().color(Color32::GREEN));
                             }
-                        });
-                    });
-                } else {
-                    if button_colored(ui, "Select to kill", Color32::from_rgb(139, 90, 43)).clicked() {
-                        self.add_to_wait(mvp);
-                    }
+                        }
+                    },
+                );
+            }
+            if in_wait {
+                ui.allocate_ui_with_layout(
+                    egui::vec2(cw, 22.0),
+                    egui::Layout::top_down(egui::Align::Center),
+                    |ui| {
+                        ui.label(RichText::new("📌 Pinned").size(16.0).strong().color(Color32::from_rgb(200, 200, 100)));
+                    },
+                );
+            }
+
+            // 5. Map name (18px fixed)
+            if let Some(mn) = mapname {
+                ui.allocate_ui_with_layout(
+                    egui::vec2(cw, 18.0),
+                    egui::Layout::top_down(egui::Align::Center),
+                    |ui| {
+                        ui.label(RichText::new(format!("Map: {}", mn)).size(13.0).color(Color32::from_rgb(100, 180, 255)));
+                    },
+                );
+            }
+
+            // 6. Map preview (100px fixed)
+            if let Some(mtx) = &map_tx {
+                ui.allocate_ui_with_layout(
+                    egui::vec2(cw, 100.0),
+                    egui::Layout::top_down(egui::Align::Center),
+                    |ui| {
+                        ui.add(egui::Image::from_texture(mtx).max_height(100.0));
+                    },
+                );
+            }
+
+            // Push buttons to bottom then render
+            let has_btns = in_active || in_wait;
+            let btn_section_h: f32 = if has_btns {
+                6.0 + 32.0 + 4.0 + 40.0
+            } else {
+                6.0 + 32.0
+            };
+            let remaining = ui.available_height();
+            if remaining > btn_section_h {
+                ui.add_space(remaining - btn_section_h);
+            }
+
+            ui.add_space(6.0);
+            if has_btns {
+                if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43)).clicked() {
+                    self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
                 }
-            });
+                egui::Frame::group(ui.style()).inner_margin(Margin::symmetric(0, 4)).show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        if button_colored(ui, "Edit", Color32::from_rgb(74, 74, 74)).clicked() {
+                            self.edit_mvp_index = Some(orig_idx);
+                        }
+                        if in_active {
+                            if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
+                                self.remove_mvp(orig_idx);
+                            }
+                            if button_colored(ui, "BACK", Color32::from_rgb(214, 90, 90)).clicked() {
+                                self.move_to_wait(orig_idx);
+                            }
+                        } else {
+                            if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
+                                self.remove_from_wait(orig_idx);
+                            }
+                            if button_colored(ui, "CANCEL", Color32::from_rgb(214, 90, 90)).clicked() {
+                                self.remove_from_wait(orig_idx);
+                            }
+                        }
+                    });
+                });
+            } else {
+                if button_colored(ui, "Select to kill", Color32::from_rgb(139, 90, 43)).clicked() {
+                    self.add_to_wait(mvp);
+                }
+            }
         });
     }
 }
