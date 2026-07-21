@@ -49,6 +49,7 @@ pub struct MvpTimerApp {
     asset_dir: PathBuf,
     icon_max_size: (f32, f32),
     map_max_size: (f32, f32),
+    icon_pixel_sizes: HashMap<u32, (f32, f32)>,
 }
 
 impl Default for MvpTimerApp {
@@ -79,6 +80,7 @@ impl Default for MvpTimerApp {
             asset_dir: asset_dir.clone(),
             icon_max_size: (80.0, 80.0),
             map_max_size: (200.0, 100.0),
+            icon_pixel_sizes: HashMap::new(),
         };
         app.compute_max_image_sizes(&asset_dir);
         app.load_server_data();
@@ -102,10 +104,15 @@ impl MvpTimerApp {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if p.extension().and_then(|e| e.to_str()) != Some("png") { continue; }
-                if let Ok(data) = std::fs::read(&p) {
-                    if let Ok(img) = image::load_from_memory(&data) {
-                        max_icon_w = max_icon_w.max(img.width() as f32);
-                        max_icon_h = max_icon_h.max(img.height() as f32);
+                let fname = p.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+                if let Ok(id) = fname.parse::<u32>() {
+                    if let Ok(data) = std::fs::read(&p) {
+                        if let Ok(img) = image::load_from_memory(&data) {
+                            let (w, h) = (img.width() as f32, img.height() as f32);
+                            self.icon_pixel_sizes.entry(id).or_insert((w, h));
+                            max_icon_w = max_icon_w.max(w);
+                            max_icon_h = max_icon_h.max(h);
+                        }
                     }
                 }
             }
@@ -123,7 +130,7 @@ impl MvpTimerApp {
                 }
             }
         }
-        log::warn!("Max image sizes — icon: {}x{}, map: {}x{}", max_icon_w, max_icon_h, max_map_w, max_map_h);
+        log::warn!("Max image sizes — icon: {}x{}, map: {}x{} ({} icons scanned)", max_icon_w, max_icon_h, max_map_w, max_map_h, self.icon_pixel_sizes.len());
         self.icon_max_size = (max_icon_w, max_icon_h);
         self.map_max_size = (max_map_w, max_map_h);
     }
@@ -491,15 +498,22 @@ impl MvpTimerApp {
                 },
             );
 
-            // 3. Sprite (fixed max-icon size)
-            let (icon_max_w, icon_max_h) = self.icon_max_size;
-            let icon_h = icon_max_h.min(120.0);
+            // 3. Sprite (webapp-style: fixed height = 100px, width auto-proportional)
+            let sprite_h = 100.0;
+            let sprite_display = self.icon_pixel_sizes.get(&mvp_id).map(|(pw, ph)| {
+                let w = (pw / ph) * sprite_h;
+                (w, sprite_h)
+            });
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, icon_h),
+                egui::vec2(cw, sprite_h),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if let Some(tx) = &icon {
-                        ui.add(egui::Image::from_texture(tx).max_size(egui::vec2(icon_max_w.min(120.0), icon_h)));
+                        if let Some((sw, sh)) = sprite_display {
+                            ui.add(egui::Image::from_texture(tx).fit_to_exact_size(egui::vec2(sw, sh)));
+                        } else {
+                            ui.add(egui::Image::from_texture(tx).max_size(egui::vec2(cw, sprite_h)));
+                        }
                     }
                 },
             );
