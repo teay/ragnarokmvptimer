@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use eframe::egui::{self, Color32, Frame, Margin, CornerRadius, Stroke, RichText, Context, TextureHandle};
 use image::codecs::gif::GifDecoder;
+use image::codecs::png::PngDecoder;
 use image::AnimationDecoder;
 
 use crate::core::rehydrate::rehydrate_mvps;
@@ -129,22 +130,34 @@ impl MvpTimerApp {
             return self.textures.get(&anim.frame_keys[anim.current]).cloned();
         }
         let icons_dir = self.exe_dir().join("assets/icons");
-        let gif_path = icons_dir.join(format!("{}.gif", mvp_id));
-        if !gif_path.exists() {
-            return self.load_icon_texture(ctx, mvp_id);
+
+        if let Some(anim) = self.try_load_apng(ctx, &anim_key, &icons_dir.join("anim").join(format!("{}.png", mvp_id))) {
+            self.animations.insert(anim_key, anim);
+            return self.load_animated_icon(ctx, mvp_id);
         }
-        let file = match std::fs::File::open(&gif_path) {
-            Ok(f) => f,
-            Err(_) => return self.load_icon_texture(ctx, mvp_id),
-        };
-        let decoder = match GifDecoder::new(std::io::BufReader::new(file)) {
-            Ok(d) => d,
-            Err(_) => return self.load_icon_texture(ctx, mvp_id),
-        };
-        let frames = match decoder.into_frames().collect_frames() {
-            Ok(f) => f,
-            Err(_) => return self.load_icon_texture(ctx, mvp_id),
-        };
+        if let Some(anim) = self.try_load_gif(ctx, &anim_key, &icons_dir.join(format!("{}.gif", mvp_id))) {
+            self.animations.insert(anim_key, anim);
+            return self.load_animated_icon(ctx, mvp_id);
+        }
+        self.load_icon_texture(ctx, mvp_id)
+    }
+
+    fn try_load_gif(&mut self, ctx: &Context, anim_key: &str, path: &PathBuf) -> Option<AnimatedSprite> {
+        let file = std::fs::File::open(path).ok()?;
+        let decoder = GifDecoder::new(std::io::BufReader::new(file)).ok()?;
+        let frames = decoder.into_frames().collect_frames().ok()?;
+        Some(self.decode_frames_to_anim(ctx, anim_key, &frames))
+    }
+
+    fn try_load_apng(&mut self, ctx: &Context, anim_key: &str, path: &PathBuf) -> Option<AnimatedSprite> {
+        let file = std::fs::File::open(path).ok()?;
+        let decoder = PngDecoder::new(std::io::BufReader::new(file)).ok()?;
+        let apng = decoder.apng().ok()?;
+        let frames = apng.into_frames().collect_frames().ok()?;
+        Some(self.decode_frames_to_anim(ctx, anim_key, &frames))
+    }
+
+    fn decode_frames_to_anim(&mut self, ctx: &Context, anim_key: &str, frames: &[image::Frame]) -> AnimatedSprite {
         let mut anim = AnimatedSprite {
             frame_keys: Vec::with_capacity(frames.len()),
             delays_ms: Vec::with_capacity(frames.len()),
@@ -164,8 +177,7 @@ impl MvpTimerApp {
             let handle = ctx.load_texture(&tex_key, color_image, egui::TextureOptions::LINEAR);
             self.textures.insert(tex_key, handle);
         }
-        self.animations.insert(anim_key, anim);
-        self.load_animated_icon(ctx, mvp_id)
+        anim
     }
 
     fn load_map_texture(&mut self, ctx: &Context, mapname: &str) -> Option<TextureHandle> {
