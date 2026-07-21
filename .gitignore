@@ -38,3 +38,4 @@ vite
 cli-c/mvp_tui
 cli-c/src/*.o
 cli-c/data/mvp-save.json
+ragnarok-mvp-gui/data/
