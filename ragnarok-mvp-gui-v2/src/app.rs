@@ -591,9 +591,12 @@ impl eframe::App for MvpTimerApp {
                 }
 
                 let spacing = 8.0_f32;
-                let card_w = 340.0_f32;
+                let card_h = 400.0_f32;
                 let avail_w = ui.available_width();
-                let n_cols = ((avail_w + spacing) / (card_w + spacing)).floor().max(1.0) as usize;
+                let min_col_w = 200.0_f32;
+                let n_cols = ((avail_w + spacing) / (min_col_w + spacing)).floor().max(1.0) as usize;
+                let n_cols = n_cols.min(10);
+                let card_w = (avail_w - (n_cols - 1) as f32 * spacing) / n_cols as f32;
                 let row_w = n_cols as f32 * card_w + (n_cols - 1) as f32 * spacing;
                 let offset = ((avail_w - row_w) / 2.0).max(0.0);
                 for chunk in display_mvps.chunks(n_cols) {
@@ -601,7 +604,7 @@ impl eframe::App for MvpTimerApp {
                         ui.add_space(offset);
                         for (orig_idx, mvp) in chunk {
                             let _ = ui.allocate_ui_with_layout(
-                                egui::vec2(card_w, ui.available_height().max(80.0)),
+                                egui::vec2(card_w, card_h),
                                 egui::Layout::top_down(egui::Align::LEFT),
                                 |ui| {
                                     self.render_card(ui, ctx, *orig_idx, mvp);
