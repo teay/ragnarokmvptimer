@@ -47,6 +47,8 @@ pub struct MvpTimerApp {
     textures: HashMap<String, TextureHandle>,
     animations: HashMap<String, AnimatedSprite>,
     asset_dir: PathBuf,
+    icon_max_size: (f32, f32),
+    map_max_size: (f32, f32),
 }
 
 impl Default for MvpTimerApp {
@@ -74,8 +76,11 @@ impl Default for MvpTimerApp {
             edit_mvp_index: None,
             textures: HashMap::new(),
             animations: HashMap::new(),
-            asset_dir,
+            asset_dir: asset_dir.clone(),
+            icon_max_size: (80.0, 80.0),
+            map_max_size: (200.0, 100.0),
         };
+        app.compute_max_image_sizes(&asset_dir);
         app.load_server_data();
         app
     }
@@ -84,6 +89,43 @@ impl Default for MvpTimerApp {
 impl MvpTimerApp {
     fn exe_dir(&self) -> &PathBuf {
         &self.asset_dir
+    }
+
+    fn compute_max_image_sizes(&mut self, asset_dir: &PathBuf) {
+        let icon_dir = asset_dir.join("assets/icons");
+        let map_dir = asset_dir.join("assets/maps");
+        let mut max_icon_w = 80.0_f32;
+        let mut max_icon_h = 80.0_f32;
+        let mut max_map_w = 200.0_f32;
+        let mut max_map_h = 100.0_f32;
+        if let Ok(entries) = std::fs::read_dir(&icon_dir) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.extension().and_then(|e| e.to_str()) != Some("png") { continue; }
+                if let Ok(data) = std::fs::read(&p) {
+                    if let Ok(img) = image::load_from_memory(&data) {
+                        max_icon_w = max_icon_w.max(img.width() as f32);
+                        max_icon_h = max_icon_h.max(img.height() as f32);
+                    }
+                }
+            }
+        }
+        if let Ok(entries) = std::fs::read_dir(&map_dir) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.extension().and_then(|e| e.to_str()) != Some("png") { continue; }
+                if p.to_string_lossy().contains("_raw") { continue; }
+                if let Ok(data) = std::fs::read(&p) {
+                    if let Ok(img) = image::load_from_memory(&data) {
+                        max_map_w = max_map_w.max(img.width() as f32);
+                        max_map_h = max_map_h.max(img.height() as f32);
+                    }
+                }
+            }
+        }
+        log::warn!("Max image sizes — icon: {}x{}, map: {}x{}", max_icon_w, max_icon_h, max_map_w, max_map_h);
+        self.icon_max_size = (max_icon_w, max_icon_h);
+        self.map_max_size = (max_map_w, max_map_h);
     }
 
     fn load_texture(&mut self, ctx: &Context, key: &str, path: &PathBuf) -> Option<TextureHandle> {
@@ -449,23 +491,25 @@ impl MvpTimerApp {
                 },
             );
 
-            // 3. Sprite (80px fixed)
+            // 3. Sprite (fixed max-icon size)
+            let (icon_max_w, icon_max_h) = self.icon_max_size;
+            let icon_h = icon_max_h.min(120.0);
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 80.0),
+                egui::vec2(cw, icon_h),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if let Some(tx) = &icon {
-                        ui.add(egui::Image::from_texture(tx).max_height(80.0).max_width(80.0));
+                        ui.add(egui::Image::from_texture(tx).max_size(egui::vec2(icon_max_w.min(120.0), icon_h)));
                     }
                 },
             );
 
-            // 4. Timer / Pinned (22px fixed)
-            if in_active {
-                ui.allocate_ui_with_layout(
-                    egui::vec2(cw, 22.0),
-                    egui::Layout::top_down(egui::Align::Center),
-                    |ui| {
+            // 4. Timer / Pinned (22px fixed, always allocated)
+            ui.allocate_ui_with_layout(
+                egui::vec2(cw, 22.0),
+                egui::Layout::top_down(egui::Align::Center),
+                |ui| {
+                    if in_active {
                         if let Some(eta_val) = eta {
                             let remaining = eta_val - self.now_ms;
                             if remaining > 0 {
@@ -478,40 +522,35 @@ impl MvpTimerApp {
                                 ui.label(RichText::new("✅ Respawned").size(16.0).strong().color(Color32::GREEN));
                             }
                         }
-                    },
-                );
-            }
-            if in_wait {
-                ui.allocate_ui_with_layout(
-                    egui::vec2(cw, 22.0),
-                    egui::Layout::top_down(egui::Align::Center),
-                    |ui| {
+                    } else if in_wait {
                         ui.label(RichText::new("📌 Pinned").size(16.0).strong().color(Color32::from_rgb(200, 200, 100)));
-                    },
-                );
-            }
+                    }
+                },
+            );
 
             // 5. Map name (18px fixed)
-            if let Some(ref mn) = map_label {
-                ui.allocate_ui_with_layout(
-                    egui::vec2(cw, 18.0),
-                    egui::Layout::top_down(egui::Align::Center),
-                    |ui| {
+            ui.allocate_ui_with_layout(
+                egui::vec2(cw, 18.0),
+                egui::Layout::top_down(egui::Align::Center),
+                |ui| {
+                    if let Some(ref mn) = map_label {
                         ui.label(RichText::new(format!("Map: {}", mn)).size(13.0).color(Color32::from_rgb(100, 180, 255)));
-                    },
-                );
-            }
+                    }
+                },
+            );
 
-            // 6. Map preview (100px fixed)
-            if let Some(mtx) = &map_tx {
-                ui.allocate_ui_with_layout(
-                    egui::vec2(cw, 100.0),
-                    egui::Layout::top_down(egui::Align::Center),
-                    |ui| {
-                        ui.add(egui::Image::from_texture(mtx).max_height(100.0));
-                    },
-                );
-            }
+            // 6. Map preview (fixed max-map size)
+            let map_max_h = self.map_max_size.1;
+            let map_h = map_max_h.min(120.0);
+            ui.allocate_ui_with_layout(
+                egui::vec2(cw, map_h),
+                egui::Layout::top_down(egui::Align::Center),
+                |ui| {
+                    if let Some(mtx) = &map_tx {
+                        ui.add(egui::Image::from_texture(mtx).max_size(egui::vec2(cw, map_h)));
+                    }
+                },
+            );
 
             // Push buttons to bottom then render
             let has_btns = in_active || in_wait;
@@ -527,9 +566,11 @@ impl MvpTimerApp {
 
             ui.add_space(6.0);
             if has_btns {
-                if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43)).clicked() {
-                    self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
-                }
+                ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                    if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43)).clicked() {
+                        self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
+                    }
+                });
                 egui::Frame::group(ui.style()).inner_margin(Margin::symmetric(0, 4)).show(ui, |ui| {
                     ui.horizontal(|ui| {
                         if button_colored(ui, "Edit", Color32::from_rgb(74, 74, 74)).clicked() {
@@ -553,9 +594,11 @@ impl MvpTimerApp {
                     });
                 });
             } else {
-                if button_colored(ui, "Select to kill", Color32::from_rgb(139, 90, 43)).clicked() {
-                    self.add_to_wait(mvp);
-                }
+                ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                    if button_colored(ui, "Select to kill", Color32::from_rgb(139, 90, 43)).clicked() {
+                        self.add_to_wait(mvp);
+                    }
+                });
             }
         });
     }
@@ -759,7 +802,7 @@ impl eframe::App for MvpTimerApp {
                 }
 
                 let spacing = 8.0_f32;
-                let card_h = 400.0_f32;
+                let card_h = 480.0_f32;
                 let card_w = 222.0_f32;
                 let avail_w = ui.available_width();
                 let n_cols = ((avail_w + spacing) / (card_w + spacing)).floor().max(1.0) as usize;
@@ -841,12 +884,11 @@ impl eframe::App for MvpTimerApp {
 
 fn button_colored(ui: &mut egui::Ui, text: &str, color: Color32) -> egui::Response {
     let is_primary = text == "Killed Now" || text == "Select to kill";
-    let w = if is_primary { ui.available_width() } else { 60.0 };
+    let w = if is_primary { 150.0 } else { 60.0 };
     let h = if is_primary { 32.0 } else { 28.0 };
     let font_size = if is_primary { 14.0 } else { 11.0 };
-    ui.add(
-        egui::Button::new(RichText::new(text).size(font_size).color(Color32::WHITE).strong())
-            .fill(color)
-            .min_size(egui::vec2(w, h)),
-    )
+    let btn = egui::Button::new(RichText::new(text).size(font_size).color(Color32::WHITE).strong())
+        .fill(color)
+        .min_size(egui::vec2(w, h));
+    ui.add(btn)
 }
