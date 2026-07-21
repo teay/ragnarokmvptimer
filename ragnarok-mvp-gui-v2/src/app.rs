@@ -592,28 +592,32 @@ impl eframe::App for MvpTimerApp {
 
                 let spacing = 8.0_f32;
                 let card_h = 400.0_f32;
+                let card_w = 222.0_f32;
                 let avail_w = ui.available_width();
-                let min_col_w = 200.0_f32;
-                let n_cols = ((avail_w + spacing) / (min_col_w + spacing)).floor().max(1.0) as usize;
+                let n_cols = ((avail_w + spacing) / (card_w + spacing)).floor().max(1.0) as usize;
                 let n_cols = n_cols.min(10);
-                let card_w = (avail_w - (n_cols - 1) as f32 * spacing) / n_cols as f32;
-                let row_w = n_cols as f32 * card_w + (n_cols - 1) as f32 * spacing;
-                let offset = ((avail_w - row_w) / 2.0).max(0.0);
-                for chunk in display_mvps.chunks(n_cols) {
-                    ui.horizontal(|ui| {
-                        ui.add_space(offset);
-                        for (orig_idx, mvp) in chunk {
-                            let _ = ui.allocate_ui_with_layout(
-                                egui::vec2(card_w, card_h),
-                                egui::Layout::top_down(egui::Align::LEFT),
-                                |ui| {
-                                    self.render_card(ui, ctx, *orig_idx, mvp);
-                                },
-                            );
-                        }
-                    });
-                    ui.add_space(4.0);
-                }
+                let grid_w = n_cols as f32 * card_w + (n_cols - 1) as f32 * spacing;
+                log::warn!("avail_w={:.0} n_cols={} grid_w={:.0} card_h={:.0}", avail_w, n_cols, grid_w, card_h);
+                ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                    for chunk in display_mvps.chunks(n_cols) {
+                        let _ = ui.allocate_ui_with_layout(
+                            egui::vec2(grid_w, card_h),
+                            egui::Layout::left_to_right(egui::Align::TOP),
+                            |ui| {
+                                for (orig_idx, mvp) in chunk {
+                                    let _ = ui.allocate_ui_with_layout(
+                                        egui::vec2(card_w, card_h),
+                                        egui::Layout::top_down(egui::Align::LEFT),
+                                        |ui| {
+                                            self.render_card(ui, ctx, *orig_idx, mvp);
+                                        },
+                                    );
+                                }
+                            },
+                        );
+                        ui.add_space(4.0);
+                    }
+                });
             });
         });
 
@@ -656,7 +660,7 @@ impl eframe::App for MvpTimerApp {
 
 fn button_colored(ui: &mut egui::Ui, text: &str, color: Color32) -> egui::Response {
     let is_primary = text == "Killed Now" || text == "Select to kill";
-    let w = if is_primary { ui.available_width() } else { 70.0 };
+    let w = if is_primary { ui.available_width() } else { 60.0 };
     let h = if is_primary { 32.0 } else { 28.0 };
     let font_size = if is_primary { 14.0 } else { 11.0 };
     ui.add(

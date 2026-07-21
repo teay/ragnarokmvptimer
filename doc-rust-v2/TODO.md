@@ -5,7 +5,7 @@
 ### P1 — Core UX (missing features that affect daily use)
 
 - [x] **Fonts ไทย/JP/KR** — `main.rs` โหลด `NotoSansThai/JP/KR.ttf` เข้า egui ตอน start
-- [ ] **Layout polish** — จัด UI ให้สวยใช้งานง่ายแบบ v1 (card layout, spacing, colors, responsive grid)
+- [x] **Layout polish** — จัด UI ให้สวยใช้งานง่ายแบบ v1 (card layout, spacing, colors, responsive grid, consistent 222×400 cards across all tabs)
 
 ### P2 — Real-time & Engagement
 
