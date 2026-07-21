@@ -484,9 +484,11 @@ impl eframe::App for MvpTimerApp {
                     // Preload icon texture
                     let icon = self.load_icon_texture(ctx, mvp_id);
 
-                    // Preload map texture
+                    let map_to_show = death_map.as_ref()
+                        .map(|s| s.as_str())
+                        .or_else(|| mvp.spawn.first().map(|s| s.mapname.as_str()));
                     let map_tx = if self.settings.show_mvp_map {
-                        death_map.as_ref().and_then(|dm| self.load_map_texture(ctx, dm))
+                        map_to_show.and_then(|dm| self.load_map_texture(ctx, dm))
                     } else {
                         None
                     };
