@@ -755,12 +755,12 @@ impl eframe::App for MvpTimerApp {
             });
             ui.separator();
 
-            if self.tab == ActiveTab::All {
+            ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
                 ui.horizontal(|ui| {
                     ui.label("Search:");
-                    ui.text_edit_singleline(&mut self.search_query);
+                    ui.add(egui::TextEdit::singleline(&mut self.search_query).desired_width(250.0));
                 });
-            }
+            });
 
             let display_mvps: Vec<(usize, Mvp)> = match self.tab {
                 ActiveTab::Active => {
@@ -769,6 +769,10 @@ impl eframe::App for MvpTimerApp {
                         .filter(|(_, m)| m.death_time.is_some())
                         .map(|(i, m)| (i, m.clone()))
                         .collect();
+                    if !self.search_query.is_empty() {
+                        let q = self.search_query.to_lowercase();
+                        list.retain(|(_, m)| m.name.to_lowercase().contains(&q));
+                    }
                     list.sort_by(|a, b| {
                         let eta_a = a.1.death_time.unwrap_or(0) + a.1.spawn.first().map(|s| s.respawn_time as i64).unwrap_or(0);
                         let eta_b = b.1.death_time.unwrap_or(0) + b.1.spawn.first().map(|s| s.respawn_time as i64).unwrap_or(0);
@@ -777,11 +781,16 @@ impl eframe::App for MvpTimerApp {
                     list
                 }
                 ActiveTab::Wait => {
-                    self.active_mvps.iter()
+                    let mut list: Vec<(usize, Mvp)> = self.active_mvps.iter()
                         .enumerate()
                         .filter(|(_, m)| m.is_pinned && m.death_time.is_none())
                         .map(|(i, m)| (i, m.clone()))
-                        .collect()
+                        .collect();
+                    if !self.search_query.is_empty() {
+                        let q = self.search_query.to_lowercase();
+                        list.retain(|(_, m)| m.name.to_lowercase().contains(&q));
+                    }
+                    list
                 }
                 ActiveTab::All => {
                     let active_keys: HashSet<String> = self.active_mvps.iter()
