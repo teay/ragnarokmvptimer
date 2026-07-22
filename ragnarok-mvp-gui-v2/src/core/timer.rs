@@ -56,7 +56,8 @@ pub fn get_respawn_eta(mvp: &Mvp) -> Option<i64> {
 
 pub fn has_respawned(mvp: &Mvp, now_epoch_ms: i64) -> bool {
     if let Some(eta) = get_respawn_eta(mvp) {
-        now_epoch_ms >= eta
+        let window = get_mvp_respawn_window(mvp) as i64;
+        now_epoch_ms >= eta + window
     } else {
         false
     }

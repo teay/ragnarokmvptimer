@@ -492,166 +492,183 @@ impl MvpTimerApp {
             .fill(Color32::from_rgb(30, 30, 40))
             .stroke(Stroke::new(1.0_f32, Color32::from_rgb(60, 60, 80)))
             .corner_radius(CornerRadius::same(8))
-            .inner_margin(Margin::same(10));
+            .inner_margin(Margin::symmetric(6, 4));
 
         card_frame.show(ui, |ui| {
             let cw = ui.available_width();
 
-            // 1. Header (18px fixed)
+            // ── Helper: fill a section to exact height ──
+            let fill_section = |ui: &mut egui::Ui, h: f32| {
+                let used = ui.min_rect().height();
+                let fill = (h - used).max(0.0);
+                if fill > 0.0 {
+                    ui.allocate_exact_size(egui::vec2(cw, fill), egui::Sense::hover());
+                }
+            };
+
+            // 1. Header
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 18.0),
+                egui::vec2(cw, 14.0),
                 egui::Layout::left_to_right(egui::Align::Center),
                 |ui| {
-                    ui.label(RichText::new(format!("(({}))", mvp_id)).size(11.0).color(Color32::from_rgb(140, 140, 160)));
+                    ui.label(RichText::new(format!("(({}))", mvp_id)).size(10.0).color(Color32::from_rgb(140, 140, 160)));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if in_active {
                             if let Some(dt) = mvp.death_time {
                                 let formatted = chrono::DateTime::from_timestamp_millis(dt)
                                     .map(|d| d.format("%d/%m %H:%M").to_string())
                                     .unwrap_or_default();
-                                ui.label(RichText::new(formatted).size(10.0).color(Color32::GRAY));
+                                ui.label(RichText::new(formatted).size(9.0).color(Color32::GRAY));
                             }
                         }
                     });
                 },
             );
 
-            // 2. Name (24px fixed)
+            // 2. Name (centered)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 24.0),
+                egui::vec2(cw, 22.0),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
-                    ui.label(RichText::new(&name).size(16.0).strong().color(Color32::from_rgb(230, 230, 240)));
+                    ui.label(RichText::new(&name).size(14.0).strong().color(Color32::from_rgb(230, 230, 240)));
+                    fill_section(ui, 22.0);
                 },
             );
 
-            // 3. Sprite (webapp-style: fixed height = 100px, width auto-proportional)
-            let sprite_h = 100.0;
-            let sprite_display = self.icon_pixel_sizes.get(&mvp_id).map(|(pw, ph)| {
-                let w = (pw / ph) * sprite_h;
-                (w, sprite_h)
-            });
+            // 3. Sprite (fixed 80h, aspect ratio preserved)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, sprite_h),
+                egui::vec2(cw, 80.0),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if let Some(tx) = &icon {
-                        if let Some((sw, sh)) = sprite_display {
-                            ui.add(egui::Image::from_texture(tx).fit_to_exact_size(egui::vec2(sw, sh)));
+                        let ts = tx.size();
+                        let (tex_w, tex_h) = (ts[0] as f32, ts[1] as f32);
+                        if tex_w > 0.0 && tex_h > 0.0 {
+                            let max_w = cw - 2.0;
+                            let scale = (80.0 / tex_h).min(max_w / tex_w);
+                            let fw = (tex_w * scale).round();
+                            let fh = (tex_h * scale).round();
+                            ui.add(egui::Image::from_texture(tx).fit_to_exact_size(egui::vec2(fw, fh)));
                         } else {
-                            ui.add(egui::Image::from_texture(tx).max_size(egui::vec2(cw, sprite_h)));
+                            ui.add_space(80.0);
                         }
+                    } else {
+                        ui.add_space(80.0);
                     }
+                    fill_section(ui, 80.0);
                 },
             );
 
-            // 4. Timer / Pinned (22px fixed, always allocated)
+            // 4. Timer / Pinned (centered, fixed 38h)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 22.0),
+                egui::vec2(cw, 38.0),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if in_active {
                         if let Some(eta_val) = eta {
                             let remaining = eta_val - self.now_ms;
                             if remaining > 0 {
-                                ui.label(RichText::new(format!("⏳ {}", format_time(remaining))).size(18.0).strong().color(Color32::from_rgb(255, 200, 100)));
+                                ui.label(RichText::new("Respawn in").size(11.0).color(Color32::from_rgb(180, 180, 180)));
+                                ui.label(RichText::new(format!("{}", format_time(remaining))).size(16.0).strong().color(Color32::from_rgb(224, 224, 224)));
                             } else if !has_resp {
                                 let end = eta_val + resp_window as i64;
                                 let rem = end - self.now_ms;
-                                ui.label(RichText::new(format!("⚡ {}", format_time(rem))).size(16.0).strong().color(Color32::from_rgb(255, 150, 100)));
+                                ui.label(RichText::new("Respawning").size(11.0).color(Color32::from_rgb(255, 255, 0)));
+                                ui.label(RichText::new(format!("{}", format_time(rem))).size(14.0).color(Color32::from_rgb(255, 255, 0)));
                             } else {
-                                ui.label(RichText::new("✅ Respawned").size(16.0).strong().color(Color32::GREEN));
+                                let max_end = eta_val + resp_window as i64;
+                                let elapsed = self.now_ms - max_end;
+                                ui.label(RichText::new("Already Respawned").size(10.0).color(Color32::from_rgb(242, 88, 88)));
+                                ui.label(RichText::new(format!("{}", format_time(elapsed))).size(14.0).color(Color32::from_rgb(242, 88, 88)));
                             }
                         }
                     } else if in_wait {
-                        ui.label(RichText::new("📌 Pinned").size(16.0).strong().color(Color32::from_rgb(200, 200, 100)));
+                        ui.label(RichText::new("Pinned").size(11.0).color(Color32::from_rgb(200, 200, 100)));
+                        ui.label(RichText::new("📌").size(14.0).color(Color32::from_rgb(200, 200, 100)));
                     }
+                    fill_section(ui, 38.0);
                 },
             );
 
-            // 5. Map name (18px fixed)
+            // 5. Map name (centered, fixed 18h)
             ui.allocate_ui_with_layout(
                 egui::vec2(cw, 18.0),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if let Some(ref mn) = map_label {
-                        ui.label(RichText::new(format!("Map: {}", mn)).size(13.0).color(Color32::from_rgb(100, 180, 255)));
+                        ui.label(RichText::new(format!("Map: {}", mn)).size(11.0).color(Color32::from_rgb(100, 180, 255)));
                     }
+                    fill_section(ui, 18.0);
                 },
             );
 
-            // 6. Map preview (fixed max-map size, clickable for marker)
-            let map_max_h = self.map_max_size.1;
-            let map_h = map_max_h.min(120.0);
+            // 6. Map preview (120h)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, map_h),
+                egui::vec2(cw, 120.0),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if let Some(mtx) = &map_tx {
-                        let resp = ui.add(egui::Image::from_texture(mtx).max_size(egui::vec2(cw, map_h)).sense(egui::Sense::click()));
+                        let resp = ui.add(egui::Image::from_texture(mtx).fit_to_exact_size(egui::vec2(cw, 98.0)).sense(egui::Sense::click()));
                         if let Some(pos) = &mvp.death_position {
                             if pos.x >= 0.0 && pos.y >= 0.0 {
                                 let px = resp.rect.min.x + (pos.x as f32 / 256.0) * resp.rect.width();
                                 let py = resp.rect.min.y + (pos.y as f32 / 256.0) * resp.rect.height();
-                                ui.painter_at(resp.rect).circle_filled(egui::pos2(px, py), 4.0, Color32::RED);
-                                ui.label(RichText::new(format!("📍 ({}, {})", pos.x as i32, pos.y as i32)).size(10.0).color(Color32::from_rgb(255, 200, 100)));
+                                ui.painter_at(resp.rect).circle_filled(egui::pos2(px, py), 3.0, Color32::RED);
                             }
                         }
                         if resp.clicked() {
                             self.edit_mvp_target = Some((orig_idx, false));
                         }
                     }
+                    if let Some(pos) = &mvp.death_position {
+                        if pos.x >= 0.0 && pos.y >= 0.0 {
+                            ui.label(RichText::new(format!("📍 ({}, {})", pos.x as i32, pos.y as i32)).size(9.0).color(Color32::from_rgb(255, 200, 100)));
+                        }
+                    }
+                    fill_section(ui, 120.0);
                 },
             );
 
-            // Push buttons to bottom then render
-            let has_btns = in_active || in_wait;
-            let btn_section_h: f32 = if has_btns {
-                6.0 + 32.0 + 4.0 + 40.0
-            } else {
-                6.0 + 32.0
-            };
-            let remaining = ui.available_height();
-            if remaining > btn_section_h {
-                ui.add_space((remaining - btn_section_h) * 0.5);
-            }
-
+            // ── Fixed gap before buttons ──
             ui.add_space(6.0);
-            if has_btns {
-                ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-                    if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43)).clicked() {
-                        self.edit_mvp_target = Some((orig_idx, true));
-                    }
-                });
-                egui::Frame::group(ui.style()).inner_margin(Margin::symmetric(0, 4)).show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        if button_colored(ui, "Edit", Color32::from_rgb(74, 74, 74)).clicked() {
-                            self.edit_mvp_target = Some((orig_idx, false));
+
+            // 7. Buttons (fixed 60h)
+            ui.allocate_ui_with_layout(
+                egui::vec2(cw, 60.0),
+                egui::Layout::top_down(egui::Align::Center),
+                |ui| {
+                    if in_active || in_wait {
+                        if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43)).clicked() {
+                            self.edit_mvp_target = Some((orig_idx, true));
                         }
-                        if in_active {
-                            if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
-                                self.remove_mvp(orig_idx);
+                        ui.horizontal(|ui| {
+                            if button_colored(ui, "Edit", Color32::from_rgb(74, 74, 74)).clicked() {
+                                self.edit_mvp_target = Some((orig_idx, false));
                             }
-                            if button_colored(ui, "BACK", Color32::from_rgb(214, 90, 90)).clicked() {
-                                self.move_to_wait(orig_idx);
+                            if in_active {
+                                if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
+                                    self.remove_mvp(orig_idx);
+                                }
+                                if button_colored(ui, "BACK", Color32::from_rgb(214, 90, 90)).clicked() {
+                                    self.move_to_wait(orig_idx);
+                                }
+                            } else {
+                                if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
+                                    self.remove_from_wait(orig_idx);
+                                }
+                                if button_colored(ui, "CANCEL", Color32::from_rgb(214, 90, 90)).clicked() {
+                                    self.remove_from_wait(orig_idx);
+                                }
                             }
-                        } else {
-                            if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
-                                self.remove_from_wait(orig_idx);
-                            }
-                            if button_colored(ui, "CANCEL", Color32::from_rgb(214, 90, 90)).clicked() {
-                                self.remove_from_wait(orig_idx);
-                            }
+                        });
+                    } else {
+                        if button_colored(ui, "Select to kill", Color32::from_rgb(139, 90, 43)).clicked() {
+                            self.add_to_wait(mvp);
                         }
-                    });
-                });
-            } else {
-                ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-                    if button_colored(ui, "Select to kill", Color32::from_rgb(139, 90, 43)).clicked() {
-                        self.add_to_wait(mvp);
                     }
-                });
-            }
+                    fill_section(ui, 60.0);
+                },
+            );
         });
     }
 }
@@ -957,7 +974,23 @@ impl eframe::App for MvpTimerApp {
                 }
             };
 
-            egui::ScrollArea::vertical().show(ui, |ui| {
+            // ── PageUp / PageDown scrolling ──
+            let sa_id = ui.make_persistent_id(egui::Id::new("mvp_grid"));
+            let vh = ui.available_height();
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::PageUp)) {
+                if let Some(mut state) = egui::containers::scroll_area::State::load(ctx, sa_id) {
+                    state.offset.y = (state.offset.y - vh * 0.85).max(0.0);
+                    state.store(ctx, sa_id);
+                }
+            }
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::PageDown)) {
+                if let Some(mut state) = egui::containers::scroll_area::State::load(ctx, sa_id) {
+                    state.offset.y = state.offset.y + vh * 0.85;
+                    state.store(ctx, sa_id);
+                }
+            }
+
+            egui::ScrollArea::vertical().id_salt("mvp_grid").show(ui, |ui| {
                 if display_mvps.is_empty() {
                     ui.label("No MVPs to display");
                     return;
