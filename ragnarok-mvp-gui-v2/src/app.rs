@@ -1,6 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 
+use chrono::{Datelike, Timelike, TimeZone};
 use eframe::egui::{self, Color32, Frame, Margin, CornerRadius, Stroke, RichText, Context, TextureHandle};
 use image::codecs::gif::GifDecoder;
 use image::codecs::png::PngDecoder;
@@ -51,6 +53,10 @@ pub struct MvpTimerApp {
     map_max_size: (f32, f32),
     icon_pixel_sizes: HashMap<u32, (f32, f32)>,
     profile_focus_requested: bool,
+    notified_respawns: HashSet<String>,
+    marker_mode_mvp: Option<(usize, String, f64, f64)>,
+    sse_poll_data: Arc<Mutex<Option<Vec<Mvp>>>>,
+    sse_started: bool,
 }
 
 impl Default for MvpTimerApp {
@@ -83,6 +89,10 @@ impl Default for MvpTimerApp {
             map_max_size: (200.0, 100.0),
             icon_pixel_sizes: HashMap::new(),
             profile_focus_requested: false,
+            notified_respawns: HashSet::new(),
+            marker_mode_mvp: None,
+            sse_poll_data: Arc::new(Mutex::new(None)),
+            sse_started: false,
         };
         app.compute_max_image_sizes(&asset_dir);
         app.load_server_data();
@@ -341,6 +351,7 @@ impl MvpTimerApp {
 
     fn kill_mvp(&mut self, id: u32, death_map: Option<&str>, death_time: i64) {
         if let Some(idx) = self.active_mvps.iter().position(|m| m.id == id && m.death_map.as_deref() == death_map) {
+            self.clear_notification(id, death_map);
             self.active_mvps[idx].death_time = Some(death_time);
             self.active_mvps[idx].is_pinned = false;
         } else if let Some(idx) = self.original_all_mvps.iter().position(|m| m.id == id) {
@@ -352,6 +363,10 @@ impl MvpTimerApp {
         sort_mvps_by_respawn_time(&mut self.active_mvps);
         self.rebuild_all_mvps();
         self.push_to_firebase();
+    }
+
+    fn clear_notification(&mut self, id: u32, death_map: Option<&str>) {
+        self.notified_respawns.remove(&format!("{}-{}", id, death_map.unwrap_or("unknown")));
     }
 
     fn edit_mvp_time(&mut self, index: usize, death_time: i64) {
@@ -366,6 +381,7 @@ impl MvpTimerApp {
         if index < self.active_mvps.len() {
             let id = self.active_mvps[index].id;
             let map = self.active_mvps[index].death_map.as_deref().map(|s| s.to_string());
+            self.clear_notification(id, map.as_deref());
             self.delete_from_firebase(id, map.as_deref());
             self.active_mvps.remove(index);
             self.rebuild_all_mvps();
@@ -385,6 +401,7 @@ impl MvpTimerApp {
         if index < self.active_mvps.len() {
             let id = self.active_mvps[index].id;
             let map = self.active_mvps[index].death_map.as_deref().map(|s| s.to_string());
+            self.clear_notification(id, map.as_deref());
             self.delete_from_firebase(id, map.as_deref());
             self.active_mvps.remove(index);
             self.rebuild_all_mvps();
@@ -419,14 +436,35 @@ impl MvpTimerApp {
         if self.settings.nickname.is_empty() { return; }
         let db_url = std::env::var("VITE_FIREBASE_DATABASE_URL")
             .unwrap_or_else(|_| "https://ragnarokmvptimer-default-rtdb.firebaseio.com".to_string());
-        let server = if self.settings.server.is_empty() { DEFAULT_SERVER } else { &self.settings.server };
+        let server = if self.settings.server.is_empty() { DEFAULT_SERVER.to_string() } else { self.settings.server.clone() };
+        let nick = self.settings.nickname.clone();
+        let party = self.settings.party_room.clone();
         self.firebase_sync = Some(FirebaseSync::new(
             &db_url,
-            &self.settings.nickname,
-            server,
-            self.settings.party_room.as_deref(),
+            &nick,
+            &server,
+            party.as_deref(),
         ));
         self.pull_from_firebase();
+
+        // ── Spawn SSE subscribe ──
+        if !self.sse_started {
+            self.sse_started = true;
+            let poll_data = self.sse_poll_data.clone();
+            let path = crate::firebase::client::get_firebase_path(&nick, &server, party.as_deref());
+            let url = db_url.clone();
+            tokio::spawn(async move {
+                let client = crate::firebase::client::FirebaseClient::new(&url);
+                let sse_sync = crate::firebase::sync::FirebaseSync {
+                    client,
+                    path,
+                    nickname: String::new(),
+                };
+                sse_sync.subscribe(poll_data, |msg| {
+                    log::warn!("SSE: {}", msg);
+                }).await;
+            });
+        }
     }
 
     fn pull_from_firebase(&mut self) {
@@ -567,7 +605,7 @@ impl MvpTimerApp {
                 },
             );
 
-            // 6. Map preview (fixed max-map size)
+            // 6. Map preview (fixed max-map size, clickable for marker)
             let map_max_h = self.map_max_size.1;
             let map_h = map_max_h.min(120.0);
             ui.allocate_ui_with_layout(
@@ -575,7 +613,18 @@ impl MvpTimerApp {
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if let Some(mtx) = &map_tx {
-                        ui.add(egui::Image::from_texture(mtx).max_size(egui::vec2(cw, map_h)));
+                        let resp = ui.add(egui::Image::from_texture(mtx).max_size(egui::vec2(cw, map_h)).sense(egui::Sense::click()));
+                        let has_marker = mvp.death_position.as_ref().map(|p| p.x >= 0.0 && p.y >= 0.0).unwrap_or(false);
+                        if has_marker {
+                            if let Some(pos) = &mvp.death_position {
+                                ui.label(RichText::new(format!("📍 ({}, {})", pos.x as i32, pos.y as i32)).size(10.0).color(Color32::from_rgb(255, 200, 100)));
+                            }
+                        }
+                        if resp.clicked() {
+                            if let Some(ref m) = first_map {
+                                self.marker_mode_mvp = Some((orig_idx, m.to_string(), 0.0, 0.0));
+                            }
+                        }
                     }
                 },
             );
@@ -589,7 +638,7 @@ impl MvpTimerApp {
             };
             let remaining = ui.available_height();
             if remaining > btn_section_h {
-                ui.add_space(remaining - btn_section_h);
+                ui.add_space((remaining - btn_section_h) * 0.5);
             }
 
             ui.add_space(6.0);
@@ -636,6 +685,16 @@ impl eframe::App for MvpTimerApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.now_ms = chrono::Utc::now().timestamp_millis();
 
+        // ── SSE real-time poll ──
+        let sse_data = self.sse_poll_data.lock().ok().and_then(|mut g| g.take());
+        if let Some(remote_data) = sse_data {
+            let rehydrated = crate::core::rehydrate::rehydrate_mvps(&remote_data, &self.original_all_mvps);
+            self.active_mvps = rehydrated;
+            crate::core::sort::sort_mvps_by_respawn_time(&mut self.active_mvps);
+            self.rebuild_all_mvps();
+            self.firebase_log.push("SSE: received update".into());
+        }
+
         // ── Top bar ──
         egui::TopBottomPanel::top("header").show(ctx, |ui| {
             let nickname = self.settings.nickname.clone();
@@ -662,6 +721,26 @@ impl eframe::App for MvpTimerApp {
             self.show_settings = show_s;
             self.show_profile = show_p;
         });
+
+        // ── Notification check (respawned MVPs) ──
+        if self.settings.notification_sound {
+            for mvp in &self.active_mvps {
+                if mvp.death_time.is_some() {
+                    let key = format!("{}-{}", mvp.id, mvp.death_map.as_deref().unwrap_or("unknown"));
+                    if !self.notified_respawns.contains(&key) && crate::core::timer::has_respawned(mvp, self.now_ms) {
+                        let map = mvp.death_map.as_deref().unwrap_or("unknown");
+                        notify_rust::Notification::new()
+                            .summary("MVP Respawned!")
+                            .body(&format!("{} has respawned on {}", mvp.name, map))
+                            .appname("Ragnarok MVP Timer")
+                            .timeout(notify_rust::Timeout::Milliseconds(8000))
+                            .show()
+                            .ok();
+                        self.notified_respawns.insert(key);
+                    }
+                }
+            }
+        }
 
         // ── Settings modal ──
         if self.show_settings {
@@ -727,7 +806,7 @@ impl eframe::App for MvpTimerApp {
             let mut do_set_nick = false;
             let mut do_set_party = false;
             let mut close_profile = false;
-            let mut focus_nick = self.profile_focus_requested;
+            let focus_nick = self.profile_focus_requested;
 
             egui::Window::new("Profile & Party")
                 .id(egui::Id::new("profile_window"))
@@ -908,31 +987,121 @@ impl eframe::App for MvpTimerApp {
             if idx < self.active_mvps.len() {
                 let mvp_name = self.active_mvps[idx].name.clone();
                 let death_time = self.active_mvps[idx].death_time.unwrap_or(self.now_ms);
-                let mut open = true;
-                let mut clicked = false;
+                let mut window_open = true;
+                let mut set_now = false;
+                let mut saved_ms: Option<i64> = None;
 
-                egui::Window::new(format!("Edit: {}", mvp_name))
-                    .open(&mut open)
+                let dt = chrono::DateTime::from_timestamp_millis(death_time)
+                    .map(|d| d.with_timezone(&chrono::Local))
+                    .unwrap_or_else(|| chrono::Local::now());
+
+                let mut year = dt.year();
+                let mut month = dt.month();
+                let mut day = dt.day();
+                let mut hour = dt.hour();
+                let mut minute = dt.minute();
+
+                egui::Window::new(format!("Edit Death Time — {}", mvp_name))
+                    .id(egui::Id::new("edit_time_window"))
+                    .open(&mut window_open)
+                    .resizable(false)
                     .show(ctx, |ui| {
-                        ui.label("Death time:");
-                        let dt = chrono::DateTime::from_timestamp_millis(death_time)
-                            .map(|d| d.format("%Y-%m-%d %H:%M:%S").to_string())
-                            .unwrap_or_default();
-                        ui.label(&dt);
-                        if ui.button("Set to now").clicked() {
-                            clicked = true;
-                        }
+                        ui.label(RichText::new("Set death time:").size(14.0).strong());
+                        ui.add_space(6.0);
+
+                        ui.horizontal(|ui| {
+                            ui.label("Date:");
+                            ui.add(egui::DragValue::new(&mut year).range(2020..=2030).speed(1).prefix("Y "));
+                            ui.add(egui::DragValue::new(&mut month).range(1..=12).speed(1).prefix("M "));
+                            ui.add(egui::DragValue::new(&mut day).range(1..=31).speed(1).prefix("D "));
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label("Time:");
+                            ui.add(egui::DragValue::new(&mut hour).range(0..=23).speed(1).prefix("H "));
+                            ui.add(egui::DragValue::new(&mut minute).range(0..=59).speed(1).prefix("M "));
+                        });
+
+                        ui.add_space(4.0);
+                        let preview = format!("{:04}-{:02}-{:02} {:02}:{:02}", year, month, day, hour, minute);
+                        ui.label(RichText::new(&preview).size(13.0).color(Color32::from_rgb(200, 200, 100)));
+
+                        ui.add_space(8.0);
+                        ui.horizontal(|ui| {
+                            if ui.button("Now").clicked() {
+                                set_now = true;
+                            }
+                            if ui.button("Save").clicked() {
+                                saved_ms = Some(
+                                    chrono::Local.with_ymd_and_hms(year, month, day, hour, minute, 0)
+                                        .single()
+                                        .map(|d| d.timestamp_millis())
+                                        .unwrap_or(self.now_ms)
+                                );
+                            }
+                        });
                     });
 
-                if clicked {
+                if let Some(ms) = saved_ms {
+                    self.edit_mvp_time(idx, ms);
+                    self.edit_mvp_index = None;
+                } else if set_now {
                     self.edit_mvp_time(idx, self.now_ms);
                     self.edit_mvp_index = None;
-                }
-                if !open {
+                } else if !window_open {
                     self.edit_mvp_index = None;
                 }
             } else {
                 self.edit_mvp_index = None;
+            }
+        }
+
+        // ── Map marker modal ──
+        if let Some((mk_idx, ref mk_map, _, _)) = self.marker_mode_mvp {
+            if mk_idx < self.active_mvps.len() {
+                let mut open = true;
+                let map_name = mk_map.clone();
+                let mvp_name = self.active_mvps[mk_idx].name.clone();
+                egui::Window::new(format!("Set Marker — {}", mvp_name))
+                    .id(egui::Id::new("marker_window"))
+                    .open(&mut open)
+                    .resizable(false)
+                    .show(ctx, |ui| {
+                        if let Some(map_tx) = self.load_map_texture(ctx, &map_name) {
+                            let img_size = egui::vec2(400.0, 400.0);
+                            let resp = ui.add(egui::Image::from_texture(&map_tx).fit_to_exact_size(img_size).sense(egui::Sense::click()));
+                            if let Some(pos) = resp.interact_pointer_pos() {
+                                let rect = resp.rect;
+                                let rel_x = ((pos.x - rect.min.x) / rect.width() * 512.0) as f64;
+                                let rel_y = ((pos.y - rect.min.y) / rect.height() * 512.0) as f64;
+                                self.marker_mode_mvp = Some((mk_idx, map_name.clone(), rel_x, rel_y));
+                            }
+                            if let Some((_, _, ref mx, ref my)) = self.marker_mode_mvp {
+                                if *mx >= 0.0 && *my >= 0.0 {
+                                    ui.label(RichText::new(format!("Position: ({}, {})", mx.round() as i32, my.round() as i32)).size(14.0).color(Color32::from_rgb(200, 200, 100)));
+                                }
+                            }
+                        }
+                        ui.add_space(8.0);
+                        ui.horizontal(|ui| {
+                            if ui.button("Save Marker").clicked() {
+                                if let Some((ref _idx, _, ref mx, ref my)) = self.marker_mode_mvp {
+                                    if mk_idx < self.active_mvps.len() {
+                                        self.active_mvps[mk_idx].death_position = Some(crate::data::mvp::MapMark { x: *mx, y: *my });
+                                        self.push_to_firebase();
+                                    }
+                                }
+                                self.marker_mode_mvp = None;
+                            }
+                            if ui.button("Cancel").clicked() {
+                                self.marker_mode_mvp = None;
+                            }
+                        });
+                    });
+                if !open {
+                    self.marker_mode_mvp = None;
+                }
+            } else {
+                self.marker_mode_mvp = None;
             }
         }
 
