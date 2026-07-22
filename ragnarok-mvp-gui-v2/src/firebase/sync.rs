@@ -129,14 +129,25 @@ fn extract_sse_data(event_str: &str) -> Option<&str> {
 
 fn parse_firebase_sse_data(data: &str) -> Option<Vec<Mvp>> {
     use super::client::FirebaseMvp;
-    if let Ok(map) = serde_json::from_str::<std::collections::HashMap<String, FirebaseMvp>>(data) {
-        return Some(map.into_values().map(|fb| from_firebase(&fb)).collect());
-    }
-    if let Ok(arr) = serde_json::from_str::<Vec<FirebaseMvp>>(data) {
-        return Some(arr.iter().map(from_firebase).collect());
-    }
-    if let Ok(single) = serde_json::from_str::<FirebaseMvp>(data) {
-        return Some(vec![from_firebase(&single)]);
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(data) {
+        let inner = if let Some(obj) = value.as_object() {
+            if let Some(data_val) = obj.get("data") {
+                data_val
+            } else {
+                &value
+            }
+        } else {
+            &value
+        };
+        if let Ok(arr) = serde_json::from_value::<Vec<FirebaseMvp>>(inner.clone()) {
+            return Some(arr.iter().map(from_firebase).collect());
+        }
+        if let Ok(map) = serde_json::from_value::<std::collections::HashMap<String, FirebaseMvp>>(inner.clone()) {
+            return Some(map.into_values().map(|fb| from_firebase(&fb)).collect());
+        }
+        if let Ok(single) = serde_json::from_value::<FirebaseMvp>(inner.clone()) {
+            return Some(vec![from_firebase(&single)]);
+        }
     }
     None
 }

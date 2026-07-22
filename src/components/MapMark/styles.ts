@@ -5,11 +5,10 @@ interface Props {
 }
 
 export const Container = styled.div<Props>`
-  height: 0;
-  width: 0;
-  position: relative;
-  top: ${({ coordinates }) => coordinates.y - 265}px;
-  left: ${({ coordinates }) => coordinates.x - 10}px;
+  position: absolute;
+  top: ${({ coordinates }) => (coordinates.y / 256) * 100}%;
+  left: ${({ coordinates }) => (coordinates.x / 256) * 100}%;
+  transform: translate(-50%, -100%);
   pointer-events: none;
 `;
 

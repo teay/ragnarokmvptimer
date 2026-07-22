@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 
 import { getMapImage } from '@/utils';
 import { MapMark } from '../MapMark';
@@ -20,22 +20,20 @@ declare const __LITE_MODE__: boolean;
 
 export function Map({ mapName, onChange, coordinates }: MapProps) {
   const safeCoords = coordinates ?? defaultCoordinates;
-  const mapMark = useCallback(
-    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      if (!onChange) return;
 
-      const { offsetX, offsetY } = e.nativeEvent;
-      const newCoords = {
-        x: offsetX,
-        y: offsetY,
-      };
-      onChange(newCoords);
+  const mapMark = useCallback(
+    (e: React.MouseEvent<HTMLImageElement>) => {
+      if (!onChange) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = Math.round(((e.clientX - rect.left) / rect.width) * 256);
+      const y = Math.round(((e.clientY - rect.top) / rect.height) * 256);
+      onChange({ x, y });
     },
     [onChange]
   );
 
   return (
-    <div>
+    <div style={{ position: 'relative', display: 'inline-block' }}>
       <MapImg
         src={getMapImage(mapName)}
         alt={mapName}

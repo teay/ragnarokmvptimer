@@ -13,6 +13,7 @@ use crate::core::sort::sort_mvps_by_respawn_time;
 use crate::core::timer::{format_time, get_respawn_eta, has_respawned, get_mvp_respawn_window};
 use crate::data::mvp::Mvp;
 use crate::data::settings::{Settings, SERVERS, DEFAULT_SERVER};
+
 use crate::firebase::client::FirebaseClient;
 use crate::firebase::sync::FirebaseSync;
 
@@ -45,7 +46,15 @@ pub struct MvpTimerApp {
     now_ms: i64,
     nickname_input: String,
     party_input: String,
-    edit_mvp_index: Option<usize>,
+    edit_mvp_target: Option<(usize, bool)>,
+    edit_year_str: String,
+    edit_month_str: String,
+    edit_day_str: String,
+    edit_hour_str: String,
+    edit_minute_str: String,
+    edit_modal_inited: bool,
+    settings_db_url: String,
+    settings_inited: bool,
     textures: HashMap<String, TextureHandle>,
     animations: HashMap<String, AnimatedSprite>,
     asset_dir: PathBuf,
@@ -54,14 +63,13 @@ pub struct MvpTimerApp {
     icon_pixel_sizes: HashMap<u32, (f32, f32)>,
     profile_focus_requested: bool,
     notified_respawns: HashSet<String>,
-    marker_mode_mvp: Option<(usize, String, f64, f64)>,
     sse_poll_data: Arc<Mutex<Option<Vec<Mvp>>>>,
     sse_started: bool,
 }
 
 impl Default for MvpTimerApp {
     fn default() -> Self {
-        let settings = Settings::default();
+        let settings = Settings::load();
         let asset_dir = std::env::current_exe()
             .ok()
             .and_then(|p| p.parent().map(|d| d.to_path_buf()))
@@ -81,7 +89,15 @@ impl Default for MvpTimerApp {
             now_ms: 0,
             nickname_input: String::new(),
             party_input: String::new(),
-            edit_mvp_index: None,
+            edit_mvp_target: None,
+            edit_year_str: String::new(),
+            edit_month_str: String::new(),
+            edit_day_str: String::new(),
+            edit_hour_str: String::new(),
+            edit_minute_str: String::new(),
+            edit_modal_inited: false,
+            settings_db_url: String::new(),
+            settings_inited: false,
             textures: HashMap::new(),
             animations: HashMap::new(),
             asset_dir: asset_dir.clone(),
@@ -90,7 +106,6 @@ impl Default for MvpTimerApp {
             icon_pixel_sizes: HashMap::new(),
             profile_focus_requested: false,
             notified_respawns: HashSet::new(),
-            marker_mode_mvp: None,
             sse_poll_data: Arc::new(Mutex::new(None)),
             sse_started: false,
         };
@@ -304,21 +319,17 @@ impl MvpTimerApp {
             let mvps = self.active_mvps.clone();
             let nickname = sync.nickname.clone();
             let path = sync.path.clone();
-            let client = FirebaseClient::new(&sync.client.database_url);
+            let url_base = sync.client.database_url.clone();
             tokio::spawn(async move {
-                let updates: HashMap<String, crate::firebase::client::FirebaseMvp> = mvps
+                let data: Vec<crate::firebase::client::FirebaseMvp> = mvps
                     .iter()
-                    .map(|m| {
-                        let key = format!("{}-{}", m.id, m.death_map.as_deref().unwrap_or("unknown"));
-                        (key, crate::firebase::client::to_firebase(m, &nickname))
-                    })
+                    .map(|m| crate::firebase::client::to_firebase(m, &nickname))
                     .collect();
-                let url = format!("{}{}.json", client.database_url, path);
-                let _ = reqwest::Client::new()
-                    .patch(&url)
-                    .json(&updates)
-                    .send()
-                    .await;
+                let url = format!("{}{}.json", url_base, path);
+                match reqwest::Client::new().put(&url).json(&data).send().await {
+                    Ok(resp) => log::info!("Firebase PUT {} -> {}", url, resp.status()),
+                    Err(e) => log::warn!("Firebase PUT failed: {}", e),
+                }
             });
         }
     }
@@ -335,46 +346,8 @@ impl MvpTimerApp {
         }
     }
 
-    fn delete_from_firebase(&self, id: u32, death_map: Option<&str>) {
-        if let Some(ref sync) = self.firebase_sync {
-            let path = sync.path.clone();
-            let key = format!("{}-{}", id, death_map.unwrap_or("unknown"));
-            let url = format!("{}{}/{}.json", sync.client.database_url, path.trim_end_matches('/'), key);
-            tokio::spawn(async move {
-                let _ = reqwest::Client::new()
-                    .delete(&url)
-                    .send()
-                    .await;
-            });
-        }
-    }
-
-    fn kill_mvp(&mut self, id: u32, death_map: Option<&str>, death_time: i64) {
-        if let Some(idx) = self.active_mvps.iter().position(|m| m.id == id && m.death_map.as_deref() == death_map) {
-            self.clear_notification(id, death_map);
-            self.active_mvps[idx].death_time = Some(death_time);
-            self.active_mvps[idx].is_pinned = false;
-        } else if let Some(idx) = self.original_all_mvps.iter().position(|m| m.id == id) {
-            let mut mvp = self.original_all_mvps[idx].clone();
-            mvp.death_time = Some(death_time);
-            mvp.death_map = death_map.map(|s| s.to_string());
-            self.active_mvps.push(mvp);
-        }
-        sort_mvps_by_respawn_time(&mut self.active_mvps);
-        self.rebuild_all_mvps();
-        self.push_to_firebase();
-    }
-
     fn clear_notification(&mut self, id: u32, death_map: Option<&str>) {
         self.notified_respawns.remove(&format!("{}-{}", id, death_map.unwrap_or("unknown")));
-    }
-
-    fn edit_mvp_time(&mut self, index: usize, death_time: i64) {
-        if index < self.active_mvps.len() {
-            self.active_mvps[index].death_time = Some(death_time);
-            sort_mvps_by_respawn_time(&mut self.active_mvps);
-            self.push_to_firebase();
-        }
     }
 
     fn remove_mvp(&mut self, index: usize) {
@@ -382,9 +355,9 @@ impl MvpTimerApp {
             let id = self.active_mvps[index].id;
             let map = self.active_mvps[index].death_map.as_deref().map(|s| s.to_string());
             self.clear_notification(id, map.as_deref());
-            self.delete_from_firebase(id, map.as_deref());
             self.active_mvps.remove(index);
             self.rebuild_all_mvps();
+            self.push_to_firebase();
         }
     }
 
@@ -402,9 +375,9 @@ impl MvpTimerApp {
             let id = self.active_mvps[index].id;
             let map = self.active_mvps[index].death_map.as_deref().map(|s| s.to_string());
             self.clear_notification(id, map.as_deref());
-            self.delete_from_firebase(id, map.as_deref());
             self.active_mvps.remove(index);
             self.rebuild_all_mvps();
+            self.push_to_firebase();
         }
     }
 
@@ -423,22 +396,25 @@ impl MvpTimerApp {
             return;
         }
         self.settings.nickname = nickname;
+        self.settings.save();
         self.init_firebase();
     }
 
     fn set_party_room(&mut self, room: &str) {
         let room = sanitize_nickname(room);
         self.settings.party_room = if room.is_empty() { None } else { Some(room) };
+        self.settings.save();
         self.init_firebase();
     }
 
     fn init_firebase(&mut self) {
         if self.settings.nickname.is_empty() { return; }
-        let db_url = std::env::var("VITE_FIREBASE_DATABASE_URL")
-            .unwrap_or_else(|_| "https://ragnarokmvptimer-default-rtdb.firebaseio.com".to_string());
+        let db_url = self.settings.database_url.clone();
         let server = if self.settings.server.is_empty() { DEFAULT_SERVER.to_string() } else { self.settings.server.clone() };
         let nick = self.settings.nickname.clone();
         let party = self.settings.party_room.clone();
+        self.firebase_log.push(format!("Firebase URL: {}", db_url));
+        self.firebase_log.push(format!("Firebase path: hunting/solo/{}/{}/mvps", nick, server));
         self.firebase_sync = Some(FirebaseSync::new(
             &db_url,
             &nick,
@@ -447,24 +423,23 @@ impl MvpTimerApp {
         ));
         self.pull_from_firebase();
 
-        // ── Spawn SSE subscribe ──
-        if !self.sse_started {
-            self.sse_started = true;
-            let poll_data = self.sse_poll_data.clone();
-            let path = crate::firebase::client::get_firebase_path(&nick, &server, party.as_deref());
-            let url = db_url.clone();
-            tokio::spawn(async move {
-                let client = crate::firebase::client::FirebaseClient::new(&url);
-                let sse_sync = crate::firebase::sync::FirebaseSync {
-                    client,
-                    path,
-                    nickname: String::new(),
-                };
-                sse_sync.subscribe(poll_data, |msg| {
-                    log::warn!("SSE: {}", msg);
-                }).await;
-            });
-        }
+        // ── SSE subscribe (re-spawn on every init_firebase) ──
+        self.sse_started = false;
+        let poll_data = self.sse_poll_data.clone();
+        let path = crate::firebase::client::get_firebase_path(&nick, &server, party.as_deref());
+        let url = db_url.clone();
+        tokio::spawn(async move {
+            let client = FirebaseClient::new(&url);
+            let sse_sync = FirebaseSync {
+                client,
+                path,
+                nickname: String::new(),
+            };
+            sse_sync.subscribe(poll_data, |msg| {
+                log::warn!("SSE: {}", msg);
+            }).await;
+        });
+        self.sse_started = true;
     }
 
     fn pull_from_firebase(&mut self) {
@@ -614,16 +589,16 @@ impl MvpTimerApp {
                 |ui| {
                     if let Some(mtx) = &map_tx {
                         let resp = ui.add(egui::Image::from_texture(mtx).max_size(egui::vec2(cw, map_h)).sense(egui::Sense::click()));
-                        let has_marker = mvp.death_position.as_ref().map(|p| p.x >= 0.0 && p.y >= 0.0).unwrap_or(false);
-                        if has_marker {
-                            if let Some(pos) = &mvp.death_position {
+                        if let Some(pos) = &mvp.death_position {
+                            if pos.x >= 0.0 && pos.y >= 0.0 {
+                                let px = resp.rect.min.x + (pos.x as f32 / 256.0) * resp.rect.width();
+                                let py = resp.rect.min.y + (pos.y as f32 / 256.0) * resp.rect.height();
+                                ui.painter_at(resp.rect).circle_filled(egui::pos2(px, py), 4.0, Color32::RED);
                                 ui.label(RichText::new(format!("📍 ({}, {})", pos.x as i32, pos.y as i32)).size(10.0).color(Color32::from_rgb(255, 200, 100)));
                             }
                         }
                         if resp.clicked() {
-                            if let Some(ref m) = first_map {
-                                self.marker_mode_mvp = Some((orig_idx, m.to_string(), 0.0, 0.0));
-                            }
+                            self.edit_mvp_target = Some((orig_idx, false));
                         }
                     }
                 },
@@ -645,13 +620,13 @@ impl MvpTimerApp {
             if has_btns {
                 ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
                     if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43)).clicked() {
-                        self.kill_mvp(mvp_id, death_map.as_deref(), self.now_ms);
+                        self.edit_mvp_target = Some((orig_idx, true));
                     }
                 });
                 egui::Frame::group(ui.style()).inner_margin(Margin::symmetric(0, 4)).show(ui, |ui| {
                     ui.horizontal(|ui| {
                         if button_colored(ui, "Edit", Color32::from_rgb(74, 74, 74)).clicked() {
-                            self.edit_mvp_index = Some(orig_idx);
+                            self.edit_mvp_target = Some((orig_idx, false));
                         }
                         if in_active {
                             if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
@@ -713,6 +688,9 @@ impl eframe::App for MvpTimerApp {
                 } else {
                     ui.label(RichText::new(format!("[Solo: {}]", nickname)).color(Color32::GREEN));
                 }
+                if self.firebase_sync.is_some() {
+                    ui.label(RichText::new("✓FB").size(11.0).color(Color32::GREEN));
+                }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("⚙").clicked() { show_s = !show_s; }
                     if ui.button("👤").clicked() { show_p = !show_p; if show_p { self.profile_focus_requested = true; } }
@@ -744,6 +722,10 @@ impl eframe::App for MvpTimerApp {
 
         // ── Settings modal ──
         if self.show_settings {
+            if !self.settings_inited {
+                self.settings_db_url = self.settings.database_url.clone();
+                self.settings_inited = true;
+            }
             let current_server = self.settings.server.clone();
             let mut new_server = current_server.clone();
             let mut use_24h = self.settings.use_24_hour_format;
@@ -752,10 +734,16 @@ impl eframe::App for MvpTimerApp {
             let mut sound = self.settings.notification_sound;
             let mut changed = false;
             let mut clear = false;
+            let mut refresh = false;
+            let mut close_settings = false;
 
             egui::Window::new("Settings")
+                .id(egui::Id::new("settings_window"))
                 .open(&mut self.show_settings)
                 .show(ctx, |ui| {
+                    let esc = ui.ctx().input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
+                    if esc { close_settings = true; }
+
                     egui::ComboBox::from_label("Server")
                         .selected_text(&new_server)
                         .show_ui(ui, |ui| {
@@ -766,15 +754,27 @@ impl eframe::App for MvpTimerApp {
                                 }
                             }
                         });
+                    ui.horizontal(|ui| {
+                        ui.label("DB URL:");
+                        if ui.add(egui::TextEdit::singleline(&mut self.settings_db_url).desired_width(400.0).id_source("settings_db_url")).lost_focus() {
+                            changed = true;
+                        }
+                    });
                     if ui.checkbox(&mut use_24h, "24-hour format").changed() { changed = true; }
                     if ui.checkbox(&mut show_map, "Show MVP map").changed() { changed = true; }
                     if ui.checkbox(&mut anim, "Animated sprites").changed() { changed = true; }
                     if ui.checkbox(&mut sound, "Notification sound").changed() { changed = true; }
                     ui.separator();
+                    if ui.button("🔄 Refresh from Firebase").clicked() {
+                        refresh = true;
+                    }
                     if ui.button(RichText::new("🗑 Clear Data").color(Color32::from_rgb(255, 100, 100)).strong()).clicked() {
                         clear = true;
                     }
+                    ui.label(RichText::new("ESC to close").size(10.0).color(Color32::DARK_GRAY));
                 });
+
+            if close_settings { self.show_settings = false; self.settings_inited = false; }
 
             if clear {
                 self.clear_data();
@@ -782,18 +782,24 @@ impl eframe::App for MvpTimerApp {
                 self.rebuild_all_mvps();
             }
 
+            if refresh {
+                self.pull_from_firebase();
+            }
+
             if changed {
                 self.settings.server = new_server;
+                self.settings.database_url = self.settings_db_url.clone();
                 self.settings.use_24_hour_format = use_24h;
                 self.settings.show_mvp_map = show_map;
                 let anim_changed = self.settings.animated_sprites != anim;
                 self.settings.animated_sprites = anim;
                 self.settings.notification_sound = sound;
+                self.settings.save();
                 if anim_changed {
                     self.animations.clear();
                 }
                 self.load_server_data();
-                self.pull_from_firebase();
+                self.init_firebase();
             }
         }
 
@@ -812,6 +818,10 @@ impl eframe::App for MvpTimerApp {
                 .id(egui::Id::new("profile_window"))
                 .open(&mut self.show_profile)
                 .show(ctx, |ui| {
+                    let enter = ui.ctx().input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
+                    let esc = ui.ctx().input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
+                    if esc { close_profile = true; }
+
                     ui.horizontal(|ui| {
                         ui.label("Nickname:");
                         let nick_resp = ui.add(egui::TextEdit::singleline(&mut nickname_val)
@@ -831,7 +841,7 @@ impl eframe::App for MvpTimerApp {
                     });
                     ui.add_space(8.0);
                     ui.horizontal(|ui| {
-                        if ui.button("Save").clicked() {
+                        if ui.button("Save").clicked() || enter {
                             do_set_nick = true;
                             do_set_party = true;
                             close_profile = true;
@@ -839,12 +849,14 @@ impl eframe::App for MvpTimerApp {
                         if ui.button("Logout").clicked() {
                             self.settings.nickname.clear();
                             self.settings.party_room = None;
+                            self.settings.save();
                             self.firebase_sync = None;
                             self.active_mvps.clear();
                             self.nickname_input.clear();
                             self.party_input.clear();
                         }
                     });
+                    ui.label(RichText::new("ENTER to save / ESC to close / TAB to cycle").size(10.0).color(Color32::DARK_GRAY));
                 });
 
             let saved_nick = sanitize_nickname(&nickname_val);
@@ -982,18 +994,38 @@ impl eframe::App for MvpTimerApp {
             });
         });
 
-        // ── Edit time window ──
-        if let Some(idx) = self.edit_mvp_index {
+        // ── Combined Edit/Kill modal (time + map marker) ──
+        if let Some((idx, is_kill)) = self.edit_mvp_target {
             if idx < self.active_mvps.len() {
-                let mvp_name = self.active_mvps[idx].name.clone();
-                let death_time = self.active_mvps[idx].death_time.unwrap_or(self.now_ms);
+                let mvp = &self.active_mvps[idx];
+                let mvp_name = mvp.name.clone();
+                let map_name = mvp.death_map.clone().or_else(|| mvp.spawn.first().map(|s| s.mapname.clone())).unwrap_or_default();
+                let has_marker = mvp.death_position.as_ref().map(|p| p.x >= 0.0 && p.y >= 0.0).unwrap_or(false);
+                let (mut mx, mut my) = if has_marker {
+                    let p = mvp.death_position.as_ref().unwrap();
+                    (p.x, p.y)
+                } else {
+                    (-1.0, -1.0)
+                };
+
+                let death_time = if is_kill { self.now_ms } else { mvp.death_time.unwrap_or(self.now_ms) };
                 let mut window_open = true;
-                let mut set_now = false;
-                let mut saved_ms: Option<i64> = None;
+                let mut do_save = false;
+                let mut do_esc = false;
+                let mut focus_shown = false;
 
                 let dt = chrono::DateTime::from_timestamp_millis(death_time)
                     .map(|d| d.with_timezone(&chrono::Local))
                     .unwrap_or_else(|| chrono::Local::now());
+
+                if !self.edit_modal_inited {
+                    self.edit_year_str = dt.year().to_string();
+                    self.edit_month_str = format!("{:02}", dt.month());
+                    self.edit_day_str = format!("{:02}", dt.day());
+                    self.edit_hour_str = format!("{:02}", dt.hour());
+                    self.edit_minute_str = format!("{:02}", dt.minute());
+                    self.edit_modal_inited = true;
+                }
 
                 let mut year = dt.year();
                 let mut month = dt.month();
@@ -1001,107 +1033,118 @@ impl eframe::App for MvpTimerApp {
                 let mut hour = dt.hour();
                 let mut minute = dt.minute();
 
-                egui::Window::new(format!("Edit Death Time — {}", mvp_name))
-                    .id(egui::Id::new("edit_time_window"))
+                let title = if is_kill { format!("Kill — {}", mvp_name) } else { format!("Edit — {}", mvp_name) };
+                egui::Window::new(title)
+                    .id(egui::Id::new("kill_edit_window"))
                     .open(&mut window_open)
                     .resizable(false)
                     .show(ctx, |ui| {
-                        ui.label(RichText::new("Set death time:").size(14.0).strong());
-                        ui.add_space(6.0);
+                        let enter = ui.ctx().input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
+                        let esc = ui.ctx().input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
+
+                        ui.label(RichText::new("When was mvp killed?").size(14.0).strong());
+                        ui.add_space(4.0);
 
                         ui.horizontal(|ui| {
                             ui.label("Date:");
-                            ui.add(egui::DragValue::new(&mut year).range(2020..=2030).speed(1).prefix("Y "));
-                            ui.add(egui::DragValue::new(&mut month).range(1..=12).speed(1).prefix("M "));
-                            ui.add(egui::DragValue::new(&mut day).range(1..=31).speed(1).prefix("D "));
+                            let y_resp = ui.add(egui::TextEdit::singleline(&mut self.edit_year_str).desired_width(40.0).id_source("edit_year").clip_text(false));
+                            if !focus_shown { y_resp.request_focus(); focus_shown = true; }
+                            ui.label("/");
+                            ui.add(egui::TextEdit::singleline(&mut self.edit_month_str).desired_width(30.0).id_source("edit_month").clip_text(false));
+                            ui.label("/");
+                            ui.add(egui::TextEdit::singleline(&mut self.edit_day_str).desired_width(30.0).id_source("edit_day").clip_text(false));
                         });
                         ui.horizontal(|ui| {
                             ui.label("Time:");
-                            ui.add(egui::DragValue::new(&mut hour).range(0..=23).speed(1).prefix("H "));
-                            ui.add(egui::DragValue::new(&mut minute).range(0..=59).speed(1).prefix("M "));
+                            ui.add(egui::TextEdit::singleline(&mut self.edit_hour_str).desired_width(30.0).id_source("edit_hour").clip_text(false));
+                            ui.label(":");
+                            ui.add(egui::TextEdit::singleline(&mut self.edit_minute_str).desired_width(30.0).id_source("edit_minute").clip_text(false));
                         });
+
+                        if let Ok(y) = self.edit_year_str.parse::<i32>() { year = y; }
+                        if let Ok(m) = self.edit_month_str.parse::<u32>() { month = m.clamp(1, 12); }
+                        if let Ok(d) = self.edit_day_str.parse::<u32>() { day = d.clamp(1, 31); }
+                        if let Ok(h) = self.edit_hour_str.parse::<u32>() { hour = h.min(23); }
+                        if let Ok(m) = self.edit_minute_str.parse::<u32>() { minute = m.min(59); }
 
                         ui.add_space(4.0);
                         let preview = format!("{:04}-{:02}-{:02} {:02}:{:02}", year, month, day, hour, minute);
                         ui.label(RichText::new(&preview).size(13.0).color(Color32::from_rgb(200, 200, 100)));
 
                         ui.add_space(8.0);
-                        ui.horizontal(|ui| {
-                            if ui.button("Now").clicked() {
-                                set_now = true;
-                            }
-                            if ui.button("Save").clicked() {
-                                saved_ms = Some(
-                                    chrono::Local.with_ymd_and_hms(year, month, day, hour, minute, 0)
-                                        .single()
-                                        .map(|d| d.timestamp_millis())
-                                        .unwrap_or(self.now_ms)
-                                );
-                            }
-                        });
-                    });
+                        ui.label(RichText::new("Where's mvp tombstone:").size(13.0).strong());
+                        ui.label(RichText::new("(click to mark)").size(11.0).color(Color32::GRAY));
 
-                if let Some(ms) = saved_ms {
-                    self.edit_mvp_time(idx, ms);
-                    self.edit_mvp_index = None;
-                } else if set_now {
-                    self.edit_mvp_time(idx, self.now_ms);
-                    self.edit_mvp_index = None;
-                } else if !window_open {
-                    self.edit_mvp_index = None;
-                }
-            } else {
-                self.edit_mvp_index = None;
-            }
-        }
-
-        // ── Map marker modal ──
-        if let Some((mk_idx, ref mk_map, _, _)) = self.marker_mode_mvp {
-            if mk_idx < self.active_mvps.len() {
-                let mut open = true;
-                let map_name = mk_map.clone();
-                let mvp_name = self.active_mvps[mk_idx].name.clone();
-                egui::Window::new(format!("Set Marker — {}", mvp_name))
-                    .id(egui::Id::new("marker_window"))
-                    .open(&mut open)
-                    .resizable(false)
-                    .show(ctx, |ui| {
-                        if let Some(map_tx) = self.load_map_texture(ctx, &map_name) {
-                            let img_size = egui::vec2(400.0, 400.0);
-                            let resp = ui.add(egui::Image::from_texture(&map_tx).fit_to_exact_size(img_size).sense(egui::Sense::click()));
-                            if let Some(pos) = resp.interact_pointer_pos() {
-                                let rect = resp.rect;
-                                let rel_x = ((pos.x - rect.min.x) / rect.width() * 512.0) as f64;
-                                let rel_y = ((pos.y - rect.min.y) / rect.height() * 512.0) as f64;
-                                self.marker_mode_mvp = Some((mk_idx, map_name.clone(), rel_x, rel_y));
-                            }
-                            if let Some((_, _, ref mx, ref my)) = self.marker_mode_mvp {
-                                if *mx >= 0.0 && *my >= 0.0 {
-                                    ui.label(RichText::new(format!("Position: ({}, {})", mx.round() as i32, my.round() as i32)).size(14.0).color(Color32::from_rgb(200, 200, 100)));
+                        if !map_name.is_empty() {
+                            if let Some(map_tx) = self.load_map_texture(ctx, &map_name) {
+                                let img_size = egui::vec2(350.0, 350.0);
+                                let resp = ui.add(egui::Image::from_texture(&map_tx).fit_to_exact_size(img_size).sense(egui::Sense::click()));
+                                if let Some(pos) = resp.interact_pointer_pos() {
+                                    let rect = resp.rect;
+                                    mx = ((pos.x - rect.min.x) / rect.width() * 256.0) as f64;
+                                    my = ((pos.y - rect.min.y) / rect.height() * 256.0) as f64;
+                                }
+                                if mx >= 0.0 && my >= 0.0 {
+                                    let px = resp.rect.min.x + (mx as f32 / 256.0) * resp.rect.width();
+                                    let py = resp.rect.min.y + (my as f32 / 256.0) * resp.rect.height();
+                                    let painter = ui.painter_at(resp.rect);
+                                    painter.circle_filled(egui::pos2(px, py), 8.0, Color32::RED);
+                                    painter.circle_stroke(egui::pos2(px, py), 16.0, egui::Stroke::new(2.0_f32, Color32::from_rgb(255, 255, 0)));
+                                    painter.line_segment([
+                                        egui::pos2(px - 12.0, py),
+                                        egui::pos2(px + 12.0, py),
+                                    ], egui::Stroke::new(2.0_f32, Color32::RED));
+                                    painter.line_segment([
+                                        egui::pos2(px, py - 12.0),
+                                        egui::pos2(px, py + 12.0),
+                                    ], egui::Stroke::new(2.0_f32, Color32::RED));
+                                    ui.label(RichText::new(format!("📍 ({}, {})", mx as i32, my as i32)).size(12.0).color(Color32::from_rgb(255, 200, 100)));
                                 }
                             }
                         }
+
                         ui.add_space(8.0);
                         ui.horizontal(|ui| {
-                            if ui.button("Save Marker").clicked() {
-                                if let Some((ref _idx, _, ref mx, ref my)) = self.marker_mode_mvp {
-                                    if mk_idx < self.active_mvps.len() {
-                                        self.active_mvps[mk_idx].death_position = Some(crate::data::mvp::MapMark { x: *mx, y: *my });
-                                        self.push_to_firebase();
-                                    }
-                                }
-                                self.marker_mode_mvp = None;
+                            if ui.button("Confirm").clicked() || enter {
+                                do_save = true;
                             }
-                            if ui.button("Cancel").clicked() {
-                                self.marker_mode_mvp = None;
+                            if ui.button("Cancel").clicked() || esc {
+                                do_esc = true;
                             }
                         });
+                        ui.label(RichText::new("ENTER / ESC / TAB").size(10.0).color(Color32::DARK_GRAY));
                     });
-                if !open {
-                    self.marker_mode_mvp = None;
+
+                if do_save {
+                    // Parse final values from text fields
+                    if let Ok(y) = self.edit_year_str.parse::<i32>() { year = y; }
+                    if let Ok(m) = self.edit_month_str.parse::<u32>() { month = m.clamp(1, 12); }
+                    if let Ok(d) = self.edit_day_str.parse::<u32>() { day = d.clamp(1, 31); }
+                    if let Ok(h) = self.edit_hour_str.parse::<u32>() { hour = h.min(23); }
+                    if let Ok(m) = self.edit_minute_str.parse::<u32>() { minute = m.min(59); }
+                    let ms = chrono::Local.with_ymd_and_hms(year, month, day, hour, minute, 0)
+                        .single()
+                        .map(|d| d.timestamp_millis())
+                        .unwrap_or(self.now_ms);
+                    if idx < self.active_mvps.len() {
+                        let old_death_map = self.active_mvps[idx].death_map.clone();
+                        self.clear_notification(self.active_mvps[idx].id, old_death_map.as_deref());
+                        self.active_mvps[idx].death_time = Some(ms);
+                        self.active_mvps[idx].is_pinned = false;
+                        if mx >= 0.0 && my >= 0.0 {
+                            self.active_mvps[idx].death_position = Some(crate::data::mvp::MapMark { x: mx, y: my });
+                        }
+                        sort_mvps_by_respawn_time(&mut self.active_mvps);
+                        self.push_to_firebase();
+                    }
+                    self.edit_mvp_target = None;
+                    self.edit_modal_inited = false;
+                } else if do_esc || !window_open {
+                    self.edit_mvp_target = None;
+                    self.edit_modal_inited = false;
                 }
             } else {
-                self.marker_mode_mvp = None;
+                self.edit_mvp_target = None;
             }
         }
 
