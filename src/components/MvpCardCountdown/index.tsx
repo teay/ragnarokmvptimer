@@ -104,7 +104,7 @@ export function MvpCardCountdown({
   );
 
   return (
-    <Container>
+    <Container respawningSoon={isWithinWindow} missedRespawn={missedRespawn}>
       <FormattedMessage
         id={
           isWithinWindow
