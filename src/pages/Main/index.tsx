@@ -29,7 +29,7 @@ export function Main() {
     sessionStorage.getItem('search') || ''
   );
   const [currentSort, setCurrentSort] = useState<string>(
-    sessionStorage.getItem('sort') || 'respawnTime'
+    sessionStorage.getItem('sort') || 'name'
   );
   const [reverseSort, setReverseSort] = useState<boolean>(
     sessionStorage.getItem('reverse') === 'true'
