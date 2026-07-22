@@ -38,7 +38,8 @@ fn load_fonts(ctx: &egui::Context) {
     ctx.set_fonts(defs);
 }
 
-fn main() -> eframe::Result<()> {
+#[tokio::main]
+async fn main() -> eframe::Result<()> {
     let log_path = asset_dir().join("debug.log");
     let _ = env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn"))
         .target(env_logger::Target::Pipe(Box::new(

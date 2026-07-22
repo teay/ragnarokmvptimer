@@ -50,6 +50,7 @@ pub struct MvpTimerApp {
     icon_max_size: (f32, f32),
     map_max_size: (f32, f32),
     icon_pixel_sizes: HashMap<u32, (f32, f32)>,
+    profile_focus_requested: bool,
 }
 
 impl Default for MvpTimerApp {
@@ -81,6 +82,7 @@ impl Default for MvpTimerApp {
             icon_max_size: (80.0, 80.0),
             map_max_size: (200.0, 100.0),
             icon_pixel_sizes: HashMap::new(),
+            profile_focus_requested: false,
         };
         app.compute_max_image_sizes(&asset_dir);
         app.load_server_data();
@@ -311,6 +313,18 @@ impl MvpTimerApp {
         }
     }
 
+    fn clear_data(&self) {
+        if let Some(ref sync) = self.firebase_sync {
+            let url = format!("{}{}.json", sync.client.database_url, sync.path.trim_end_matches('/'));
+            tokio::spawn(async move {
+                let _ = reqwest::Client::new()
+                    .delete(&url)
+                    .send()
+                    .await;
+            });
+        }
+    }
+
     fn delete_from_firebase(&self, id: u32, death_map: Option<&str>) {
         if let Some(ref sync) = self.firebase_sync {
             let path = sync.path.clone();
@@ -386,7 +400,7 @@ impl MvpTimerApp {
     }
 
     fn set_nickname(&mut self, nickname: &str) {
-        let nickname = nickname.trim().to_uppercase();
+        let nickname = sanitize_nickname(nickname);
         if nickname.is_empty() {
             self.firebase_sync = None;
             return;
@@ -396,7 +410,7 @@ impl MvpTimerApp {
     }
 
     fn set_party_room(&mut self, room: &str) {
-        let room = room.trim().to_uppercase();
+        let room = sanitize_nickname(room);
         self.settings.party_room = if room.is_empty() { None } else { Some(room) };
         self.init_firebase();
     }
@@ -463,7 +477,7 @@ impl MvpTimerApp {
 
         let card_frame = Frame::NONE
             .fill(Color32::from_rgb(30, 30, 40))
-            .stroke(Stroke::new(1.0, Color32::from_rgb(60, 60, 80)))
+            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(60, 60, 80)))
             .corner_radius(CornerRadius::same(8))
             .inner_margin(Margin::same(10));
 
@@ -635,13 +649,14 @@ impl eframe::App for MvpTimerApp {
                 if nickname.is_empty() {
                     ui.label(RichText::new("[Local]").color(Color32::YELLOW));
                 } else if party_room.is_some() {
-                    ui.label(RichText::new(format!("[Party: {}]", party_room.unwrap_or_default())).color(Color32::GREEN));
+                    let party = party_room.unwrap_or_default();
+                    ui.label(RichText::new(format!("[Party: {}] — {}", party, nickname)).color(Color32::GREEN));
                 } else {
                     ui.label(RichText::new(format!("[Solo: {}]", nickname)).color(Color32::GREEN));
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("⚙").clicked() { show_s = !show_s; }
-                    if ui.button("👤").clicked() { show_p = !show_p; }
+                    if ui.button("👤").clicked() { show_p = !show_p; if show_p { self.profile_focus_requested = true; } }
                 });
             });
             self.show_settings = show_s;
@@ -657,6 +672,7 @@ impl eframe::App for MvpTimerApp {
             let mut anim = self.settings.animated_sprites;
             let mut sound = self.settings.notification_sound;
             let mut changed = false;
+            let mut clear = false;
 
             egui::Window::new("Settings")
                 .open(&mut self.show_settings)
@@ -675,7 +691,17 @@ impl eframe::App for MvpTimerApp {
                     if ui.checkbox(&mut show_map, "Show MVP map").changed() { changed = true; }
                     if ui.checkbox(&mut anim, "Animated sprites").changed() { changed = true; }
                     if ui.checkbox(&mut sound, "Notification sound").changed() { changed = true; }
+                    ui.separator();
+                    if ui.button(RichText::new("🗑 Clear Data").color(Color32::from_rgb(255, 100, 100)).strong()).clicked() {
+                        clear = true;
+                    }
                 });
+
+            if clear {
+                self.clear_data();
+                self.active_mvps.clear();
+                self.rebuild_all_mvps();
+            }
 
             if changed {
                 self.settings.server = new_server;
@@ -694,43 +720,65 @@ impl eframe::App for MvpTimerApp {
 
         // ── Profile modal ──
         if self.show_profile {
+            if self.nickname_input.is_empty() { self.nickname_input = self.settings.nickname.clone(); }
+            if self.party_input.is_empty() { self.party_input = self.settings.party_room.clone().unwrap_or_default(); }
             let mut nickname_val = self.nickname_input.clone();
             let mut party_val = self.party_input.clone();
             let mut do_set_nick = false;
             let mut do_set_party = false;
+            let mut close_profile = false;
+            let mut focus_nick = self.profile_focus_requested;
 
             egui::Window::new("Profile & Party")
+                .id(egui::Id::new("profile_window"))
                 .open(&mut self.show_profile)
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
                         ui.label("Nickname:");
-                        if ui.text_edit_singleline(&mut nickname_val).lost_focus() {
-                            do_set_nick = true;
+                        let nick_resp = ui.add(egui::TextEdit::singleline(&mut nickname_val)
+                            .desired_width(200.0)
+                            .hint_text("Enter nickname")
+                            .id_source("nickname_field"));
+                        if focus_nick {
+                            nick_resp.request_focus();
                         }
                     });
                     ui.horizontal(|ui| {
                         ui.label("Party Room:");
-                        if ui.text_edit_singleline(&mut party_val).lost_focus() {
+                        ui.add(egui::TextEdit::singleline(&mut party_val)
+                            .desired_width(200.0)
+                            .hint_text("Optional")
+                            .id_source("party_field"));
+                    });
+                    ui.add_space(8.0);
+                    ui.horizontal(|ui| {
+                        if ui.button("Save").clicked() {
+                            do_set_nick = true;
                             do_set_party = true;
+                            close_profile = true;
+                        }
+                        if ui.button("Logout").clicked() {
+                            self.settings.nickname.clear();
+                            self.settings.party_room = None;
+                            self.firebase_sync = None;
+                            self.active_mvps.clear();
+                            self.nickname_input.clear();
+                            self.party_input.clear();
                         }
                     });
-                    if ui.button("Logout").clicked() {
-                        self.settings.nickname.clear();
-                        self.settings.party_room = None;
-                        self.firebase_sync = None;
-                        self.active_mvps.clear();
-                        self.nickname_input.clear();
-                        self.party_input.clear();
-                    }
                 });
 
+            let saved_nick = sanitize_nickname(&nickname_val);
+            let saved_party = sanitize_nickname(&party_val);
+            self.profile_focus_requested = false;
+            if close_profile { self.show_profile = false; }
+            self.nickname_input = saved_nick.clone();
+            self.party_input = saved_party.clone();
             if do_set_nick {
-                self.nickname_input = nickname_val.clone();
-                self.set_nickname(&nickname_val);
+                self.set_nickname(&saved_nick);
             }
             if do_set_party {
-                self.party_input = party_val.clone();
-                self.set_party_room(&party_val);
+                self.set_party_room(&saved_party);
             }
         }
 
@@ -903,6 +951,10 @@ impl eframe::App for MvpTimerApp {
             ctx.request_repaint_after(std::time::Duration::from_millis(1000));
         }
     }
+}
+
+fn sanitize_nickname(s: &str) -> String {
+    s.to_uppercase().chars().filter(|c| c.is_ascii_alphanumeric()).collect()
 }
 
 fn button_colored(ui: &mut egui::Ui, text: &str, color: Color32) -> egui::Response {
