@@ -12,8 +12,8 @@ export const Container = styled.div<{
   flex-direction: column;
   align-items: center;
 
-  width: 28rem;
-  padding: 10px;
+  width: 222px;
+  padding: 6px;
 
   border-radius: 8px;
 

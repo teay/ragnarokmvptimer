@@ -28,23 +28,10 @@ export const SectionTitle = styled.span`
 
 export const MvpsContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-gap: 2.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(222px, 1fr));
+  grid-gap: 8px;
   width: 100%;
   justify-items: center;
-  max-width: 130rem;
-  padding: 1rem;
-  
-
-  @media (max-width: 75em) { /* ~1200px */
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  @media (max-width: 56.25em) { /* ~900px */
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 37.5em) { /* ~600px */
-    grid-template-columns: 1fr;
-  }
+  max-width: 160rem;
+  padding: 4px;
 `;
