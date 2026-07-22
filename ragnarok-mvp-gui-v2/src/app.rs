@@ -84,7 +84,7 @@ impl Default for MvpTimerApp {
             firebase_log: vec![],
             show_settings: false,
             show_profile: false,
-            tab: ActiveTab::Active,
+            tab: ActiveTab::All,
             search_query: String::new(),
             now_ms: 0,
             nickname_input: String::new(),
