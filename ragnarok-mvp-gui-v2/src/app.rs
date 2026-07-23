@@ -380,6 +380,7 @@ impl MvpTimerApp {
         let mut wait_mvp = mvp.clone();
         wait_mvp.death_time = None;
         wait_mvp.is_pinned = true;
+        wait_mvp.updated_at = Some(chrono::Utc::now().timestamp_millis());
         self.active_mvps.push(wait_mvp);
         self.rebuild_all_mvps();
         self.push_to_firebase();
@@ -402,6 +403,7 @@ impl MvpTimerApp {
             self.active_mvps[index].death_map = None;
             self.active_mvps[index].death_position = None;
             self.active_mvps[index].is_pinned = true;
+            self.active_mvps[index].updated_at = Some(chrono::Utc::now().timestamp_millis());
             self.push_to_firebase();
         }
     }
@@ -1366,6 +1368,7 @@ impl eframe::App for MvpTimerApp {
                         self.active_mvps[idx].death_time = Some(ms);
                         self.active_mvps[idx].is_pinned = false;
                         self.active_mvps[idx].death_map = Some(map_name.clone());
+                        self.active_mvps[idx].updated_at = Some(chrono::Utc::now().timestamp_millis());
                         if self.edit_mx >= 0.0 && self.edit_my >= 0.0 {
                             self.active_mvps[idx].death_position = Some(crate::data::mvp::MapMark { x: self.edit_mx, y: self.edit_my });
                         }
