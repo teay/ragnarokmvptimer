@@ -741,6 +741,9 @@ impl eframe::App for MvpTimerApp {
                             }
                         }
                     }
+                    if ui.button("📥").clicked() {
+                        self.pull_from_firebase();
+                    }
                     let zoom = self.settings.card_zoom;
                     let zoom_label = if zoom < 1.1 { "1.0x" }
                         else if (zoom - 1.2).abs() < 0.01 { "1.2x" }
@@ -947,6 +950,7 @@ impl eframe::App for MvpTimerApp {
         };
 
         // ── YT resizable panel + webview bounds ──
+        let mut yt_panel_w = 0.0f32;
         if self.youtube_webview.is_some() {
             let inner_w = ctx.input(|i| i.viewport().inner_rect).map_or(400.0, |r| r.width());
             let default_right = (inner_w * 0.50).max(200.0);
@@ -955,10 +959,9 @@ impl eframe::App for MvpTimerApp {
                 .default_width(default_right)
                 .min_width(100.0)
                 .show(ctx, |ui| {
-                    // occupy space so panel actually shows
                     ui.allocate_space(ui.available_size());
                 });
-            let yt_panel_w = resp.response.rect.width();
+            yt_panel_w = resp.response.rect.width();
             let sf = ctx.input(|i| i.viewport().native_pixels_per_point.unwrap_or(1.0));
             if yt_panel_w > 50.0 {
                 if let Some(inner) = ctx.input(|i| i.viewport().inner_rect) {
@@ -1103,6 +1106,10 @@ impl eframe::App for MvpTimerApp {
 
         // ── Combined Edit/Kill modal (time + map marker) ──
         if let Some((idx, is_kill)) = self.edit_mvp_target {
+            // Keep focus on egui window when modal is open
+            if let Some(wv) = &self.youtube_webview {
+                let _ = wv.focus_parent();
+            }
             if idx < self.active_mvps.len() {
                 let mvp = &self.active_mvps[idx];
                 let mvp_name = mvp.name.clone();
@@ -1145,7 +1152,7 @@ impl eframe::App for MvpTimerApp {
                 let title = if is_kill { format!("Kill — {}", mvp_name) } else { format!("Edit — {}", mvp_name) };
                 egui::Window::new(title)
                     .id(egui::Id::new("kill_edit_window"))
-                    .anchor(egui::Align2::CENTER_CENTER, (0.0, 0.0))
+                    .anchor(egui::Align2::CENTER_CENTER, (-yt_panel_w / 2.0, 0.0))
                     .open(&mut window_open)
                     .resizable(false)
                     .show(ctx, |ui| {

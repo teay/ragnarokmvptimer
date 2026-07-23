@@ -219,7 +219,7 @@ pub fn from_firebase(fb: &FirebaseMvp) -> Mvp {
 pub fn get_firebase_path(nickname: &str, server: &str, party_room: Option<&str>) -> String {
     match party_room {
         Some(room) if !room.is_empty() => {
-            format!("/hunting/party/{}/{}/mvps", room, server)
+            format!("/hunting/party/{}/members/{}/{}/mvps", room, nickname, server)
         }
         _ => {
             format!("/hunting/solo/{}/{}/mvps", nickname, server)
