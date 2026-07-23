@@ -67,6 +67,7 @@ pub struct MvpTimerApp {
     notified_respawns: HashSet<String>,
     sse_poll_data: Arc<Mutex<Option<Vec<Mvp>>>>,
     sse_started: bool,
+    youtube_webview: Option<wry::WebView>,
 }
 
 impl Default for MvpTimerApp {
@@ -112,6 +113,7 @@ impl Default for MvpTimerApp {
             notified_respawns: HashSet::new(),
             sse_poll_data: Arc::new(Mutex::new(None)),
             sse_started: false,
+            youtube_webview: None,
         };
         app.compute_max_image_sizes(&asset_dir);
         app.load_server_data();
@@ -686,7 +688,7 @@ impl MvpTimerApp {
 }
 
 impl eframe::App for MvpTimerApp {
-    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &Context, frame: &mut eframe::Frame) {
         self.now_ms = chrono::Utc::now().timestamp_millis();
 
         // ── SSE real-time poll ──
@@ -723,6 +725,22 @@ impl eframe::App for MvpTimerApp {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("⚙").clicked() { show_s = !show_s; }
                     if ui.button("👤").clicked() { show_p = !show_p; if show_p { self.profile_focus_requested = true; } }
+                    let yt_on = self.youtube_webview.is_some();
+                    if ui.selectable_label(yt_on, "▶YT").clicked() {
+                        if yt_on {
+                            self.youtube_webview = None;
+                        } else {
+                            let mut data_path = self.asset_dir.clone();
+                            data_path.push("webview_data");
+                            let mut web_ctx = wry::WebContext::new(Some(data_path));
+                            if let Ok(webview) = wry::WebViewBuilder::new_with_web_context(&mut web_ctx)
+                                .with_url("https://www.youtube.com")
+                                .build_as_child(frame)
+                            {
+                                self.youtube_webview = Some(webview);
+                            }
+                        }
+                    }
                     let zoom = self.settings.card_zoom;
                     let zoom_label = if zoom < 1.1 { "1.0x" }
                         else if (zoom - 1.2).abs() < 0.01 { "1.2x" }
@@ -927,6 +945,36 @@ impl eframe::App for MvpTimerApp {
                 .filter(|(id, s)| !active_keys.contains(&format!("{}-{}", id, s.mapname)))
                 .count()
         };
+
+        // ── YT resizable panel + webview bounds ──
+        if self.youtube_webview.is_some() {
+            let inner_w = ctx.input(|i| i.viewport().inner_rect).map_or(400.0, |r| r.width());
+            let default_right = (inner_w * 0.50).max(200.0);
+            let resp = egui::SidePanel::right("yt_webview_panel")
+                .resizable(true)
+                .default_width(default_right)
+                .min_width(100.0)
+                .show(ctx, |ui| {
+                    // occupy space so panel actually shows
+                    ui.allocate_space(ui.available_size());
+                });
+            let yt_panel_w = resp.response.rect.width();
+            let sf = ctx.input(|i| i.viewport().native_pixels_per_point.unwrap_or(1.0));
+            if yt_panel_w > 50.0 {
+                if let Some(inner) = ctx.input(|i| i.viewport().inner_rect) {
+                    let web_x = (inner.width() - yt_panel_w) as f64 * sf as f64;
+                    let web_w = yt_panel_w as f64 * sf as f64;
+                    let top_h = 40.0 * sf as f64;
+                    let web_h = (inner.height() as f64 - 40.0) * sf as f64;
+                    if web_w > 100.0 && web_h > 100.0 {
+                        let _ = self.youtube_webview.as_ref().unwrap().set_bounds(wry::Rect {
+                            position: wry::dpi::PhysicalPosition::new(web_x, top_h).into(),
+                            size: wry::dpi::PhysicalSize::new(web_w, web_h).into(),
+                        });
+                    }
+                }
+            }
+        }
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
