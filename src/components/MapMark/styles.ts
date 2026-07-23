@@ -1,19 +1,16 @@
 import { styled } from '@linaria/react';
 
-interface Props {
-  coordinates: IMapMark;
-}
-
-export const Container = styled.div<Props>`
+export const Container = styled.div<{ $x: number; $y: number }>`
   height: 0;
   width: 0;
-  position: relative;
-  top: ${({ coordinates }) => coordinates.y - 265}px;
-  left: ${({ coordinates }) => coordinates.x - 10}px;
+  position: absolute;
+  top: ${({ $y }) => $y}px;
+  left: ${({ $x }) => $x}px;
   pointer-events: none;
 `;
 
 export const Tomb = styled.img`
   width: 20px;
   height: auto;
+  transform: translate(-50%, -100%);
 `;

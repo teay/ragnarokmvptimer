@@ -38,6 +38,15 @@ fn load_fonts(ctx: &egui::Context) {
     ctx.set_fonts(defs);
 }
 
+fn build_title() -> String {
+    let hash = option_env!("GIT_HASH").unwrap_or("unknown");
+    let ts_secs: u64 = option_env!("BUILD_TS").unwrap_or("0").parse().unwrap_or(0);
+    let dt = chrono::DateTime::from_timestamp(ts_secs as i64, 0)
+        .map(|d| d.format("%Y%m%d-%H%M%S").to_string())
+        .unwrap_or_else(|| "??".to_string());
+    format!("Ragnarok MVP Timer v2 [{} {}]", hash, dt)
+}
+
 #[tokio::main]
 async fn main() -> eframe::Result<()> {
     let log_path = asset_dir().join("debug.log");
@@ -47,16 +56,18 @@ async fn main() -> eframe::Result<()> {
         )))
         .init();
 
+    let title = build_title();
+
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([900.0, 700.0])
             .with_min_inner_size([600.0, 400.0])
-            .with_title("Ragnarok MVP Timer v2"),
+            .with_title(&title),
         ..Default::default()
     };
 
     eframe::run_native(
-        "Ragnarok MVP Timer v2",
+        &title,
         options,
         Box::new(|cc| {
             load_fonts(&cc.egui_ctx);

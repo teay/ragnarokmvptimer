@@ -111,6 +111,15 @@ impl Default for MvpTimerApp {
         };
         app.compute_max_image_sizes(&asset_dir);
         app.load_server_data();
+        let has_active = app.active_mvps.iter().any(|m| m.death_time.is_some());
+        let has_wait = app.active_mvps.iter().any(|m| m.is_pinned && m.death_time.is_none());
+        app.tab = if has_active {
+            ActiveTab::Active
+        } else if has_wait {
+            ActiveTab::Wait
+        } else {
+            ActiveTab::All
+        };
         app
     }
 }
