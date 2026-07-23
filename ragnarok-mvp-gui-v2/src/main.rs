@@ -47,7 +47,7 @@ fn build_title() -> String {
     format!("Ragnarok MVP Timer v2 [{} {}]", hash, dt)
 }
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() -> eframe::Result<()> {
     let log_path = asset_dir().join("debug.log");
     let _ = env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn"))
