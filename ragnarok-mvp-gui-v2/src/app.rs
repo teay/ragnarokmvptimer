@@ -336,14 +336,17 @@ impl MvpTimerApp {
             let path = sync.path.clone();
             let url_base = sync.client.database_url.clone();
             tokio::spawn(async move {
-                let data: Vec<crate::firebase::client::FirebaseMvp> = mvps
-                    .iter()
-                    .map(|m| crate::firebase::client::to_firebase(m, &nickname))
-                    .collect();
+                let mut updates: std::collections::HashMap<String, crate::firebase::client::FirebaseMvp> = std::collections::HashMap::new();
+                for mvp in &mvps {
+                    if mvp.death_time.is_some() || mvp.is_pinned {
+                        let key = format!("{}-{}", mvp.id, mvp.death_map.as_deref().unwrap_or("unknown"));
+                        updates.insert(key, crate::firebase::client::to_firebase(mvp, &nickname));
+                    }
+                }
                 let url = format!("{}{}.json", url_base, path);
-                match reqwest::Client::new().put(&url).json(&data).send().await {
-                    Ok(resp) => log::info!("Firebase PUT {} -> {}", url, resp.status()),
-                    Err(e) => log::warn!("Firebase PUT failed: {}", e),
+                match reqwest::Client::new().patch(&url).json(&updates).send().await {
+                    Ok(resp) => log::info!("Firebase PATCH {} -> {}", url, resp.status()),
+                    Err(e) => log::warn!("Firebase PATCH failed: {}", e),
                 }
             });
         }
@@ -693,12 +696,25 @@ impl eframe::App for MvpTimerApp {
     fn update(&mut self, ctx: &Context, frame: &mut eframe::Frame) {
         self.now_ms = chrono::Utc::now().timestamp_millis();
 
-        // ── SSE real-time poll ──
+        // ── SSE real-time poll (merge by updatedAt) ──
         let sse_data = self.sse_poll_data.lock().ok().and_then(|mut g| g.take());
         if let Some(remote_data) = sse_data {
             if self.edit_mvp_target.is_none() {
                 let rehydrated = crate::core::rehydrate::rehydrate_mvps(&remote_data, &self.original_all_mvps);
-                self.active_mvps = rehydrated;
+                let mut merged = self.active_mvps.clone();
+                for remote in rehydrated {
+                    let rkey = format!("{}-{}", remote.id, remote.death_map.as_deref().unwrap_or("unknown"));
+                    if let Some(local) = merged.iter_mut().find(|m| {
+                        format!("{}-{}", m.id, m.death_map.as_deref().unwrap_or("unknown")) == rkey
+                    }) {
+                        if remote.updated_at.unwrap_or(0) > local.updated_at.unwrap_or(0) {
+                            *local = remote;
+                        }
+                    } else {
+                        merged.push(remote);
+                    }
+                }
+                self.active_mvps = merged;
                 crate::core::sort::sort_mvps_by_respawn_time(&mut self.active_mvps);
                 self.rebuild_all_mvps();
                 self.firebase_log.push("SSE: received update".into());
