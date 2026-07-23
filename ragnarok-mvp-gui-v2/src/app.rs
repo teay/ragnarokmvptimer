@@ -719,6 +719,20 @@ impl eframe::App for MvpTimerApp {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("⚙").clicked() { show_s = !show_s; }
                     if ui.button("👤").clicked() { show_p = !show_p; if show_p { self.profile_focus_requested = true; } }
+                    let zoom = self.settings.card_zoom;
+                    let zoom_label = match zoom as i32 {
+                        1 => "1.0x",
+                        2 => "2.0x",
+                        _ => if (zoom - 1.2).abs() < 0.01 { "1.2x" } else { "1.5x" }
+                    };
+                    if ui.button(zoom_label).clicked() {
+                        let next = if zoom < 1.1 { 1.2 }
+                            else if zoom < 1.35 { 1.5 }
+                            else if zoom < 1.75 { 2.0 }
+                            else { 1.0 };
+                        self.settings.card_zoom = next;
+                        self.settings.save();
+                    }
                 });
             });
             self.show_settings = show_s;
@@ -789,19 +803,6 @@ impl eframe::App for MvpTimerApp {
             if ui.checkbox(&mut show_map, "Show MVP map").changed() { changed = true; }
             if ui.checkbox(&mut anim, "Animated sprites").changed() { changed = true; }
             if ui.checkbox(&mut sound, "Notification sound").changed() { changed = true; }
-            ui.separator();
-            let mut zoom = self.settings.card_zoom;
-            egui::ComboBox::from_label("Card zoom")
-                .selected_text(format!("{:.1}x", zoom))
-                .show_ui(ui, |ui| {
-                    for z in [1.0_f32, 1.2, 1.5, 2.0] {
-                        if ui.selectable_label((zoom - z).abs() < 0.01, format!("{:.1}x", z)).clicked() {
-                            zoom = z;
-                            changed = true;
-                        }
-                    }
-                });
-            self.settings.card_zoom = zoom;
             ui.separator();
                     if ui.button("🔄 Refresh from Firebase").clicked() {
                         refresh = true;
