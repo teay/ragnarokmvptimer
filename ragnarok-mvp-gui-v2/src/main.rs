@@ -61,8 +61,7 @@ async fn main() -> eframe::Result<()> {
     let mut viewport = egui::ViewportBuilder::default()
         .with_inner_size([900.0, 700.0])
         .with_min_inner_size([600.0, 400.0])
-        .with_title(&title)
-        .with_fullscreen(true);
+        .with_title(&title);
 
     let icon_path = asset_dir().join("assets").join("favicon.png");
     if let Ok(icon_bytes) = std::fs::read(&icon_path) {
