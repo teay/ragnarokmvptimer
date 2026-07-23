@@ -1365,6 +1365,7 @@ impl eframe::App for MvpTimerApp {
                         self.clear_notification(self.active_mvps[idx].id, old_death_map.as_deref());
                         self.active_mvps[idx].death_time = Some(ms);
                         self.active_mvps[idx].is_pinned = false;
+                        self.active_mvps[idx].death_map = Some(map_name.clone());
                         if self.edit_mx >= 0.0 && self.edit_my >= 0.0 {
                             self.active_mvps[idx].death_position = Some(crate::data::mvp::MapMark { x: self.edit_mx, y: self.edit_my });
                         }
