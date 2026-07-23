@@ -23,6 +23,7 @@ pub struct Settings {
     pub animated_sprites: bool,
     pub card_bg_alpha: u8,
     pub notification_sound: bool,
+    pub card_zoom: f32,
 }
 
 impl Settings {
@@ -57,6 +58,7 @@ impl Default for Settings {
             animated_sprites: true,
             card_bg_alpha: 75,
             notification_sound: true,
+            card_zoom: 1.0,
         }
     }
 }

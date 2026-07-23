@@ -468,7 +468,7 @@ impl MvpTimerApp {
         }
     }
 
-    fn render_card(&mut self, ui: &mut egui::Ui, ctx: &Context, orig_idx: usize, mvp: &Mvp) {
+    fn render_card(&mut self, ui: &mut egui::Ui, ctx: &Context, orig_idx: usize, mvp: &Mvp, zoom: f32) {
         let mvp_id = mvp.id;
         let death_map = mvp.death_map.clone();
         let name = mvp.name.clone();
@@ -499,9 +499,9 @@ impl MvpTimerApp {
 
         let card_frame = Frame::NONE
             .fill(Color32::from_rgb(30, 30, 40))
-            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(60, 60, 80)))
-            .corner_radius(CornerRadius::same(8))
-            .inner_margin(Margin::symmetric(6, 4));
+            .stroke(Stroke::new(1.0_f32 * zoom, Color32::from_rgb(60, 60, 80)))
+            .corner_radius(CornerRadius::same((8.0_f32 * zoom) as u8))
+            .inner_margin(Margin::symmetric((6.0_f32 * zoom) as i8, (4.0_f32 * zoom) as i8));
 
         card_frame.show(ui, |ui| {
             let cw = ui.available_width();
@@ -514,20 +514,21 @@ impl MvpTimerApp {
                     ui.allocate_exact_size(egui::vec2(cw, fill), egui::Sense::hover());
                 }
             };
+            let sz = |v: f32| (v * zoom).round();
 
             // 1. Header
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 14.0),
+                egui::vec2(cw, 14.0 * zoom),
                 egui::Layout::left_to_right(egui::Align::Center),
                 |ui| {
-                    ui.label(RichText::new(format!("(({}))", mvp_id)).size(10.0).color(Color32::from_rgb(140, 140, 160)));
+                    ui.label(RichText::new(format!("(({}))", mvp_id)).size(sz(10.0)).color(Color32::from_rgb(140, 140, 160)));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if in_active {
                             if let Some(dt) = mvp.death_time {
                                 let formatted = chrono::DateTime::from_timestamp_millis(dt)
                                     .map(|d| d.format("%d/%m %H:%M").to_string())
                                     .unwrap_or_default();
-                                ui.label(RichText::new(formatted).size(9.0).color(Color32::GRAY));
+                                ui.label(RichText::new(formatted).size(sz(9.0)).color(Color32::GRAY));
                             }
                         }
                     });
@@ -536,146 +537,144 @@ impl MvpTimerApp {
 
             // 2. Name (centered)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 22.0),
+                egui::vec2(cw, 22.0 * zoom),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
-                    ui.label(RichText::new(&name).size(14.0).strong().color(Color32::from_rgb(230, 230, 240)));
-                    fill_section(ui, 22.0);
+                    ui.label(RichText::new(&name).size(sz(14.0)).strong().color(Color32::from_rgb(230, 230, 240)));
+                    fill_section(ui, 22.0 * zoom);
                 },
             );
 
             // 3. Sprite (fixed 80h, aspect ratio preserved)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 80.0),
+                egui::vec2(cw, 80.0 * zoom),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if let Some(tx) = &icon {
                         let ts = tx.size();
                         let (tex_w, tex_h) = (ts[0] as f32, ts[1] as f32);
                         if tex_w > 0.0 && tex_h > 0.0 {
-                            let max_w = cw - 2.0;
-                            let scale = (80.0 / tex_h).min(max_w / tex_w);
+                            let max_w = cw - 2.0 * zoom;
+                            let scale = ((80.0 * zoom) / tex_h).min(max_w / tex_w);
                             let fw = (tex_w * scale).round();
                             let fh = (tex_h * scale).round();
                             ui.add(egui::Image::from_texture(tx).fit_to_exact_size(egui::vec2(fw, fh)));
                         } else {
-                            ui.add_space(80.0);
+                            ui.add_space(80.0 * zoom);
                         }
                     } else {
-                        ui.add_space(80.0);
+                        ui.add_space(80.0 * zoom);
                     }
-                    fill_section(ui, 80.0);
+                    fill_section(ui, 80.0 * zoom);
                 },
             );
 
             // 4. Timer / Pinned (centered, fixed 38h)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 38.0),
+                egui::vec2(cw, 38.0 * zoom),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if in_active {
                         if let Some(eta_val) = eta {
                             let remaining = eta_val - self.now_ms;
                             if remaining > 0 {
-                                ui.label(RichText::new("Respawn in").size(11.0).color(Color32::from_rgb(180, 180, 180)));
-                                ui.label(RichText::new(format!("{}", format_time(remaining))).size(16.0).strong().color(Color32::from_rgb(224, 224, 224)));
+                                ui.label(RichText::new("Respawn in").size(sz(11.0)).color(Color32::from_rgb(180, 180, 180)));
+                                ui.label(RichText::new(format!("{}", format_time(remaining))).size(sz(16.0)).strong().color(Color32::from_rgb(224, 224, 224)));
                             } else if !has_resp {
                                 let end = eta_val + resp_window as i64;
                                 let rem = end - self.now_ms;
-                                ui.label(RichText::new("Respawning").size(11.0).color(Color32::from_rgb(255, 255, 0)));
-                                ui.label(RichText::new(format!("{}", format_time(rem))).size(14.0).color(Color32::from_rgb(255, 255, 0)));
+                                ui.label(RichText::new("Respawning").size(sz(11.0)).color(Color32::from_rgb(255, 255, 0)));
+                                ui.label(RichText::new(format!("{}", format_time(rem))).size(sz(14.0)).color(Color32::from_rgb(255, 255, 0)));
                             } else {
                                 let max_end = eta_val + resp_window as i64;
                                 let elapsed = self.now_ms - max_end;
-                                ui.label(RichText::new("Already Respawned").size(10.0).color(Color32::from_rgb(242, 88, 88)));
-                                ui.label(RichText::new(format!("{}", format_time(elapsed))).size(14.0).color(Color32::from_rgb(242, 88, 88)));
+                                ui.label(RichText::new("Already Respawned").size(sz(10.0)).color(Color32::from_rgb(242, 88, 88)));
+                                ui.label(RichText::new(format!("{}", format_time(elapsed))).size(sz(14.0)).color(Color32::from_rgb(242, 88, 88)));
                             }
                         }
                     } else if in_wait {
-                        ui.label(RichText::new("Pinned").size(11.0).color(Color32::from_rgb(200, 200, 100)));
-                        ui.label(RichText::new("📌").size(14.0).color(Color32::from_rgb(200, 200, 100)));
+                        ui.label(RichText::new("Pinned").size(sz(11.0)).color(Color32::from_rgb(200, 200, 100)));
+                        ui.label(RichText::new("📌").size(sz(14.0)).color(Color32::from_rgb(200, 200, 100)));
                     }
-                    fill_section(ui, 38.0);
+                    fill_section(ui, 38.0 * zoom);
                 },
             );
 
             // 5. Map name (centered, fixed 18h)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 18.0),
+                egui::vec2(cw, 18.0 * zoom),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if let Some(ref mn) = map_label {
-                        ui.label(RichText::new(format!("Map: {}", mn)).size(11.0).color(Color32::from_rgb(100, 180, 255)));
+                        ui.label(RichText::new(format!("Map: {}", mn)).size(sz(11.0)).color(Color32::from_rgb(100, 180, 255)));
                     }
-                    fill_section(ui, 18.0);
+                    fill_section(ui, 18.0 * zoom);
                 },
             );
 
             // 6. Map preview (120h)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 120.0),
+                egui::vec2(cw, 120.0 * zoom),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if let Some(mtx) = &map_tx {
-                        let resp = ui.add(egui::Image::from_texture(mtx).fit_to_exact_size(egui::vec2(cw, 98.0)).sense(egui::Sense::click()));
+                        let resp = ui.add(egui::Image::from_texture(mtx).fit_to_exact_size(egui::vec2(cw, 98.0 * zoom))
+                            .sense(egui::Sense::click()));
                         if let Some(pos) = &mvp.death_position {
                             if pos.x >= 0.0 && pos.y >= 0.0 {
                                 let px = resp.rect.min.x + (pos.x as f32 / 256.0) * resp.rect.width();
                                 let py = resp.rect.min.y + (pos.y as f32 / 256.0) * resp.rect.height();
-                                ui.painter_at(resp.rect).circle_filled(egui::pos2(px, py), 3.0, Color32::RED);
+                                ui.painter_at(resp.rect).circle_filled(egui::pos2(px, py), 3.0 * zoom, Color32::RED);
                             }
-                        }
-                        if resp.clicked() {
-                            self.edit_mvp_target = Some((orig_idx, false));
                         }
                     }
                     if let Some(pos) = &mvp.death_position {
                         if pos.x >= 0.0 && pos.y >= 0.0 {
-                            ui.label(RichText::new(format!("📍 ({}, {})", pos.x as i32, pos.y as i32)).size(9.0).color(Color32::from_rgb(255, 200, 100)));
+                            ui.label(RichText::new(format!("📍 ({}, {})", pos.x as i32, pos.y as i32)).size(sz(9.0)).color(Color32::from_rgb(255, 200, 100)));
                         }
                     }
-                    fill_section(ui, 120.0);
+                    fill_section(ui, 120.0 * zoom);
                 },
             );
 
-            // ── Fixed gap before buttons ──
-            ui.add_space(6.0);
+            // gap before buttons
+            ui.add_space(6.0 * zoom);
 
             // 7. Buttons (fixed 60h)
             ui.allocate_ui_with_layout(
-                egui::vec2(cw, 60.0),
+                egui::vec2(cw, 60.0 * zoom),
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     if in_active || in_wait {
-                        if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43)).clicked() {
+                        if button_colored(ui, "Killed Now", Color32::from_rgb(139, 90, 43), zoom).clicked() {
                             self.edit_mvp_target = Some((orig_idx, true));
                         }
                         ui.horizontal(|ui| {
-                            if button_colored(ui, "Edit", Color32::from_rgb(74, 74, 74)).clicked() {
+                            if button_colored(ui, "Edit", Color32::from_rgb(74, 74, 74), zoom).clicked() {
                                 self.edit_mvp_target = Some((orig_idx, false));
                             }
                             if in_active {
-                                if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
+                                if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58), zoom).clicked() {
                                     self.remove_mvp(orig_idx);
                                 }
-                                if button_colored(ui, "BACK", Color32::from_rgb(214, 90, 90)).clicked() {
+                                if button_colored(ui, "BACK", Color32::from_rgb(214, 90, 90), zoom).clicked() {
                                     self.move_to_wait(orig_idx);
                                 }
                             } else {
-                                if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58)).clicked() {
+                                if button_colored(ui, "RMV", Color32::from_rgb(179, 58, 58), zoom).clicked() {
                                     self.remove_from_wait(orig_idx);
                                 }
-                                if button_colored(ui, "CANCEL", Color32::from_rgb(214, 90, 90)).clicked() {
+                                if button_colored(ui, "CANCEL", Color32::from_rgb(214, 90, 90), zoom).clicked() {
                                     self.remove_from_wait(orig_idx);
                                 }
                             }
                         });
                     } else {
-                        if button_colored(ui, "Select to kill", Color32::from_rgb(139, 90, 43)).clicked() {
+                        if button_colored(ui, "Select to kill", Color32::from_rgb(139, 90, 43), zoom).clicked() {
                             self.add_to_wait(mvp);
                         }
                     }
-                    fill_section(ui, 60.0);
+                    fill_section(ui, 60.0 * zoom);
                 },
             );
         });
@@ -786,11 +785,24 @@ impl eframe::App for MvpTimerApp {
                             changed = true;
                         }
                     });
-                    if ui.checkbox(&mut use_24h, "24-hour format").changed() { changed = true; }
-                    if ui.checkbox(&mut show_map, "Show MVP map").changed() { changed = true; }
-                    if ui.checkbox(&mut anim, "Animated sprites").changed() { changed = true; }
-                    if ui.checkbox(&mut sound, "Notification sound").changed() { changed = true; }
-                    ui.separator();
+            if ui.checkbox(&mut use_24h, "24-hour format").changed() { changed = true; }
+            if ui.checkbox(&mut show_map, "Show MVP map").changed() { changed = true; }
+            if ui.checkbox(&mut anim, "Animated sprites").changed() { changed = true; }
+            if ui.checkbox(&mut sound, "Notification sound").changed() { changed = true; }
+            ui.separator();
+            let mut zoom = self.settings.card_zoom;
+            egui::ComboBox::from_label("Card zoom")
+                .selected_text(format!("{:.1}x", zoom))
+                .show_ui(ui, |ui| {
+                    for z in [1.0_f32, 1.2, 1.5, 2.0] {
+                        if ui.selectable_label((zoom - z).abs() < 0.01, format!("{:.1}x", z)).clicked() {
+                            zoom = z;
+                            changed = true;
+                        }
+                    }
+                });
+            self.settings.card_zoom = zoom;
+            ui.separator();
                     if ui.button("🔄 Refresh from Firebase").clicked() {
                         refresh = true;
                     }
@@ -999,15 +1011,16 @@ impl eframe::App for MvpTimerApp {
                 }
             }
 
+            let zoom = self.settings.card_zoom;
             egui::ScrollArea::vertical().id_salt("mvp_grid").show(ui, |ui| {
                 if display_mvps.is_empty() {
                     ui.label("No MVPs to display");
                     return;
                 }
 
-                let spacing = 8.0_f32;
-                let card_h = 480.0_f32;
-                let card_w = 222.0_f32;
+                let spacing = 8.0_f32 * zoom;
+                let card_h = 480.0_f32 * zoom;
+                let card_w = 222.0_f32 * zoom;
                 let avail_w = ui.available_width();
                 let n_cols = ((avail_w + spacing) / (card_w + spacing)).floor().max(1.0) as usize;
                 let n_cols = n_cols.min(10);
@@ -1024,13 +1037,13 @@ impl eframe::App for MvpTimerApp {
                                         egui::vec2(card_w, card_h),
                                         egui::Layout::top_down(egui::Align::LEFT),
                                         |ui| {
-                                            self.render_card(ui, ctx, *orig_idx, mvp);
+                                            self.render_card(ui, ctx, *orig_idx, mvp, zoom);
                                         },
                                     );
                                 }
                             },
                         );
-                        ui.add_space(4.0);
+                        ui.add_space(4.0 * zoom);
                     }
                 });
             });
@@ -1211,11 +1224,11 @@ fn sanitize_nickname(s: &str) -> String {
     s.to_uppercase().chars().filter(|c| c.is_ascii_alphanumeric()).collect()
 }
 
-fn button_colored(ui: &mut egui::Ui, text: &str, color: Color32) -> egui::Response {
+fn button_colored(ui: &mut egui::Ui, text: &str, color: Color32, zoom: f32) -> egui::Response {
     let is_primary = text == "Killed Now" || text == "Select to kill";
-    let w = if is_primary { 150.0 } else { 60.0 };
-    let h = if is_primary { 32.0 } else { 28.0 };
-    let font_size = if is_primary { 14.0 } else { 11.0 };
+    let w = if is_primary { 150.0 } else { 60.0 } * zoom;
+    let h = if is_primary { 32.0 } else { 28.0 } * zoom;
+    let font_size = if is_primary { 14.0 } else { 11.0 } * zoom;
     let btn = egui::Button::new(RichText::new(text).size(font_size).color(Color32::WHITE).strong())
         .fill(color)
         .min_size(egui::vec2(w, h));
