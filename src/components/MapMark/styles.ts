@@ -12,5 +12,5 @@ export const Container = styled.div<{ $x: number; $y: number }>`
 export const Tomb = styled.img`
   width: 20px;
   height: auto;
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, -50%);
 `;
