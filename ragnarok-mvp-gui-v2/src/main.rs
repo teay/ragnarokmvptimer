@@ -58,11 +58,26 @@ async fn main() -> eframe::Result<()> {
 
     let title = build_title();
 
+    let mut viewport = egui::ViewportBuilder::default()
+        .with_inner_size([900.0, 700.0])
+        .with_min_inner_size([600.0, 400.0])
+        .with_title(&title);
+
+    let icon_path = asset_dir().join("assets").join("favicon.png");
+    if let Ok(icon_bytes) = std::fs::read(&icon_path) {
+        if let Ok(img) = image::load_from_memory(&icon_bytes) {
+            let rgba = img.to_rgba8();
+            let (w, h) = rgba.dimensions();
+            viewport = viewport.with_icon(egui::IconData {
+                rgba: rgba.to_vec(),
+                width: w,
+                height: h,
+            });
+        }
+    }
+
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_inner_size([900.0, 700.0])
-            .with_min_inner_size([600.0, 400.0])
-            .with_title(&title),
+        viewport,
         ..Default::default()
     };
 
