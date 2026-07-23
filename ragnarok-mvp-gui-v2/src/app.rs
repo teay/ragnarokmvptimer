@@ -689,12 +689,6 @@ impl eframe::App for MvpTimerApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.now_ms = chrono::Utc::now().timestamp_millis();
 
-        // ── F11 Toggle fullscreen ──
-        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F11)) {
-            let is_fullscreen = ctx.input(|i| i.viewport().fullscreen).unwrap_or(true);
-            ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(!is_fullscreen));
-        }
-
         // ── SSE real-time poll ──
         let sse_data = self.sse_poll_data.lock().ok().and_then(|mut g| g.take());
         if let Some(remote_data) = sse_data {
@@ -742,7 +736,6 @@ impl eframe::App for MvpTimerApp {
                         self.settings.card_zoom = next;
                         self.settings.save();
                     }
-                    ui.label(RichText::new("F11").size(9.0).color(Color32::DARK_GRAY));
                 });
             });
             self.show_settings = show_s;
