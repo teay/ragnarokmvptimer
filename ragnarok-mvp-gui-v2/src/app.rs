@@ -459,47 +459,18 @@ impl MvpTimerApp {
 
     fn pull_from_firebase(&mut self) {
         if let Some(ref sync) = self.firebase_sync {
-            let party = self.settings.party_room.clone();
-            let server = self.settings.server.clone();
-            let nick = self.settings.nickname.clone();
-            let db_url = sync.client.database_url.clone();
-
-            let mut all_remote: Vec<Mvp> = Vec::new();
-
-            // Read from NEW path (correct)
             match sync.pull_blocking() {
                 Ok(remote) => {
-                    all_remote.extend(remote);
-                    self.firebase_log.push(format!("Pulled {} MVPs from Firebase", all_remote.len()));
+                    let rehydrated = rehydrate_mvps(&remote, &self.original_all_mvps);
+                    self.active_mvps = rehydrated;
+                    sort_mvps_by_respawn_time(&mut self.active_mvps);
+                    self.rebuild_all_mvps();
+                    self.firebase_log.push(format!("Pulled {} MVPs from Firebase", remote.len()));
                 }
                 Err(e) => {
                     self.firebase_log.push(format!("Pull failed: {}", e));
                 }
             }
-
-            // Also read from OLD path (missing /members/{nickname}/) for migration
-            if party.as_deref().map_or(false, |r| !r.is_empty()) && !server.is_empty() && !nick.is_empty() {
-                let old_path = format!("/hunting/party/{}/{}/mvps", party.as_deref().unwrap(), server);
-                let client = reqwest::blocking::Client::new();
-                let url = format!("{}{}.json", db_url, old_path);
-                if let Ok(resp) = client.get(&url).send() {
-                    let body = resp.text().unwrap_or_default();
-                    if let Ok(old_mvps) = crate::firebase::client::parse_firebase_body(&body, reqwest::StatusCode::OK) {
-                        let old_converted: Vec<Mvp> = old_mvps.iter().map(crate::firebase::client::from_firebase).collect();
-                        self.firebase_log.push(format!("Migrating {} MVPs from old path", old_converted.len()));
-                        for m in old_converted {
-                            if !all_remote.iter().any(|r| r.id == m.id && r.death_map == m.death_map) {
-                                all_remote.push(m);
-                            }
-                        }
-                    }
-                }
-            }
-
-            let rehydrated = rehydrate_mvps(&all_remote, &self.original_all_mvps);
-            self.active_mvps = rehydrated;
-            sort_mvps_by_respawn_time(&mut self.active_mvps);
-            self.rebuild_all_mvps();
         }
     }
 

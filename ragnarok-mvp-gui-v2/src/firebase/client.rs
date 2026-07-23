@@ -159,7 +159,7 @@ impl FirebaseClient {
     }
 }
 
-pub fn parse_firebase_body(body: &str, status: reqwest::StatusCode) -> Result<Vec<FirebaseMvp>, String> {
+fn parse_firebase_body(body: &str, status: reqwest::StatusCode) -> Result<Vec<FirebaseMvp>, String> {
     if body.is_empty() || body == "null" {
         return Ok(vec![]);
     }
