@@ -696,11 +696,15 @@ impl eframe::App for MvpTimerApp {
         // ── SSE real-time poll ──
         let sse_data = self.sse_poll_data.lock().ok().and_then(|mut g| g.take());
         if let Some(remote_data) = sse_data {
-            let rehydrated = crate::core::rehydrate::rehydrate_mvps(&remote_data, &self.original_all_mvps);
-            self.active_mvps = rehydrated;
-            crate::core::sort::sort_mvps_by_respawn_time(&mut self.active_mvps);
-            self.rebuild_all_mvps();
-            self.firebase_log.push("SSE: received update".into());
+            if self.edit_mvp_target.is_none() {
+                let rehydrated = crate::core::rehydrate::rehydrate_mvps(&remote_data, &self.original_all_mvps);
+                self.active_mvps = rehydrated;
+                crate::core::sort::sort_mvps_by_respawn_time(&mut self.active_mvps);
+                self.rebuild_all_mvps();
+                self.firebase_log.push("SSE: received update".into());
+            } else {
+                self.firebase_log.push("SSE: skipped (edit modal open)".into());
+            }
         }
 
         // ── Top bar ──
