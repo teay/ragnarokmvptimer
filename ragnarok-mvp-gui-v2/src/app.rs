@@ -723,6 +723,8 @@ impl eframe::App for MvpTimerApp {
                     ui.label(RichText::new("✓FB").size(11.0).color(Color32::GREEN));
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    let now = chrono::Local::now();
+                    ui.label(RichText::new(now.format("%d/%m %H:%M").to_string()).size(14.0).color(Color32::GRAY));
                     if ui.button("⚙").clicked() { show_s = !show_s; }
                     if ui.button("👤").clicked() { show_p = !show_p; if show_p { self.profile_focus_requested = true; } }
                     let yt_on = self.youtube_webview.is_some();
