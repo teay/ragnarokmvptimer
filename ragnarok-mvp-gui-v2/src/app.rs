@@ -720,11 +720,10 @@ impl eframe::App for MvpTimerApp {
                     if ui.button("⚙").clicked() { show_s = !show_s; }
                     if ui.button("👤").clicked() { show_p = !show_p; if show_p { self.profile_focus_requested = true; } }
                     let zoom = self.settings.card_zoom;
-                    let zoom_label = match zoom as i32 {
-                        1 => "1.0x",
-                        2 => "2.0x",
-                        _ => if (zoom - 1.2).abs() < 0.01 { "1.2x" } else { "1.5x" }
-                    };
+                    let zoom_label = if zoom < 1.1 { "1.0x" }
+                        else if (zoom - 1.2).abs() < 0.01 { "1.2x" }
+                        else if (zoom - 1.5).abs() < 0.01 { "1.5x" }
+                        else { "2.0x" };
                     if ui.button(zoom_label).clicked() {
                         let next = if zoom < 1.1 { 1.2 }
                             else if zoom < 1.35 { 1.5 }
