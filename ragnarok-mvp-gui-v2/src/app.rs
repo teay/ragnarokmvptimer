@@ -400,7 +400,6 @@ impl MvpTimerApp {
     fn move_to_wait(&mut self, index: usize) {
         if index < self.active_mvps.len() {
             self.active_mvps[index].death_time = None;
-            self.active_mvps[index].death_map = None;
             self.active_mvps[index].death_position = None;
             self.active_mvps[index].is_pinned = true;
             self.active_mvps[index].updated_at = Some(chrono::Utc::now().timestamp_millis());

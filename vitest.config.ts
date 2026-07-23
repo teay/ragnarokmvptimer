@@ -10,6 +10,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  define: {
+    __LITE_MODE__: false,
+  },
   test: {
     globals: true,
     environment: 'jsdom',

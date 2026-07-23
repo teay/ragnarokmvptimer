@@ -18,6 +18,7 @@ interface IMvp {
   deathMap?: string;
   deathPosition?: IMapMark;
   isPinned?: boolean;
+  updatedAt?: number;
 }
 
 describe('utils/index', () => {

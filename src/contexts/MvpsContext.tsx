@@ -256,6 +256,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         deathPosition: m.deathPosition || null,
         isPinned: m.isPinned || false,
         updatedBy: nickname || 'Anon',
+        updatedAt: m.updatedAt || Date.now(),
       }));
 
       const isSoloMode = !partyRoom && !!nickname;
@@ -294,6 +295,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
           ...mvp,
           deathTime,
           isPinned: mvp.isPinned || false,
+          updatedAt: Date.now(),
         };
         const exists = current.some(
           (m) => m.id === mvp.id && m.deathMap === mvp.deathMap
@@ -311,7 +313,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
   const updateMvp = useCallback(
     (mvp: IMvp, deathTime = mvp.deathTime) => {
       modifyMvps((current) => {
-        const updatedMvp = { ...mvp, deathTime };
+        const updatedMvp = { ...mvp, deathTime, updatedAt: Date.now() };
         const exists = current.some(
           (m) => m.id === mvp.id && m.deathMap === mvp.deathMap
         );
@@ -339,6 +341,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
               ...m,
               deathMap: newDeathMap,
               deathPosition: newDeathPosition,
+              updatedAt: Date.now(),
             };
           }
           return m;
@@ -369,7 +372,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
 
   const pinMvp = useCallback(
     (mvp: IMvp) => {
-      const pinnedMvp = { ...mvp, isPinned: true };
+      const pinnedMvp = { ...mvp, isPinned: true, updatedAt: Date.now() };
       modifyMvps((current) => {
         const exists = current.some(
           (m) => m.id === mvp.id && m.deathMap === mvp.deathMap
@@ -377,7 +380,7 @@ export function MvpProvider({ children }: MvpProviderProps) {
         return exists
           ? current.map((m) =>
               m.id === mvp.id && m.deathMap === mvp.deathMap
-                ? { ...m, isPinned: true }
+                ? { ...m, isPinned: true, updatedAt: Date.now() }
                 : m
             )
           : [...current, pinnedMvp];
@@ -398,7 +401,13 @@ export function MvpProvider({ children }: MvpProviderProps) {
         modifyMvps((current) => {
           return current.map((m) =>
             m.id === mvp.id && m.deathMap === mvp.deathMap
-              ? { ...m, deathTime: undefined, isPinned: true }
+              ? {
+                  ...m,
+                  deathTime: undefined,
+                  deathPosition: undefined,
+                  isPinned: true,
+                  updatedAt: Date.now(),
+                }
               : m
           );
         });

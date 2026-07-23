@@ -5,9 +5,6 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { MvpProvider, useMvpsContext } from '@/contexts/MvpsContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { getServerData } from '@/utils';
-import { database, ref, set, onValue, DB_ROOT_PATH } from '@/services/firebase';
-
-// --- 1. Mocking External Dependencies ---
 
 vi.mock('@/contexts/SettingsContext');
 
@@ -18,16 +15,24 @@ vi.mock('@/utils', () => ({
   formatTime: vi.fn((ms) => `${ms}ms`),
 }));
 
-vi.mock('@/services/firebase', () => ({
-  database: {}, 
-  ref: vi.fn((db, path) => path),
-  set: vi.fn().mockResolvedValue(undefined),
-  onValue: vi.fn((reference, callback) => {
-    // ส่งคืนฟังก์ชัน unsubscribe
+vi.mock('@/services/firebaseLazy', () => {
+  const mockSet = vi.fn().mockResolvedValue(undefined);
+  const mockOnValue = vi.fn((reference, callback) => {
     return vi.fn();
-  }),
-  DB_ROOT_PATH: 'hunting',
-}));
+  });
+  const mockRef = vi.fn((db, path) => path);
+
+  return {
+    getFirebase: vi.fn().mockResolvedValue({
+      database: {},
+      ref: mockRef,
+      set: mockSet,
+      onValue: mockOnValue,
+      get: vi.fn().mockResolvedValue(undefined),
+    }),
+    DB_ROOT_PATH: 'hunting',
+  };
+});
 
 // --- 2. Mock Data Interfaces ---
 interface IMapMark { x: number; y: number; }
@@ -41,6 +46,7 @@ interface IMvp {
   deathMap?: string;
   deathPosition?: IMapMark;
   isPinned?: boolean;
+  updatedAt?: number;
 }
 
 const mockSettingsContext = {
@@ -142,6 +148,8 @@ describe('MvpsContext', () => {
       hook.result.current.killMvp(initialMvp, new Date('2023-10-27T12:00:00Z'));
     });
 
+    const { getFirebase } = await import('@/services/firebaseLazy');
+    const { set } = await getFirebase();
     expect(set).toHaveBeenCalled();
   });
 });
