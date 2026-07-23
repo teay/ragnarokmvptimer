@@ -47,6 +47,8 @@ pub struct MvpTimerApp {
     nickname_input: String,
     party_input: String,
     edit_mvp_target: Option<(usize, bool)>,
+    edit_mx: f64,
+    edit_my: f64,
     edit_year_str: String,
     edit_month_str: String,
     edit_day_str: String,
@@ -90,6 +92,8 @@ impl Default for MvpTimerApp {
             nickname_input: String::new(),
             party_input: String::new(),
             edit_mvp_target: None,
+            edit_mx: -1.0,
+            edit_my: -1.0,
             edit_year_str: String::new(),
             edit_month_str: String::new(),
             edit_day_str: String::new(),
@@ -685,6 +689,12 @@ impl eframe::App for MvpTimerApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.now_ms = chrono::Utc::now().timestamp_millis();
 
+        // ── F11 Toggle fullscreen ──
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F11)) {
+            let is_fullscreen = ctx.input(|i| i.viewport().fullscreen).unwrap_or(true);
+            ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(!is_fullscreen));
+        }
+
         // ── SSE real-time poll ──
         let sse_data = self.sse_poll_data.lock().ok().and_then(|mut g| g.take());
         if let Some(remote_data) = sse_data {
@@ -732,6 +742,7 @@ impl eframe::App for MvpTimerApp {
                         self.settings.card_zoom = next;
                         self.settings.save();
                     }
+                    ui.label(RichText::new("F11").size(9.0).color(Color32::DARK_GRAY));
                 });
             });
             self.show_settings = show_s;
@@ -1055,30 +1066,32 @@ impl eframe::App for MvpTimerApp {
                 let mvp = &self.active_mvps[idx];
                 let mvp_name = mvp.name.clone();
                 let map_name = mvp.death_map.clone().or_else(|| mvp.spawn.first().map(|s| s.mapname.clone())).unwrap_or_default();
-                let has_marker = mvp.death_position.as_ref().map(|p| p.x >= 0.0 && p.y >= 0.0).unwrap_or(false);
-                let (mut mx, mut my) = if has_marker {
-                    let p = mvp.death_position.as_ref().unwrap();
-                    (p.x, p.y)
-                } else {
-                    (-1.0, -1.0)
-                };
 
                 let death_time = if is_kill { self.now_ms } else { mvp.death_time.unwrap_or(self.now_ms) };
                 let mut window_open = true;
                 let mut do_save = false;
                 let mut do_esc = false;
-                let mut focus_shown = false;
 
                 let dt = chrono::DateTime::from_timestamp_millis(death_time)
                     .map(|d| d.with_timezone(&chrono::Local))
                     .unwrap_or_else(|| chrono::Local::now());
 
+                let first_open = !self.edit_modal_inited;
                 if !self.edit_modal_inited {
                     self.edit_year_str = dt.year().to_string();
                     self.edit_month_str = format!("{:02}", dt.month());
                     self.edit_day_str = format!("{:02}", dt.day());
                     self.edit_hour_str = format!("{:02}", dt.hour());
                     self.edit_minute_str = format!("{:02}", dt.minute());
+                    let has_marker = mvp.death_position.as_ref().map(|p| p.x >= 0.0 && p.y >= 0.0).unwrap_or(false);
+                    if has_marker {
+                        let p = mvp.death_position.as_ref().unwrap();
+                        self.edit_mx = p.x;
+                        self.edit_my = p.y;
+                    } else {
+                        self.edit_mx = -1.0;
+                        self.edit_my = -1.0;
+                    }
                     self.edit_modal_inited = true;
                 }
 
@@ -1091,30 +1104,127 @@ impl eframe::App for MvpTimerApp {
                 let title = if is_kill { format!("Kill — {}", mvp_name) } else { format!("Edit — {}", mvp_name) };
                 egui::Window::new(title)
                     .id(egui::Id::new("kill_edit_window"))
+                    .anchor(egui::Align2::CENTER_CENTER, (0.0, 0.0))
                     .open(&mut window_open)
                     .resizable(false)
                     .show(ctx, |ui| {
                         let enter = ui.ctx().input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
                         let esc = ui.ctx().input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
 
+                        // Consume arrow keys before TextEdits so they don't steal them
+                        let arrow_left = ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::ArrowLeft));
+                        let arrow_right = ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::ArrowRight));
+                        let arrow_up = ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::ArrowUp));
+                        let arrow_down = ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::ArrowDown));
+
                         ui.label(RichText::new("When was mvp killed?").size(14.0).strong());
                         ui.add_space(4.0);
 
+                        // ── Render text fields ──
                         ui.horizontal(|ui| {
                             ui.label("Date:");
-                            let y_resp = ui.add(egui::TextEdit::singleline(&mut self.edit_year_str).desired_width(40.0).id_source("edit_year").clip_text(false));
-                            if !focus_shown { y_resp.request_focus(); focus_shown = true; }
+                            let y_resp = ui.add(egui::TextEdit::singleline(&mut self.edit_year_str).desired_width(40.0).id(egui::Id::new("edit_year")).clip_text(false));
+                            if first_open { y_resp.request_focus(); }
                             ui.label("/");
-                            ui.add(egui::TextEdit::singleline(&mut self.edit_month_str).desired_width(30.0).id_source("edit_month").clip_text(false));
+                            ui.add(egui::TextEdit::singleline(&mut self.edit_month_str).desired_width(30.0).id(egui::Id::new("edit_month")).clip_text(false));
                             ui.label("/");
-                            ui.add(egui::TextEdit::singleline(&mut self.edit_day_str).desired_width(30.0).id_source("edit_day").clip_text(false));
+                            ui.add(egui::TextEdit::singleline(&mut self.edit_day_str).desired_width(30.0).id(egui::Id::new("edit_day")).clip_text(false));
                         });
                         ui.horizontal(|ui| {
                             ui.label("Time:");
-                            ui.add(egui::TextEdit::singleline(&mut self.edit_hour_str).desired_width(30.0).id_source("edit_hour").clip_text(false));
+                            ui.add(egui::TextEdit::singleline(&mut self.edit_hour_str).desired_width(30.0).id(egui::Id::new("edit_hour")).clip_text(false));
                             ui.label(":");
-                            ui.add(egui::TextEdit::singleline(&mut self.edit_minute_str).desired_width(30.0).id_source("edit_minute").clip_text(false));
+                            ui.add(egui::TextEdit::singleline(&mut self.edit_minute_str).desired_width(30.0).id(egui::Id::new("edit_minute")).clip_text(false));
                         });
+
+                        // ── Auto-select all on first open ──
+                        if first_open {
+                            if let Some(mut state) = egui::TextEdit::load_state(ctx, egui::Id::new("edit_year")) {
+                                let len = self.edit_year_str.len();
+                                state.cursor.set_char_range(Some(egui::text::CCursorRange {
+                                    primary: egui::text::CCursor { index: 0, prefer_next_row: true },
+                                    secondary: egui::text::CCursor { index: len, prefer_next_row: true },
+                                }));
+                                egui::TextEdit::store_state(ctx, egui::Id::new("edit_year"), state);
+                            }
+                        }
+
+                        // ── Arrow key navigation ──
+                        const FIELD_IDS: [&str; 5] = ["edit_year", "edit_month", "edit_day", "edit_hour", "edit_minute"];
+                        let focused_idx = FIELD_IDS.iter().position(|id| ctx.memory(|mem| mem.has_focus(egui::Id::new(id))));
+
+                        macro_rules! select_all_and_focus { ($idx:expr) => {{
+                            let next = egui::Id::new(FIELD_IDS[$idx]);
+                            ctx.memory_mut(|mem| mem.request_focus(next));
+                            let len = match $idx {
+                                0 => self.edit_year_str.len(),
+                                1 => self.edit_month_str.len(),
+                                2 => self.edit_day_str.len(),
+                                3 => self.edit_hour_str.len(),
+                                4 => self.edit_minute_str.len(),
+                                _ => 0,
+                            };
+                            if let Some(mut state) = egui::TextEdit::load_state(ctx, next) {
+                                state.cursor.set_char_range(Some(egui::text::CCursorRange {
+                                    primary: egui::text::CCursor { index: 0, prefer_next_row: true },
+                                    secondary: egui::text::CCursor { index: len, prefer_next_row: true },
+                                }));
+                                egui::TextEdit::store_state(ctx, next, state);
+                            }
+                        }};}
+
+                        if let Some(fi) = focused_idx {
+                            let fid = egui::Id::new(FIELD_IDS[fi]);
+                            if arrow_right {
+                                select_all_and_focus!((fi + 1) % 5);
+                            } else if arrow_left {
+                                select_all_and_focus!((fi + 4) % 5);
+                            } else if arrow_up {
+                                if fid == egui::Id::new("edit_year") {
+                                    if let Ok(y) = self.edit_year_str.parse::<i32>() {
+                                        self.edit_year_str = (y + 1).to_string();
+                                    }
+                                } else if fid == egui::Id::new("edit_month") {
+                                    if let Ok(m) = self.edit_month_str.parse::<u32>() {
+                                        self.edit_month_str = format!("{:02}", if m >= 12 { 1 } else { m + 1 });
+                                    }
+                                } else if fid == egui::Id::new("edit_day") {
+                                    if let Ok(d) = self.edit_day_str.parse::<u32>() {
+                                        self.edit_day_str = format!("{:02}", if d >= 31 { 1 } else { d + 1 });
+                                    }
+                                } else if fid == egui::Id::new("edit_hour") {
+                                    if let Ok(h) = self.edit_hour_str.parse::<u32>() {
+                                        self.edit_hour_str = format!("{:02}", if h >= 23 { 0 } else { h + 1 });
+                                    }
+                                } else if fid == egui::Id::new("edit_minute") {
+                                    if let Ok(m) = self.edit_minute_str.parse::<u32>() {
+                                        self.edit_minute_str = format!("{:02}", if m >= 59 { 0 } else { m + 1 });
+                                    }
+                                }
+                            } else if arrow_down {
+                                if fid == egui::Id::new("edit_year") {
+                                    if let Ok(y) = self.edit_year_str.parse::<i32>() {
+                                        self.edit_year_str = (y - 1).to_string();
+                                    }
+                                } else if fid == egui::Id::new("edit_month") {
+                                    if let Ok(m) = self.edit_month_str.parse::<u32>() {
+                                        self.edit_month_str = format!("{:02}", if m <= 1 { 12 } else { m - 1 });
+                                    }
+                                } else if fid == egui::Id::new("edit_day") {
+                                    if let Ok(d) = self.edit_day_str.parse::<u32>() {
+                                        self.edit_day_str = format!("{:02}", if d <= 1 { 31 } else { d - 1 });
+                                    }
+                                } else if fid == egui::Id::new("edit_hour") {
+                                    if let Ok(h) = self.edit_hour_str.parse::<u32>() {
+                                        self.edit_hour_str = format!("{:02}", if h <= 0 { 23 } else { h - 1 });
+                                    }
+                                } else if fid == egui::Id::new("edit_minute") {
+                                    if let Ok(m) = self.edit_minute_str.parse::<u32>() {
+                                        self.edit_minute_str = format!("{:02}", if m <= 0 { 59 } else { m - 1 });
+                                    }
+                                }
+                            }
+                        }
 
                         if let Ok(y) = self.edit_year_str.parse::<i32>() { year = y; }
                         if let Ok(m) = self.edit_month_str.parse::<u32>() { month = m.clamp(1, 12); }
@@ -1136,12 +1246,12 @@ impl eframe::App for MvpTimerApp {
                                 let resp = ui.add(egui::Image::from_texture(&map_tx).fit_to_exact_size(img_size).sense(egui::Sense::click()));
                                 if let Some(pos) = resp.interact_pointer_pos() {
                                     let rect = resp.rect;
-                                    mx = ((pos.x - rect.min.x) / rect.width() * 256.0) as f64;
-                                    my = ((pos.y - rect.min.y) / rect.height() * 256.0) as f64;
+                                    self.edit_mx = ((pos.x - rect.min.x) / rect.width() * 256.0) as f64;
+                                    self.edit_my = ((pos.y - rect.min.y) / rect.height() * 256.0) as f64;
                                 }
-                                if mx >= 0.0 && my >= 0.0 {
-                                    let px = resp.rect.min.x + (mx as f32 / 256.0) * resp.rect.width();
-                                    let py = resp.rect.min.y + (my as f32 / 256.0) * resp.rect.height();
+                                if self.edit_mx >= 0.0 && self.edit_my >= 0.0 {
+                                    let px = resp.rect.min.x + (self.edit_mx as f32 / 256.0) * resp.rect.width();
+                                    let py = resp.rect.min.y + (self.edit_my as f32 / 256.0) * resp.rect.height();
                                     let painter = ui.painter_at(resp.rect);
                                     painter.circle_filled(egui::pos2(px, py), 8.0, Color32::RED);
                                     painter.circle_stroke(egui::pos2(px, py), 16.0, egui::Stroke::new(2.0_f32, Color32::from_rgb(255, 255, 0)));
@@ -1153,7 +1263,7 @@ impl eframe::App for MvpTimerApp {
                                         egui::pos2(px, py - 12.0),
                                         egui::pos2(px, py + 12.0),
                                     ], egui::Stroke::new(2.0_f32, Color32::RED));
-                                    ui.label(RichText::new(format!("📍 ({}, {})", mx as i32, my as i32)).size(12.0).color(Color32::from_rgb(255, 200, 100)));
+                                    ui.label(RichText::new(format!("📍 ({}, {})", self.edit_mx as i32, self.edit_my as i32)).size(12.0).color(Color32::from_rgb(255, 200, 100)));
                                 }
                             }
                         }
@@ -1167,7 +1277,7 @@ impl eframe::App for MvpTimerApp {
                                 do_esc = true;
                             }
                         });
-                        ui.label(RichText::new("ENTER / ESC / TAB").size(10.0).color(Color32::DARK_GRAY));
+                        ui.label(RichText::new("ENTER / ESC / TAB / ←→↑↓").size(10.0).color(Color32::DARK_GRAY));
                     });
 
                 if do_save {
@@ -1186,8 +1296,8 @@ impl eframe::App for MvpTimerApp {
                         self.clear_notification(self.active_mvps[idx].id, old_death_map.as_deref());
                         self.active_mvps[idx].death_time = Some(ms);
                         self.active_mvps[idx].is_pinned = false;
-                        if mx >= 0.0 && my >= 0.0 {
-                            self.active_mvps[idx].death_position = Some(crate::data::mvp::MapMark { x: mx, y: my });
+                        if self.edit_mx >= 0.0 && self.edit_my >= 0.0 {
+                            self.active_mvps[idx].death_position = Some(crate::data::mvp::MapMark { x: self.edit_mx, y: self.edit_my });
                         }
                         sort_mvps_by_respawn_time(&mut self.active_mvps);
                         self.push_to_firebase();
