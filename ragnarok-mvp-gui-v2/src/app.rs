@@ -532,7 +532,7 @@ impl MvpTimerApp {
                         if in_active {
                             if let Some(dt) = mvp.death_time {
                                 let formatted = chrono::DateTime::from_timestamp_millis(dt)
-                                    .map(|d| d.format("%d/%m %H:%M").to_string())
+                                    .map(|d| d.with_timezone(&chrono::Local).format("%d/%m %H:%M").to_string())
                                     .unwrap_or_default();
                                 ui.label(RichText::new(formatted).size(sz(9.0)).color(Color32::GRAY));
                             }
