@@ -7,7 +7,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useTimer } from '@/contexts/TimerContext'; // <-- เปลี่ยนจาก useTimerContext เป็น useTimer
 
-import mvpImg from '@/assets/mvp.png';
+import faviconPng from '@/assets/favicon.png';
 
 import {
   Container,
@@ -67,7 +67,7 @@ export function Header() {
   return (
     <Container>
       <LogoContainer>
-        <Logo src={mvpImg} alt='mvp' width={55} height={55} />
+        <Logo src={faviconPng} alt='logo' width={55} height={55} />
         <Title>Ragnarok MVP Timer</Title>
         <DataBadge location={getBadgeStatus()}>{getBadgeText()}</DataBadge>
         {nickname && !partyRoom && (
