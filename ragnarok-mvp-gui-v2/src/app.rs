@@ -336,17 +336,14 @@ impl MvpTimerApp {
             let path = sync.path.clone();
             let url_base = sync.client.database_url.clone();
             tokio::spawn(async move {
-                let mut updates: std::collections::HashMap<String, crate::firebase::client::FirebaseMvp> = std::collections::HashMap::new();
-                for mvp in &mvps {
-                    if mvp.death_time.is_some() || mvp.is_pinned {
-                        let key = format!("{}-{}", mvp.id, mvp.death_map.as_deref().unwrap_or("unknown"));
-                        updates.insert(key, crate::firebase::client::to_firebase(mvp, &nickname));
-                    }
-                }
+                let data: Vec<crate::firebase::client::FirebaseMvp> = mvps
+                    .iter()
+                    .map(|m| crate::firebase::client::to_firebase(m, &nickname))
+                    .collect();
                 let url = format!("{}{}.json", url_base, path);
-                match reqwest::Client::new().patch(&url).json(&updates).send().await {
-                    Ok(resp) => log::info!("Firebase PATCH {} -> {}", url, resp.status()),
-                    Err(e) => log::warn!("Firebase PATCH failed: {}", e),
+                match reqwest::Client::new().put(&url).json(&data).send().await {
+                    Ok(resp) => log::info!("Firebase PUT {} -> {}", url, resp.status()),
+                    Err(e) => log::warn!("Firebase PUT failed: {}", e),
                 }
             });
         }
