@@ -4,6 +4,9 @@ mod app;
 mod core;
 mod data;
 mod firebase;
+mod tab;
+mod webview_manager;
+mod split_layout;
 
 use app::MvpTimerApp;
 

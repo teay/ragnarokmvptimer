@@ -17,6 +17,10 @@ use crate::data::settings::{Settings, SERVERS, DEFAULT_SERVER};
 use crate::firebase::client::FirebaseClient;
 use crate::firebase::sync::FirebaseSync;
 
+use crate::tab::{TabContent, TabManager};
+use crate::webview_manager::WebViewManager;
+use crate::split_layout::{SplitLayout, SplitMode};
+
 #[derive(Clone, Copy, PartialEq)]
 enum ActiveTab {
     Active,
@@ -67,7 +71,9 @@ pub struct MvpTimerApp {
     notified_respawns: HashSet<String>,
     sse_poll_data: Arc<Mutex<Option<Vec<Mvp>>>>,
     sse_started: bool,
-    youtube_webview: Option<wry::WebView>,
+    tab_manager: TabManager,
+    webview_manager: WebViewManager,
+    split_layout: SplitLayout,
 }
 
 impl Default for MvpTimerApp {
@@ -113,7 +119,9 @@ impl Default for MvpTimerApp {
             notified_respawns: HashSet::new(),
             sse_poll_data: Arc::new(Mutex::new(None)),
             sse_started: false,
-            youtube_webview: None,
+            tab_manager: TabManager::new(),
+            webview_manager: WebViewManager::new(),
+            split_layout: SplitLayout::new(),
         };
         app.compute_max_image_sizes(&asset_dir);
         app.load_server_data();
@@ -688,6 +696,211 @@ impl MvpTimerApp {
             );
         });
     }
+
+    fn render_app_content(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+        let active_count = self.active_mvps.iter().filter(|m| m.death_time.is_some()).count();
+        let wait_count = self.active_mvps.iter().filter(|m| m.is_pinned && m.death_time.is_none()).count();
+        let all_count = {
+            let active_keys: HashSet<String> = self.active_mvps.iter()
+                .map(|m| format!("{}-{}", m.id, m.death_map.as_deref().unwrap_or("unknown")))
+                .collect();
+            self.original_all_mvps.iter()
+                .flat_map(|mvp| mvp.spawn.iter().map(move |s| (mvp.id, s)))
+                .filter(|(id, s)| !active_keys.contains(&format!("{}-{}", id, s.mapname)))
+                .count()
+        };
+
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut self.tab, ActiveTab::Active, &format!("Active ({})", active_count));
+            ui.selectable_value(&mut self.tab, ActiveTab::Wait, &format!("Wait for kill ({})", wait_count));
+            ui.selectable_value(&mut self.tab, ActiveTab::All, &format!("All ({})", all_count));
+        });
+        ui.separator();
+
+        ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+            ui.horizontal(|ui| {
+                ui.label("Search:");
+                ui.add(egui::TextEdit::singleline(&mut self.search_query).desired_width(250.0));
+            });
+        });
+
+        let display_mvps: Vec<(usize, Mvp)> = match self.tab {
+            ActiveTab::Active => {
+                let mut list: Vec<(usize, Mvp)> = self.active_mvps.iter()
+                    .enumerate()
+                    .filter(|(_, m)| m.death_time.is_some())
+                    .map(|(i, m)| (i, m.clone()))
+                    .collect();
+                if !self.search_query.is_empty() {
+                    let q = self.search_query.to_lowercase();
+                    list.retain(|(_, m)| m.name.to_lowercase().contains(&q));
+                }
+                list.sort_by(|a, b| {
+                    let eta_a = a.1.death_time.unwrap_or(0) + a.1.spawn.first().map(|s| s.respawn_time as i64).unwrap_or(0);
+                    let eta_b = b.1.death_time.unwrap_or(0) + b.1.spawn.first().map(|s| s.respawn_time as i64).unwrap_or(0);
+                    eta_a.cmp(&eta_b)
+                });
+                list
+            }
+            ActiveTab::Wait => {
+                let mut list: Vec<(usize, Mvp)> = self.active_mvps.iter()
+                    .enumerate()
+                    .filter(|(_, m)| m.is_pinned && m.death_time.is_none())
+                    .map(|(i, m)| (i, m.clone()))
+                    .collect();
+                if !self.search_query.is_empty() {
+                    let q = self.search_query.to_lowercase();
+                    list.retain(|(_, m)| m.name.to_lowercase().contains(&q));
+                }
+                list
+            }
+            ActiveTab::All => {
+                let active_keys: HashSet<String> = self.active_mvps.iter()
+                    .map(|m| format!("{}-{}", m.id, m.death_map.as_deref().unwrap_or("unknown")))
+                    .collect();
+                let mut list: Vec<(usize, Mvp)> = Vec::new();
+                for (idx, mvp) in self.original_all_mvps.iter().enumerate() {
+                    for spawn in &mvp.spawn {
+                        let key = format!("{}-{}", mvp.id, spawn.mapname);
+                        if active_keys.contains(&key) {
+                            continue;
+                        }
+                        let mut clone = mvp.clone();
+                        clone.spawn = vec![spawn.clone()];
+                        clone.death_map = Some(spawn.mapname.clone());
+                        list.push((idx, clone));
+                    }
+                }
+                if !self.search_query.is_empty() {
+                    let q = self.search_query.to_lowercase();
+                    list.retain(|(_, m)| m.name.to_lowercase().contains(&q));
+                }
+                list.sort_by(|a, b| a.1.name.cmp(&b.1.name));
+                list
+            }
+        };
+
+        // ── PageUp / PageDown scrolling ──
+        let sa_id = ui.make_persistent_id(egui::Id::new("mvp_grid"));
+        let vh = ui.available_height();
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::PageUp)) {
+            if let Some(mut state) = egui::containers::scroll_area::State::load(ctx, sa_id) {
+                state.offset.y = (state.offset.y - vh * 0.85).max(0.0);
+                state.store(ctx, sa_id);
+            }
+        }
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::PageDown)) {
+            if let Some(mut state) = egui::containers::scroll_area::State::load(ctx, sa_id) {
+                state.offset.y = state.offset.y + vh * 0.85;
+                state.store(ctx, sa_id);
+            }
+        }
+
+        let zoom = self.settings.card_zoom;
+        egui::ScrollArea::vertical().id_salt("mvp_grid").show(ui, |ui| {
+            if display_mvps.is_empty() {
+                ui.label("No MVPs to display");
+                return;
+            }
+
+            let spacing = 8.0_f32 * zoom;
+            let card_h = 480.0_f32 * zoom;
+            let card_w = 222.0_f32 * zoom;
+            let avail_w = ui.available_width();
+            let n_cols = ((avail_w + spacing) / (card_w + spacing)).floor().max(1.0) as usize;
+            let n_cols = n_cols.min(10);
+            let grid_w = n_cols as f32 * card_w + (n_cols - 1) as f32 * spacing;
+            ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                for chunk in display_mvps.chunks(n_cols) {
+                    let _ = ui.allocate_ui_with_layout(
+                        egui::vec2(grid_w, card_h),
+                        egui::Layout::left_to_right(egui::Align::TOP),
+                        |ui| {
+                            for (orig_idx, mvp) in chunk {
+                                let _ = ui.allocate_ui_with_layout(
+                                    egui::vec2(card_w, card_h),
+                                    egui::Layout::top_down(egui::Align::LEFT),
+                                    |ui| {
+                                        self.render_card(ui, ctx, *orig_idx, mvp, zoom);
+                                    },
+                                );
+                            }
+                        },
+                    );
+                    ui.add_space(4.0 * zoom);
+                }
+            });
+        });
+    }
+
+    fn render_browser_bar(&mut self, ui: &mut egui::Ui, tab_index: usize) -> f32 {
+        let Some(tab) = self.tab_manager.tabs.get_mut(tab_index) else { return 0.0 };
+
+        let mut do_navigate = false;
+        let mut do_back = false;
+        let mut do_forward = false;
+        let mut do_reload = false;
+
+        let enter_pressed = ui.ctx().input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
+
+        ui.horizontal(|ui| {
+            if ui.button("◀").clicked() { do_back = true; }
+            if ui.button("▶").clicked() { do_forward = true; }
+            if ui.button("⟳").clicked() { do_reload = true; }
+
+            ui.add(egui::TextEdit::singleline(&mut tab.url)
+                .desired_width(ui.available_width() - 30.0)
+                .id_source(("url_bar", tab_index)));
+
+            if ui.button("Go").clicked() {
+                do_navigate = true;
+            }
+        });
+
+        if enter_pressed {
+            do_navigate = true;
+        }
+
+        if do_navigate {
+            if !tab.url.is_empty() {
+                let url_str = if tab.url.contains("://") {
+                    tab.url.clone()
+                } else {
+                    format!("https://{}", tab.url)
+                };
+                tab.url = url_str.clone();
+                let tab_id = tab.id;
+                self.webview_manager.load_url(tab_id, &url_str);
+            }
+        }
+        if do_back {
+            let tab_id = tab.id;
+            self.webview_manager.go_back(tab_id);
+        }
+        if do_forward {
+            let tab_id = tab.id;
+            self.webview_manager.go_forward(tab_id);
+        }
+        if do_reload {
+            let tab_id = tab.id;
+            self.webview_manager.reload(tab_id);
+        }
+
+        if !tab.url.is_empty() {
+            let domain = tab.url
+                .trim_start_matches("https://")
+                .trim_start_matches("http://")
+                .trim_start_matches("www.")
+                .split('/')
+                .next()
+                .unwrap_or("New Tab");
+            tab.label = domain.to_string();
+        }
+
+        let bar_height = ui.min_rect().height();
+        ui.separator();
+        bar_height + 4.0
+    }
 }
 
 impl eframe::App for MvpTimerApp {
@@ -722,11 +935,12 @@ impl eframe::App for MvpTimerApp {
         }
 
         // ── Top bar ──
-        egui::TopBottomPanel::top("header").show(ctx, |ui| {
+        let mut show_s = self.show_settings;
+        let mut show_p = self.show_profile;
+
+        let _toolbar_h = egui::TopBottomPanel::top("header").show(ctx, |ui| {
             let nickname = self.settings.nickname.clone();
             let party_room = self.settings.party_room.clone();
-            let mut show_s = self.show_settings;
-            let mut show_p = self.show_profile;
 
             ui.horizontal(|ui| {
                 ui.heading("Ragnarok MVP Timer");
@@ -747,22 +961,6 @@ impl eframe::App for MvpTimerApp {
                     ui.label(RichText::new(now.format("%d/%m %H:%M").to_string()).size(14.0).color(Color32::GRAY));
                     if ui.button("⚙").clicked() { show_s = !show_s; }
                     if ui.button("👤").clicked() { show_p = !show_p; if show_p { self.profile_focus_requested = true; } }
-                    let yt_on = self.youtube_webview.is_some();
-                    if ui.selectable_label(yt_on, "▶YT").clicked() {
-                        if yt_on {
-                            self.youtube_webview = None;
-                        } else {
-                            let mut data_path = self.asset_dir.clone();
-                            data_path.push("webview_data");
-                            let mut web_ctx = wry::WebContext::new(Some(data_path));
-                            if let Ok(webview) = wry::WebViewBuilder::new_with_web_context(&mut web_ctx)
-                                .with_url("https://www.youtube.com")
-                                .build_as_child(frame)
-                            {
-                                self.youtube_webview = Some(webview);
-                            }
-                        }
-                    }
                     if ui.button("📥").clicked() {
                         self.pull_from_firebase();
                     }
@@ -781,9 +979,81 @@ impl eframe::App for MvpTimerApp {
                     }
                 });
             });
-            self.show_settings = show_s;
-            self.show_profile = show_p;
-        });
+        }).response.rect.height();
+
+        // ── Tab bar ──
+        let _tab_bar_h = egui::TopBottomPanel::top("tab_bar").show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                for (i, tab) in self.tab_manager.tabs.iter().enumerate() {
+                    let is_active = self.split_layout.panel_tabs.contains(&i);
+                    let label = if tab.content == TabContent::App {
+                        format!("📋 {}", tab.label)
+                    } else {
+                        format!("🌐 {}", tab.label)
+                    };
+                    if ui.selectable_label(is_active, &label).clicked() {
+                        for pt in &mut self.split_layout.panel_tabs {
+                            *pt = i;
+                        }
+                    }
+                }
+                // Add tab button
+                if ui.button("＋").clicked() {
+                    let new_id = self.tab_manager.add_browser_tab();
+                    let new_idx = self.tab_manager.get_index_by_id(new_id).unwrap_or(0);
+                    match self.split_layout.mode {
+                        SplitMode::Single => {
+                            // Auto-switch to Dual, keep App in panel 0, new tab in panel 1
+                            self.split_layout.set_mode(SplitMode::Dual, self.tab_manager.tabs.len());
+                            if self.split_layout.panel_tabs.len() >= 2 {
+                                self.split_layout.panel_tabs[1] = new_idx;
+                            }
+                        }
+                        _ => {
+                            // Replace last panel with new tab
+                            let last = self.split_layout.panel_tabs.len().saturating_sub(1);
+                            self.split_layout.panel_tabs[last] = new_idx;
+                        }
+                    }
+                }
+                ui.separator();
+                // Split mode buttons
+                let cur_mode = self.split_layout.mode;
+                if ui.selectable_label(cur_mode == SplitMode::Single, "1").clicked() {
+                    self.split_layout.set_mode(SplitMode::Single, self.tab_manager.tabs.len());
+                }
+                if ui.selectable_label(cur_mode == SplitMode::Dual, "‖").clicked() {
+                    self.split_layout.set_mode(SplitMode::Dual, self.tab_manager.tabs.len());
+                }
+                if ui.selectable_label(cur_mode == SplitMode::Triple, "≡").clicked() {
+                    self.split_layout.set_mode(SplitMode::Triple, self.tab_manager.tabs.len());
+                }
+                ui.separator();
+                // Close tab button (only for non-app tabs that are in any panel)
+                let any_browser_panel = self.split_layout.panel_tabs.iter().any(|&pt| {
+                    pt < self.tab_manager.tabs.len() && self.tab_manager.tabs[pt].content == TabContent::Browser
+                });
+                if any_browser_panel {
+                    if ui.button("✕").clicked() {
+                        let to_remove: Vec<usize> = self.split_layout.panel_tabs.iter()
+                            .copied()
+                            .filter(|&pt| pt < self.tab_manager.tabs.len() && self.tab_manager.tabs[pt].content == TabContent::Browser)
+                            .collect();
+                        for &pt in to_remove.iter().rev() {
+                            let tab_id = self.tab_manager.tabs[pt].id;
+                            self.webview_manager.remove(tab_id);
+                            self.tab_manager.remove_tab(pt);
+                        }
+                        for pt in &mut self.split_layout.panel_tabs {
+                            *pt = (*pt).min(self.tab_manager.tabs.len().saturating_sub(1));
+                        }
+                    }
+                }
+            });
+        }).response.rect.height();
+
+        self.show_settings = show_s;
+        self.show_profile = show_p;
 
         // ── Notification check (respawned MVPs) ──
         if self.settings.notification_sound {
@@ -958,180 +1228,68 @@ impl eframe::App for MvpTimerApp {
             }
         }
 
-        // ── Central panel ──
-        let active_count = self.active_mvps.iter().filter(|m| m.death_time.is_some()).count();
-        let wait_count = self.active_mvps.iter().filter(|m| m.is_pinned && m.death_time.is_none()).count();
-        let all_count = {
-            let active_keys: HashSet<String> = self.active_mvps.iter()
-                .map(|m| format!("{}-{}", m.id, m.death_map.as_deref().unwrap_or("unknown")))
-                .collect();
-            self.original_all_mvps.iter()
-                .flat_map(|mvp| mvp.spawn.iter().map(move |s| (mvp.id, s)))
-                .filter(|(id, s)| !active_keys.contains(&format!("{}-{}", id, s.mapname)))
-                .count()
-        };
-
-        // ── YT resizable panel + webview bounds ──
-        let mut yt_panel_w = 0.0f32;
-        if self.youtube_webview.is_some() {
-            let inner_w = ctx.input(|i| i.viewport().inner_rect).map_or(400.0, |r| r.width());
-            let default_right = (inner_w * 0.50).max(200.0);
-            let resp = egui::SidePanel::right("yt_webview_panel")
-                .resizable(true)
-                .default_width(default_right)
-                .min_width(100.0)
-                .show(ctx, |ui| {
-                    ui.allocate_space(ui.available_size());
-                });
-            yt_panel_w = resp.response.rect.width();
-            let sf = ctx.input(|i| i.viewport().native_pixels_per_point.unwrap_or(1.0));
-            if yt_panel_w > 50.0 {
-                if let Some(inner) = ctx.input(|i| i.viewport().inner_rect) {
-                    let web_x = (inner.width() - yt_panel_w) as f64 * sf as f64;
-                    let web_w = yt_panel_w as f64 * sf as f64;
-                    let top_h = 40.0 * sf as f64;
-                    let web_h = (inner.height() as f64 - 40.0) * sf as f64;
-                    if web_w > 100.0 && web_h > 100.0 {
-                        let _ = self.youtube_webview.as_ref().unwrap().set_bounds(wry::Rect {
-                            position: wry::dpi::PhysicalPosition::new(web_x, top_h).into(),
-                            size: wry::dpi::PhysicalSize::new(web_w, web_h).into(),
-                        });
-                    }
-                }
-            }
-        }
+        // ── Split layout: render panels + dividers ──
+        let mut browser_rects: Vec<(u64, egui::Rect)> = Vec::new();
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.tab, ActiveTab::Active, &format!("Active ({})", active_count));
-                ui.selectable_value(&mut self.tab, ActiveTab::Wait, &format!("Wait for kill ({})", wait_count));
-                ui.selectable_value(&mut self.tab, ActiveTab::All, &format!("All ({})", all_count));
-            });
-            ui.separator();
+            let available = ui.available_rect_before_wrap();
 
-            ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-                ui.horizontal(|ui| {
-                    ui.label("Search:");
-                    ui.add(egui::TextEdit::singleline(&mut self.search_query).desired_width(250.0));
-                });
-            });
+            // Render dividers first (captures drag input)
+            self.split_layout.render_dividers(ui, available);
 
-            let display_mvps: Vec<(usize, Mvp)> = match self.tab {
-                ActiveTab::Active => {
-                    let mut list: Vec<(usize, Mvp)> = self.active_mvps.iter()
-                        .enumerate()
-                        .filter(|(_, m)| m.death_time.is_some())
-                        .map(|(i, m)| (i, m.clone()))
-                        .collect();
-                    if !self.search_query.is_empty() {
-                        let q = self.search_query.to_lowercase();
-                        list.retain(|(_, m)| m.name.to_lowercase().contains(&q));
+            // Get panel rects
+            let panel_rects = self.split_layout.get_panel_rects(available);
+
+            for (_panel_idx, (tab_idx, panel_rect)) in panel_rects.iter().enumerate() {
+                let panel_rect = *panel_rect;
+
+                // Ensure webview exists and keep focus on egui
+                if let Some(tab) = self.tab_manager.tabs.get(*tab_idx) {
+                    if tab.content == TabContent::Browser {
+                        self.webview_manager.ensure_created(tab.id, frame);
                     }
-                    list.sort_by(|a, b| {
-                        let eta_a = a.1.death_time.unwrap_or(0) + a.1.spawn.first().map(|s| s.respawn_time as i64).unwrap_or(0);
-                        let eta_b = b.1.death_time.unwrap_or(0) + b.1.spawn.first().map(|s| s.respawn_time as i64).unwrap_or(0);
-                        eta_a.cmp(&eta_b)
-                    });
-                    list
                 }
-                ActiveTab::Wait => {
-                    let mut list: Vec<(usize, Mvp)> = self.active_mvps.iter()
-                        .enumerate()
-                        .filter(|(_, m)| m.is_pinned && m.death_time.is_none())
-                        .map(|(i, m)| (i, m.clone()))
-                        .collect();
-                    if !self.search_query.is_empty() {
-                        let q = self.search_query.to_lowercase();
-                        list.retain(|(_, m)| m.name.to_lowercase().contains(&q));
-                    }
-                    list
-                }
-                ActiveTab::All => {
-                    let active_keys: HashSet<String> = self.active_mvps.iter()
-                        .map(|m| format!("{}-{}", m.id, m.death_map.as_deref().unwrap_or("unknown")))
-                        .collect();
-                    let mut list: Vec<(usize, Mvp)> = Vec::new();
-                    for (idx, mvp) in self.original_all_mvps.iter().enumerate() {
-                        for spawn in &mvp.spawn {
-                            let key = format!("{}-{}", mvp.id, spawn.mapname);
-                            if active_keys.contains(&key) {
-                                continue;
-                            }
-                            let mut clone = mvp.clone();
-                            clone.spawn = vec![spawn.clone()];
-                            clone.death_map = Some(spawn.mapname.clone());
-                            list.push((idx, clone));
+
+                // Copy tab data before closure to avoid borrow conflicts
+                let (tab_content, tab_id) = self.tab_manager.tabs.get(*tab_idx)
+                    .map(|t| (t.content.clone(), t.id))
+                    .unwrap_or((TabContent::App, 0));
+
+                let tab_idx_copy = *tab_idx;
+
+                ui.allocate_new_ui(
+                    egui::UiBuilder::new()
+                        .max_rect(panel_rect)
+                        .layout(egui::Layout::top_down(egui::Align::LEFT))
+                        .id_salt(("panel", _panel_idx, panel_rect.min.x as u32)),
+                    |child_ui| {
+                    child_ui.set_clip_rect(panel_rect);
+                    match tab_content {
+                        TabContent::App => {
+                            self.render_app_content(child_ui, ctx);
+                        }
+                        TabContent::Browser => {
+                            let url_bar_h = self.render_browser_bar(child_ui, tab_idx_copy);
+
+                            let web_rect = egui::Rect::from_min_size(
+                                egui::pos2(panel_rect.min.x, panel_rect.min.y + url_bar_h),
+                                egui::vec2(panel_rect.width(), (panel_rect.height() - url_bar_h).max(0.0)),
+                            );
+
+                            browser_rects.push((tab_id, web_rect));
                         }
                     }
-                    if !self.search_query.is_empty() {
-                        let q = self.search_query.to_lowercase();
-                        list.retain(|(_, m)| m.name.to_lowercase().contains(&q));
-                    }
-                    list.sort_by(|a, b| a.1.name.cmp(&b.1.name));
-                    list
-                }
-            };
-
-            // ── PageUp / PageDown scrolling ──
-            let sa_id = ui.make_persistent_id(egui::Id::new("mvp_grid"));
-            let vh = ui.available_height();
-            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::PageUp)) {
-                if let Some(mut state) = egui::containers::scroll_area::State::load(ctx, sa_id) {
-                    state.offset.y = (state.offset.y - vh * 0.85).max(0.0);
-                    state.store(ctx, sa_id);
-                }
-            }
-            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::PageDown)) {
-                if let Some(mut state) = egui::containers::scroll_area::State::load(ctx, sa_id) {
-                    state.offset.y = state.offset.y + vh * 0.85;
-                    state.store(ctx, sa_id);
-                }
-            }
-
-            let zoom = self.settings.card_zoom;
-            egui::ScrollArea::vertical().id_salt("mvp_grid").show(ui, |ui| {
-                if display_mvps.is_empty() {
-                    ui.label("No MVPs to display");
-                    return;
-                }
-
-                let spacing = 8.0_f32 * zoom;
-                let card_h = 480.0_f32 * zoom;
-                let card_w = 222.0_f32 * zoom;
-                let avail_w = ui.available_width();
-                let n_cols = ((avail_w + spacing) / (card_w + spacing)).floor().max(1.0) as usize;
-                let n_cols = n_cols.min(10);
-                let grid_w = n_cols as f32 * card_w + (n_cols - 1) as f32 * spacing;
-                log::warn!("avail_w={:.0} n_cols={} grid_w={:.0} card_h={:.0}", avail_w, n_cols, grid_w, card_h);
-                ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-                    for chunk in display_mvps.chunks(n_cols) {
-                        let _ = ui.allocate_ui_with_layout(
-                            egui::vec2(grid_w, card_h),
-                            egui::Layout::left_to_right(egui::Align::TOP),
-                            |ui| {
-                                for (orig_idx, mvp) in chunk {
-                                    let _ = ui.allocate_ui_with_layout(
-                                        egui::vec2(card_w, card_h),
-                                        egui::Layout::top_down(egui::Align::LEFT),
-                                        |ui| {
-                                            self.render_card(ui, ctx, *orig_idx, mvp, zoom);
-                                        },
-                                    );
-                                }
-                            },
-                        );
-                        ui.add_space(4.0 * zoom);
-                    }
                 });
-            });
+            }
         });
+
+        // Keep egui focus so the URL bar stays responsive
+        for inst in self.webview_manager.instances.values() {
+            let _ = inst.webview.focus_parent();
+        }
 
         // ── Combined Edit/Kill modal (time + map marker) ──
         if let Some((idx, is_kill)) = self.edit_mvp_target {
-            // Keep focus on egui window when modal is open
-            if let Some(wv) = &self.youtube_webview {
-                let _ = wv.focus_parent();
-            }
             if idx < self.active_mvps.len() {
                 let mvp = &self.active_mvps[idx];
                 let mvp_name = mvp.name.clone();
@@ -1174,7 +1332,7 @@ impl eframe::App for MvpTimerApp {
                 let title = if is_kill { format!("Kill — {}", mvp_name) } else { format!("Edit — {}", mvp_name) };
                 egui::Window::new(title)
                     .id(egui::Id::new("kill_edit_window"))
-                    .anchor(egui::Align2::CENTER_CENTER, (-yt_panel_w / 2.0, 0.0))
+                    .anchor(egui::Align2::CENTER_CENTER, (0.0, 0.0))
                     .open(&mut window_open)
                     .resizable(false)
                     .show(ctx, |ui| {
@@ -1384,6 +1542,16 @@ impl eframe::App for MvpTimerApp {
                 self.edit_mvp_target = None;
             }
         }
+
+        // ── Sync webview bounds ──
+        let sf = ctx.input(|i| i.viewport().native_pixels_per_point).unwrap_or(1.0) as f64;
+        self.webview_manager.sync_bounds(&browser_rects, sf);
+
+        // ── Cleanup webviews for tabs no longer in any panel ──
+        let active_tab_ids: Vec<u64> = self.split_layout.panel_tabs.iter()
+            .filter_map(|&ti| self.tab_manager.tabs.get(ti).map(|t| t.id))
+            .collect();
+        self.webview_manager.cleanup(&active_tab_ids);
 
         if self.settings.animated_sprites {
             for anim in self.animations.values_mut() {
