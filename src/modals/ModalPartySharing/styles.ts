@@ -13,7 +13,7 @@ export const Modal = styled.div`
 export const Title = styled.span`
   color: var(--modal_name);
 
-  font-size: 2.4rem;
+  font-size: 1.8rem;
   font-weight: 600;
 `;
 
@@ -22,8 +22,8 @@ export const SettingsContainer = styled.div`
   flex-direction: column;
   align-items: center;
   width: 100%;
-  gap: 1.5rem;
-  padding: 1.5rem 2rem;
+  gap: 0.8rem;
+  padding: 1rem 1.5rem;
   border-radius: 6px;
   position: relative;
   max-height: 80vh;
@@ -59,13 +59,15 @@ export const Setting = styled.div<{ disabled?: boolean }>`
 export const SettingName = styled.span`
   color: var(---modal_text);
 
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 500;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+
+  margin-bottom: 4px;
 `;
 
 export const SettingSecondary = styled(Setting)`
@@ -74,17 +76,17 @@ export const SettingSecondary = styled(Setting)`
 `;
 
 export const ActionButton = styled.button`
-  padding: 8px 16px;
+  padding: 6px 12px;
   border: 0;
   border-radius: 4px;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 600;
   color: #fff;
   background-color: var(--primary);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 
   &:hover {
     filter: brightness(1.1);
@@ -100,19 +102,19 @@ export const ActionButton = styled.button`
   }
 
   > svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 `;
 
 export const Input = styled.input`
   width: 100%;
-  padding: 10px 15px;
+  padding: 8px 12px;
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(0, 0, 0, 0.2);
   color: #fff;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   outline: none;
 
   &:focus {
@@ -124,7 +126,7 @@ export const InputWrapper = styled.div`
   display: flex;
   gap: 8px;
   width: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 `;
 
 export const LiveStatus = styled.div<{ active?: boolean }>`

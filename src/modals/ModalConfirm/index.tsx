@@ -16,7 +16,8 @@ interface Props {
   description: string;
   confirmText: string;
   onConfirm: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
+  hideCancel?: boolean;
 }
 
 export function ModalConfirm({
@@ -25,11 +26,12 @@ export function ModalConfirm({
   confirmText,
   onConfirm,
   onCancel,
+  hideCancel,
 }: Props) {
   return (
     <ModalBase>
       <Modal>
-        <ModalCloseIconButton onClick={onCancel} />
+        {onCancel && <ModalCloseIconButton onClick={onCancel} />}
 
         <Content>
           <Title>{title}</Title>
@@ -37,7 +39,9 @@ export function ModalConfirm({
           <Description>{description}</Description>
 
           <Footer>
-            <CancelButton onClick={onCancel}>ยกเลิก</CancelButton>
+            {!hideCancel && onCancel && (
+              <CancelButton onClick={onCancel}>ยกเลิก</CancelButton>
+            )}
             <ConfirmButton onClick={onConfirm}>{confirmText}</ConfirmButton>
           </Footer>
         </Content>

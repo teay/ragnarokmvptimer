@@ -55,6 +55,7 @@ export function ModalPartySharing({ onClose }: Props) {
   const [copyPartyInput, setCopyPartyInput] = useState('');
   const [confirmCopyTarget, setConfirmCopyTarget] = useState<string | null>(null);
   const [pendingImportData, setPendingImportData] = useState<any[] | null>(null);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -172,17 +173,18 @@ export function ModalPartySharing({ onClose }: Props) {
       }
 
       await set(mvpsRef, mergedArray);
-      alert(`Imported ${pendingImportData.length} record(s) successfully!`);
+      setResultMessage(`Imported ${pendingImportData.length} record(s) successfully!`);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error) {
       console.error('Import failed:', error);
-      alert('Import failed. Check console for details.');
+      setResultMessage('Import failed. Check console for details.');
     } finally {
       setIsProcessing(false);
     }
   }, [pendingImportData, currentPartyRoom, nickname, server]);
 
-  const modalRef = useClickOutside(onClose);
+  const modalClickEnabled = !confirmCopyTarget && !pendingImportData && !resultMessage;
+  const modalRef = useClickOutside(onClose, modalClickEnabled);
 
   const handleSaveNickname = () => {
     if (!nicknameInput.trim()) return;
@@ -248,6 +250,7 @@ export function ModalPartySharing({ onClose }: Props) {
       const sourceArray = Object.values(sourceData as Record<string, unknown>[]);
 
       const targetPath = `hunting/party/${targetParty}/${server}/mvps`;
+
       const targetRef = ref(database, targetPath);
       const targetSnapshot = await get(targetRef);
       const targetData = targetSnapshot.val();
@@ -270,10 +273,10 @@ export function ModalPartySharing({ onClose }: Props) {
       }
 
       await set(targetRef, mergedArray);
-      alert(`คัดลอก ${sourceArray.length} MVPs ไปยัง Party: ${targetParty} สำเร็จ!`);
+      setResultMessage(`คัดลอก ${sourceArray.length} MVPs ไปยัง Party: ${targetParty} สำเร็จ!`);
     } catch (error) {
-      console.error('Copy failed:', error);
-      alert('คัดลอกล้มเหลว');
+      console.error('[executeCopy] Copy failed:', error);
+      setResultMessage('คัดลอกล้มเหลว');
     } finally {
       setIsProcessing(false);
     }
@@ -289,16 +292,16 @@ export function ModalPartySharing({ onClose }: Props) {
           <div
             style={{
               width: '100%',
-              padding: '20px',
+              padding: '10px',
               background: currentPartyRoom
                 ? 'rgba(33, 150, 243, 0.2)'
                 : 'rgba(76, 175, 80, 0.2)',
-              borderRadius: '10px',
+              borderRadius: '8px',
               textAlign: 'center',
               color: currentPartyRoom ? '#2196F3' : '#4CAF50',
-              fontSize: '2.4rem',
+              fontSize: '1.6rem',
               fontWeight: 'bold',
-              marginBottom: '10px',
+              marginBottom: '4px',
             }}
           >
             {currentPartyRoom
@@ -324,7 +327,7 @@ export function ModalPartySharing({ onClose }: Props) {
                   alignItems: 'center',
                   gap: '4px',
                   color: '#aaa',
-                  fontSize: '2.4rem',
+                  fontSize: '1.6rem',
                 }}
               >
                 <input
@@ -359,10 +362,10 @@ export function ModalPartySharing({ onClose }: Props) {
               disabled={!partyNameInput.trim()}
               style={{
                 width: '100%',
-                marginTop: '10px',
-                padding: '12px',
-                fontSize: '2.4rem',
-                borderRadius: '8px',
+                marginTop: '6px',
+                padding: '8px',
+                fontSize: '1.6rem',
+                borderRadius: '6px',
                 border: 'none',
                 background: partyNameInput.trim() ? '#2196F3' : '#555',
                 color: '#fff',
@@ -376,10 +379,10 @@ export function ModalPartySharing({ onClose }: Props) {
                 onClick={handlePartyLeave}
                 style={{
                   width: '100%',
-                  marginTop: '10px',
-                  padding: '12px',
-                  fontSize: '2.4rem',
-                  borderRadius: '8px',
+                  marginTop: '6px',
+                  padding: '8px',
+                  fontSize: '1.6rem',
+                  borderRadius: '6px',
                   border: '1px solid #f44336',
                   background: 'transparent',
                   color: '#f44336',
@@ -392,44 +395,44 @@ export function ModalPartySharing({ onClose }: Props) {
           </div>
 
           {/* Export / Import */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={handleExport}
               style={{
                 flex: 1,
-                padding: '12px',
-                fontSize: '2.4rem',
+                padding: '8px',
+                fontSize: '1.6rem',
                 background: 'rgba(255,255,255,0.1)',
                 border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 color: '#fff',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
+                gap: '6px',
               }}
             >
-              <Download size={16} /> Export
+              <Download size={14} /> Export
             </button>
             <button
               onClick={handleImport}
               style={{
                 flex: 1,
-                padding: '12px',
-                fontSize: '2.4rem',
+                padding: '8px',
+                fontSize: '1.6rem',
                 background: 'rgba(255,255,255,0.1)',
                 border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 color: '#fff',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
+                gap: '6px',
               }}
             >
-              <Upload size={16} /> Import
+              <Upload size={14} /> Import
             </button>
             <input
               type='file'
@@ -443,7 +446,7 @@ export function ModalPartySharing({ onClose }: Props) {
           </div>
 
           {/* Copy to Party */}
-          <div style={{ width: '100%', marginBottom: '20px' }}>
+          <div style={{ width: '100%' }}>
             <SettingName>คัดลอกไปยัง Party</SettingName>
             <InputWrapper>
               <Input
@@ -460,10 +463,10 @@ export function ModalPartySharing({ onClose }: Props) {
               disabled={!copyPartyInput.trim() || isProcessing || activeMvps.length === 0}
               style={{
                 width: '100%',
-                marginTop: '10px',
-                padding: '12px',
-                fontSize: '2.4rem',
-                borderRadius: '8px',
+                marginTop: '6px',
+                padding: '8px',
+                fontSize: '1.6rem',
+                borderRadius: '6px',
                 border: 'none',
                 background: copyPartyInput.trim() && !isProcessing && activeMvps.length > 0 ? '#FF9800' : '#555',
                 color: copyPartyInput.trim() && !isProcessing && activeMvps.length > 0 ? '#fff' : '#888',
@@ -480,20 +483,20 @@ export function ModalPartySharing({ onClose }: Props) {
 
           {/* Logout */}
           {confirmLogout ? (
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ textAlign: 'center', color: '#f44336', fontSize: '2.4rem', marginBottom: '5px' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ textAlign: 'center', color: '#f44336', fontSize: '1.6rem' }}>
                 ต้องการออกจากระบบจริงหรือไม่?
               </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={handleLogout}
                   style={{
                     flex: 1,
-                    padding: '12px',
-                    fontSize: '2.4rem',
+                    padding: '8px',
+                    fontSize: '1.6rem',
                     background: 'rgba(244, 67, 54, 0.3)',
                     border: '1px solid #f44336',
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     color: '#f44336',
                     cursor: 'pointer',
                     fontWeight: 'bold',
@@ -505,11 +508,11 @@ export function ModalPartySharing({ onClose }: Props) {
                   onClick={() => setConfirmLogout(false)}
                   style={{
                     flex: 1,
-                    padding: '12px',
-                    fontSize: '2.4rem',
+                    padding: '8px',
+                    fontSize: '1.6rem',
                     background: 'rgba(255,255,255,0.1)',
                     border: '1px solid rgba(255,255,255,0.2)',
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     color: '#aaa',
                     cursor: 'pointer',
                   }}
@@ -523,20 +526,20 @@ export function ModalPartySharing({ onClose }: Props) {
               onClick={() => setConfirmLogout(true)}
               style={{
                 width: '100%',
-                padding: '12px',
-                fontSize: '2.4rem',
+                padding: '8px',
+                fontSize: '1.6rem',
                 background: 'rgba(244, 67, 54, 0.2)',
                 border: '1px solid #f44336',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 color: '#f44336',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
+                gap: '6px',
               }}
             >
-              <LogOut size={16} /> ออกจากระบบ
+              <LogOut size={14} /> ออกจากระบบ
             </button>
           )}
         </SettingsContainer>
@@ -563,6 +566,16 @@ export function ModalPartySharing({ onClose }: Props) {
             onCancel={() => {
               setConfirmCopyTarget(null);
             }}
+          />
+        )}
+
+        {resultMessage && (
+          <ModalConfirm
+            title="ผลลัพธ์"
+            description={resultMessage}
+            confirmText="ตกลง"
+            hideCancel
+            onConfirm={() => setResultMessage(null)}
           />
         )}
       </Modal>
