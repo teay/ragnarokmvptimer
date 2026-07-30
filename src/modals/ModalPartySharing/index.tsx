@@ -39,7 +39,7 @@ export function ModalPartySharing({ onClose }: Props) {
     server,
   } = useSettings();
 
-  const { originalAllMvps } = useMvpsContext();
+  const { originalAllMvps, activeMvps } = useMvpsContext();
 
   const [partyNameInput, setPartyNameInput] = useState(currentPartyRoom || '');
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
@@ -443,7 +443,7 @@ export function ModalPartySharing({ onClose }: Props) {
             </InputWrapper>
             <button
               onClick={handleCopyToParty}
-              disabled={!copyPartyInput.trim() || isProcessing}
+              disabled={!copyPartyInput.trim() || isProcessing || activeMvps.length === 0}
               style={{
                 width: '100%',
                 marginTop: '10px',
@@ -451,12 +451,16 @@ export function ModalPartySharing({ onClose }: Props) {
                 fontSize: '2.4rem',
                 borderRadius: '8px',
                 border: 'none',
-                background: copyPartyInput.trim() && !isProcessing ? '#FF9800' : '#555',
-                color: '#fff',
-                cursor: copyPartyInput.trim() && !isProcessing ? 'pointer' : 'default',
+                background: copyPartyInput.trim() && !isProcessing && activeMvps.length > 0 ? '#FF9800' : '#555',
+                color: copyPartyInput.trim() && !isProcessing && activeMvps.length > 0 ? '#fff' : '#888',
+                cursor: copyPartyInput.trim() && !isProcessing && activeMvps.length > 0 ? 'pointer' : 'default',
               }}
             >
-              {isProcessing ? 'กำลังคัดลอก...' : '📋 คัดลอกไป Party'}
+              {isProcessing
+                ? 'กำลังคัดลอก...'
+                : activeMvps.length === 0
+                  ? '⚠️ ยังไม่ได้บันทึกเวลาบอส'
+                  : '📋 คัดลอกไป Party'}
             </button>
           </div>
 
