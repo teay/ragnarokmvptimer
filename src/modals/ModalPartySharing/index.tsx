@@ -575,7 +575,10 @@ export function ModalPartySharing({ onClose }: Props) {
             description={resultMessage}
             confirmText="ตกลง"
             hideCancel
-            onConfirm={() => setResultMessage(null)}
+            onConfirm={() => {
+              setResultMessage(null);
+              onClose();
+            }}
           />
         )}
       </Modal>
