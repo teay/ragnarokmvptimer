@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { usePersistedState } from '../../hooks/usePersistedState';
 import { useMvpsContext } from '../../contexts/MvpsContext';
-import { database, ref, get } from '../../services/firebase';
+import { database, ref, get, set } from '../../services/firebase';
 import { Header } from '../Header';
 import { Main } from '../../pages/Main';
 import { Footer } from '../Footer';
@@ -118,8 +118,50 @@ export function WelcomeScreen() {
 
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
-      alert(`Import ${data.length} records (mock - not implemented)`);
+      const importData = JSON.parse(text);
+
+      if (!Array.isArray(importData) || importData.length === 0) {
+        alert('Invalid or empty data file.');
+        return;
+      }
+
+      if (!window.confirm(
+        `Import ${importData.length} MVP record(s) to ${partyRoom ? `Party: ${partyRoom}` : (nickname ? `Solo: ${nickname}` : 'current mode')}?\n\nExisting records with the same MVP + map will be overwritten.`
+      )) return;
+
+      let path: string;
+      if (partyRoom) {
+        path = `hunting/party/${partyRoom}/${server}/mvps`;
+      } else if (nickname) {
+        path = `hunting/solo/${nickname}/${server}/mvps`;
+      } else {
+        alert('No active party or nickname. Cannot import.');
+        return;
+      }
+
+      const mvpsRef = ref(database, path);
+      const snapshot = await get(mvpsRef);
+      const existingData = snapshot.val();
+      let existingArray: Record<string, unknown>[] = [];
+
+      if (existingData) {
+        existingArray = Object.values(existingData) as Record<string, unknown>[];
+      }
+
+      const mergedArray = [...existingArray];
+      for (const imported of importData) {
+        const idx = mergedArray.findIndex(
+          (m: Record<string, unknown>) => m.id === imported.id && m.deathMap === imported.deathMap
+        );
+        if (idx >= 0) {
+          mergedArray[idx] = imported;
+        } else {
+          mergedArray.push(imported);
+        }
+      }
+
+      await set(mvpsRef, mergedArray);
+      alert(`Imported ${importData.length} record(s) successfully!`);
     } catch (error) {
       console.error('Import failed:', error);
       alert('Import failed. Check console for details.');

@@ -51,6 +51,8 @@ export function ModalPartySharing({ onClose }: Props) {
     true
   );
 
+  const [copyPartyInput, setCopyPartyInput] = useState('');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -112,11 +114,58 @@ export function ModalPartySharing({ onClose }: Props) {
 
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
-      alert(`Import ${data.length} records (mock - not implemented)`);
+      const importData = JSON.parse(text);
+
+      if (!Array.isArray(importData) || importData.length === 0) {
+        alert('Invalid or empty data file.');
+        return;
+      }
+
+      if (!window.confirm(
+        `Import ${importData.length} MVP record(s) to ${currentPartyRoom ? `Party: ${currentPartyRoom}` : (nickname ? `Solo: ${nickname}` : 'current mode')}?\n\nExisting records with the same MVP + map will be overwritten.`
+      )) return;
+
+      setIsProcessing(true);
+
+      const { database, ref, get, set } = await getFirebase();
+      let path: string;
+      if (currentPartyRoom) {
+        path = `hunting/party/${currentPartyRoom}/${server}/mvps`;
+      } else if (nickname) {
+        path = `hunting/solo/${nickname}/${server}/mvps`;
+      } else {
+        alert('No active party or nickname. Cannot import.');
+        return;
+      }
+
+      const mvpsRef = ref(database, path);
+      const snapshot = await get(mvpsRef);
+      const existingData = snapshot.val();
+      let existingArray: Record<string, unknown>[] = [];
+
+      if (existingData) {
+        existingArray = Object.values(existingData) as Record<string, unknown>[];
+      }
+
+      const mergedArray = [...existingArray];
+      for (const imported of importData) {
+        const idx = mergedArray.findIndex(
+          (m: Record<string, unknown>) => m.id === imported.id && m.deathMap === imported.deathMap
+        );
+        if (idx >= 0) {
+          mergedArray[idx] = imported;
+        } else {
+          mergedArray.push(imported);
+        }
+      }
+
+      await set(mvpsRef, mergedArray);
+      alert(`Imported ${importData.length} record(s) successfully!`);
     } catch (error) {
       console.error('Import failed:', error);
       alert('Import failed. Check console for details.');
+    } finally {
+      setIsProcessing(false);
     }
     e.target.value = '';
   };
@@ -150,6 +199,71 @@ export function ModalPartySharing({ onClose }: Props) {
     localStorage.removeItem('joinNickname');
     window.location.reload();
   };
+
+  const handleCopyToParty = useCallback(async () => {
+    const targetParty = copyPartyInput.trim().toUpperCase();
+    if (!targetParty) return;
+
+    if (!window.confirm(
+      `คัดลอก MVPs จาก ${currentPartyRoom ? `Party: ${currentPartyRoom}` : `Solo: ${nickname}`} ไปยัง Party: ${targetParty}?\n\nข้อมูลเดิมของ Party ${targetParty} จะถูกบันทึกไว้ (merge ด้วย id + deathMap)`
+    )) return;
+
+    setIsProcessing(true);
+    try {
+      const { database, ref, get, set } = await getFirebase();
+
+      let sourcePath: string;
+      if (currentPartyRoom) {
+        sourcePath = `hunting/party/${currentPartyRoom}/${server}/mvps`;
+      } else if (nickname) {
+        sourcePath = `hunting/solo/${nickname}/${server}/mvps`;
+      } else {
+        alert('ไม่มีข้อมูลต้นทาง');
+        return;
+      }
+
+      const sourceRef = ref(database, sourcePath);
+      const snapshot = await get(sourceRef);
+      const sourceData = snapshot.val();
+
+      if (!sourceData) {
+        alert('ไม่มีข้อมูล MVPs ที่จะคัดลอก');
+        return;
+      }
+
+      const sourceArray = Object.values(sourceData as Record<string, unknown>[]);
+
+      const targetPath = `hunting/party/${targetParty}/${server}/mvps`;
+      const targetRef = ref(database, targetPath);
+      const targetSnapshot = await get(targetRef);
+      const targetData = targetSnapshot.val();
+
+      let targetArray: Record<string, unknown>[] = [];
+      if (targetData) {
+        targetArray = Object.values(targetData) as Record<string, unknown>[];
+      }
+
+      const mergedArray = [...targetArray];
+      for (const item of sourceArray) {
+        const idx = mergedArray.findIndex(
+          (m: Record<string, unknown>) => m.id === (item as Record<string, unknown>).id && m.deathMap === (item as Record<string, unknown>).deathMap
+        );
+        if (idx >= 0) {
+          mergedArray[idx] = item;
+        } else {
+          mergedArray.push(item);
+        }
+      }
+
+      await set(targetRef, mergedArray);
+      alert(`คัดลอก ${sourceArray.length} MVPs ไปยัง Party: ${targetParty} สำเร็จ!`);
+    } catch (error) {
+      console.error('Copy failed:', error);
+      alert('คัดลอกล้มเหลว');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [copyPartyInput, currentPartyRoom, nickname, server]);
 
   return (
     <ModalBase>
@@ -264,7 +378,7 @@ export function ModalPartySharing({ onClose }: Props) {
           </div>
 
           {/* Export / Import */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
             <button
               onClick={handleExport}
               style={{
@@ -312,6 +426,38 @@ export function ModalPartySharing({ onClose }: Props) {
               style={{ display: 'none' }}
               onChange={handleFileChange}
             />
+          </div>
+
+          {/* Copy to Party */}
+          <div style={{ width: '100%', marginBottom: '20px' }}>
+            <SettingName>คัดลอกไปยัง Party</SettingName>
+            <InputWrapper>
+              <Input
+                id='copy-party-name'
+                name='copy-party-name'
+                placeholder='ชื่อ Party ปลายทาง'
+                value={copyPartyInput}
+                onChange={(e) => setCopyPartyInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                maxLength={20}
+              />
+            </InputWrapper>
+            <button
+              onClick={handleCopyToParty}
+              disabled={!copyPartyInput.trim() || isProcessing}
+              style={{
+                width: '100%',
+                marginTop: '10px',
+                padding: '12px',
+                fontSize: '2.4rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: copyPartyInput.trim() && !isProcessing ? '#FF9800' : '#555',
+                color: '#fff',
+                cursor: copyPartyInput.trim() && !isProcessing ? 'pointer' : 'default',
+              }}
+            >
+              {isProcessing ? 'กำลังคัดลอก...' : '📋 คัดลอกไป Party'}
+            </button>
           </div>
 
           {/* Logout */}
