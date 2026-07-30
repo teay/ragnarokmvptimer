@@ -3,11 +3,10 @@ import { styled } from '@linaria/react';
 export const Modal = styled.div`
   width: 100%;
   max-width: 500px;
-
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-top: 5vh;
   z-index: 10000;
 `;
 
@@ -23,11 +22,11 @@ export const SettingsContainer = styled.div`
   flex-direction: column;
   align-items: center;
   width: 100%;
-  gap: 3rem;
-  padding: 3rem 2rem;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
   border-radius: 6px;
   position: relative;
-  max-height: 85vh;
+  max-height: 80vh;
   overflow-y: auto;
 
   &::before {
@@ -60,7 +59,7 @@ export const Setting = styled.div<{ disabled?: boolean }>`
 export const SettingName = styled.span`
   color: var(---modal_text);
 
-  font-size: 2.4rem;
+  font-size: 1.8rem;
   font-weight: 500;
 
   display: flex;
