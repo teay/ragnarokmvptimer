@@ -3,6 +3,7 @@ import { Download, Upload, LogOut } from '@styled-icons/feather';
 
 import { ModalBase } from '../ModalBase';
 import { ModalCloseIconButton } from '@/ui/ModalCloseIconButton';
+import { ModalConfirm } from '../ModalConfirm';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { getFirebase } from '@/services/firebaseLazy';
@@ -52,6 +53,8 @@ export function ModalPartySharing({ onClose }: Props) {
   );
 
   const [copyPartyInput, setCopyPartyInput] = useState('');
+  const [confirmCopyTarget, setConfirmCopyTarget] = useState<string | null>(null);
+  const [pendingImportData, setPendingImportData] = useState<any[] | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -118,15 +121,24 @@ export function ModalPartySharing({ onClose }: Props) {
 
       if (!Array.isArray(importData) || importData.length === 0) {
         alert('Invalid or empty data file.');
+        e.target.value = '';
         return;
       }
 
-      if (!window.confirm(
-        `Import ${importData.length} MVP record(s) to ${currentPartyRoom ? `Party: ${currentPartyRoom}` : (nickname ? `Solo: ${nickname}` : 'current mode')}?\n\nExisting records with the same MVP + map will be overwritten.`
-      )) return;
+      setPendingImportData(importData);
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert('Import failed. Check console for details.');
+      e.target.value = '';
+    }
+  };
 
-      setIsProcessing(true);
+  const executeImport = useCallback(async () => {
+    if (!pendingImportData) return;
+    setIsProcessing(true);
+    setPendingImportData(null);
 
+    try {
       const { database, ref, get, set } = await getFirebase();
       let path: string;
       if (currentPartyRoom) {
@@ -148,7 +160,7 @@ export function ModalPartySharing({ onClose }: Props) {
       }
 
       const mergedArray = [...existingArray];
-      for (const imported of importData) {
+      for (const imported of pendingImportData) {
         const idx = mergedArray.findIndex(
           (m: Record<string, unknown>) => m.id === imported.id && m.deathMap === imported.deathMap
         );
@@ -160,15 +172,15 @@ export function ModalPartySharing({ onClose }: Props) {
       }
 
       await set(mvpsRef, mergedArray);
-      alert(`Imported ${importData.length} record(s) successfully!`);
+      alert(`Imported ${pendingImportData.length} record(s) successfully!`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error) {
       console.error('Import failed:', error);
       alert('Import failed. Check console for details.');
     } finally {
       setIsProcessing(false);
     }
-    e.target.value = '';
-  };
+  }, [pendingImportData, currentPartyRoom, nickname, server]);
 
   const modalRef = useClickOutside(onClose);
 
@@ -200,14 +212,16 @@ export function ModalPartySharing({ onClose }: Props) {
     window.location.reload();
   };
 
-  const handleCopyToParty = useCallback(async () => {
+  const handleCopyToParty = () => {
     const targetParty = copyPartyInput.trim().toUpperCase();
     if (!targetParty) return;
+    setConfirmCopyTarget(targetParty);
+  };
 
-    if (!window.confirm(
-      `คัดลอก MVPs จาก ${currentPartyRoom ? `Party: ${currentPartyRoom}` : `Solo: ${nickname}`} ไปยัง Party: ${targetParty}?\n\nข้อมูลเดิมของ Party ${targetParty} จะถูกบันทึกไว้ (merge ด้วย id + deathMap)`
-    )) return;
-
+  const executeCopy = useCallback(async () => {
+    const targetParty = confirmCopyTarget;
+    if (!targetParty) return;
+    setConfirmCopyTarget(null);
     setIsProcessing(true);
     try {
       const { database, ref, get, set } = await getFirebase();
@@ -263,7 +277,7 @@ export function ModalPartySharing({ onClose }: Props) {
     } finally {
       setIsProcessing(false);
     }
-  }, [copyPartyInput, currentPartyRoom, nickname, server]);
+  }, [confirmCopyTarget, currentPartyRoom, nickname, server]);
 
   return (
     <ModalBase>
@@ -284,7 +298,7 @@ export function ModalPartySharing({ onClose }: Props) {
               color: currentPartyRoom ? '#2196F3' : '#4CAF50',
               fontSize: '2.4rem',
               fontWeight: 'bold',
-              marginBottom: '20px',
+              marginBottom: '10px',
             }}
           >
             {currentPartyRoom
@@ -293,7 +307,7 @@ export function ModalPartySharing({ onClose }: Props) {
           </div>
 
           {/* Nickname */}
-          <div style={{ width: '100%', marginBottom: '15px' }}>
+          <div style={{ width: '100%', marginBottom: '10px' }}>
             <SettingName>ชื่อของคุณ</SettingName>
             <InputWrapper>
               <Input
@@ -326,7 +340,7 @@ export function ModalPartySharing({ onClose }: Props) {
           </div>
 
           {/* Party Name */}
-          <div style={{ width: '100%', marginBottom: '20px' }}>
+          <div style={{ width: '100%', marginBottom: '10px' }}>
             <SettingName>ชื่อ Party</SettingName>
             <InputWrapper>
               <Input
@@ -526,6 +540,31 @@ export function ModalPartySharing({ onClose }: Props) {
             </button>
           )}
         </SettingsContainer>
+
+        {pendingImportData && (
+          <ModalConfirm
+            title="Import MVPs"
+            description={`Import ${pendingImportData.length} MVP record(s) to ${currentPartyRoom ? `Party: ${currentPartyRoom}` : (nickname ? `Solo: ${nickname}` : 'current mode')}?\n\nExisting records with the same MVP + map will be overwritten.`}
+            confirmText="ยืนยัน"
+            onConfirm={executeImport}
+            onCancel={() => {
+              setPendingImportData(null);
+              if (fileInputRef.current) fileInputRef.current.value = '';
+            }}
+          />
+        )}
+
+        {confirmCopyTarget && (
+          <ModalConfirm
+            title="คัดลอกไปยัง Party"
+            description={`คัดลอก MVPs จาก ${currentPartyRoom ? `Party: ${currentPartyRoom}` : `Solo: ${nickname}`} ไปยัง Party: ${confirmCopyTarget}?\n\nข้อมูลเดิมของ Party ${confirmCopyTarget} จะถูกบันทึกไว้ (merge ด้วย id + deathMap)`}
+            confirmText="ยืนยัน"
+            onConfirm={executeCopy}
+            onCancel={() => {
+              setConfirmCopyTarget(null);
+            }}
+          />
+        )}
       </Modal>
     </ModalBase>
   );
