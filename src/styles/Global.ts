@@ -3,7 +3,7 @@ import { css } from '@linaria/core';
 export const globals = css`
   :global() {
     /* Fonts: Load all in full mode, single font in lite mode */
-    @import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
     ${'' /* In lite mode, only Jost is loaded via build-time replacement */}
 
     *,
