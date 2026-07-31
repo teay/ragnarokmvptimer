@@ -29,7 +29,8 @@ export const SectionTitle = styled.span`
 export const MvpsContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(222px, 1fr));
-  grid-gap: 8px;
+  row-gap: 16px;
+  column-gap: 8px;
   width: 100%;
   justify-items: center;
   max-width: 160rem;

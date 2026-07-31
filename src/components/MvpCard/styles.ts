@@ -88,13 +88,13 @@ export const Bold = styled.span`
 `;
 
 export const KillTime = styled.span`
-  font-size: 0.7rem;
-  color: #888;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--mvpCard_text);
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    font-size: 1.4rem;
     color: #fff;
   }
 `;
