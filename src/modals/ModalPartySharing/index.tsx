@@ -57,7 +57,23 @@ export function ModalPartySharing({ onClose }: Props) {
   const [pendingImportData, setPendingImportData] = useState<any[] | null>(null);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
 
+  const [partyHistory, setPartyHistory] = usePersistedState<string[]>(
+    'partyHistory',
+    []
+  );
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const recordPartyName = useCallback(
+    (name: string) => {
+      const clean = name.trim().toUpperCase();
+      if (!clean) return;
+      setPartyHistory((prev) =>
+        [clean, ...prev.filter((n) => n !== clean)].slice(0, 30)
+      );
+    },
+    [setPartyHistory]
+  );
 
   useEffect(() => {
     setNicknameInput(nickname || '');
@@ -195,6 +211,7 @@ export function ModalPartySharing({ onClose }: Props) {
 
   const handlePartyJoin = () => {
     if (!partyNameInput.trim()) return;
+    recordPartyName(partyNameInput);
     changePartyRoom(partyNameInput.trim().toUpperCase());
     setPartyNameInput('');
     onClose();
@@ -217,6 +234,7 @@ export function ModalPartySharing({ onClose }: Props) {
   const handleCopyToParty = () => {
     const targetParty = copyPartyInput.trim().toUpperCase();
     if (!targetParty) return;
+    recordPartyName(targetParty);
     setConfirmCopyTarget(targetParty);
   };
 
@@ -355,6 +373,8 @@ export function ModalPartySharing({ onClose }: Props) {
                   setPartyNameInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))
                 }
                 maxLength={20}
+                list='party-name-history'
+                autoComplete='off'
               />
             </InputWrapper>
             <button
@@ -456,6 +476,8 @@ export function ModalPartySharing({ onClose }: Props) {
                 value={copyPartyInput}
                 onChange={(e) => setCopyPartyInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                 maxLength={20}
+                list='party-name-history'
+                autoComplete='off'
               />
             </InputWrapper>
             <button
@@ -480,6 +502,13 @@ export function ModalPartySharing({ onClose }: Props) {
                   : '📋 คัดลอกไป Party'}
             </button>
           </div>
+
+          {/* Party name suggestions */}
+          <datalist id='party-name-history'>
+            {partyHistory.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
 
           {/* Logout */}
           {confirmLogout ? (
