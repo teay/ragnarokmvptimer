@@ -82,3 +82,9 @@ export interface BossTimerState {
 }
 
 export const DEFAULT_SET_NAMES = ['Set 1', 'Set 2', 'Set 3'];
+
+export const DEFAULT_SPEECH_MESSAGES: string[][] = [
+  ['บอสที่ 1 เกิดแล้ว', 'บอสที่ 2 เกิดแล้ว', 'บอสที่ 3 เกิดแล้ว'],
+  ['บอสที่ 1 เกิดแล้ว', 'บอสที่ 2 เกิดแล้ว', 'บอสที่ 3 เกิดแล้ว'],
+  ['บอสที่ 1 เกิดแล้ว', 'บอสที่ 2 เกิดแล้ว', 'บอสที่ 3 เกิดแล้ว'],
+];

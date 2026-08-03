@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { styled } from '@linaria/react';
 
-import { BOSS_DURATIONS, DEFAULT_SET_NAMES } from '@/data/centralLab';
+import { BOSS_DURATIONS, DEFAULT_SET_NAMES, DEFAULT_SPEECH_MESSAGES } from '@/data/centralLab';
 import { usePersistedState } from '@/hooks';
 import { useSettings } from '@/contexts/SettingsContext';
 
@@ -93,7 +94,77 @@ const NameInput = styled.input`
   }
 `;
 
-const TimeButton = styled.button<{ state: 'idle' | 'running' | 'done' }>`
+const Toolbar = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+`;
+
+const SpeechToggle = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 2px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  transition: all 0.15s ease;
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  }
+`;
+
+const SettingsPanel = styled.div`
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  background: var(--quaternary);
+  margin-bottom: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const SetSettingsCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const StageRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const StageLabel = styled.label`
+  font-size: 1.25rem;
+  color: var(--text);
+  opacity: 0.75;
+`;
+
+const SpeechField = styled(NameInput)`
+  font-size: 1.25rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  &:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 0 6px var(--primary), 0 0 18px rgba(255, 255, 255, 0.22), 0 0 16px var(--primary), 0 2px 6px rgba(0, 0, 0, 0.25);
+  }
+`;
+
+const TimeButton = styled.button`
   width: 100%;
   padding: 0.6rem 0;
   border-radius: 10px;
@@ -106,26 +177,6 @@ const TimeButton = styled.button<{ state: 'idle' | 'running' | 'done' }>`
   background: transparent;
   color: var(--text);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-
-  ${(p) =>
-    p.state === 'running' &&
-    `
-      color: #ffb74d;
-      border-color: var(--primary);
-      background: rgba(255, 183, 77, 0.1);
-    `}
-  ${(p) =>
-    p.state === 'done' &&
-    `
-      color: #4caf50;
-      border-color: #4caf50;
-      background: rgba(76, 175, 80, 0.1);
-    `}
-  &:hover {
-    border-color: rgba(255, 255, 255, 0.65);
-    box-shadow: 0 0 6px var(--primary), 0 0 18px rgba(255, 255, 255, 0.22), 0 0 16px var(--primary), 0 2px 6px rgba(0, 0, 0, 0.25);
-    transform: translateY(-1px);
-  }
 `;
 
 function formatBossTime(s: number) {
@@ -136,16 +187,30 @@ function formatBossTime(s: number) {
 
 export function BossTimer() {
   const { isNotificationSoundEnabled } = useSettings();
+  const intl = useIntl();
   const [setNames, setSetNames] = usePersistedState<string[]>(
     'centralLabSetNames',
     DEFAULT_SET_NAMES
   );
+  const [speechEnabled, setSpeechEnabled] = usePersistedState<boolean>(
+    'centralLabSpeechEnabled',
+    true
+  );
+  const [speechMessages, setSpeechMessages] = usePersistedState<string[][]>(
+    'centralLabSpeechMessages',
+    DEFAULT_SPEECH_MESSAGES
+  );
   const [sets, setSets] = useState<TTimer[][]>([makeSet(), makeSet(), makeSet()]);
   const [now, setNow] = useState(Date.now());
   const [editingSet, setEditingSet] = useState<number | null>(null);
+  const [speechSettingsOpen, setSpeechSettingsOpen] = useState(false);
   const [hoveredTimer, setHoveredTimer] = useState<string | null>(null);
   const setNamesRef = useRef(setNames);
   setNamesRef.current = setNames;
+  const speechEnabledRef = useRef(speechEnabled);
+  speechEnabledRef.current = speechEnabled;
+  const speechMessagesRef = useRef(speechMessages);
+  speechMessagesRef.current = speechMessages;
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -163,7 +228,7 @@ export function BossTimer() {
           t.notified = true;
           changed = true;
           const ti = copy[si].indexOf(t);
-          notify(name, ti);
+          notify(name, si, ti);
         }
       });
     }
@@ -171,20 +236,31 @@ export function BossTimer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sets]);
 
-  const notify = (setName: string, ti: number) => {
+  const defaultStageSpeech = (ti: number) =>
+    intl.formatMessage(
+      { id: 'cl_speech_default' },
+      { stage: ti + 1, time: formatBossTime(BOSS_DURATIONS[ti]) }
+    );
+
+  const notify = (setName: string, si: number, ti: number) => {
     if (isNotificationSoundEnabled) {
       const audio = new Audio('notification.mp3');
       audio.volume = 0.5;
-      audio.play().catch(() => {});
+      audio.play().catch(() => undefined);
     }
     const title = `✅ ${setName}`;
     const body = `Stage ${ti + 1} (${formatBossTime(BOSS_DURATIONS[ti])})`;
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, { body });
     }
-    if ('speechSynthesis' in window) {
+    if (speechEnabledRef.current && 'speechSynthesis' in window) {
+      const custom =
+        speechMessagesRef.current &&
+        speechMessagesRef.current[si] &&
+        speechMessagesRef.current[si][ti];
+      const text = (custom && custom.trim()) || defaultStageSpeech(ti);
       window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(`Stage ${ti + 1} done, ${setName}`);
+      const u = new SpeechSynthesisUtterance(text);
       u.lang = 'th-TH';
       window.speechSynthesis.speak(u);
     }
@@ -221,8 +297,73 @@ export function BossTimer() {
     }
   };
 
+  const getMessage = (si: number, ti: number) =>
+    speechMessages && Array.isArray(speechMessages[si]) && speechMessages[si][ti]
+      ? speechMessages[si][ti]
+      : '';
+
+  const effectiveMessage = (si: number, ti: number) => {
+    const custom = getMessage(si, ti);
+    return (custom && custom.trim()) || DEFAULT_SPEECH_MESSAGES[si][ti];
+  };
+
+  const updateMessage = (si: number, ti: number, msg: string) => {
+    setSpeechMessages((prev) => {
+      const base =
+        Array.isArray(prev) && Array.isArray(prev[0]) ? prev : DEFAULT_SPEECH_MESSAGES;
+      const next = base.map((s) => [...s]);
+      next[si][ti] = msg;
+      return next;
+    });
+  };
+
+  const speechLabel = (ti: number) =>
+    intl.formatMessage(
+      { id: 'cl_speech_default' },
+      { stage: ti + 1, time: formatBossTime(BOSS_DURATIONS[ti]) }
+    );
+
   return (
     <div>
+      <Toolbar>
+        <SpeechToggle onClick={() => setSpeechEnabled(!speechEnabled)}>
+          {speechEnabled ? '🔊' : '🔇'}{' '}
+          <FormattedMessage id='cl_speech' /> (
+          <FormattedMessage id={speechEnabled ? 'cl_speech_on' : 'cl_speech_off'} />)
+        </SpeechToggle>
+        <SpeechToggle onClick={() => setSpeechSettingsOpen(!speechSettingsOpen)}>
+          ⚙️ <FormattedMessage id='cl_speech_settings' />
+        </SpeechToggle>
+      </Toolbar>
+      {speechSettingsOpen && (
+        <SettingsPanel>
+          {[0, 1, 2].map((si) => {
+            const name = (setNames && setNames[si]) || DEFAULT_SET_NAMES[si];
+            return (
+              <SetSettingsCol key={si}>
+                <StageLabel style={{ fontWeight: 700, opacity: 0.9 }}>
+                  {name}
+                </StageLabel>
+                {BOSS_DURATIONS.map((_, ti) => (
+                  <StageRow key={ti}>
+                    <StageLabel htmlFor={`cl-speech-${si}-${ti}`}>
+                      {speechLabel(ti)}
+                    </StageLabel>
+                    <SpeechField
+                      id={`cl-speech-${si}-${ti}`}
+                      name={`cl-speech-${si}-${ti}`}
+                      value={effectiveMessage(si, ti)}
+                      placeholder={intl.formatMessage({ id: 'cl_speech_placeholder' })}
+                      maxLength={80}
+                      onChange={(e) => updateMessage(si, ti, e.target.value)}
+                    />
+                  </StageRow>
+                ))}
+              </SetSettingsCol>
+            );
+          })}
+        </SettingsPanel>
+      )}
       <Grid>
         {[0, 1, 2].map((si) => {
           const set = sets[si];
@@ -233,6 +374,8 @@ export function BossTimer() {
                 {editingSet === si ? (
                   <NameInput
                     autoFocus
+                    name={`cl-set-name-${si}`}
+                    aria-label={`Rename set ${si + 1}`}
                     defaultValue={name}
                     maxLength={30}
                     onBlur={(e) => commitRename(e.target.value)}
@@ -264,23 +407,38 @@ export function BossTimer() {
                   : t.started
                   ? 'running'
                   : 'idle';
+                const stateStyle =
+                  state === 'running'
+                    ? {
+                        color: '#ffb74d',
+                        borderColor: 'var(--primary)',
+                        background: 'rgba(255, 183, 77, 0.1)',
+                      }
+                    : state === 'done'
+                    ? {
+                        color: '#4caf50',
+                        borderColor: '#4caf50',
+                        background: 'rgba(76, 175, 80, 0.1)',
+                      }
+                    : undefined;
+                const isHovered = hoveredTimer === `${si}-${ti}`;
                 return (
                   <TimeButton
                     key={ti}
-                    state={state}
                     onClick={() => startTimer(si, ti)}
                     onMouseEnter={() => setHoveredTimer(`${si}-${ti}`)}
                     onMouseLeave={() => setHoveredTimer(null)}
-                    style={
-                      hoveredTimer === `${si}-${ti}`
+                    style={{
+                      ...(stateStyle || {}),
+                      ...(isHovered
                         ? {
                             borderColor: 'rgba(255, 255, 255, 0.65)',
                             boxShadow:
                               '0 0 6px var(--primary), 0 0 18px rgba(255, 255, 255, 0.22), 0 0 16px var(--primary), 0 2px 6px rgba(0, 0, 0, 0.25)',
                             transform: 'translateY(-1px)',
                           }
-                        : undefined
-                    }
+                        : {}),
+                    }}
                   >
                     {formatBossTime(doneNow ? 0 : remaining)}
                   </TimeButton>

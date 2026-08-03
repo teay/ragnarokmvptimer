@@ -141,10 +141,12 @@ export function BinaryCalculator() {
       </Formula>
       <Row>
         <Field>
-          <Label>
+          <Label htmlFor='cl-day'>
             <FormattedMessage id='cl_day' />
           </Label>
           <Input
+            id='cl-day'
+            name='cl-day'
             type='number'
             min={1}
             max={31}
@@ -153,10 +155,12 @@ export function BinaryCalculator() {
           />
         </Field>
         <Field>
-          <Label>
+          <Label htmlFor='cl-month'>
             <FormattedMessage id='cl_month' />
           </Label>
           <Input
+            id='cl-month'
+            name='cl-month'
             type='number'
             min={1}
             max={12}
