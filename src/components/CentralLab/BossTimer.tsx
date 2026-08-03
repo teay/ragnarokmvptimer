@@ -122,6 +122,33 @@ const SpeechToggle = styled.button`
   }
 `;
 
+const SpeechHint = styled.div`
+  font-size: 0.85rem;
+  color: var(--text);
+  opacity: 0.7;
+  margin-bottom: 0.8rem;
+`;
+
+const PermButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 2px solid var(--primary);
+  background: rgba(248, 146, 0, 0.12);
+  color: var(--text);
+  transition: all 0.15s ease;
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 8px var(--primary);
+  }
+`;
+
 const SettingsPanel = styled.div`
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -229,6 +256,10 @@ export function BossTimer() {
   const [now, setNow] = useState(Date.now());
   const [editingSet, setEditingSet] = useState<number | null>(null);
   const [speechSettingsOpen, setSpeechSettingsOpen] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(() =>
+    'Notification' in window ? Notification.permission : 'denied'
+  );
+  const [permTried, setPermTried] = useState(false);
   const [hoveredTimer, setHoveredTimer] = useState<string | null>(null);
   const setNamesRef = useRef(setNames);
   setNamesRef.current = setNames;
@@ -378,6 +409,14 @@ export function BossTimer() {
       { stage: ti + 1, time: formatBossTime(BOSS_DURATIONS[ti]) }
     );
 
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const p = await Notification.requestPermission();
+      setNotifPermission(p);
+      setPermTried(true);
+    }
+  };
+
   return (
     <div>
       <Toolbar>
@@ -390,6 +429,24 @@ export function BossTimer() {
           ⚙️ <FormattedMessage id='cl_speech_settings' />
         </SpeechToggle>
       </Toolbar>
+      {speechEnabled && (
+        <SpeechHint>
+          🔔 <FormattedMessage id='cl_speech_hint' />
+        </SpeechHint>
+      )}
+      {speechEnabled && 'Notification' in window && notifPermission !== 'granted' && (
+        <SpeechHint>
+          {notifPermission === 'denied' ? (
+            <span>🚫 <FormattedMessage id='cl_perm_denied' /></span>
+          ) : permTried ? (
+            <span>🔔 <FormattedMessage id='cl_perm_quiet' /></span>
+          ) : (
+            <PermButton type='button' onClick={requestNotificationPermission}>
+              🔔 <FormattedMessage id='cl_perm_grant' />
+            </PermButton>
+          )}
+        </SpeechHint>
+      )}
       {speechSettingsOpen && (
         <SettingsPanel>
           {[0, 1, 2].map((si) => {
