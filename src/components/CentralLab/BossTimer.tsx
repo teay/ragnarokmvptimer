@@ -210,9 +210,13 @@ const TestBtn = styled.button`
   background: transparent;
   color: var(--text);
   transition: all 0.15s ease;
-  &:hover {
+  &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 0 8px var(--primary);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 `;
 
@@ -261,6 +265,7 @@ export function BossTimer() {
   );
   const [permTried, setPermTried] = useState(false);
   const [hoveredTimer, setHoveredTimer] = useState<string | null>(null);
+  const speechAudioRef = useRef<HTMLAudioElement | null>(null);
   const setNamesRef = useRef(setNames);
   setNamesRef.current = setNames;
   const speechEnabledRef = useRef(speechEnabled);
@@ -328,7 +333,24 @@ export function BossTimer() {
         text
       )}`
     );
+    speechAudioRef.current = audio;
     audio.play().catch(() => undefined);
+  };
+
+  const stopSpeech = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (speechAudioRef.current) {
+      speechAudioRef.current.pause();
+      speechAudioRef.current = null;
+    }
+  };
+
+  const toggleSpeech = () => {
+    const next = !speechEnabled;
+    setSpeechEnabled(next);
+    if (!next) stopSpeech();
   };
 
   const notify = (setName: string, si: number, ti: number) => {
@@ -420,7 +442,7 @@ export function BossTimer() {
   return (
     <div>
       <Toolbar>
-        <SpeechToggle onClick={() => setSpeechEnabled(!speechEnabled)}>
+        <SpeechToggle onClick={toggleSpeech}>
           {speechEnabled ? '🔊' : '🔇'}{' '}
           <FormattedMessage id='cl_speech' /> (
           <FormattedMessage id={speechEnabled ? 'cl_speech_on' : 'cl_speech_off'} />)
@@ -473,6 +495,7 @@ export function BossTimer() {
                       <TestBtn
                         type='button'
                         title={intl.formatMessage({ id: 'cl_speech_test' })}
+                        disabled={!speechEnabled}
                         onClick={() => speakText(effectiveMessage(si, ti))}
                       >
                         🔊
