@@ -21,6 +21,7 @@ const DAYJS_LOCALE_MAP: Record<string, string> = {
 };
 
 import { Main } from './pages/Main';
+import { CentralLabPage } from './pages/CentralLab';
 
 import { Header } from './components/Header';
 import { WarningHeader } from './components/WarningHeader';
@@ -250,6 +251,20 @@ function AppContent() {
 
   const hasJoined = !!nickname;
 
+  const getRoute = () => {
+    const h = window.location.hash;
+    if (h === '#/central-lab') return 'central-lab';
+    return '';
+  };
+
+  const [route, setRoute] = useState(getRoute);
+
+  useEffect(() => {
+    const onHashChange = () => setRoute(getRoute());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   return (
     <>
       {!__LITE_MODE__ && isAnimatedBackgroundEnabled && LuminousParticlesBackground && (
@@ -267,7 +282,10 @@ function AppContent() {
         locale={language}
         defaultLocale={LOCALES.ENGLISH}
       >
-        {!hideActiveContent && (
+        {route === 'central-lab' ? (
+          <CentralLabPage />
+        ) : (
+        !hideActiveContent && (
           <>
             {!hasNotificationPermission && (
               <WarningHeader
@@ -291,10 +309,10 @@ function AppContent() {
                 <Footer />
                 <WarningHeader text={messages[language]['under_development']} />
               </>
-            )}
-          </>
-        )}
-      </IntlProvider>
+              )}
+            </>
+          ))}
+        </IntlProvider>
     </>
   );
 }

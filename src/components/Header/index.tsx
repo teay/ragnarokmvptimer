@@ -3,6 +3,7 @@ import { HeaderTimer } from '../HeaderTimer';
 import { ServerButton } from '../ServerButton';
 import { SettingsButton } from '../SettingsButton';
 import { PartyButton } from '../PartyButton';
+import { CentralLabButton } from '../CentralLabButton';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useMvpsContext } from '@/contexts/MvpsContext';
 import { useTimer } from '@/contexts/TimerContext'; // <-- เปลี่ยนจาก useTimerContext เป็น useTimer
@@ -162,6 +163,7 @@ export function Header() {
       <HeaderTimer use24HourFormat={use24HourFormat} />
 
       <Customization>
+        <CentralLabButton />
         <PartyButton />
         <ServerButton />
         <SettingsButton />
