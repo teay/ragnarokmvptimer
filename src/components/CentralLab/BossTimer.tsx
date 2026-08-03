@@ -294,19 +294,27 @@ export function BossTimer() {
     let changed = false;
     const copy = sets.map((s) => s.map((x) => ({ ...x })));
     for (let si = 0; si < 3; si++) {
-      copy[si].forEach((t) => {
-        if (t.done && !t.notified) {
-          const name = (setNamesRef.current && setNamesRef.current[si]) || DEFAULT_SET_NAMES[si];
-          t.notified = true;
-          changed = true;
-          const ti = copy[si].indexOf(t);
-          notify(name, si, ti);
+      copy[si].forEach((t, ti) => {
+        if (t.started && t.startedAt) {
+          const elapsed = (Date.now() - t.startedAt) / 1000;
+          if (elapsed >= BOSS_DURATIONS[ti] && !t.done) {
+            t.done = true;
+            t.notified = false;
+            changed = true;
+          }
+          if (t.done && !t.notified) {
+            t.notified = true;
+            changed = true;
+            const name =
+              (setNamesRef.current && setNamesRef.current[si]) || DEFAULT_SET_NAMES[si];
+            notify(name, si, ti);
+          }
         }
       });
     }
     if (changed) setSets(copy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sets]);
+  }, [sets, now]);
 
   const defaultStageSpeech = (ti: number) =>
     intl.formatMessage(
