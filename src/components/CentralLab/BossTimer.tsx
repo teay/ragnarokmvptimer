@@ -155,12 +155,37 @@ const StageLabel = styled.label`
 `;
 
 const SpeechField = styled(NameInput)`
+  flex: 1;
+  min-width: 0;
   font-size: 1.25rem;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   &:hover {
     transform: translateY(-1px);
     border-color: rgba(255, 255, 255, 0.65);
     box-shadow: 0 0 6px var(--primary), 0 0 18px rgba(255, 255, 255, 0.22), 0 0 16px var(--primary), 0 2px 6px rgba(0, 0, 0, 0.25);
+  }
+`;
+
+const SpeechFieldRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+`;
+
+const TestBtn = styled.button`
+  flex: 0 0 auto;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1.1rem;
+  border: 2px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  transition: all 0.15s ease;
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 8px var(--primary);
   }
 `;
 
@@ -217,6 +242,17 @@ export function BossTimer() {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      const handler = () => window.speechSynthesis.getVoices();
+      window.speechSynthesis.addEventListener('voiceschanged', handler);
+      return () =>
+        window.speechSynthesis.removeEventListener('voiceschanged', handler);
+    }
+    return undefined;
+  }, []);
+
   // Fire notification once per timer upon completion
   useEffect(() => {
     let changed = false;
@@ -242,6 +278,28 @@ export function BossTimer() {
       { stage: ti + 1, time: formatBossTime(BOSS_DURATIONS[ti]) }
     );
 
+  const speakText = (text: string) => {
+    if ('speechSynthesis' in window) {
+      const voices = window.speechSynthesis.getVoices();
+      const thVoice = voices.find((v) => v.lang.toLowerCase().startsWith('th'));
+      if (thVoice) {
+        const synth = window.speechSynthesis;
+        const u = new SpeechSynthesisUtterance(text);
+        u.voice = thVoice;
+        u.lang = thVoice.lang;
+        synth.cancel();
+        synth.speak(u);
+        return;
+      }
+    }
+    const audio = new Audio(
+      `https://translate.google.com/translate_tts?ie=UTF-8&tl=th&client=tw-ob&q=${encodeURIComponent(
+        text
+      )}`
+    );
+    audio.play().catch(() => undefined);
+  };
+
   const notify = (setName: string, si: number, ti: number) => {
     if (isNotificationSoundEnabled) {
       const audio = new Audio('notification.mp3');
@@ -253,16 +311,13 @@ export function BossTimer() {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, { body });
     }
-    if (speechEnabledRef.current && 'speechSynthesis' in window) {
+    if (speechEnabledRef.current) {
       const custom =
         speechMessagesRef.current &&
         speechMessagesRef.current[si] &&
         speechMessagesRef.current[si][ti];
       const text = (custom && custom.trim()) || defaultStageSpeech(ti);
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'th-TH';
-      window.speechSynthesis.speak(u);
+      speakText(text);
     }
   };
 
@@ -349,14 +404,23 @@ export function BossTimer() {
                     <StageLabel htmlFor={`cl-speech-${si}-${ti}`}>
                       {speechLabel(ti)}
                     </StageLabel>
-                    <SpeechField
-                      id={`cl-speech-${si}-${ti}`}
-                      name={`cl-speech-${si}-${ti}`}
-                      value={effectiveMessage(si, ti)}
-                      placeholder={intl.formatMessage({ id: 'cl_speech_placeholder' })}
-                      maxLength={80}
-                      onChange={(e) => updateMessage(si, ti, e.target.value)}
-                    />
+                    <SpeechFieldRow>
+                      <SpeechField
+                        id={`cl-speech-${si}-${ti}`}
+                        name={`cl-speech-${si}-${ti}`}
+                        value={effectiveMessage(si, ti)}
+                        placeholder={intl.formatMessage({ id: 'cl_speech_placeholder' })}
+                        maxLength={80}
+                        onChange={(e) => updateMessage(si, ti, e.target.value)}
+                      />
+                      <TestBtn
+                        type='button'
+                        title={intl.formatMessage({ id: 'cl_speech_test' })}
+                        onClick={() => speakText(effectiveMessage(si, ti))}
+                      >
+                        🔊
+                      </TestBtn>
+                    </SpeechFieldRow>
                   </StageRow>
                 ))}
               </SetSettingsCol>

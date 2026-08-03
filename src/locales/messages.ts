@@ -132,6 +132,7 @@ export const messages = {
     cl_speech_placeholder: 'e.g. Stage 1 done',
     cl_speech_settings: 'Speech messages (per set)',
     cl_speech_default: 'Stage {stage} done ({time})',
+    cl_speech_test: 'Test speech',
   },
   [LOCALES.PORTUGUESE]: {
     under_development: 'Em desenvolvimento',
@@ -262,6 +263,7 @@ cl_speech_edit: 'Editar mensagem de voz',
     cl_speech_placeholder: 'ex. Chease Stage 1',
     cl_speech_settings: 'Mensagens de voz (por conjunto)',
     cl_speech_default: 'Stage {stage} completo ({time})',
+    cl_speech_test: 'Testar voz',
   },
   [LOCALES.THAI]: {
     under_development: 'อยู่ระหว่างการพัฒนา',
@@ -394,5 +396,6 @@ cl_speech_edit: 'Editar mensagem de voz',
     cl_speech_placeholder: 'เช่น เจอ Stage 1 แล้ว',
     cl_speech_settings: 'ตั้งค่าข้อความพูด (แยกตาม Set)',
     cl_speech_default: 'Stage {stage} ครบ ({time})',
+    cl_speech_test: 'ทดสอบเสียง',
   },
 };
