@@ -4,7 +4,6 @@ import { styled } from '@linaria/react';
 
 import { BOSS_DURATIONS, DEFAULT_SET_NAMES, DEFAULT_SPEECH_MESSAGES } from '@/data/centralLab';
 import { usePersistedState } from '@/hooks';
-import { useSettings } from '@/contexts/SettingsContext';
 
 interface TTimer {
   remaining: number;
@@ -242,7 +241,6 @@ function formatBossTime(s: number) {
 }
 
 export function BossTimer() {
-  const { isNotificationSoundEnabled } = useSettings();
   const intl = useIntl();
   const [setNames, setSetNames] = usePersistedState<string[]>(
     'centralLabSetNames',
@@ -362,11 +360,6 @@ export function BossTimer() {
   };
 
   const notify = (setName: string, si: number, ti: number) => {
-    if (isNotificationSoundEnabled) {
-      const audio = new Audio('notification.mp3');
-      audio.volume = 0.5;
-      audio.play().catch(() => undefined);
-    }
     const title = `✅ ${setName}`;
     const body = `Stage ${ti + 1} (${formatBossTime(BOSS_DURATIONS[ti])})`;
     if ('Notification' in window && Notification.permission === 'granted') {
