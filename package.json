@@ -63,6 +63,11 @@
   "engines": {
     "node": ">=18"
   },
+  "overrides": {
+    "imagetools-core": {
+      "sharp": "0.35.3"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/teay/ragnarokmvptimer.git"
