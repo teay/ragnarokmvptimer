@@ -68,7 +68,9 @@ export function Header() {
   return (
     <Container>
       <LogoContainer>
-        <Logo as='a' href='#/' src={faviconPng} alt='logo' width={55} height={55} title='Home' />
+        <a href='#/' title='Home' style={{ lineHeight: 0 }}>
+          <Logo src={faviconPng} alt='logo' width={55} height={55} />
+        </a>
         <Title>Ragnarok MVP Timer</Title>
         <DataBadge location={getBadgeStatus()}>{getBadgeText()}</DataBadge>
         {nickname && !partyRoom && (
