@@ -50,7 +50,7 @@ export const globals = css`
       --header_box_shadow: none;
 
       --warning_header_bg: transparent;
-      --warning_header_text: #000;
+      --warning_header_text: #ff8a80;
 
       --scrollbar_bg: transparent;
       --scrollbar_thumb: var(--primary);
@@ -142,7 +142,7 @@ export const globals = css`
       --header_box_shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.3); /* Lighter shadow */
 
       --warning_header_bg: transparent; /* From dark theme */
-      --warning_header_text: #000; /* From dark theme */
+      --warning_header_text: #ff8a80; /* From dark theme */
 
       --scrollbar_bg: transparent; /* From dark theme */
       --scrollbar_thumb: var(--primary); /* From dark theme */

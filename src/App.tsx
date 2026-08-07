@@ -29,7 +29,7 @@ import { Footer } from './components/Footer';
 
 import { useSettings } from './contexts/SettingsContext';
 import { MvpProvider, useMvpsContext } from './contexts/MvpsContext';
-import { useNotification } from './hooks';
+import { useNotification, usePersistedState } from './hooks';
 import { useTheme } from './hooks';
 
 import { LOCALES } from './locales';
@@ -133,6 +133,9 @@ function AppContent() {
     isNotificationPermissionDenied,
     browserSupportsNotifications,
   } = useNotification();
+
+  const [notificationWarningDismissed, setNotificationWarningDismissed] =
+    usePersistedState('notification_warning_dismissed', false);
 
   // Handle Global Shortcuts
   useEffect(() => {
@@ -287,7 +290,7 @@ function AppContent() {
         ) : (
         !hideActiveContent && (
           <>
-            {!hasNotificationPermission && (
+            {!hasNotificationPermission && !notificationWarningDismissed && (
               <WarningHeader
                 text={
                   messages[language][
@@ -298,6 +301,7 @@ function AppContent() {
                       : 'disabled_notifications'
                   ]
                 }
+                onClose={() => setNotificationWarningDismissed(true)}
               />
         )}
 
